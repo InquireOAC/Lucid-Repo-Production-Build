@@ -1,17 +1,8 @@
 
-import React from "react";
-import Header from "@/components/Header";
-import MainContent from "@/components/MainContent";
-import Footer from "@/components/Footer";
+import { Navigate } from "react-router-dom";
 
-const Index: React.FC = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <Header />
-      <MainContent />
-      <Footer />
-    </div>
-  );
+const Index = () => {
+  return <Navigate to="/" replace />;
 };
 
 export default Index;
