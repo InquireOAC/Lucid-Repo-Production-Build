@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import { X } from "lucide-react"; // Importing the "X" icon
+import { X } from "lucide-react"; // Import the "X" icon
 
 interface DreamEntryFormProps {
   existingDream?: any;
@@ -125,7 +125,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
   return (
     <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4 relative">
       {/* Close Button - X Icon at the top right */}
-      <div className="absolute top-8 right-4 cursor-pointer" onClick={handleClose}>
+      <div className="absolute top-6 right-4 cursor-pointer" onClick={handleClose}>
         <X className="h-6 w-6 text-gray-600" />
       </div>
 
