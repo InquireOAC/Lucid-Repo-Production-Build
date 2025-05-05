@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from "@/lib/stripe";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -28,6 +29,13 @@ const DreamImageGenerator = ({
   const handleSuggestPrompt = async () => {
     setLoading(true);
     try {
+      // Check if the user has access to this feature
+      const hasAccess = await checkFeatureAccess('image');
+      if (!hasAccess) {
+        showSubscriptionPrompt('image');
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke('analyze-dream', {
         body: { 
           dreamContent,
@@ -54,11 +62,21 @@ const DreamImageGenerator = ({
 
     setLoading(true);
     try {
+      // Check if the user has access to this feature
+      const hasAccess = await checkFeatureAccess('image');
+      if (!hasAccess) {
+        showSubscriptionPrompt('image');
+        return;
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-dream-image', {
         body: { prompt }
       });
 
       if (error) throw error;
+      
+      // Increment usage counter after successful generation
+      await incrementFeatureUsage('image');
       
       setImageUrl(data.imageUrl);
       onImageGenerated(data.imageUrl, prompt);
@@ -96,6 +114,7 @@ const DreamImageGenerator = ({
               size="sm"
               onClick={handleSuggestPrompt}
               className="whitespace-nowrap border-dream-lavender text-dream-lavender hover:bg-dream-lavender/10"
+              disabled={loading}
             >
               Suggest Prompt
             </Button>

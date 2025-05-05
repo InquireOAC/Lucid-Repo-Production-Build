@@ -53,6 +53,8 @@ const Profile = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [subscription, setSubscription] = useState<any>(null);
   
+  const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
+  
   const profileToShow = isOwnProfile ? profile : viewedProfile;
   
   useEffect(() => {
@@ -471,6 +473,34 @@ const Profile = () => {
     } catch (error) {
       console.error("Error signing out:", error);
     }
+  };
+  
+  // Transform dream data to include comment_count
+  const transformDreamData = (data: any[]): DreamEntry[] => {
+    return data.map(dream => ({
+      id: dream.id,
+      title: dream.title,
+      content: dream.content,
+      date: dream.dream_date,
+      tags: dream.tags || [],
+      lucid: dream.lucid,
+      mood: dream.mood,
+      userId: dream.user_id,
+      analysis: dream.analysis || "",
+      isPublic: dream.is_public,
+      likeCount: dream.like_count || 0,
+      commentCount: dream.comment_count || 0,
+      created_at: dream.created_at,
+      updated_at: dream.updated_at,
+      generatedImage: dream.image_url,
+      imagePrompt: dream.image_prompt,
+      liked: false,
+      user_id: dream.user_id,
+      is_public: dream.is_public,
+      like_count: dream.like_count || 0,
+      comment_count: dream.comment_count || 0,
+      profiles: dream.profiles
+    }));
   };
   
   // Loading state

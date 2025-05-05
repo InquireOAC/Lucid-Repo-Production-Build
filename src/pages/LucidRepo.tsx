@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { DreamEntry } from "@/types/dream";
+import { DreamEntry, DreamTag } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,7 +25,7 @@ const LucidRepo = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
-  const [dreamTags, setDreamTags] = useState([]);
+  const [dreamTags, setDreamTags] = useState<DreamTag[]>([]);
 
   useEffect(() => {
     fetchPublicDreams();
@@ -113,9 +113,11 @@ const LucidRepo = () => {
           .eq("user_id", user.id)
           .eq("dream_id", dreamId);
 
-        // Update dream like count using RPC
+        // Update dream like count using SQL update
         await supabase
-          .rpc("decrement_like_count", { dream_id: dreamId });
+          .from("dream_entries")
+          .update({ like_count: Math.max(0, (dreams.find(d => d.id === dreamId)?.likeCount as number) - 1) })
+          .eq("id", dreamId);
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
@@ -130,9 +132,11 @@ const LucidRepo = () => {
           .from("dream_likes")
           .insert({ user_id: user.id, dream_id: dreamId });
 
-        // Update dream like count using RPC
+        // Update dream like count using SQL update
         await supabase
-          .rpc("increment_like_count", { dream_id: dreamId });
+          .from("dream_entries")
+          .update({ like_count: (dreams.find(d => d.id === dreamId)?.likeCount as number) + 1 })
+          .eq("id", dreamId);
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
