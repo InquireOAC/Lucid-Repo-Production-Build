@@ -10,9 +10,10 @@ import { toast } from "sonner";
 
 interface DreamCommentsProps {
   dreamId: string;
+  onCommentCountChange?: (count: number) => void;
 }
 
-const DreamComments = ({ dreamId }: DreamCommentsProps) => {
+const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) => {
   const { user, profile } = useAuth();
   const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState("");
@@ -36,6 +37,11 @@ const DreamComments = ({ dreamId }: DreamCommentsProps) => {
       if (error) throw error;
       
       setComments(data || []);
+      
+      // Update comment count
+      if (onCommentCountChange) {
+        onCommentCountChange(data?.length || 0);
+      }
       
       // Get user profiles for comments
       if (data && data.length > 0) {
@@ -101,6 +107,14 @@ const DreamComments = ({ dreamId }: DreamCommentsProps) => {
       
       if (data) {
         setComments([data[0], ...comments]);
+        
+        // Increment comment count
+        if (onCommentCountChange) {
+          onCommentCountChange(comments.length + 1);
+        }
+        
+        // Update comment count in the database
+        await supabase.rpc('increment_comment_count', { dream_id: dreamId });
       }
       
       setCommentText("");
@@ -115,7 +129,7 @@ const DreamComments = ({ dreamId }: DreamCommentsProps) => {
   
   return (
     <div className="space-y-4 mt-2">
-      <Separator />
+      <h3 className="text-lg font-medium">Comments</h3>
       
       {user ? (
         <div className="flex gap-3">

@@ -12,18 +12,24 @@ import { Heart, MessageCircle, Search, Filter, Loader2 } from "lucide-react";
 import DreamCard from "@/components/dreams/DreamCard";
 import EmptyState from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
+import DreamDetail from "@/components/DreamDetail";
+import { useNavigate } from "react-router-dom";
 
 const LucidRepo = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [dreams, setDreams] = useState<DreamEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [activeTab, setActiveTab] = useState("all");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
+  const [dreamTags, setDreamTags] = useState([]);
 
   useEffect(() => {
     fetchPublicDreams();
+    fetchDreamTags();
   }, [sortBy, activeTab]);
 
   useEffect(() => {
@@ -31,6 +37,19 @@ const LucidRepo = () => {
       checkLikedDreams();
     }
   }, [user, dreams]);
+
+  const fetchDreamTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("dream_tags")
+        .select("*");
+      
+      if (error) throw error;
+      setDreamTags(data || []);
+    } catch (error) {
+      console.error("Error fetching dream tags:", error);
+    }
+  };
 
   const fetchPublicDreams = async () => {
     setIsLoading(true);
@@ -94,11 +113,9 @@ const LucidRepo = () => {
           .eq("user_id", user.id)
           .eq("dream_id", dreamId);
 
-        // Update dream like count in database - this is now handled by triggers
+        // Update dream like count using RPC
         await supabase
-          .from("dream_entries")
-          .update({ like_count: supabase.sql`like_count - 1` })
-          .eq("id", dreamId);
+          .rpc("decrement_like_count", { dream_id: dreamId });
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
@@ -113,11 +130,9 @@ const LucidRepo = () => {
           .from("dream_likes")
           .insert({ user_id: user.id, dream_id: dreamId });
 
-        // Update dream like count in database - this is now handled by triggers
+        // Update dream like count using RPC
         await supabase
-          .from("dream_entries")
-          .update({ like_count: supabase.sql`like_count + 1` })
-          .eq("id", dreamId);
+          .rpc("increment_like_count", { dream_id: dreamId });
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
@@ -163,6 +178,27 @@ const LucidRepo = () => {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     // Filter dreams based on search query is done client-side in the filteredDreams variable
+  };
+
+  const handleOpenDream = (dream: DreamEntry) => {
+    setSelectedDream(dream);
+  };
+
+  const handleUpdateDream = (id: string, updates: Partial<DreamEntry>) => {
+    setDreams(prevDreams => 
+      prevDreams.map(dream => 
+        dream.id === id ? { ...dream, ...updates } : dream
+      )
+    );
+    setSelectedDream(prev => prev && prev.id === id ? { ...prev, ...updates } : prev);
+  };
+
+  const handleCloseDream = () => {
+    setSelectedDream(null);
+  };
+
+  const handleNavigateToProfile = (userId: string) => {
+    navigate(`/profile/${userId}`);
   };
 
   const filteredDreams = dreams.filter((dream) => {
@@ -239,6 +275,8 @@ const LucidRepo = () => {
               dream={dream}
               onLike={() => handleLike(dream.id)}
               showUser={true}
+              onClick={() => handleOpenDream(dream)}
+              onUserClick={() => dream.user_id && handleNavigateToProfile(dream.user_id)}
             />
           ))}
         </div>
@@ -251,6 +289,20 @@ const LucidRepo = () => {
               ? "Try a different search term or filter"
               : "Be the first to share your dream with the community"
           }
+        />
+      )}
+
+      {selectedDream && (
+        <DreamDetail
+          dream={selectedDream}
+          tags={dreamTags}
+          onClose={handleCloseDream}
+          onUpdate={handleUpdateDream}
+          onDelete={() => {
+            // We don't allow deletion from LucidRepo yet
+            handleCloseDream();
+          }}
+          isAuthenticated={!!user}
         />
       )}
 

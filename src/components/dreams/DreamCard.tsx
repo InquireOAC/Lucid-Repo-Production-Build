@@ -12,9 +12,11 @@ interface DreamCardProps {
   dream: DreamEntry;
   onLike?: () => void;
   showUser?: boolean;
+  onClick?: () => void;
+  onUserClick?: () => void;
 }
 
-const DreamCard = ({ dream, onLike, showUser = false }: DreamCardProps) => {
+const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
   
   // Check either isPublic or is_public field
@@ -24,17 +26,24 @@ const DreamCard = ({ dream, onLike, showUser = false }: DreamCardProps) => {
   const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : (dream.like_count || 0);
   
   // Similarly handle comment count
-  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : 0;
+  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
   const displayName = dream.profiles?.display_name || "Anonymous User";
   const avatarUrl = dream.profiles?.avatar_url || "";
 
+  const handleUserClick = (e: React.MouseEvent) => {
+    if (onUserClick) {
+      e.stopPropagation();
+      onUserClick();
+    }
+  };
+
   return (
     <Card 
       className="dream-card h-full cursor-pointer hover:scale-[1.02] transition-all"
-      onClick={onLike}
+      onClick={onClick}
     >
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
@@ -49,7 +58,10 @@ const DreamCard = ({ dream, onLike, showUser = false }: DreamCardProps) => {
       </CardHeader>
       <CardContent className="p-4 pt-2">
         {showUser && (
-          <div className="flex items-center mb-3">
+          <div 
+            className="flex items-center mb-3 cursor-pointer hover:underline" 
+            onClick={handleUserClick}
+          >
             <Avatar className="h-6 w-6 mr-2">
               <AvatarImage src={avatarUrl} alt={username} />
               <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
@@ -90,12 +102,10 @@ const DreamCard = ({ dream, onLike, showUser = false }: DreamCardProps) => {
               <Heart size={12} className="mr-1" />
               <span>{likeCount}</span>
             </div>
-            {commentCount > 0 && (
-              <div className="flex items-center">
-                <MessageCircle size={12} className="mr-1" />
-                <span>{commentCount}</span>
-              </div>
-            )}
+            <div className="flex items-center">
+              <MessageCircle size={12} className="mr-1" />
+              <span>{commentCount || 0}</span>
+            </div>
           </div>
         )}
       </CardContent>

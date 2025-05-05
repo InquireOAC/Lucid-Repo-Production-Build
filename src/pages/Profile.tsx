@@ -228,14 +228,16 @@ const Profile = () => {
       if (error) throw error;
       
       // Map Supabase field names to our app's field names for consistency
-      const mappedData = data?.map(dream => ({
+      const transformedDreams = data.map((dream: any) => ({
         ...dream,
         isPublic: dream.is_public,
         likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0 // Add default value if missing
+        commentCount: dream.comment_count || 0, // Use 0 as fallback
+        userId: dream.user_id,
+        profiles: dream.profiles
       }));
       
-      setPublicDreams(mappedData || []);
+      setPublicDreams(transformedDreams || []);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
     }
@@ -270,14 +272,16 @@ const Profile = () => {
         if (dreamError) throw dreamError;
         
         // Map fields for consistency
-        const mappedData = dreamData?.map(dream => ({
+        const transformedDreams = dreamData?.map(dream => ({
           ...dream,
           isPublic: dream.is_public,
           likeCount: dream.like_count || 0,
-          commentCount: dream.comment_count || 0 // Add default value if missing
+          commentCount: dream.comment_count || 0, // Use 0 as fallback
+          userId: dream.user_id,
+          profiles: dream.profiles
         }));
         
-        setLikedDreams(mappedData || []);
+        setLikedDreams(transformedDreams || []);
       } else {
         setLikedDreams([]);
       }
