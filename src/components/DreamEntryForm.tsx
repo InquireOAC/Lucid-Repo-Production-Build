@@ -174,7 +174,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4">
       {/* Dream Details */}
       <div className="space-y-4">
         <Input
@@ -269,7 +269,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
 
       {/* Dream Analysis */}
       <div className="space-y-8">
-        {/* Dream Analysis */}
         <DreamAnalysis
           dreamContent={formData.content}
           existingAnalysis={formData.analysis}
@@ -281,7 +280,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
           }}
         />
         
-        {/* Dream Image Generator */}
         <DreamImageGenerator
           dreamContent={formData.content}
           existingPrompt={formData.imagePrompt}
