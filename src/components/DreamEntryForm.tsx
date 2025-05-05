@@ -7,10 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Separator } from "@/components/ui/separator";
-import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import DreamAnalysis from "./DreamAnalysis";
@@ -30,8 +26,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     content: existingDream?.content || "",
     date: existingDream?.date ? new Date(existingDream.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     tags: existingDream?.tags || [],
-    lucid: existingDream?.lucid || false,
-    mood: existingDream?.mood || null,
+    mood: existingDream?.mood || "Neutral",  // Set a default mood
     analysis: existingDream?.analysis || "",
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || ""
@@ -52,14 +47,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     }));
   };
 
-  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: checked
-    }));
-  };
-
   const handleTagSelect = (tagId: string) => {
     setFormData(prevState => {
       if (prevState.tags.includes(tagId)) {
@@ -74,39 +61,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
         };
       }
     });
-  };
-
-  const handleCreateTag = async () => {
-    if (!newTag.trim()) return;
-
-    try {
-      setIsSubmitting(true);
-      const { data, error } = await supabase
-        .from("dream_tags")
-        .insert({ name: newTag, color: getRandomColor() })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setAvailableTags(prevTags => [...prevTags, data]);
-      setFormData(prevState => ({
-        ...prevState,
-        tags: [...prevState.tags, data.id]
-      }));
-      setNewTag("");
-    } catch (error) {
-      console.error("Error creating tag:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleMoodChange = (value: number[]) => {
-    setFormData(prevState => ({
-      ...prevState,
-      mood: String(value[0])
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,7 +78,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
       content: formData.content,
       dream_date: formData.date,
       tags: formData.tags,
-      lucid: formData.lucid,
       mood: formData.mood,
       user_id: user.id,
       analysis: formData.analysis,
@@ -162,15 +115,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
   };
 
   return (
@@ -221,54 +165,34 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
             </Badge>
           ))}
         </div>
-
-        <div className="flex items-center space-x-2">
-          <Input
-            type="text"
-            placeholder="New Tag"
-            value={newTag}
-            onChange={(e) => setNewTag(e.target.value)}
-            className="dream-input flex-1"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleCreateTag}
-            disabled={isSubmitting}
-            className="whitespace-nowrap border-dream-lavender text-dream-lavender hover:bg-dream-lavender/10"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Tag
-          </Button>
-        </div>
       </div>
 
-      {/* Dream Mood */}
+      {/* Mood Dropdown */}
       <div className="space-y-2">
         <Label>Mood</Label>
-        <Slider
-          defaultValue={[formData.mood ? parseInt(formData.mood) : 5]}
-          max={10}
-          step={1}
-          aria-label="Mood"
-          onChange={handleMoodChange}
-        />
-      </div>
-
-      {/* Dream State */}
-      <div className="flex items-center space-x-2">
-        <Checkbox
-          id="lucid"
-          name="lucid"
-          checked={formData.lucid}
-          onCheckedChange={(checked) => setFormData(prevState => ({ ...prevState, lucid: !!checked }))}
-        />
-        <Label htmlFor="lucid">Lucid Dream</Label>
+        <Select
+          name="mood"
+          value={formData.mood}
+          onValueChange={(value) => setFormData({ ...formData, mood: value })}
+        >
+          <SelectTrigger className="dream-input">
+            <SelectValue placeholder="Select Mood" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Happy">Happy</SelectItem>
+            <SelectItem value="Sad">Sad</SelectItem>
+            <SelectItem value="Neutral">Neutral</SelectItem>
+            <SelectItem value="Angry">Angry</SelectItem>
+            <SelectItem value="Excited">Excited</SelectItem>
+            <SelectItem value="Relaxed">Relaxed</SelectItem>
+            <SelectItem value="Confused">Confused</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Dream Analysis */}
       <div className="space-y-8">
+        {/* Dream Analysis */}
         <DreamAnalysis
           dreamContent={formData.content}
           existingAnalysis={formData.analysis}
@@ -280,6 +204,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
           }}
         />
         
+        {/* Dream Image Generator */}
         <DreamImageGenerator
           dreamContent={formData.content}
           existingPrompt={formData.imagePrompt}
