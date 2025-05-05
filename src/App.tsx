@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,15 +12,27 @@ import MainLayout from "./layouts/MainLayout";
 import Journal from "./pages/Journal";
 import LucidRepo from "./pages/LucidRepo";
 import Profile from "./pages/Profile";
-import { StatusBar } from "@capacitor/status-bar"; // Import the StatusBar plugin
+import { StatusBar } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    // Ensure the content does not overlap with the status bar or bottom home indicator
-    StatusBar.setOverlaysWebView({ overlay: false }); // Set to false to prevent overlap
-    StatusBar.show(); // Ensure the status bar is visible
+    const setupStatusBar = async () => {
+      if (Capacitor.isPluginAvailable('StatusBar')) {
+        try {
+          // Set status bar to be transparent with light text
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          await StatusBar.setStyle({ style: "DARK" });
+          await StatusBar.setBackgroundColor({ color: '#00000000' });
+        } catch (error) {
+          console.error('Error configuring status bar:', error);
+        }
+      }
+    };
+    
+    setupStatusBar();
   }, []);
 
   return (

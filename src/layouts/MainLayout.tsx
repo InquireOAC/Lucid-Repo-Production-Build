@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User } from "lucide-react";
@@ -17,14 +18,14 @@ const MainLayout = () => {
   }, [user, loading, location.pathname]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Scrollable content above the fixed tab bar */}
-      <div className="flex-1 overflow-y-auto pb-20"> {/* Ensure content scrolls */}
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Main content - scrollable area */}
+      <div className="flex-1 overflow-y-auto pb-24 safe-top">
         <Outlet />
       </div>
       
-      {/* Fixed tab bar */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 shadow-lg border-t z-50">
+      {/* Fixed tab bar positioned at the bottom with safe area insets */}
+      <div className="fixed bottom-0 left-0 right-0 bg-card shadow-lg border-t z-50 safe-bottom">
         <div className="flex justify-around items-center h-16">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucidrepo" icon={<Moon />} label="Lucid Repo" />

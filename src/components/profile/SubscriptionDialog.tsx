@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,7 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { createCheckoutSession, createPortalSession, getStripePrices } from "@/lib/stripe";
 import { toast } from "sonner";
-import { Brain, Image, CreditCard, Loader2 } from "lucide-react";
+import { Brain, Image, CreditCard, Loader2, Check, Star } from "lucide-react";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -117,10 +118,24 @@ const SubscriptionDialog = ({
             )}
 
             {subscription && (
-              <div className="space-y-4 p-4 border rounded-lg">
+              <div className="space-y-4 p-4 border rounded-lg bg-card/50">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-medium">Current Plan: {subscription.plan}</h3>
-                  <Badge variant="outline">{subscription.status}</Badge>
+                  <h3 className="text-lg font-medium flex items-center gap-2">
+                    <Star className="text-yellow-400" size={20} />
+                    {subscription.plan}
+                  </h3>
+                  <Badge 
+                    variant={subscription.status === "active" ? "default" : "outline"}
+                    className={subscription.status === "active" ? "bg-green-600" : ""}
+                  >
+                    {subscription.status === "active" ? "Active" : subscription.status}
+                  </Badge>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Current period ends: <span className="text-foreground">{subscription.currentPeriodEnd}</span>
+                  </p>
                 </div>
                 
                 <div className="space-y-4">
@@ -184,17 +199,27 @@ const SubscriptionDialog = ({
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className="rounded-lg border p-4 space-y-4"
+                    className={cn(
+                      "rounded-lg border p-4 space-y-4",
+                      subscription?.plan === product.name ? "border-primary border-2" : ""
+                    )}
                   >
                     <div>
-                      <h4 className="text-lg font-medium">{product.name}</h4>
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-lg font-medium">{product.name}</h4>
+                        {subscription?.plan === product.name && (
+                          <Badge variant="outline" className="bg-primary/20 text-primary-foreground">
+                            Current Plan
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-2xl font-bold gradient-text">{product.price}</p>
                       <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
                     </div>
                     <ul className="space-y-2 text-sm">
                       {product.features.map((feature) => (
                         <li key={feature} className="flex items-center">
-                          <span className="mr-2">•</span>
+                          <Check size={16} className="text-green-500 mr-2 flex-shrink-0" />
                           {feature}
                         </li>
                       ))}
@@ -202,12 +227,13 @@ const SubscriptionDialog = ({
                     <Button
                       className="w-full"
                       onClick={() => handleSubscribe(product.id)}
-                      disabled={loading}
+                      disabled={loading || subscription?.plan === product.name}
+                      variant={subscription?.plan === product.name ? "outline" : "default"}
                     >
                       {loading ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : null}
-                      Subscribe
+                      {subscription?.plan === product.name ? "Current Plan" : "Subscribe"}
                     </Button>
                   </div>
                 ))}

@@ -1,3 +1,4 @@
+
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
@@ -9,7 +10,7 @@ const config: CapacitorConfig = {
     cleartext: true,
   },
   ios: {
-    contentInset: 'always',
+    contentInset: 'automatic',
     scheme: 'app.dreamweaver.journal',
     backgroundColor: '#1E1A2B'
   },
@@ -25,7 +26,8 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'dark',
-      backgroundColor: '#1E1A2B'
+      backgroundColor: '#1E1A2B',
+      overlay: true
     }
   }
 };

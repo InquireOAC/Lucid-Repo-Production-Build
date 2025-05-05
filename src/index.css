@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -54,10 +55,11 @@
     @apply bg-background text-foreground;
     margin: 0;
     padding: 0;
-    padding-top: env(safe-area-inset-top);   /* For iOS status bar */
-    padding-bottom: env(safe-area-inset-bottom); /* For home indicator */
-    padding-left: env(safe-area-inset-left);  /* For edge devices */
-    padding-right: env(safe-area-inset-right); /* For edge devices */
+    padding-top: 0; /* Remove padding-top to allow content to flow under status bar */
+    padding-bottom: 0; /* Remove padding-bottom to handle it with safe-bottom utility */
+    padding-left: 0;
+    padding-right: 0;
+    overflow-x: hidden;
   }
 
   /* Make sure the content doesn't scroll under the fixed tab bar */
@@ -68,22 +70,21 @@
   }
 }
 
-/* Scrollable content area */
-.scrollable-content {
-  max-height: calc(100vh - 60px); /* Adjust height based on tab bar height */
-  overflow-y: auto;  /* Makes sure the content is scrollable */
-  padding-bottom: 60px;  /* Ensure content doesn't overlap with tab bar */
+/* Safe area utilities for iOS devices */
+.safe-top {
+  padding-top: env(safe-area-inset-top);
 }
 
-/* Fixed tab bar */
-.fixed-tab-bar {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  background-color: #fff;  /* Tab bar background color */
-  z-index: 10;  /* Ensure it stays above the content */
-  height: 60px; /* Adjust the height based on your tab bar */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: env(safe-area-inset-right);
 }
 
 .dream-background {
