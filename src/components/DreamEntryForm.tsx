@@ -11,12 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import { X } from "lucide-react"; // Import the "X" icon from lucide-react
+import { X } from "lucide-react"; // Importing the "X" icon
 
 interface DreamEntryFormProps {
   existingDream?: any;
   tags: DreamTag[];
-  onClose: () => void;
+  onClose: () => void; // Ensure onClose is passed correctly
 }
 
 const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) => {
@@ -109,7 +109,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
         if (error) throw error;
         console.log("Dream created:", data);
       }
-      onClose();
+      onClose(); // Close form after saving
     } catch (error) {
       console.error("Error saving dream:", error);
     } finally {
@@ -119,13 +119,13 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
 
   // Function to handle the Close action (just close the form without saving)
   const handleClose = () => {
-    onClose(); // Close or reset any state if necessary
+    onClose(); // This will call the parent component's onClose function to close the form
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4">
+    <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4 relative">
       {/* Close Button - X Icon at the top right */}
-      <div className="absolute top-12 right-4 cursor-pointer" onClick={handleClose}>
+      <div className="absolute top-8 right-4 cursor-pointer" onClick={handleClose}>
         <X className="h-6 w-6 text-gray-600" />
       </div>
 
