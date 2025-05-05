@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // Ensure this is imported
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,7 +20,7 @@ interface DreamEntryFormProps {
 
 const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate(); // Used for navigation
+  const navigate = useNavigate(); // Ensure this is being used correctly
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
     content: existingDream?.content || "",
@@ -118,7 +118,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
 
   // Function to handle the Close action (navigate back to Journal page)
   const handleClose = () => {
-    onClose(); // You can pass a function to reset or close any state if necessary.
+    onClose(); // Close or reset any state if necessary
     navigate("/journal"); // Navigate back to the journal page.
   };
 
