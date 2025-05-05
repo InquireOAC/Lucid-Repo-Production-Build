@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 
@@ -26,13 +26,12 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     content: existingDream?.content || "",
     date: existingDream?.date ? new Date(existingDream.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
     tags: existingDream?.tags || [],
-    mood: existingDream?.mood || "Neutral",  // Set a default mood
+    mood: existingDream?.mood || "Neutral",  // Default mood set to Neutral
     analysis: existingDream?.analysis || "",
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || ""
   });
   const [availableTags, setAvailableTags] = useState(tags);
-  const [newTag, setNewTag] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -192,7 +191,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
 
       {/* Dream Analysis */}
       <div className="space-y-8">
-        {/* Dream Analysis */}
         <DreamAnalysis
           dreamContent={formData.content}
           existingAnalysis={formData.analysis}
@@ -204,7 +202,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
           }}
         />
         
-        {/* Dream Image Generator */}
         <DreamImageGenerator
           dreamContent={formData.content}
           existingPrompt={formData.imagePrompt}
