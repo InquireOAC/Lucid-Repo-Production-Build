@@ -20,7 +20,7 @@ interface DreamEntryFormProps {
 
 const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Used for navigation
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
     content: existingDream?.content || "",
@@ -114,6 +114,12 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Function to handle the Close action (navigate back to Journal page)
+  const handleClose = () => {
+    onClose(); // You can pass a function to reset or close any state if necessary.
+    navigate("/journal"); // Navigate back to the journal page.
   };
 
   return (
@@ -215,7 +221,15 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
           }}
         />
         
-        <div className="flex justify-end">
+        <div className="flex justify-end space-x-4">
+          <Button
+            type="button"
+            onClick={handleClose} // Close button
+            className="bg-gray-500 text-white hover:bg-gray-600"
+          >
+            Close
+          </Button>
+
           <Button
             type="submit"
             disabled={isSubmitting}
