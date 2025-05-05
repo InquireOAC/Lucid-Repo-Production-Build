@@ -25,7 +25,9 @@ export type DreamEntry = {
   created_at?: string; // Added for Supabase timestamp
   updated_at?: string; // Added for Supabase timestamp
   user_id?: string; // Added for Supabase user ID
+  userId?: string; // For consistency with other fields
   view_count?: number; // Added for Supabase view count
+  liked?: boolean; // Whether the current user has liked this dream
   // Add profiles field for joined queries
   profiles?: {
     username?: string;

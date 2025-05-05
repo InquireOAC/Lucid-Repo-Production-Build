@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -56,13 +57,9 @@ const LucidRepo = () => {
         ...dream,
         isPublic: dream.is_public,
         likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0, // Add default value if missing
+        commentCount: dream.comment_count || 0,
         userId: dream.user_id,
-        user: {
-          username: dream.profiles?.username || "Anonymous",
-          displayName: dream.profiles?.display_name || "Anonymous User",
-          avatarUrl: dream.profiles?.avatar_url || "",
-        },
+        profiles: dream.profiles
       }));
 
       setDreams(transformedDreams);
@@ -97,13 +94,16 @@ const LucidRepo = () => {
           .eq("user_id", user.id)
           .eq("dream_id", dreamId);
 
-        // Decrement the like count
-        await supabase.rpc("decrement_like_count", { dream_id: dreamId });
+        // Update dream like count in database - this is now handled by triggers
+        await supabase
+          .from("dream_entries")
+          .update({ like_count: supabase.sql`like_count - 1` })
+          .eq("id", dreamId);
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
             dream.id === dreamId
-              ? { ...dream, likeCount: Math.max(0, dream.likeCount - 1), liked: false }
+              ? { ...dream, likeCount: Math.max(0, dream.likeCount as number - 1), liked: false }
               : dream
           )
         );
@@ -113,13 +113,16 @@ const LucidRepo = () => {
           .from("dream_likes")
           .insert({ user_id: user.id, dream_id: dreamId });
 
-        // Increment the like count
-        await supabase.rpc("increment_like_count", { dream_id: dreamId });
+        // Update dream like count in database - this is now handled by triggers
+        await supabase
+          .from("dream_entries")
+          .update({ like_count: supabase.sql`like_count + 1` })
+          .eq("id", dreamId);
 
         setDreams((prevDreams) =>
           prevDreams.map((dream) =>
             dream.id === dreamId
-              ? { ...dream, likeCount: dream.likeCount + 1, liked: true }
+              ? { ...dream, likeCount: (dream.likeCount as number) + 1, liked: true }
               : dream
           )
         );
@@ -159,9 +162,7 @@ const LucidRepo = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Filter dreams based on search query
-    // This is client-side filtering for now
-    // In a real app, you might want to do this on the server
+    // Filter dreams based on search query is done client-side in the filteredDreams variable
   };
 
   const filteredDreams = dreams.filter((dream) => {
@@ -170,8 +171,8 @@ const LucidRepo = () => {
       return (
         dream.title?.toLowerCase().includes(query) ||
         dream.content?.toLowerCase().includes(query) ||
-        dream.user?.username?.toLowerCase().includes(query) ||
-        dream.user?.displayName?.toLowerCase().includes(query)
+        dream.profiles?.username?.toLowerCase()?.includes(query) ||
+        dream.profiles?.display_name?.toLowerCase()?.includes(query)
       );
     }
     return true;
