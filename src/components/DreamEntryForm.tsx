@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Ensure this is imported
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
+import { X } from "lucide-react"; // Import the "X" icon from lucide-react
 
 interface DreamEntryFormProps {
   existingDream?: any;
@@ -20,7 +21,7 @@ interface DreamEntryFormProps {
 
 const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate(); // Ensure this is being used correctly
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
     content: existingDream?.content || "",
@@ -116,14 +117,18 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     }
   };
 
-  // Function to handle the Close action (navigate back to Journal page)
+  // Function to handle the Close action (just close the form without saving)
   const handleClose = () => {
     onClose(); // Close or reset any state if necessary
-    navigate("/journal"); // Navigate back to the journal page.
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4">
+      {/* Close Button - X Icon at the top right */}
+      <div className="absolute top-4 right-4 cursor-pointer" onClick={handleClose}>
+        <X className="h-6 w-6 text-gray-600" />
+      </div>
+
       {/* Dream Details */}
       <div className="space-y-4">
         <Input
@@ -222,14 +227,6 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
         />
         
         <div className="flex justify-end space-x-4">
-          <Button
-            type="button"
-            onClick={handleClose} // Close button
-            className="bg-gray-500 text-white hover:bg-gray-600"
-          >
-            Close
-          </Button>
-
           <Button
             type="submit"
             disabled={isSubmitting}
