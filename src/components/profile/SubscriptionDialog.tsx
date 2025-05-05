@@ -7,7 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { createCheckoutSession, createPortalSession, getStripePrices } from "@/lib/stripe";
 import { toast } from "sonner";
-import { Brain, Image, CreditCard, Loader2, Check, Star } from "lucide-react";
+import { Brain, Image, CreditCard, Loader2, Check, Star, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -52,7 +53,9 @@ const SubscriptionDialog = ({
       try {
         setError(null);
         setLoadingProducts(true);
+        console.log("Fetching Stripe products...");
         const productsData = await getStripePrices();
+        console.log("Products data received:", productsData);
         setProducts(productsData);
       } catch (error: any) {
         console.error("Error fetching products:", error);
@@ -72,6 +75,7 @@ const SubscriptionDialog = ({
     try {
       setLoading(true);
       setError(null);
+      console.log("Creating checkout session for product:", productId);
       await createCheckoutSession(productId);
       // Success case is handled by redirect to Stripe
     } catch (error: any) {
@@ -89,6 +93,7 @@ const SubscriptionDialog = ({
     try {
       setLoading(true);
       setError(null);
+      console.log("Creating portal session...");
       await createPortalSession();
       // Success case is handled by redirect to Stripe Portal
     } catch (error: any) {
@@ -113,7 +118,10 @@ const SubscriptionDialog = ({
           <div className="space-y-6 py-4">
             {error && (
               <div className="p-4 border border-destructive/50 rounded-lg text-destructive">
-                <p className="text-sm">{error}</p>
+                <p className="flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  <span>{error}</span>
+                </p>
               </div>
             )}
 
@@ -193,50 +201,58 @@ const SubscriptionDialog = ({
             {loadingProducts ? (
               <div className="flex justify-center items-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
+                <span className="ml-2 text-muted-foreground">Loading subscription options...</span>
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2">
-                {products.map((product) => (
-                  <div
-                    key={product.id}
-                    className={cn(
-                      "rounded-lg border p-4 space-y-4",
-                      subscription?.plan === product.name ? "border-primary border-2" : ""
-                    )}
-                  >
-                    <div>
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-lg font-medium">{product.name}</h4>
-                        {subscription?.plan === product.name && (
-                          <Badge variant="outline" className="bg-primary/20 text-primary-foreground">
-                            Current Plan
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-2xl font-bold gradient-text">{product.price}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
-                    </div>
-                    <ul className="space-y-2 text-sm">
-                      {product.features.map((feature) => (
-                        <li key={feature} className="flex items-center">
-                          <Check size={16} className="text-green-500 mr-2 flex-shrink-0" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                    <Button
-                      className="w-full"
-                      onClick={() => handleSubscribe(product.id)}
-                      disabled={loading || subscription?.plan === product.name}
-                      variant={subscription?.plan === product.name ? "outline" : "default"}
+                {products.length > 0 ? (
+                  products.map((product) => (
+                    <div
+                      key={product.id}
+                      className={cn(
+                        "rounded-lg border p-4 space-y-4",
+                        subscription?.plan === product.name ? "border-primary border-2" : ""
+                      )}
                     >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : null}
-                      {subscription?.plan === product.name ? "Current Plan" : "Subscribe"}
-                    </Button>
+                      <div>
+                        <div className="flex justify-between items-center">
+                          <h4 className="text-lg font-medium">{product.name}</h4>
+                          {subscription?.plan === product.name && (
+                            <Badge variant="outline" className="bg-primary/20 text-primary-foreground">
+                              Current Plan
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-2xl font-bold gradient-text">{product.price}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{product.description}</p>
+                      </div>
+                      <ul className="space-y-2 text-sm">
+                        {product.features.map((feature, index) => (
+                          <li key={index} className="flex items-center">
+                            <Check size={16} className="text-green-500 mr-2 flex-shrink-0" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <Button
+                        className="w-full"
+                        onClick={() => handleSubscribe(product.id)}
+                        disabled={loading || subscription?.plan === product.name}
+                        variant={subscription?.plan === product.name ? "outline" : "default"}
+                      >
+                        {loading ? (
+                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        ) : null}
+                        {subscription?.plan === product.name ? "Current Plan" : "Subscribe"}
+                      </Button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-2 p-6 text-center border rounded-lg">
+                    <AlertCircle className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-muted-foreground">No subscription plans available at the moment.</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

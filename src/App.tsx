@@ -12,7 +12,7 @@ import MainLayout from "./layouts/MainLayout";
 import Journal from "./pages/Journal";
 import LucidRepo from "./pages/LucidRepo";
 import Profile from "./pages/Profile";
-import { StatusBar } from "@capacitor/status-bar";
+import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
 
 const queryClient = new QueryClient();
@@ -22,10 +22,10 @@ const App = () => {
     const setupStatusBar = async () => {
       if (Capacitor.isPluginAvailable('StatusBar')) {
         try {
-          // Set status bar to be transparent with light text
-          await StatusBar.setOverlaysWebView({ overlay: true });
-          await StatusBar.setStyle({ style: "DARK" });
-          await StatusBar.setBackgroundColor({ color: '#00000000' });
+          // Set status bar to be opaque with dark text
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#1E1A2B' });
         } catch (error) {
           console.error('Error configuring status bar:', error);
         }

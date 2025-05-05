@@ -55,10 +55,6 @@
     @apply bg-background text-foreground;
     margin: 0;
     padding: 0;
-    padding-top: 0; /* Remove padding-top to allow content to flow under status bar */
-    padding-bottom: 0; /* Remove padding-bottom to handle it with safe-bottom utility */
-    padding-left: 0;
-    padding-right: 0;
     overflow-x: hidden;
   }
 
@@ -67,23 +63,24 @@
     height: 100%;
     width: 100%;
     overflow-x: hidden;
+    position: relative;
   }
 }
 
 /* Safe area utilities for iOS devices */
-.safe-top {
+.pt-safe-top {
   padding-top: env(safe-area-inset-top);
 }
 
-.safe-bottom {
+.pb-safe-bottom {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-.safe-left {
+.pl-safe-left {
   padding-left: env(safe-area-inset-left);
 }
 
-.safe-right {
+.pr-safe-right {
   padding-right: env(safe-area-inset-right);
 }
 
@@ -91,4 +88,9 @@
   background: radial-gradient(circle at top right, rgba(126, 105, 171, 0.15), transparent 400px),
               radial-gradient(circle at bottom left, rgba(155, 135, 245, 0.1), transparent 400px),
               hsl(260, 20%, 12%);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-dream-purple to-blue-400;
 }

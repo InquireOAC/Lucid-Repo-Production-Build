@@ -232,7 +232,7 @@ const Profile = () => {
         ...dream,
         isPublic: dream.is_public,
         likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0
+        commentCount: dream.comment_count || 0 // Add default value if missing
       }));
       
       setPublicDreams(mappedData || []);
@@ -274,7 +274,7 @@ const Profile = () => {
           ...dream,
           isPublic: dream.is_public,
           likeCount: dream.like_count || 0,
-          commentCount: dream.comment_count || 0
+          commentCount: dream.comment_count || 0 // Add default value if missing
         }));
         
         setLikedDreams(mappedData || []);
@@ -329,6 +329,7 @@ const Profile = () => {
 
   const fetchSubscription = async () => {
     try {
+      console.log("Fetching subscription data...");
       // First get the customer record
       const { data: customerData, error: customerError } = await supabase
         .from('stripe_customers')
@@ -342,8 +343,11 @@ const Profile = () => {
       }
 
       if (!customerData?.customer_id) {
+        console.log("No customer ID found for user");
         return;
       }
+
+      console.log(`Found customer ID: ${customerData.customer_id}`);
 
       // Then get the subscription details
       const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -358,19 +362,22 @@ const Profile = () => {
       }
 
       if (subscriptionData) {
+        console.log("Subscription data found:", subscriptionData);
         setSubscription({
           plan: subscriptionData.price_id === 'price_premium' ? 'Premium' : 'Basic',
           status: subscriptionData.status,
           currentPeriodEnd: new Date(subscriptionData.current_period_end * 1000).toLocaleDateString(),
           analysisCredits: {
-            used: subscriptionData.dream_analyses_used,
+            used: subscriptionData.dream_analyses_used || 0,
             total: subscriptionData.price_id === 'price_premium' ? 999999 : 10
           },
           imageCredits: {
-            used: subscriptionData.image_generations_used,
+            used: subscriptionData.image_generations_used || 0,
             total: subscriptionData.price_id === 'price_premium' ? 20 : 5
           }
         });
+      } else {
+        console.log("No subscription data found");
       }
     } catch (error) {
       console.error('Error fetching subscription:', error);

@@ -27,7 +27,7 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: 'dark',
       backgroundColor: '#1E1A2B',
-      overlay: true
+      overlay: false // Set to false to make the status bar opaque
     }
   }
 };
