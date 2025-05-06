@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,13 +19,27 @@ import {
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 import { X } from "lucide-react";
+import { toast } from "sonner";
 
 interface DreamEntryFormProps {
   existingDream?: any;
   tags: DreamTag[];
+  onSubmit?: (dreamData: {
+    title: string;
+    content: string;
+    tags: string[];
+    lucid: boolean;
+    mood: string;
+  }) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
-const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
+const DreamEntryForm = ({ 
+  existingDream, 
+  tags, 
+  onSubmit, 
+  isSubmitting: externalIsSubmitting 
+}: DreamEntryFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -36,13 +51,15 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
     tags: existingDream?.tags || [],
     mood: existingDream?.mood || "Neutral",
     analysis: existingDream?.analysis || "",
-    generatedImage:
-      existingDream?.image_url || existingDream?.generatedImage || "",
-    imagePrompt:
-      existingDream?.image_prompt || existingDream?.imagePrompt || "",
+    generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
+    imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
+    lucid: existingDream?.lucid || false,
   });
-  const [availableTags, setAvailableTags] = useState(tags);
+  const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTagInput, setShowTagInput] = useState(false);
+  const [newTagName, setNewTagName] = useState("");
+  const [newTagColor, setNewTagColor] = useState("#6366f1");
 
   useEffect(() => {
     setAvailableTags(tags);
@@ -64,9 +81,51 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
     }));
   };
 
+  const handleAddTag = async () => {
+    if (!user) return;
+    if (!newTagName.trim()) {
+      toast.error("Tag name cannot be empty");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("dream_tags")
+        .insert({
+          name: newTagName.trim(),
+          color: newTagColor,
+          user_id: user.id
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setAvailableTags([...availableTags, data]);
+      setFormData(p => ({ ...p, tags: [...p.tags, data.id] }));
+      setNewTagName("");
+      setShowTagInput(false);
+      toast.success("Tag added successfully!");
+    } catch (error: any) {
+      toast.error(`Failed to add tag: ${error.message}`);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return navigate("/auth");
+    if (!user && !onSubmit) return navigate("/auth");
+    
+    // Use external submit handler if provided
+    if (onSubmit) {
+      onSubmit({
+        title: formData.title,
+        content: formData.content,
+        tags: formData.tags,
+        lucid: formData.lucid,
+        mood: formData.mood,
+      });
+      return;
+    }
 
     setIsSubmitting(true);
     const dreamData = {
@@ -75,11 +134,12 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
       dream_date: formData.date,
       tags: formData.tags,
       mood: formData.mood,
-      user_id: user.id,
+      user_id: user?.id,
       analysis: formData.analysis,
       is_public: false,
       image_url: formData.generatedImage,
       image_prompt: formData.imagePrompt,
+      lucid: formData.lucid
     };
 
     try {
@@ -150,11 +210,69 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
             className="dream-input"
             required
           />
+          
+          {/* Lucid Toggle */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="lucid-toggle"
+              checked={formData.lucid}
+              onChange={(e) => setFormData(p => ({ ...p, lucid: e.target.checked }))}
+              className="rounded text-dream-purple focus:ring-dream-purple h-4 w-4"
+            />
+            <Label htmlFor="lucid-toggle">This was a lucid dream</Label>
+          </div>
         </div>
 
         {/* Dream Tags */}
         <div className="space-y-2">
-          <Label>Tags</Label>
+          <div className="flex justify-between items-center">
+            <Label>Tags</Label>
+            {!showTagInput && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowTagInput(true)}
+                className="text-xs"
+              >
+                + Add Tag
+              </Button>
+            )}
+          </div>
+          
+          {showTagInput && (
+            <div className="flex items-center gap-2 mb-2">
+              <Input
+                value={newTagName}
+                onChange={(e) => setNewTagName(e.target.value)}
+                placeholder="Tag name"
+                className="flex-1"
+              />
+              <Input
+                type="color"
+                value={newTagColor}
+                onChange={(e) => setNewTagColor(e.target.value)}
+                className="w-12 p-1 h-10"
+              />
+              <Button 
+                type="button"
+                size="sm"
+                onClick={handleAddTag}
+              >
+                Add
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowTagInput(false)}
+              >
+                Cancel
+              </Button>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-1">
             {availableTags.map((tag) => (
               <Badge
@@ -230,10 +348,10 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={externalIsSubmitting || isSubmitting}
               className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
             >
-              {isSubmitting ? "Saving..." : "Save Dream"}
+              {externalIsSubmitting || isSubmitting ? "Saving..." : "Save Dream"}
             </Button>
           </div>
         </div>

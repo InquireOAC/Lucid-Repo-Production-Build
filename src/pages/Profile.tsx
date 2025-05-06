@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -385,7 +386,7 @@ const Profile = () => {
       } else {
         console.log("No subscription data found");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching subscription:', error);
     }
   };
@@ -437,26 +438,8 @@ const Profile = () => {
     }
   };
   
-  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-    
-    setIsUploading(true);
-    
-    try {
-      // For now, we'll simulate the avatar upload
-      // In a real implementation, you would upload to a storage bucket and get the URL
-      setTimeout(() => {
-        // Simulate a URL being returned
-        const fakeUrl = `https://api.dicebear.com/7.x/personas/svg?seed=${Math.random()}`;
-        setAvatarUrl(fakeUrl);
-        setIsUploading(false);
-        toast.success("Avatar updated!");
-      }, 1500);
-    } catch (error) {
-      setIsUploading(false);
-      toast.error("Failed to upload avatar");
-    }
+  const handleAvatarChange = (url: string) => {
+    setAvatarUrl(url);
   };
   
   const handleStartConversation = () => {
@@ -547,12 +530,13 @@ const Profile = () => {
         setDisplayName={setDisplayName}
         username={username}
         setUsername={setUsername}
-        bio={bio}
+        bio={setBio}
         setBio={setBio}
         avatarUrl={avatarUrl}
         isUploading={isUploading}
         handleAvatarChange={handleAvatarChange}
         handleUpdateProfile={handleUpdateProfile}
+        userId={user.id}
       />
       
       <SocialLinksDialog 

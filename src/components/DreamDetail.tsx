@@ -233,20 +233,21 @@ const DreamDetail = ({
                 dreamId={dream.id} 
                 onCommentCountChange={(count) => {
                   setCommentCount(count);
-                  onUpdate(dream.id, { comment_count: count, commentCount: count });
+                  onUpdate(dream.id, { commentCount: count });
                 }}
               />
             </>
           )}
           
-          {/* Analysis Third */}
-          {(dream.analysis || isAuthenticated) && (
+          {/* Analysis Third - Only show if it's the user's own dream or if analysis already exists */}
+          {(dream.analysis || canModifyDream) && (
             <>
               <Separator />
               <DreamAnalysis
                 dreamContent={dream.content}
                 existingAnalysis={dream.analysis}
                 onAnalysisComplete={handleAnalysisComplete}
+                disabled={!canModifyDream}
               />
             </>
           )}

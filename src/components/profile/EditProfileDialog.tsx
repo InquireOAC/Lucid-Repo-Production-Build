@@ -1,12 +1,15 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera } from "lucide-react";
+import { Camera, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { v4 as uuidv4 } from "uuid";
+import { toast } from "sonner";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -19,8 +22,9 @@ interface EditProfileDialogProps {
   setBio: (value: string) => void;
   avatarUrl: string;
   isUploading: boolean;
-  handleAvatarChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleAvatarChange: (url: string) => void;
   handleUpdateProfile: () => void;
+  userId: string;
 }
 
 const EditProfileDialog = ({
@@ -35,8 +39,68 @@ const EditProfileDialog = ({
   avatarUrl,
   isUploading,
   handleAvatarChange,
-  handleUpdateProfile
+  handleUpdateProfile,
+  userId
 }: EditProfileDialogProps) => {
+  const [localIsUploading, setLocalIsUploading] = useState(false);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    
+    setLocalIsUploading(true);
+    
+    try {
+      // Generate a unique file name
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${userId}/${fileName}`;
+      
+      // First, check if avatars bucket exists
+      const { data: buckets } = await supabase
+        .storage
+        .listBuckets();
+      
+      const avatarBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
+      
+      if (!avatarBucketExists) {
+        // Create bucket if it doesn't exist
+        const { error: bucketError } = await supabase
+          .storage
+          .createBucket('avatars', {
+            public: true
+          });
+          
+        if (bucketError) throw bucketError;
+      }
+      
+      // Upload file
+      const { error: uploadError } = await supabase
+        .storage
+        .from('avatars')
+        .upload(filePath, file);
+        
+      if (uploadError) throw uploadError;
+      
+      // Get public URL
+      const { data: publicUrl } = supabase
+        .storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+      
+      if (publicUrl) {
+        handleAvatarChange(publicUrl.publicUrl);
+        toast.success("Avatar uploaded successfully!");
+      }
+      
+    } catch (error: any) {
+      console.error("Error uploading avatar:", error);
+      toast.error(`Failed to upload avatar: ${error.message}`);
+    } finally {
+      setLocalIsUploading(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -54,16 +118,25 @@ const EditProfileDialog = ({
             
             <Label htmlFor="avatar" className="cursor-pointer">
               <div className="flex items-center gap-2 text-sm text-dream-purple">
-                <Camera size={16} />
-                <span>{isUploading ? "Uploading..." : "Change Photo"}</span>
+                {isUploading || localIsUploading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Camera size={16} />
+                    <span>Change Photo</span>
+                  </>
+                )}
               </div>
               <Input 
                 id="avatar" 
                 type="file" 
                 accept="image/*" 
                 className="hidden" 
-                onChange={handleAvatarChange}
-                disabled={isUploading}
+                onChange={handleFileChange}
+                disabled={isUploading || localIsUploading}
               />
             </Label>
           </div>
@@ -107,6 +180,7 @@ const EditProfileDialog = ({
           <Button 
             onClick={handleUpdateProfile}
             className="bg-gradient-to-r from-dream-lavender to-dream-purple"
+            disabled={isUploading || localIsUploading}
           >
             Save Changes
           </Button>

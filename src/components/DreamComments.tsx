@@ -1,30 +1,30 @@
 
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-interface DreamCommentsProps {
-  dreamId: string;
-  onCommentCountChange: (count: number) => void;
-}
 
 interface Comment {
   id: string;
-  created_at: string;
   content: string;
+  created_at: string;
   user_id: string;
-  dream_id: string;
   profiles?: {
     username: string;
     display_name: string;
     avatar_url: string;
   };
+}
+
+interface DreamCommentsProps {
+  dreamId: string;
+  onCommentCountChange: (count: number) => void;
 }
 
 const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) => {
@@ -39,8 +39,8 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
   }, [dreamId]);
 
   const fetchComments = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
       const { data, error } = await supabase
         .from("dream_comments")
         .select("*, profiles:user_id(username, display_name, avatar_url)")
@@ -50,60 +50,45 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       if (error) throw error;
 
       setComments(data || []);
+      // Update comment count
       onCommentCountChange(data?.length || 0);
     } catch (error) {
       console.error("Error fetching comments:", error);
-      toast.error("Failed to load comments");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmitComment = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) {
-      toast.error("You must be signed in to comment");
+      toast.error("You need to sign in to comment");
       return;
     }
 
-    if (!newComment.trim()) {
-      toast.error("Comment cannot be empty");
-      return;
-    }
+    if (!newComment.trim()) return;
+    setIsSubmitting(true);
 
     try {
-      setIsSubmitting(true);
-
-      // Insert the comment
       const { data, error } = await supabase
         .from("dream_comments")
-        .insert({
-          user_id: user.id,
-          dream_id: dreamId,
-          content: newComment
-        })
+        .insert([
+          {
+            dream_id: dreamId,
+            user_id: user.id,
+            content: newComment.trim(),
+          },
+        ])
         .select("*, profiles:user_id(username, display_name, avatar_url)")
         .single();
 
       if (error) throw error;
 
-      // Update comment count using custom SQL function instead of RPC
-      // Note: We'll create this function in the SQL migration
-      const { error: updateError } = await supabase
-        .from("dream_entries")
-        .update({ comment_count: comments.length + 1 })
-        .eq("id", dreamId);
-
-      if (updateError) throw updateError;
-
-      setComments(prev => [...prev, data]);
-      setNewComment("");
+      setComments([...comments, data]);
       onCommentCountChange(comments.length + 1);
-      toast.success("Comment added successfully");
-    } catch (error) {
-      console.error("Error submitting comment:", error);
-      toast.error("Failed to add comment");
+      setNewComment("");
+    } catch (error: any) {
+      toast.error("Failed to post comment: " + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -111,8 +96,8 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-medium">Comments ({comments.length})</h3>
-      
+      <h3 className="font-medium text-lg">Comments</h3>
+
       {isLoading ? (
         <div className="flex justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin text-dream-purple" />
@@ -120,56 +105,73 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment) => (
-            <div key={comment.id} className="flex space-x-3">
+            <div key={comment.id} className="flex gap-3">
               <Avatar className="h-8 w-8">
-                <AvatarImage src={comment.profiles?.avatar_url} alt={comment.profiles?.username || "User"} />
+                <AvatarImage
+                  src={comment.profiles?.avatar_url}
+                  alt={comment.profiles?.username || "User"}
+                />
                 <AvatarFallback>
-                  {(comment.profiles?.username || "U").charAt(0).toUpperCase()}
+                  {(comment.profiles?.username?.[0] || "U").toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 bg-secondary/30 rounded-lg p-3">
-                <div className="flex justify-between items-start">
+              <div>
+                <div className="flex gap-2 items-baseline">
                   <p className="font-medium text-sm">
-                    {comment.profiles?.display_name || comment.profiles?.username || "Anonymous"}
+                    {comment.profiles?.display_name ||
+                      comment.profiles?.username ||
+                      "Anonymous"}
                   </p>
                   <span className="text-xs text-muted-foreground">
                     {format(new Date(comment.created_at), "MMM d, h:mm a")}
                   </span>
                 </div>
-                <p className="text-sm mt-1">{comment.content}</p>
+                <p className="mt-1 text-sm">{comment.content}</p>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-center text-muted-foreground py-4">No comments yet. Be the first to comment!</p>
+        <p className="text-sm text-muted-foreground text-center py-2">
+          No comments yet. Be the first to comment!
+        </p>
       )}
 
-      {user && (
-        <form onSubmit={handleSubmitComment} className="space-y-2">
-          <Textarea
-            placeholder="Add a comment..."
+      {user ? (
+        <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
+          <Avatar className="h-8 w-8 flex-shrink-0">
+            <AvatarImage
+              src={user.user_metadata?.avatar_url}
+              alt={user.user_metadata?.username || "User"}
+            />
+            <AvatarFallback>
+              {(user.user_metadata?.username?.[0] || "U").toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <Input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className="resize-none"
+            placeholder="Add a comment..."
+            className="flex-1"
           />
-          <div className="flex justify-end">
-            <Button 
-              type="submit" 
-              disabled={isSubmitting || !newComment.trim()}
-              className="bg-dream-purple hover:bg-dream-purple/90"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Posting...
-                </>
-              ) : (
-                "Post Comment"
-              )}
-            </Button>
-          </div>
+          <Button
+            type="submit"
+            size="icon"
+            variant="ghost"
+            disabled={isSubmitting || !newComment.trim()}
+            className="text-dream-purple hover:bg-dream-purple/10"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
         </form>
+      ) : (
+        <p className="text-center text-sm text-muted-foreground">
+          Sign in to leave a comment
+        </p>
       )}
     </div>
   );
