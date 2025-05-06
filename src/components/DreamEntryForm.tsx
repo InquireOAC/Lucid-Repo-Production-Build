@@ -111,7 +111,7 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
       <button
         type="button"
         onClick={handleClose}
-        className="fixed top-6 right-4 z-50 h-8 w-8 flex items-center justify-center 
+        className="fixed top-12 right-4 z-50 h-8 w-8 flex items-center justify-center 
                    bg-white dark:bg-gray-800 rounded-full shadow"
       >
         <X className="h-5 w-5 text-gray-600" />
