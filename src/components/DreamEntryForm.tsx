@@ -52,26 +52,23 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((p) => ({ ...p, [name]: value }));
   };
 
   const handleTagSelect = (tagId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      tags: prev.tags.includes(tagId)
-        ? prev.tags.filter((id) => id !== tagId)
-        : [...prev.tags, tagId],
+    setFormData((p) => ({
+      ...p,
+      tags: p.tags.includes(tagId)
+        ? p.tags.filter((id) => id !== tagId)
+        : [...p.tags, tagId],
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    setIsSubmitting(true);
+    if (!user) return navigate("/auth");
 
+    setIsSubmitting(true);
     const dreamData = {
       title: formData.title,
       content: formData.content,
@@ -87,169 +84,158 @@ const DreamEntryForm = ({ existingDream, tags }: DreamEntryFormProps) => {
 
     try {
       if (existingDream) {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("dream_entries")
           .update(dreamData)
-          .eq("id", existingDream.id)
-          .select()
-          .single();
+          .eq("id", existingDream.id);
         if (error) throw error;
-        console.log("Dream updated:", data);
       } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from("dream_entries")
-          .insert(dreamData)
-          .select()
-          .single();
+          .insert(dreamData);
         if (error) throw error;
-        console.log("Dream created:", data);
       }
-      navigate(-1); // go back after save
+      navigate(-1);
     } catch (err) {
-      console.error("Error saving dream:", err);
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // fixed close button
-  const handleClose = () => {
-    navigate(-1);
-  };
+  const handleClose = () => navigate(-1);
 
   return (
-    <div className="relative h-full">
-      {/* Fixed Close Icon */}
+    <div className="relative h-full bg-background">
+      {/* Fixed X */}
       <button
         type="button"
         onClick={handleClose}
-        className="fixed top-6 right-4 z-50 h-8 w-8 p-1 rounded-full bg-white dark:bg-gray-800"
+        className="fixed top-6 right-4 z-50 h-8 w-8 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full shadow"
       >
-        <X className="h-6 w-6 text-gray-600" />
+        <X className="h-5 w-5 text-gray-600" />
       </button>
 
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-8 overflow-y-auto h-full pt-2 pb-4 px-4"
-      >
-        {/* Dream Details */}
-        <div className="space-y-4">
-          <Input
-            type="text"
-            name="title"
-            placeholder="Dream Title"
-            value={formData.title}
-            onChange={handleChange}
-            className="dream-input"
-            required
-          />
-          <Textarea
-            name="content"
-            placeholder="Dream Description"
-            value={formData.content}
-            onChange={handleChange}
-            className="dream-input resize-none"
-            rows={4}
-            required
-          />
-          <Input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="dream-input"
-            required
-          />
-        </div>
-
-        {/* Dream Tags */}
-        <div className="space-y-2">
-          <Label>Tags</Label>
-          <div className="flex flex-wrap gap-1">
-            {availableTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant={
-                  formData.tags.includes(tag.id) ? "default" : "outline"
-                }
-                onClick={() => handleTagSelect(tag.id)}
-                style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                className="cursor-pointer text-xs font-normal border"
-              >
-                {tag.name}
-              </Badge>
-            ))}
+      {/* Scrollable content */}
+      <div className="absolute inset-0 pt-16 pb-4 px-4 overflow-y-auto">
+        <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Details */}
+          <div className="space-y-4">
+            <Input
+              type="text"
+              name="title"
+              placeholder="Dream Title"
+              value={formData.title}
+              onChange={handleChange}
+              className="dream-input"
+              required
+            />
+            <Textarea
+              name="content"
+              placeholder="Dream Description"
+              value={formData.content}
+              onChange={handleChange}
+              className="dream-input resize-none"
+              rows={4}
+              required
+            />
+            <Input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="dream-input"
+              required
+            />
           </div>
-        </div>
 
-        {/* Mood Dropdown */}
-        <div className="space-y-2">
-          <Label>Mood</Label>
-          <Select
-            name="mood"
-            value={formData.mood}
-            onValueChange={(v) =>
-              setFormData((p) => ({
-                ...p,
-                mood: v,
-              }))
-            }
-          >
-            <SelectTrigger className="dream-input">
-              <SelectValue placeholder="Select Mood" />
-            </SelectTrigger>
-            <SelectContent>
-              {[
-                "Happy",
-                "Sad",
-                "Neutral",
-                "Angry",
-                "Excited",
-                "Relaxed",
-                "Confused",
-              ].map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
+          {/* Tags */}
+          <div className="space-y-2">
+            <Label>Tags</Label>
+            <div className="flex flex-wrap gap-1">
+              {availableTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  variant={formData.tags.includes(tag.id) ? "default" : "outline"}
+                  onClick={() => handleTagSelect(tag.id)}
+                  style={{ backgroundColor: tag.color + "40", color: tag.color }}
+                  className="cursor-pointer text-xs font-normal border"
+                >
+                  {tag.name}
+                </Badge>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Dream Analysis & Image */}
-        <div className="space-y-8">
-          <DreamAnalysis
-            dreamContent={formData.content}
-            existingAnalysis={formData.analysis}
-            onAnalysisComplete={(analysis) =>
-              setFormData((p) => ({ ...p, analysis }))
-            }
-          />
-          <DreamImageGenerator
-            dreamContent={formData.content}
-            existingPrompt={formData.imagePrompt}
-            existingImage={formData.generatedImage}
-            onImageGenerated={(url, prompt) =>
-              setFormData((p) => ({
-                ...p,
-                generatedImage: url,
-                imagePrompt: prompt,
-              }))
-            }
-          />
-
-          {/* Save Button */}
-          <div className="flex justify-end">
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
-            >
-              {isSubmitting ? "Saving..." : "Save Dream"}
-            </Button>
+            </div>
           </div>
-        </div>
-      </form>
+
+          {/* Mood */}
+          <div className="space-y-2">
+            <Label>Mood</Label>
+            <Select
+              name="mood"
+              value={formData.mood}
+              onValueChange={(v) =>
+                setFormData((p) => ({
+                  ...p,
+                  mood: v,
+                }))
+              }
+            >
+              <SelectTrigger className="dream-input">
+                <SelectValue placeholder="Select Mood" />
+              </SelectTrigger>
+              <SelectContent>
+                {[
+                  "Happy",
+                  "Sad",
+                  "Neutral",
+                  "Angry",
+                  "Excited",
+                  "Relaxed",
+                  "Confused",
+                ].map((m) => (
+                  <SelectItem key={m} value={m}>
+                    {m}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Analysis & Image */}
+          <div className="space-y-8">
+            <DreamAnalysis
+              dreamContent={formData.content}
+              existingAnalysis={formData.analysis}
+              onAnalysisComplete={(analysis) =>
+                setFormData((p) => ({ ...p, analysis }))
+              }
+            />
+            <DreamImageGenerator
+              dreamContent={formData.content}
+              existingPrompt={formData.imagePrompt}
+              existingImage={formData.generatedImage}
+              onImageGenerated={(url, prompt) =>
+                setFormData((p) => ({
+                  ...p,
+                  generatedImage: url,
+                  imagePrompt: prompt,
+                }))
+              }
+            />
+
+            {/* Save */}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
+              >
+                {isSubmitting ? "Saving..." : "Save Dream"}
+              </Button>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
