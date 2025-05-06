@@ -288,7 +288,8 @@ const Journal = () => {
     }
     
     return dreams.map((dream) => (
-      <div key={dream.id} className="relative group">
+      <div key={dream.id} className="relative">
+        {/* Public badge still visible at the top */}
         {(dream.is_public || dream.isPublic) && (
           <div className="absolute top-2 right-2 z-10">
             <Badge className="bg-dream-purple text-white flex items-center gap-1">
@@ -306,8 +307,8 @@ const Journal = () => {
           />
         </div>
         
-        {/* Action overlay on hover */}
-        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-md">
+        {/* Action buttons - ALWAYS visible, not just on hover */}
+        <div className="flex justify-end gap-1 mt-2 px-2">
           <Button 
             size="sm"
             variant="secondary"

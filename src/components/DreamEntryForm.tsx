@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -192,7 +193,7 @@ const DreamEntryForm = ({
       {/* Scrollable Form */}
       <form
         onSubmit={handleSubmit}
-        className="overflow-y-auto pt-8 pb-6 space-y-8"
+        className="overflow-y-auto pt-4 pb-6 space-y-8"
       >
         {/* Dream Details */}
         <div className="space-y-4">

@@ -42,7 +42,7 @@ const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: Dr
 
   return (
     <Card 
-      className="dream-card h-full cursor-pointer hover:scale-[1.02] transition-all"
+      className="dream-card h-full cursor-pointer transition-all"
       onClick={onClick}
     >
       <CardHeader className="p-4 pb-2">

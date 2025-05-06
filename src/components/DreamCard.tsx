@@ -29,7 +29,7 @@ const DreamCard = ({ dream, tags, onClick }: DreamCardProps) => {
 
   return (
     <Card 
-      className="dream-card cursor-pointer hover:scale-[1.02] transition-all"
+      className="dream-card cursor-pointer transition-all"
       onClick={onClick}
     >
       <CardHeader className="p-4 pb-2">
