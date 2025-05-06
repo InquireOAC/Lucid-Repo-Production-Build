@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -5,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CreditCard, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+// Type definitions
 interface Product {
   id: string;
   name: string;
@@ -63,7 +65,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       }
     } catch (error) {
       console.error("Error fetching products:", error);
-      // Fallback to default products if API call fails
+      // Fallback products if API call fails
       setProducts([
         {
           id: 'price_basic',
@@ -114,13 +116,8 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       
       if (subscriptionData) {
         // Get plans info to determine credit limits
-        let analysisLimit = 10;
-        let imageLimit = 5;
-        
-        if (subscriptionData.price_id === "price_premium") {
-          analysisLimit = 999999; // Unlimited
-          imageLimit = 20;
-        }
+        const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10;
+        const imageLimit = subscriptionData.price_id === "price_premium" ? 20 : 5;
         
         setSubscriptionStatus({
           subscribed: true,
@@ -136,9 +133,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           }
         });
       } else {
-        setSubscriptionStatus({
-          subscribed: false
-        });
+        setSubscriptionStatus({ subscribed: false });
       }
     } catch (error) {
       console.error("Error checking subscription:", error);
@@ -197,138 +192,202 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     }
   };
 
+  // Loading state
   if (checkingStatus || productsLoading) {
-    return (
-      <div className="flex justify-center items-center py-8">
-        <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-        <span className="ml-2">Loading subscription options...</span>
-      </div>
-    );
+    return <SubscriptionLoadingState />;
   }
 
   return (
-    <div className="space-y-6 max-w-full">
+    <div className="space-y-6 max-w-full overflow-y-auto max-h-[70vh]">
       {subscriptionStatus?.subscribed ? (
-        <div className="bg-card/50 border rounded-lg p-4 space-y-4 max-w-full">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium">
-              {subscriptionStatus.subscription_tier} Plan
-            </h3>
-            <span className="text-sm text-muted-foreground">
-              Renews: {subscriptionStatus.subscription_end}
-            </span>
-          </div>
-          
-          {subscriptionStatus.analysisCredits && (
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>Dream Analysis</span>
-                <span>
-                  {subscriptionStatus.analysisCredits.used}/{subscriptionStatus.analysisCredits.total === 999999 ? '∞' : subscriptionStatus.analysisCredits.total}
-                </span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-dream-purple" 
-                  style={{ 
-                    width: `${subscriptionStatus.analysisCredits.total === 999999 
-                      ? 100 
-                      : Math.min(100, (subscriptionStatus.analysisCredits.used / subscriptionStatus.analysisCredits.total) * 100)}%` 
-                  }}
-                />
-              </div>
-            </div>
-          )}
-          
-          {subscriptionStatus.imageCredits && (
-            <div className="space-y-1">
-              <div className="flex justify-between text-sm">
-                <span>Image Generation</span>
-                <span>
-                  {subscriptionStatus.imageCredits.used}/{subscriptionStatus.imageCredits.total}
-                </span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-dream-purple" 
-                  style={{ 
-                    width: `${Math.min(100, (subscriptionStatus.imageCredits.used / subscriptionStatus.imageCredits.total) * 100)}%` 
-                  }}
-                />
-              </div>
-            </div>
-          )}
-          
-          <Button 
-            variant="outline" 
-            className="w-full mt-4" 
-            onClick={handleManageSubscription}
-            disabled={loading}
-          >
-            {loading ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <CreditCard className="h-4 w-4 mr-2" />
-            )}
-            Manage Subscription
-          </Button>
-        </div>
+        <ActiveSubscription 
+          subscriptionStatus={subscriptionStatus}
+          handleManageSubscription={handleManageSubscription}
+          loading={loading}
+        />
       ) : (
-        <div className="space-y-6">
-          <div className="text-center pb-4">
-            <XCircle className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-            <h3 className="text-lg font-medium">No Active Subscription</h3>
-            <p className="text-sm text-muted-foreground">
-              Subscribe to access premium dream analysis and image generation features.
-            </p>
-          </div>
-          
-          <div className="grid gap-4 md:grid-cols-2">
-            {productsLoading ? (
-              <div className="col-span-2 flex justify-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-              </div>
-            ) : (
-              products.map((product) => (
-                <div 
-                  key={product.id} 
-                  className={`border rounded-lg p-4 space-y-4 ${
-                    product.name === "Premium" ? "border-dream-purple relative overflow-hidden" : ""
-                  }`}
-                >
-                  {product.name === "Premium" && (
-                    <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
-                      Popular
-                    </div>
-                  )}
-                  <h4 className="text-lg font-medium">{product.name}</h4>
-                  <p className="text-2xl font-bold">{product.price}</p>
-                  <ul className="space-y-2 text-sm">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="mr-2">•</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <Button 
-                    className={`w-full ${
-                      product.name === "Premium" ? "bg-dream-purple hover:bg-dream-purple/90" : ""
-                    }`}
-                    onClick={() => handleSubscribe(product.id)}
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                    Subscribe
-                  </Button>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+        <NoSubscription 
+          products={products}
+          productsLoading={productsLoading}
+          handleSubscribe={handleSubscribe}
+          loading={loading}
+        />
       )}
     </div>
   );
 };
+
+// Component for loading state
+const SubscriptionLoadingState = () => (
+  <div className="flex justify-center items-center py-8">
+    <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
+    <span className="ml-2">Loading subscription options...</span>
+  </div>
+);
+
+// Component for active subscription
+interface ActiveSubscriptionProps {
+  subscriptionStatus: SubscriptionStatus;
+  handleManageSubscription: () => Promise<void>;
+  loading: boolean;
+}
+
+const ActiveSubscription = ({ 
+  subscriptionStatus, 
+  handleManageSubscription, 
+  loading 
+}: ActiveSubscriptionProps) => (
+  <div className="bg-card/50 border rounded-lg p-4 space-y-4 max-w-full">
+    <div className="flex items-center justify-between">
+      <h3 className="text-lg font-medium">
+        {subscriptionStatus.subscription_tier} Plan
+      </h3>
+      <span className="text-sm text-muted-foreground">
+        Renews: {subscriptionStatus.subscription_end}
+      </span>
+    </div>
+    
+    {subscriptionStatus.analysisCredits && (
+      <CreditBar
+        label="Dream Analysis"
+        used={subscriptionStatus.analysisCredits.used}
+        total={subscriptionStatus.analysisCredits.total}
+      />
+    )}
+    
+    {subscriptionStatus.imageCredits && (
+      <CreditBar
+        label="Image Generation"
+        used={subscriptionStatus.imageCredits.used}
+        total={subscriptionStatus.imageCredits.total}
+      />
+    )}
+    
+    <Button 
+      variant="outline" 
+      className="w-full mt-4" 
+      onClick={handleManageSubscription}
+      disabled={loading}
+    >
+      {loading ? (
+        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <CreditCard className="h-4 w-4 mr-2" />
+      )}
+      Manage Subscription
+    </Button>
+  </div>
+);
+
+// Credit bar component
+interface CreditBarProps {
+  label: string;
+  used: number;
+  total: number;
+}
+
+const CreditBar = ({ label, used, total }: CreditBarProps) => (
+  <div className="space-y-1">
+    <div className="flex justify-between text-sm">
+      <span>{label}</span>
+      <span>
+        {used}/{total === 999999 ? '∞' : total}
+      </span>
+    </div>
+    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+      <div 
+        className="h-full bg-dream-purple" 
+        style={{ 
+          width: `${total === 999999 
+            ? 100 
+            : Math.min(100, (used / total) * 100)}%` 
+        }}
+      />
+    </div>
+  </div>
+);
+
+// Component for no subscription
+interface NoSubscriptionProps {
+  products: Product[];
+  productsLoading: boolean;
+  handleSubscribe: (priceId: string) => Promise<void>;
+  loading: boolean;
+}
+
+const NoSubscription = ({ 
+  products, 
+  productsLoading, 
+  handleSubscribe, 
+  loading 
+}: NoSubscriptionProps) => (
+  <div className="space-y-6 overflow-y-auto">
+    <div className="text-center pb-4">
+      <XCircle className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
+      <h3 className="text-lg font-medium">No Active Subscription</h3>
+      <p className="text-sm text-muted-foreground">
+        Subscribe to access premium dream analysis and image generation features.
+      </p>
+    </div>
+    
+    <div className="grid gap-4 md:grid-cols-2">
+      {productsLoading ? (
+        <div className="col-span-2 flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
+        </div>
+      ) : (
+        products.map((product) => (
+          <ProductCard 
+            key={product.id}
+            product={product}
+            handleSubscribe={handleSubscribe}
+            loading={loading}
+          />
+        ))
+      )}
+    </div>
+  </div>
+);
+
+// Product card component
+interface ProductCardProps {
+  product: Product;
+  handleSubscribe: (priceId: string) => Promise<void>;
+  loading: boolean;
+}
+
+const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) => (
+  <div 
+    className={`border rounded-lg p-4 space-y-4 ${
+      product.name === "Premium" ? "border-dream-purple relative overflow-hidden" : ""
+    }`}
+  >
+    {product.name === "Premium" && (
+      <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
+        Popular
+      </div>
+    )}
+    <h4 className="text-lg font-medium">{product.name}</h4>
+    <p className="text-2xl font-bold">{product.price}</p>
+    <ul className="space-y-2 text-sm">
+      {product.features.map((feature, index) => (
+        <li key={index} className="flex items-start">
+          <span className="mr-2">•</span>
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
+    <Button 
+      className={`w-full ${
+        product.name === "Premium" ? "bg-dream-purple hover:bg-dream-purple/90" : ""
+      }`}
+      onClick={() => handleSubscribe(product.id)}
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+      Subscribe
+    </Button>
+  </div>
+);
 
 export default StripeSubscriptionManager;

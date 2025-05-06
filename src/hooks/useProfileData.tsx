@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -195,7 +194,7 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
         ...dream,
         isPublic: dream.is_public,
         likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0, // Ensure commentCount exists
+        commentCount: dream.comment_count || 0, 
         userId: dream.user_id,
         profiles: dream.profiles
       }));
@@ -235,11 +234,11 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
         if (dreamError) throw dreamError;
         
         // Map fields for consistency
-        const transformedDreams = dreamData?.map(dream => ({
+        const transformedDreams = dreamData?.map((dream: any) => ({
           ...dream,
           isPublic: dream.is_public,
           likeCount: dream.like_count || 0,
-          commentCount: dream.comment_count || 0, // Ensure commentCount exists
+          commentCount: dream.comment_count || 0,
           userId: dream.user_id,
           profiles: dream.profiles
         }));

@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Pencil, Book, Moon, Calendar, Globe, Lock } from "lucide-react";
+import { Pencil, Book, Moon, Calendar, Globe, Lock, Edit, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { useDreamStore } from "@/store/dreamStore";
 import DreamCard from "@/components/DreamCard";
@@ -13,6 +14,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog";
 
 const inspirationalDreamQuotes = [
   "Dreams are illustrations from the book your soul is writing about you.",
@@ -36,7 +47,9 @@ const Journal = () => {
   const { entries, tags, addEntry, updateEntry, deleteEntry } = useDreamStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddingDream, setIsAddingDream] = useState(false);
+  const [isEditingDream, setIsEditingDream] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
+  const [dreamToDelete, setDreamToDelete] = useState<string | null>(null);
   const [dailyQuote, setDailyQuote] = useState("");
   const { user } = useAuth();
   
@@ -87,11 +100,9 @@ const Journal = () => {
           like_count: dream.like_count || 0,
           likeCount: dream.like_count || 0,
           comment_count: dream.comment_count || 0,
-          commentCount: dream.comment_count || 0
+          commentCount: dream.comment_count || 0,
+          user_id: dream.user_id
         }));
-        
-        // We'll sync them if the local store doesn't have them yet
-        // In a real application, you would implement a proper sync strategy
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);
@@ -138,6 +149,50 @@ const Journal = () => {
     } catch (error) {
       console.error("Error adding dream:", error);
       toast.error("Failed to save dream");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditDream = async (dreamData: {
+    title: string;
+    content: string;
+    tags: string[];
+    lucid: boolean;
+    mood: string;
+  }) => {
+    if (!selectedDream) return;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Update local store
+      updateEntry(selectedDream.id, dreamData);
+      
+      // If user is logged in, also update in database
+      if (user) {
+        const { error } = await supabase
+          .from("dream_entries")
+          .update({
+            title: dreamData.title,
+            content: dreamData.content,
+            tags: dreamData.tags,
+            mood: dreamData.mood,
+            lucid: dreamData.lucid,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", selectedDream.id)
+          .eq("user_id", user.id);
+        
+        if (error) throw error;
+      }
+      
+      setIsEditingDream(false);
+      setSelectedDream(null);
+      toast.success("Dream updated successfully!");
+    } catch (error) {
+      console.error("Error updating dream:", error);
+      toast.error("Failed to update dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -194,11 +249,112 @@ const Journal = () => {
       }
       
       setSelectedDream(null);
+      setDreamToDelete(null);
       toast.success("Dream deleted successfully");
     } catch (error) {
       console.error("Error deleting dream:", error);
       toast.error("Failed to delete dream");
     }
+  };
+
+  const handleTogglePublic = async (dream: DreamEntry) => {
+    const newStatus = !(dream.is_public || dream.isPublic);
+    try {
+      await handleUpdateDream(dream.id, { 
+        is_public: newStatus,
+        isPublic: newStatus
+      });
+      
+      if (newStatus) {
+        toast.success("Dream published to Lucid Repo");
+      } else {
+        toast.success("Dream set to private");
+      }
+    } catch (error) {
+      console.error("Error toggling dream visibility:", error);
+      toast.error("Failed to update dream visibility");
+    }
+  };
+
+  const renderDreamCards = (dreams: DreamEntry[]) => {
+    if (dreams.length === 0) {
+      return (
+        <div className="text-center py-12 col-span-3">
+          <p className="text-muted-foreground">
+            No dreams yet
+          </p>
+        </div>
+      );
+    }
+    
+    return dreams.map((dream) => (
+      <div key={dream.id} className="relative group">
+        {(dream.is_public || dream.isPublic) && (
+          <div className="absolute top-2 right-2 z-10">
+            <Badge className="bg-dream-purple text-white flex items-center gap-1">
+              <Globe size={12} /> Shared
+            </Badge>
+          </div>
+        )}
+        
+        {/* Dream card */}
+        <div onClick={() => setSelectedDream(dream)}>
+          <DreamCard
+            dream={dream}
+            tags={tags}
+            onClick={() => setSelectedDream(dream)}
+          />
+        </div>
+        
+        {/* Action overlay on hover */}
+        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 rounded-md">
+          <Button 
+            size="sm"
+            variant="secondary"
+            className="h-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedDream(dream);
+              setIsEditingDream(true);
+            }}
+          >
+            <Edit size={14} className="mr-1" /> Edit
+          </Button>
+          
+          <Button 
+            size="sm" 
+            variant={dream.is_public || dream.isPublic ? "outline" : "default"}
+            className={`h-8 ${dream.is_public || dream.isPublic ? "bg-white text-gray-800" : "bg-dream-purple"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleTogglePublic(dream);
+            }}
+          >
+            {dream.is_public || dream.isPublic ? (
+              <>
+                <Lock size={14} className="mr-1" /> Private
+              </>
+            ) : (
+              <>
+                <Globe size={14} className="mr-1" /> Share
+              </>
+            )}
+          </Button>
+          
+          <Button 
+            size="sm"
+            variant="destructive"
+            className="h-8"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDreamToDelete(dream.id);
+            }}
+          >
+            <Trash2 size={14} className="mr-1" /> Delete
+          </Button>
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -254,61 +410,21 @@ const Journal = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {entries.map((dream) => (
-                <div key={dream.id} className="relative">
-                  {(dream.is_public || dream.isPublic) && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-dream-purple text-white flex items-center gap-1">
-                        <Globe size={12} /> Shared
-                      </Badge>
-                    </div>
-                  )}
-                  <DreamCard
-                    dream={dream}
-                    tags={tags}
-                    onClick={() => setSelectedDream(dream)}
-                  />
-                </div>
-              ))}
+              {renderDreamCards(entries)}
             </div>
           )}
         </TabsContent>
         
         <TabsContent value="recent">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {entries
-              .slice(0, 6)
-              .map((dream) => (
-                <div key={dream.id} className="relative">
-                  {(dream.is_public || dream.isPublic) && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-dream-purple text-white flex items-center gap-1">
-                        <Globe size={12} /> Shared
-                      </Badge>
-                    </div>
-                  )}
-                  <DreamCard
-                    key={dream.id}
-                    dream={dream}
-                    tags={tags}
-                    onClick={() => setSelectedDream(dream)}
-                  />
-                </div>
-              ))}
-            {entries.length === 0 && (
-              <div className="text-center py-12 col-span-3">
-                <p className="text-muted-foreground">
-                  No recent dreams yet
-                </p>
-              </div>
-            )}
+            {renderDreamCards(entries.slice(0, 6))}
           </div>
         </TabsContent>
       </Tabs>
 
       {/* Add Dream Dialog */}
       <Dialog open={isAddingDream} onOpenChange={setIsAddingDream}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
           </DialogHeader>
@@ -319,9 +435,26 @@ const Journal = () => {
           />
         </DialogContent>
       </Dialog>
+      
+      {/* Edit Dream Dialog */}
+      {selectedDream && (
+        <Dialog open={isEditingDream} onOpenChange={setIsEditingDream}>
+          <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="gradient-text">Edit Dream</DialogTitle>
+            </DialogHeader>
+            <DreamEntryForm
+              existingDream={selectedDream}
+              onSubmit={handleEditDream}
+              tags={tags}
+              isSubmitting={isSubmitting}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Dream Detail Dialog */}
-      {selectedDream && (
+      {selectedDream && !isEditingDream && (
         <DreamDetail
           dream={selectedDream}
           tags={tags}
@@ -331,6 +464,28 @@ const Journal = () => {
           isAuthenticated={!!user}
         />
       )}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!dreamToDelete} onOpenChange={(open) => !open && setDreamToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this dream from your journal.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => dreamToDelete && handleDeleteDream(dreamToDelete)}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

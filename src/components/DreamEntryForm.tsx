@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,7 +52,7 @@ const DreamEntryForm = ({
     analysis: existingDream?.analysis || "",
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
-    lucid: existingDream?.lucid || false,
+    lucid: existingDream?.lucid || false, // We'll keep this in the state but not show UI for it
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -163,16 +162,28 @@ const DreamEntryForm = ({
     }
   };
 
-  const handleClose = () => navigate(-1);
+  // Fixed: Ensure the close button just closes the form, not the entire app
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // If using in a dialog, just reset form state
+    if (onSubmit) {
+      return;
+    }
+    
+    // Otherwise navigate back
+    navigate(-1);
+  };
 
   return (
-    <div className="relative h-screen bg-background">
-      {/* Close button */}
+    <div className="relative bg-background">
+      {/* Close button - Fixed to prevent app closure */}
       <button
         type="button"
         onClick={handleClose}
-        className="fixed top-12 right-10 z-50 h-8 w-8 flex items-center justify-center 
-                   bg-white dark:bg-gray-800 rounded-full shadow"
+        className="absolute top-0 right-0 z-10 h-8 w-8 flex items-center justify-center 
+                 bg-white dark:bg-gray-800 rounded-full shadow m-2"
         aria-label="Close form"
       >
         <X className="h-5 w-5 text-gray-600" />
@@ -181,7 +192,7 @@ const DreamEntryForm = ({
       {/* Scrollable Form */}
       <form
         onSubmit={handleSubmit}
-        className="h-full overflow-y-auto pt-16 pb-6 px-4 space-y-8"
+        className="overflow-y-auto pt-8 pb-6 space-y-8"
       >
         {/* Dream Details */}
         <div className="space-y-4">
@@ -298,6 +309,7 @@ const DreamEntryForm = ({
                 "Happy",
                 "Sad",
                 "Neutral",
+                "Anxious",
                 "Angry",
                 "Excited",
                 "Relaxed",
