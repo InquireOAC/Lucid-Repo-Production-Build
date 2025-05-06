@@ -1,5 +1,7 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from 'npm:stripe@14.14.0'
+import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +18,7 @@ serve(async (req) => {
       apiVersion: '2023-10-16',
     })
 
-    const { action, productId } = await req.json()
+    const { action, priceId } = await req.json()
 
     const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1]
     if (!authHeader) {
@@ -24,6 +26,7 @@ serve(async (req) => {
     }
 
     if (action === 'getProducts') {
+      // Get all active products from Stripe
       const products = await stripe.products.list({
         active: true,
         expand: ['data.default_price'],
@@ -32,11 +35,11 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           products: products.data.map(product => ({
-            id: product.id,
+            id: product.default_price ? (product.default_price as Stripe.Price).id : '',
             name: product.name,
             description: product.description,
             price: product.default_price 
-              ? `${(product.default_price.unit_amount || 0) / 100} ${product.default_price.currency}/${product.default_price.recurring?.interval}`
+              ? `${((product.default_price as Stripe.Price).unit_amount || 0) / 100} ${(product.default_price as Stripe.Price).currency}/${(product.default_price as Stripe.Price).recurring?.interval}`
               : 'N/A',
             features: product.metadata.features ? 
               JSON.parse(product.metadata.features) : []
@@ -52,40 +55,75 @@ serve(async (req) => {
     }
 
     if (action === 'createSession') {
-      if (!productId) {
-        throw new Error('Product ID is required')
+      if (!priceId) {
+        throw new Error('Price ID is required')
       }
 
-      // Get the product to access its default price
-      const product = await stripe.products.retrieve(productId, {
-        expand: ['default_price']
-      })
+      // Initialize Supabase client
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
+      const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-      if (!product.default_price) {
-        throw new Error('Product has no default price')
+      // Fetch user information
+      const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader)
+      if (userError || !user) {
+        throw new Error('User not authenticated')
       }
 
+      // Check if customer already exists
+      let customerId;
+      const { data: customerData } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (customerData?.customer_id) {
+        customerId = customerData.customer_id;
+      } else {
+        // Create a new Stripe customer
+        const stripeCustomer = await stripe.customers.create({
+          email: user.email,
+          metadata: {
+            supabase_user_id: user.id
+          }
+        })
+        
+        // Store customer in database
+        await supabase
+          .from('stripe_customers')
+          .insert({
+            user_id: user.id,
+            customer_id: stripeCustomer.id,
+            email: user.email,
+            created_at: new Date().toISOString()
+          })
+        
+        customerId = stripeCustomer.id;
+      }
+
+      // Create checkout session
       const session = await stripe.checkout.sessions.create({
-        mode: 'subscription',
+        customer: customerId,
         payment_method_types: ['card'],
         line_items: [
           {
-            price: product.default_price.id,
+            price: priceId,
             quantity: 1,
           },
         ],
+        mode: 'subscription',
         success_url: `${req.headers.get('origin')}/profile?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${req.headers.get('origin')}/profile`,
-        customer_creation: 'always',
         subscription_data: {
           metadata: {
-            supabase_user_id: authHeader,
+            supabase_user_id: user.id,
           },
         },
       })
 
       return new Response(
-        JSON.stringify({ sessionId: session.id }),
+        JSON.stringify({ url: session.url }),
         { 
           headers: { 
             ...corsHeaders,

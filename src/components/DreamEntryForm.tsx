@@ -167,12 +167,13 @@ const DreamEntryForm = ({
 
   return (
     <div className="relative h-screen bg-background">
-      {/* Fixed X */}
+      {/* Close button */}
       <button
         type="button"
         onClick={handleClose}
         className="fixed top-12 right-10 z-50 h-8 w-8 flex items-center justify-center 
                    bg-white dark:bg-gray-800 rounded-full shadow"
+        aria-label="Close form"
       >
         <X className="h-5 w-5 text-gray-600" />
       </button>
@@ -210,18 +211,6 @@ const DreamEntryForm = ({
             className="dream-input"
             required
           />
-          
-          {/* Lucid Toggle */}
-          <div className="flex items-center space-x-2">
-            <input
-              type="checkbox"
-              id="lucid-toggle"
-              checked={formData.lucid}
-              onChange={(e) => setFormData(p => ({ ...p, lucid: e.target.checked }))}
-              className="rounded text-dream-purple focus:ring-dream-purple h-4 w-4"
-            />
-            <Label htmlFor="lucid-toggle">This was a lucid dream</Label>
-          </div>
         </div>
 
         {/* Dream Tags */}

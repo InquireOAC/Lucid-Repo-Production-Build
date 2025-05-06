@@ -6,6 +6,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2, CreditCard, XCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: string;
+  features: string[];
+}
+
 interface SubscriptionStatus {
   subscribed: boolean;
   subscription_tier?: string;
@@ -20,17 +28,61 @@ interface SubscriptionStatus {
   };
 }
 
-const StripeSubscriptionManager = () => {
+interface StripeSubscriptionManagerProps {
+  currentPlan?: string;
+}
+
+const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerProps) => {
   const [loading, setLoading] = useState(false);
+  const [productsLoading, setProductsLoading] = useState(true);
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
+      fetchProducts();
       checkSubscriptionStatus();
     }
   }, [user]);
+
+  // Fetch products from Stripe
+  const fetchProducts = async () => {
+    try {
+      setProductsLoading(true);
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { action: 'getProducts' }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.products) {
+        setProducts(data.products);
+        console.log("Stripe products:", data.products);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      // Fallback to default products if API call fails
+      setProducts([
+        {
+          id: 'price_basic',
+          name: 'Basic',
+          price: '$4.99/month',
+          features: ['10 Dream analyses per month', '5 Image generations per month', 'Dream journal backup']
+        },
+        {
+          id: 'price_premium',
+          name: 'Premium',
+          price: '$9.99/month',
+          features: ['Unlimited dream analyses', '20 Image generations per month', 'Advanced dream patterns detection', 'Priority support']
+        }
+      ]);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
 
   // Check subscription status
   const checkSubscriptionStatus = async () => {
@@ -38,9 +90,24 @@ const StripeSubscriptionManager = () => {
       setCheckingStatus(true);
       
       // Get subscription status from Supabase
+      const { data: customerData, error: customerError } = await supabase
+        .from("stripe_customers")
+        .select("customer_id")
+        .eq("user_id", user?.id)
+        .maybeSingle();
+      
+      if (customerError) throw customerError;
+      
+      if (!customerData?.customer_id) {
+        setSubscriptionStatus({ subscribed: false });
+        return;
+      }
+      
+      // Get the subscription details
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from("stripe_subscriptions")
         .select("*")
+        .eq("customer_id", customerData.customer_id)
         .eq("status", "active")
         .maybeSingle();
       
@@ -77,18 +144,19 @@ const StripeSubscriptionManager = () => {
     } catch (error) {
       console.error("Error checking subscription:", error);
       toast.error("Failed to check subscription status");
+      setSubscriptionStatus({ subscribed: false });
     } finally {
       setCheckingStatus(false);
     }
   };
 
   // Handle subscription checkout
-  const handleSubscribe = async (planId: string) => {
+  const handleSubscribe = async (priceId: string) => {
     try {
       setLoading(true);
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { action: 'createSession', productId: planId }
+        body: { action: 'createSession', priceId }
       });
       
       if (error) throw error;
@@ -111,7 +179,9 @@ const StripeSubscriptionManager = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase.functions.invoke('create-portal-session');
+      const { data, error } = await supabase.functions.invoke('create-portal-session', {
+        body: {}
+      });
       
       if (error) throw error;
       
@@ -128,11 +198,11 @@ const StripeSubscriptionManager = () => {
     }
   };
 
-  if (checkingStatus) {
+  if (checkingStatus || productsLoading) {
     return (
       <div className="flex justify-center items-center py-8">
         <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-        <span className="ml-2">Checking subscription status...</span>
+        <span className="ml-2">Loading subscription options...</span>
       </div>
     );
   }
@@ -217,66 +287,46 @@ const StripeSubscriptionManager = () => {
       </div>
       
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="border rounded-lg p-4 space-y-4">
-          <h4 className="text-lg font-medium">Basic</h4>
-          <p className="text-2xl font-bold">$4.99<span className="text-sm text-muted-foreground">/month</span></p>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>10 Dream analyses per month</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>5 Image generations per month</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Dream journal backup</span>
-            </li>
-          </ul>
-          <Button 
-            className="w-full" 
-            onClick={() => handleSubscribe('price_basic')}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Subscribe
-          </Button>
-        </div>
-        
-        <div className="border rounded-lg border-dream-purple p-4 space-y-4 relative overflow-hidden">
-          <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
-            Popular
+        {productsLoading ? (
+          <div className="col-span-2 flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
           </div>
-          <h4 className="text-lg font-medium">Premium</h4>
-          <p className="text-2xl font-bold">$9.99<span className="text-sm text-muted-foreground">/month</span></p>
-          <ul className="space-y-2 text-sm">
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Unlimited dream analyses</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>20 Image generations per month</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Advanced dream patterns detection</span>
-            </li>
-            <li className="flex items-start">
-              <span className="mr-2">•</span>
-              <span>Priority support</span>
-            </li>
-          </ul>
-          <Button 
-            className="w-full bg-dream-purple hover:bg-dream-purple/90" 
-            onClick={() => handleSubscribe('price_premium')}
-            disabled={loading}
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-            Subscribe
-          </Button>
-        </div>
+        ) : (
+          products.map((product) => (
+            <div 
+              key={product.id} 
+              className={`border rounded-lg p-4 space-y-4 ${
+                product.name === "Premium" ? "border-dream-purple relative overflow-hidden" : ""
+              }`}
+            >
+              {product.name === "Premium" && (
+                <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
+                  Popular
+                </div>
+              )}
+              <h4 className="text-lg font-medium">{product.name}</h4>
+              <p className="text-2xl font-bold">{product.price}</p>
+              <ul className="space-y-2 text-sm">
+                {product.features.map((feature, index) => (
+                  <li key={index} className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button 
+                className={`w-full ${
+                  product.name === "Premium" ? "bg-dream-purple hover:bg-dream-purple/90" : ""
+                }`}
+                onClick={() => handleSubscribe(product.id)}
+                disabled={loading}
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Subscribe
+              </Button>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
