@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,11 +162,8 @@ const DreamEntryForm = ({
     }
   };
 
-  // Fixed: Ensure the close button just closes the form, not the entire app
-  const handleClose = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
+  // Handle close - just navigate back or reset form state
+  const handleClose = () => {
     // If using in a dialog, just reset form state
     if (onSubmit) {
       return;
@@ -179,17 +175,6 @@ const DreamEntryForm = ({
 
   return (
     <div className="relative bg-background">
-      {/* Close button - Fixed to prevent app closure */}
-      <button
-        type="button"
-        onClick={handleClose}
-        className="absolute top-0 right-0 z-10 h-8 w-8 flex items-center justify-center 
-                 bg-white dark:bg-gray-800 rounded-full shadow m-2"
-        aria-label="Close form"
-      >
-        <X className="h-5 w-5 text-gray-600" />
-      </button>
-
       {/* Scrollable Form */}
       <form
         onSubmit={handleSubmit}
