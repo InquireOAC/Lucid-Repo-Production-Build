@@ -11,12 +11,12 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import { X } from "lucide-react"; // Import the "X" icon
+import { X } from "lucide-react";
 
 interface DreamEntryFormProps {
   existingDream?: any;
   tags: DreamTag[];
-  onClose: () => void; // Ensure onClose is passed correctly
+  onClose: () => void;
 }
 
 const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) => {
@@ -25,12 +25,16 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
     content: existingDream?.content || "",
-    date: existingDream?.date ? new Date(existingDream.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+    date: existingDream?.date
+      ? new Date(existingDream.date).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
     tags: existingDream?.tags || [],
-    mood: existingDream?.mood || "Neutral",  // Default mood set to Neutral
+    mood: existingDream?.mood || "Neutral",
     analysis: existingDream?.analysis || "",
-    generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
-    imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || ""
+    generatedImage:
+      existingDream?.image_url || existingDream?.generatedImage || "",
+    imagePrompt:
+      existingDream?.image_prompt || existingDream?.imagePrompt || "",
   });
   const [availableTags, setAvailableTags] = useState(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,38 +43,28 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
     setAvailableTags(tags);
   }, [tags]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleTagSelect = (tagId: string) => {
-    setFormData(prevState => {
-      if (prevState.tags.includes(tagId)) {
-        return {
-          ...prevState,
-          tags: prevState.tags.filter(id => id !== tagId)
-        };
-      } else {
-        return {
-          ...prevState,
-          tags: [...prevState.tags, tagId]
-        };
-      }
-    });
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tagId)
+        ? prev.tags.filter((id) => id !== tagId)
+        : [...prev.tags, tagId],
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!user) {
       navigate("/auth");
       return;
     }
-
     setIsSubmitting(true);
 
     const dreamData = {
@@ -81,53 +75,56 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
       mood: formData.mood,
       user_id: user.id,
       analysis: formData.analysis,
-      is_public: false, // Default to private
+      is_public: false,
       image_url: formData.generatedImage,
-      image_prompt: formData.imagePrompt
+      image_prompt: formData.imagePrompt,
     };
 
     try {
       if (existingDream) {
-        // Update existing dream
         const { data, error } = await supabase
           .from("dream_entries")
           .update(dreamData)
           .eq("id", existingDream.id)
           .select()
           .single();
-
         if (error) throw error;
         console.log("Dream updated:", data);
       } else {
-        // Create new dream
         const { data, error } = await supabase
           .from("dream_entries")
           .insert(dreamData)
           .select()
           .single();
-
         if (error) throw error;
         console.log("Dream created:", data);
       }
-      onClose(); // Close form after saving
-    } catch (error) {
-      console.error("Error saving dream:", error);
+      onClose();
+    } catch (err) {
+      console.error("Error saving dream:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Function to handle the Close action (just close the form without saving)
   const handleClose = () => {
-    onClose(); // This will call the parent component's onClose function to close the form
+    console.log("Close icon tapped");  // verify this logs on tap
+    onClose();
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 overflow-y-auto max-h-screen p-4 relative">
-      {/* Close Button - X Icon at the top right */}
-      <div className="absolute top-5 right-4 cursor-pointer" onClick={handleClose}>
+    <form
+      onSubmit={handleSubmit}
+      className="relative space-y-8 overflow-y-auto max-h-screen p-4"
+    >
+      {/* Close Button - X Icon */}
+      <button
+        type="button"
+        onClick={handleClose}
+        className="absolute top-6 right-4 z-50 p-1 rounded-full bg-white dark:bg-gray-800"
+      >
         <X className="h-6 w-6 text-gray-600" />
-      </div>
+      </button>
 
       {/* Dream Details */}
       <div className="space-y-4">
@@ -163,7 +160,7 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
       <div className="space-y-2">
         <Label>Tags</Label>
         <div className="flex flex-wrap gap-1">
-          {availableTags.map(tag => (
+          {availableTags.map((tag) => (
             <Badge
               key={tag.id}
               variant={formData.tags.includes(tag.id) ? "default" : "outline"}
@@ -183,50 +180,49 @@ const DreamEntryForm = ({ existingDream, tags, onClose }: DreamEntryFormProps) =
         <Select
           name="mood"
           value={formData.mood}
-          onValueChange={(value) => setFormData({ ...formData, mood: value })}
+          onValueChange={(value) =>
+            setFormData((prev) => ({ ...prev, mood: value }))
+          }
         >
           <SelectTrigger className="dream-input">
             <SelectValue placeholder="Select Mood" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="Happy">Happy</SelectItem>
-            <SelectItem value="Sad">Sad</SelectItem>
-            <SelectItem value="Neutral">Neutral</SelectItem>
-            <SelectItem value="Angry">Angry</SelectItem>
-            <SelectItem value="Excited">Excited</SelectItem>
-            <SelectItem value="Relaxed">Relaxed</SelectItem>
-            <SelectItem value="Confused">Confused</SelectItem>
+            {["Happy", "Sad", "Neutral", "Angry", "Excited", "Relaxed", "Confused"].map(
+              (m) => (
+                <SelectItem key={m} value={m}>
+                  {m}
+                </SelectItem>
+              )
+            )}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Dream Analysis */}
+      {/* Dream Analysis & Image */}
       <div className="space-y-8">
         <DreamAnalysis
           dreamContent={formData.content}
           existingAnalysis={formData.analysis}
-          onAnalysisComplete={(analysis) => {
-            setFormData({
-              ...formData,
-              analysis: analysis
-            });
-          }}
+          onAnalysisComplete={(analysis) =>
+            setFormData((prev) => ({ ...prev, analysis }))
+          }
         />
-        
         <DreamImageGenerator
           dreamContent={formData.content}
           existingPrompt={formData.imagePrompt}
           existingImage={formData.generatedImage}
-          onImageGenerated={(imageUrl, prompt) => {
-            setFormData({
-              ...formData,
+          onImageGenerated={(imageUrl, prompt) =>
+            setFormData((prev) => ({
+              ...prev,
               generatedImage: imageUrl,
-              imagePrompt: prompt
-            });
-          }}
+              imagePrompt: prompt,
+            }))
+          }
         />
-        
-        <div className="flex justify-end space-x-4">
+
+        {/* Save Button */}
+        <div className="flex justify-end">
           <Button
             type="submit"
             disabled={isSubmitting}
