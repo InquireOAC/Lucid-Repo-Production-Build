@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,9 @@ const DreamCard = ({
   isAudioPlaying = false,
   onToggleAudio
 }: DreamCardProps) => {
+  // Format the dream date
+  const formattedDate = dream.date ? format(new Date(dream.date), "MMM d, yyyy") : "No date";
+  
   // State to track audio playback
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
