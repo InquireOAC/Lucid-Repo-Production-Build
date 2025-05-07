@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Trash2, Globe, Lock } from "lucide-react";
+import { Globe, Lock } from "lucide-react";
 
 interface DreamDetailActionsProps {
   isAuthenticated?: boolean;
@@ -13,24 +13,12 @@ interface DreamDetailActionsProps {
 const DreamDetailActions = ({
   isAuthenticated,
   isPublic,
-  onDelete,
   onTogglePublic
 }: DreamDetailActionsProps) => {
   if (!isAuthenticated) return null;
 
   return (
-    <div className="flex justify-between items-center mt-6">
-      <div className="flex gap-2">
-        {onDelete && (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={onDelete}
-          >
-            <Trash2 size={14} className="mr-1" /> Delete
-          </Button>
-        )}
-      </div>
+    <div className="flex justify-end items-center mt-6">
       <div className="flex gap-2">
         {onTogglePublic && (
           <Button

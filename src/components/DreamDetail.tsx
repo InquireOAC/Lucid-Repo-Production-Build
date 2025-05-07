@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -98,13 +97,12 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           <DreamDetailActions
             isAuthenticated={isAuthenticated}
             isPublic={isPublic}
-            onDelete={onDelete ? () => setIsDeleteDialogOpen(true) : undefined}
             onTogglePublic={onUpdate ? handleTogglePublic : undefined}
           />
         </DialogContent>
       </Dialog>
       
-      {/* Delete confirmation dialog */}
+      {/* Delete confirmation dialog - keeping this code for potential future use */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

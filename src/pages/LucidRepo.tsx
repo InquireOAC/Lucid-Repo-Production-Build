@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +7,7 @@ import { useDreams } from "@/hooks/useDreams";
 import LucidDreamsContent from "@/components/repos/LucidDreamsContent";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
+import { toast } from "sonner";
 
 const LucidRepo = () => {
   const { user } = useAuth();
