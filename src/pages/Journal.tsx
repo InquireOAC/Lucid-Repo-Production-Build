@@ -73,18 +73,26 @@ const Journal = () => {
           tags: dream.tags || [],
           mood: dream.mood,
           lucid: dream.lucid || false,
-          imagePrompt: dream.imagePrompt,
-          generatedImage: dream.generatedImage,
+          imagePrompt: dream.imagePrompt || dream.image_prompt,
+          generatedImage: dream.generatedImage || dream.image_url,
           analysis: dream.analysis,
           is_public: dream.is_public || false,
           isPublic: dream.is_public || false,
-          // Map is_public to isPublic
           like_count: dream.like_count || 0,
           likeCount: dream.like_count || 0,
           comment_count: dream.comment_count || 0,
           commentCount: dream.comment_count || 0,
+          audioUrl: dream.audio_url,
+          audio_url: dream.audio_url,
           user_id: dream.user_id
         }));
+        
+        console.log("Synced dreams with audio:", formattedDreams.map(d => ({
+          id: d.id,
+          title: d.title,
+          audioUrl: d.audioUrl,
+          audio_url: d.audio_url
+        })));
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);
@@ -96,14 +104,18 @@ const Journal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
+    audioUrl?: string;
   }) => {
     setIsSubmitting(true);
     try {
       // First add to local store
       const newDream = addEntry({
         ...dreamData,
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        audioUrl: dreamData.audioUrl || null
       });
+
+      console.log("Adding dream with audio:", dreamData.audioUrl);
 
       // If user is logged in, also save to database
       if (user) {
@@ -118,7 +130,8 @@ const Journal = () => {
           mood: dreamData.mood,
           lucid: dreamData.lucid,
           date: newDream.date,
-          is_public: false // Use is_public in database
+          is_public: false,
+          audio_url: dreamData.audioUrl || null // Save audio URL to database
         });
         if (error) throw error;
       }
@@ -137,12 +150,18 @@ const Journal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
+    audioUrl?: string;
   }) => {
     if (!selectedDream) return;
     setIsSubmitting(true);
     try {
       // Update local store
-      updateEntry(selectedDream.id, dreamData);
+      updateEntry(selectedDream.id, {
+        ...dreamData,
+        audioUrl: dreamData.audioUrl || null
+      });
+
+      console.log("Updating dream with audio:", dreamData.audioUrl);
 
       // If user is logged in, also update in database
       if (user) {
@@ -154,6 +173,7 @@ const Journal = () => {
           tags: dreamData.tags,
           mood: dreamData.mood,
           lucid: dreamData.lucid,
+          audio_url: dreamData.audioUrl || null, // Update audio URL in database
           updated_at: new Date().toISOString()
         }).eq("id", selectedDream.id).eq("user_id", user.id);
         if (error) throw error;

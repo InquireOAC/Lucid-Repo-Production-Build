@@ -50,6 +50,8 @@ const DreamCard = ({
 
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
+  
+  console.log("DreamCard rendering with audio URL:", audioUrl);
 
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
@@ -87,6 +89,7 @@ const DreamCard = ({
   // Create audio element and play
   const playAudio = () => {
     if (!audioUrl) {
+      console.log("No audio URL available to play");
       toast.error("No audio recording available");
       return;
     }
@@ -97,6 +100,7 @@ const DreamCard = ({
         const audio = new Audio(audioUrl);
         
         audio.addEventListener('ended', () => {
+          console.log("Audio playback ended");
           setIsPlaying(false);
           if (onToggleAudio) onToggleAudio();
         });
@@ -155,9 +159,9 @@ const DreamCard = ({
       className="dream-card h-full cursor-pointer transition-all relative"
       onClick={onClick}
     >
-      {/* Shared badge - adjusted position to be slightly higher in the middle right */}
+      {/* Only one Shared badge positioned in the middle right and adjusted up */}
       {(dream.is_public || dream.isPublic) && (
-        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -translate-y-10 z-10">
+        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-y-[-4rem] z-10">
           <div className="bg-dream-purple text-white text-xs py-1 px-2 rounded-l-md flex items-center gap-1">
             <Globe size={12} /> Shared
           </div>

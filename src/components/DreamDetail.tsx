@@ -104,6 +104,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
         const audio = new Audio(audioUrl);
         
         audio.addEventListener('ended', () => {
+          console.log("Audio playback ended");
           setIsPlaying(false);
         });
         
@@ -114,6 +115,20 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
         });
         
         audioRef.current = audio;
+      }
+      
+      // Try to reacquire the audio element if URL has changed
+      if (audioRef.current.src !== audioUrl) {
+        audioRef.current = new Audio(audioUrl);
+        audioRef.current.addEventListener('ended', () => {
+          setIsPlaying(false);
+        });
+        
+        audioRef.current.addEventListener('error', (e) => {
+          console.error('Error playing audio:', e);
+          toast.error("Could not play audio recording");
+          setIsPlaying(false);
+        });
       }
       
       audioRef.current.play().catch(err => {
@@ -154,11 +169,13 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             analysis={dream.analysis}
           />
           
-          <DreamDetailAudio
-            audioUrl={audioUrl}
-            isPlaying={isPlaying}
-            toggleAudio={toggleAudio}
-          />
+          {audioUrl && (
+            <DreamDetailAudio
+              audioUrl={audioUrl}
+              isPlaying={isPlaying}
+              toggleAudio={toggleAudio}
+            />
+          )}
           
           <DreamDetailActions
             isAuthenticated={isAuthenticated}

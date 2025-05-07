@@ -27,11 +27,23 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     return () => {
       stopRecording();
       if (timerRef.current) clearInterval(timerRef.current);
+      
+      // Clean up any existing audio element
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      
+      // Clean up any existing blob URLs to prevent memory leaks
+      if (audioUrl && audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(audioUrl);
+      }
     };
   }, []);
 
   useEffect(() => {
     if (existingAudioUrl) {
+      console.log("Setting existing audio URL:", existingAudioUrl);
       setAudioUrl(existingAudioUrl);
     }
   }, [existingAudioUrl]);
@@ -50,7 +62,14 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        
+        // Clean up previous blob URL if exists
+        if (audioUrl && audioUrl.startsWith('blob:')) {
+          URL.revokeObjectURL(audioUrl);
+        }
+        
         const url = URL.createObjectURL(audioBlob);
+        console.log("Created new audio blob URL:", url);
         setAudioUrl(url);
         onRecordingComplete(url);
         
@@ -88,16 +107,29 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
   const deleteRecording = () => {
     if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
+      if (audioUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(audioUrl);
+      }
       setAudioUrl(null);
       onRecordingComplete('');
     }
   };
 
   const togglePlayback = () => {
+    if (!audioUrl) {
+      toast.error("No audio recording available");
+      return;
+    }
+    
     if (!audioRef.current) {
-      audioRef.current = new Audio(audioUrl || '');
+      console.log("Creating preview audio element with URL:", audioUrl);
+      audioRef.current = new Audio(audioUrl);
       audioRef.current.onended = () => {
+        setIsPlaying(false);
+      };
+      audioRef.current.onerror = (e) => {
+        console.error("Error playing audio:", e);
+        toast.error("Could not play audio recording");
         setIsPlaying(false);
       };
     }

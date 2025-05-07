@@ -56,7 +56,7 @@ const DreamEntryForm = ({
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
     lucid: existingDream?.lucid || false,
-    audioUrl: existingDream?.audioUrl || "",
+    audioUrl: existingDream?.audio_url || existingDream?.audioUrl || "",
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -115,6 +115,7 @@ const DreamEntryForm = ({
   };
 
   const handleAudioRecorded = (audioUrl: string) => {
+    console.log("Audio recorded, URL:", audioUrl);
     setFormData(prev => ({
       ...prev,
       audioUrl
@@ -152,8 +153,10 @@ const DreamEntryForm = ({
       image_url: formData.generatedImage,
       image_prompt: formData.imagePrompt,
       lucid: formData.lucid,
-      audio_url: formData.audioUrl
+      audio_url: formData.audioUrl // Make sure audio_url is being saved to database
     };
+
+    console.log("Saving dream data with audio:", dreamData.audio_url);
 
     try {
       if (existingDream) {

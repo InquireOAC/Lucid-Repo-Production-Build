@@ -16,8 +16,13 @@ const DreamDetailAudio = ({
 }: DreamDetailAudioProps) => {
   console.log("DreamDetailAudio rendering with URL:", audioUrl);
   
-  if (!audioUrl) {
-    console.log("No audio URL provided, not rendering audio component");
+  // Check if the audioUrl is valid - either a string URL or a blob URL
+  const validAudioUrl = audioUrl && 
+    (typeof audioUrl === 'string' && audioUrl.length > 0) && 
+    !(typeof audioUrl === 'object'); // Make sure it's not an object
+  
+  if (!validAudioUrl) {
+    console.log("No valid audio URL provided, not rendering audio component");
     return null; // Don't render anything if no audio URL is provided
   }
 
