@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,7 +31,6 @@ const DreamCard = ({
   isAudioPlaying = false,
   onToggleAudio
 }: DreamCardProps) => {
-  const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
   // State to track audio playback
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -153,9 +151,9 @@ const DreamCard = ({
       className="dream-card h-full cursor-pointer transition-all relative"
       onClick={onClick}
     >
-      {/* Shared badge - moved to the middle right side of the card */}
+      {/* Shared badge - adjusted position to be slightly higher in the middle right */}
       {(dream.is_public || dream.isPublic) && (
-        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -translate-y-2 z-10">
+        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 -translate-y-10 z-10">
           <div className="bg-dream-purple text-white text-xs py-1 px-2 rounded-l-md flex items-center gap-1">
             <Globe size={12} /> Shared
           </div>
