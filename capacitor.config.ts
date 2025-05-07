@@ -12,7 +12,8 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'automatic',
     scheme: 'app.dreamweaver.journal',
-    backgroundColor: '#1E1A2B'
+    backgroundColor: '#1E1A2B',
+    preferredContentMode: 'mobile'
   },
   plugins: {
     SplashScreen: {
