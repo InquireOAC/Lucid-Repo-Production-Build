@@ -1,25 +1,29 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
+import { useAudioPlayback } from "@/hooks/useAudioPlayback";
 
 interface DreamDetailAudioProps {
   audioUrl?: string;
-  isPlaying: boolean;
-  toggleAudio: () => void;
 }
 
-const DreamDetailAudio = ({
-  audioUrl,
-  isPlaying,
-  toggleAudio
-}: DreamDetailAudioProps) => {
+const DreamDetailAudio = ({ audioUrl }: DreamDetailAudioProps) => {
   console.log("DreamDetailAudio rendering with URL:", audioUrl);
   
   // Check if the audioUrl is valid - either a string URL or a blob URL
   const validAudioUrl = audioUrl && 
     (typeof audioUrl === 'string' && audioUrl.length > 0) && 
     !(typeof audioUrl === 'object'); // Make sure it's not an object
+  
+  const { isPlaying, togglePlayback, cleanup } = useAudioPlayback(validAudioUrl || null);
+  
+  // Cleanup audio when component unmounts
+  useEffect(() => {
+    return () => {
+      cleanup();
+    };
+  }, []);
   
   if (!validAudioUrl) {
     console.log("No valid audio URL provided, not rendering audio component");
@@ -34,7 +38,7 @@ const DreamDetailAudio = ({
         className={`w-full flex items-center justify-center gap-2 ${
           isPlaying ? "bg-green-500/10 text-green-600 border-green-400" : "bg-blue-500/10 text-blue-600 border-blue-400"
         }`}
-        onClick={toggleAudio}
+        onClick={togglePlayback}
       >
         {isPlaying ? (
           <>
