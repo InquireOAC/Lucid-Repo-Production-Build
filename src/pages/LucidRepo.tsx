@@ -277,10 +277,15 @@ const LucidRepo = () => {
             <DreamCard
               key={dream.id}
               dream={dream}
+              tags={dreamTags}
               onLike={() => handleLike(dream.id)}
               showUser={true}
               onClick={() => handleOpenDream(dream)}
               onUserClick={() => dream.user_id && handleNavigateToProfile(dream.user_id)}
+              onTagClick={(tagId) => {
+                // Future implementation: filter by tag
+                console.log("Tag clicked:", tagId);
+              }}
             />
           ))}
         </div>

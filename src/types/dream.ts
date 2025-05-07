@@ -8,6 +8,7 @@ export interface DreamEntry {
   mood?: string;
   lucid: boolean;
   user_id?: string;
+  userId?: string;
   analysis?: string;
   generatedImage?: string;
   imagePrompt?: string;
@@ -18,7 +19,6 @@ export interface DreamEntry {
   comment_count?: number;
   commentCount?: number;
   liked?: boolean;
-  userId?: string;
   profiles?: {
     username?: string;
     display_name?: string;
