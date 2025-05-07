@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Pencil, Book, Moon, Calendar, Globe, Lock, Edit, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { useDreamStore } from "@/store/dreamStore";
-import DreamCard from "@/components/DreamCard";
+import DreamCard from "@/components/dreams/DreamCard";
 import DreamEntryForm from "@/components/DreamEntryForm";
 import DreamDetail from "@/components/DreamDetail";
 import { DreamEntry } from "@/types/dream";
