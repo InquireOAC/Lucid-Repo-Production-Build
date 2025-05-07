@@ -24,6 +24,7 @@ const DreamGrid = ({
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   
   const handleToggleAudio = (dreamId: string) => {
+    // If the same audio is clicked again, stop it; otherwise, play the new one
     setPlayingAudioId(prev => prev === dreamId ? null : dreamId);
   };
   

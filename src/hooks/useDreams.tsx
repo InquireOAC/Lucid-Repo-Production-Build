@@ -177,6 +177,7 @@ export function useDreams() {
   };
 
   const handleToggleAudio = (dreamId: string) => {
+    console.log("Toggling audio for dream:", dreamId);
     // Stop any currently playing audio before starting a new one
     setPlayingAudioId(prev => {
       if (prev && prev !== dreamId) {

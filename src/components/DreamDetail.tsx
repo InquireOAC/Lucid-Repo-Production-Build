@@ -36,6 +36,18 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     };
   }, []);
 
+  // Also clean up when closing the dialog
+  useEffect(() => {
+    const handleClose = () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+      }
+    };
+    
+    return handleClose;
+  }, [onClose]);
+
   const handleTogglePublic = async () => {
     if (onUpdate) {
       const newStatus = !(dream.is_public || dream.isPublic);
