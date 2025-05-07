@@ -2,13 +2,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Moon, Play, Pause } from "lucide-react";
+import { Moon } from "lucide-react";
 import { toast } from "sonner";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCardUser from "./DreamCardUser";
 import DreamCardTags from "./DreamCardTags";
 import DreamCardSocial from "./DreamCardSocial";
-import { Button } from "@/components/ui/button";
 
 interface DreamCardProps {
   dream: DreamEntry;
@@ -153,20 +152,9 @@ const DreamCard = ({
 
   return (
     <Card 
-      className="dream-card h-full cursor-pointer transition-all relative"
+      className="dream-card h-full cursor-pointer transition-all"
       onClick={onClick}
     >
-      {audioUrl && (
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
-          onClick={toggleAudio}
-        >
-          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-        </Button>
-      )}
-      
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg gradient-text font-bold line-clamp-1">

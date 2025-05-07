@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Heart, Play, Pause } from "lucide-react";
+import { Moon, Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DreamDetail from "@/components/DreamDetail";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAudioPlayer } from "@/hooks/useAudioPlayer";
 
 interface DreamGridProps {
   dreams: any[];
@@ -36,15 +35,21 @@ const DreamGrid = ({
   actionText,
 }: DreamGridProps) => {
   const [selectedDream, setSelectedDream] = useState<any>(null);
-  
-  // Use the audio player hook
-  const { playingAudioId, handleToggleAudio } = useAudioPlayer();
+  // Track which dream audio is playing
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+
+  // Handle audio toggle for dream detail
+  const handleToggleAudio = () => {
+    if (playingAudioId) {
+      setPlayingAudioId(null);
+    } else if (selectedDream) {
+      setPlayingAudioId(selectedDream.id);
+    }
+  };
 
   // When closing dream detail, stop audio playback
   const handleCloseDream = () => {
-    if (playingAudioId) {
-      handleToggleAudio(playingAudioId);
-    }
+    setPlayingAudioId(null);
     setSelectedDream(null);
   };
   
@@ -126,28 +131,13 @@ const DreamGrid = ({
         {dreams.map((dream: any) => {
           // Check for audio URL
           const hasAudio = !!(dream.audioUrl || dream.audio_url);
-          const isPlaying = playingAudioId === dream.id;
-          const audioUrl = dream.audioUrl || dream.audio_url;
           
           return (
             <Card 
               key={dream.id} 
-              className="overflow-hidden cursor-pointer hover:shadow-md transition-all relative"
+              className="overflow-hidden cursor-pointer hover:shadow-md transition-all"
               onClick={() => setSelectedDream(dream)}
             >
-              {hasAudio && (
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleToggleAudio(dream.id, audioUrl);
-                  }}
-                >
-                  {isPlaying ? <Pause size={14} /> : <Play size={14} />}
-                </Button>
-              )}
               <CardContent className="p-0">
                 {dream.generatedImage ? (
                   <img 
