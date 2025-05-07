@@ -23,16 +23,21 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
-  
-  console.log("DreamDetail rendering with dream:", dream.title, "audio URL:", audioUrl);
 
   const handleTogglePublic = async () => {
-    if (onUpdate) {
-      const newStatus = !(dream.is_public || dream.isPublic);
+    if (!onUpdate) return;
+    
+    const newStatus = !(dream.is_public || dream.isPublic);
+    
+    try {
       await onUpdate(dream.id, { 
         is_public: newStatus,
         isPublic: newStatus
       });
+      
+      // Success toast is shown by the parent component
+    } catch (error) {
+      console.error("Error toggling visibility:", error);
     }
   };
 
@@ -45,9 +50,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
         // Small delay to ensure dialog closes
         setTimeout(() => {
           onDelete(dream.id);
-          // Close the main dream dialog
-          onClose();
-          toast.success("Dream deleted successfully");
+          // Close the main dream dialog is handled by the parent component
         }, 100);
       } else {
         setIsDeleteDialogOpen(false);
@@ -96,7 +99,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             isAuthenticated={isAuthenticated}
             isPublic={isPublic}
             onDelete={onDelete ? () => setIsDeleteDialogOpen(true) : undefined}
-            onTogglePublic={handleTogglePublic}
+            onTogglePublic={onUpdate ? handleTogglePublic : undefined}
           />
         </DialogContent>
       </Dialog>

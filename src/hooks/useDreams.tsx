@@ -82,6 +82,40 @@ export function useDreams() {
 
   const handleUpdateDream = async (id: string, updates: Partial<DreamEntry>) => {
     try {
+      // Only attempt to update if the user is the owner of the dream
+      const dreamToUpdate = dreams.find(d => d.id === id);
+      if (!dreamToUpdate || (user && dreamToUpdate.user_id !== user.id)) {
+        console.error("Cannot update dream: not the owner");
+        return false;
+      }
+
+      // Convert client-side properties to database format
+      const dbUpdates: Record<string, any> = {};
+      
+      if ('isPublic' in updates) {
+        dbUpdates.is_public = updates.isPublic;
+      }
+      if ('is_public' in updates) {
+        dbUpdates.is_public = updates.is_public;
+      }
+
+      // Prepare other updates (omitting client-only fields)
+      Object.entries(updates).forEach(([key, value]) => {
+        if (key !== 'isPublic' && key !== 'audioUrl') {
+          dbUpdates[key] = value;
+        }
+      });
+
+      // Update the dream in Supabase
+      const { error } = await supabase
+        .from("dream_entries")
+        .update(dbUpdates)
+        .eq("id", id);
+
+      if (error) {
+        throw error;
+      }
+
       // Update the local dream array
       setDreams(prevDreams => 
         prevDreams.map(dream => 
@@ -89,12 +123,15 @@ export function useDreams() {
         )
       );
       
-      // Refresh public dreams to ensure we have the latest data from the database
-      fetchPublicDreams();
+      // If the dream is now private, remove it from the list
+      if (updates.is_public === false || updates.isPublic === false) {
+        setDreams(prevDreams => prevDreams.filter(dream => dream.id !== id));
+      }
       
       return true; // Indicate success
     } catch (error) {
       console.error("Error updating dream:", error);
+      toast.error("Failed to update dream");
       return false;
     }
   };

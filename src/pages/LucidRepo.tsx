@@ -50,7 +50,6 @@ const LucidRepo = () => {
   };
 
   const handleOpenDream = (dream: DreamEntry) => {
-    console.log("Opening dream with audio:", dream.audioUrl || dream.audio_url);
     // Stop any playing audio when opening dream detail
     if (playingAudioId) {
       handleToggleAudio(playingAudioId);
@@ -60,6 +59,8 @@ const LucidRepo = () => {
 
   const handleCloseDream = () => {
     setSelectedDream(null);
+    // Refresh dreams list when closing dream detail to ensure we have the latest data
+    fetchPublicDreams();
   };
 
   const handleNavigateToProfile = (userId: string | undefined) => {
@@ -84,11 +85,18 @@ const LucidRepo = () => {
   };
   
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    const success = handleUpdateDream(id, updates);
-    if (success) {
-      // After successfully updating dream, refresh all public dreams
-      fetchPublicDreams();
-    }
+    handleUpdateDream(id, updates)
+      .then(success => {
+        if (success) {
+          // After successfully updating dream, refresh all public dreams
+          fetchPublicDreams();
+          
+          // Show appropriate toast message
+          if (updates.is_public === false || updates.isPublic === false) {
+            toast.success("Dream is now private");
+          }
+        }
+      });
   };
 
   // Filter dreams based on search query

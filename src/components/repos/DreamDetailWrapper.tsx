@@ -45,14 +45,30 @@ const DreamDetailWrapper = ({
   
   const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
     try {
-      // First remove audioUrl from updates if it exists to avoid database error
-      const cleanedUpdates = {...updates};
+      // First make sure we're only sending valid database fields
+      const cleanedUpdates: Partial<DreamEntry> = {...updates};
+      
+      // Remove client-side only fields that would cause database errors
       if ('audioUrl' in cleanedUpdates) {
         delete cleanedUpdates.audioUrl;
       }
       
-      // Call the provided update handler
+      // Make sure both is_public and isPublic are set correctly
+      if ('is_public' in cleanedUpdates || 'isPublic' in cleanedUpdates) {
+        const newPublicState = cleanedUpdates.is_public ?? cleanedUpdates.isPublic;
+        cleanedUpdates.is_public = newPublicState;
+        cleanedUpdates.isPublic = newPublicState;
+      }
+      
+      // Call the provided update handler (which will refresh the dream list)
       onUpdate(id, cleanedUpdates);
+      
+      // If we're making it private, close the modal (common UX pattern)
+      if (cleanedUpdates.is_public === false) {
+        setTimeout(() => {
+          onClose(); // Close the modal after a brief delay
+        }, 300);
+      }
     } catch (error) {
       console.error("Error updating dream:", error);
       toast.error("Failed to update dream");
