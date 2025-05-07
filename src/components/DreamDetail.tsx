@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
@@ -21,7 +21,7 @@ interface DreamDetailProps {
 const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
@@ -29,9 +29,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   // Clean up audio element on unmount
   useEffect(() => {
     return () => {
-      if (audioElement) {
-        audioElement.pause();
-        setAudioElement(null);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);
@@ -52,67 +52,45 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     }
   };
 
-  const isValidAudioUrl = (url: string): boolean => {
-    if (!url) return false;
-    
-    try {
-      if (url.startsWith('blob:') || 
-          url.startsWith('http://') || 
-          url.startsWith('https://') || 
-          url.startsWith('data:audio/')) {
-        return true;
-      }
-      return false;
-    } catch (e) {
-      console.error('Error validating audio URL:', e);
-      return false;
-    }
-  };
-
   const toggleAudio = () => {
-    if (!audioUrl || !isValidAudioUrl(audioUrl)) {
-      console.error('Invalid audio URL:', audioUrl);
-      toast.error("Could not play audio recording - invalid URL");
+    if (!audioUrl) {
+      console.log("No audio URL provided");
+      toast.error("No audio recording available");
       return;
     }
-    
-    try {
-      if (!audioElement) {
+
+    if (isPlaying) {
+      // Pause audio
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      setIsPlaying(false);
+    } else {
+      // Play audio
+      if (!audioRef.current) {
         console.log("Creating new audio element with URL:", audioUrl);
         const audio = new Audio(audioUrl);
-        audio.addEventListener('ended', () => setIsPlaying(false));
-        audio.addEventListener('error', (err) => {
-          console.error('Audio playback error:', err);
+        
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Error playing audio:', e);
           toast.error("Could not play audio recording");
           setIsPlaying(false);
         });
         
-        setAudioElement(audio);
-        
-        audio.play().catch(err => {
-          console.error('Error playing audio:', err);
-          toast.error("Could not play audio recording");
-          setIsPlaying(false);
-        });
-        setIsPlaying(true);
-      } else {
-        if (isPlaying) {
-          audioElement.pause();
-          setIsPlaying(false);
-        } else {
-          audioElement.currentTime = 0;
-          audioElement.play().catch(err => {
-            console.error('Error playing audio:', err);
-            toast.error("Could not play audio recording");
-            setIsPlaying(false);
-          });
-          setIsPlaying(true);
-        }
+        audioRef.current = audio;
       }
-    } catch (err) {
-      console.error('Exception in audio playback:', err);
-      toast.error("Could not play audio recording");
-      setIsPlaying(false);
+      
+      audioRef.current.play().catch(err => {
+        console.error('Error playing audio:', err);
+        toast.error("Could not play audio recording");
+        setIsPlaying(false);
+      });
+      
+      setIsPlaying(true);
     }
   };
   
