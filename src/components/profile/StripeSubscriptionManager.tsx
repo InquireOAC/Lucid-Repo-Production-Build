@@ -198,7 +198,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   }
 
   return (
-    <div className="space-y-6 max-w-full overflow-y-auto max-h-[70vh]">
+    <div className="space-y-6 max-w-full">
       {subscriptionStatus?.subscribed ? (
         <ActiveSubscription 
           subscriptionStatus={subscriptionStatus}

@@ -47,8 +47,8 @@ const SubscriptionDialog = ({
           </div>
         </DialogHeader>
         
-        <ScrollArea className="h-[70vh] max-h-[500px]">
-          <div className="space-y-4 py-4 pr-4">
+        <div className="overflow-y-auto max-h-[70vh] pr-1">
+          <div className="space-y-4 py-4">
             {!subscription ? (
               <div>
                 <p className="text-sm text-center text-muted-foreground mb-4">
@@ -123,7 +123,7 @@ const SubscriptionDialog = ({
               </>
             )}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
