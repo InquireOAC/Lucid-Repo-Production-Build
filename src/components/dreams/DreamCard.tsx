@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import DreamCardUser from "./DreamCardUser";
 import DreamCardTags from "./DreamCardTags";
 import DreamCardSocial from "./DreamCardSocial";
 import { Button } from "@/components/ui/button";
+
 interface DreamCardProps {
   dream: DreamEntry;
   tags?: DreamTag[];
@@ -19,12 +21,13 @@ interface DreamCardProps {
   isAudioPlaying?: boolean;
   onToggleAudio?: () => void;
 }
-const DreamCard = ({
-  dream,
-  tags = [],
-  onLike,
-  showUser = false,
-  onClick,
+
+const DreamCard = ({ 
+  dream, 
+  tags = [], 
+  onLike, 
+  showUser = false, 
+  onClick, 
   onUserClick,
   onTagClick,
   isAudioPlaying = false,
@@ -34,18 +37,19 @@ const DreamCard = ({
   // State to track audio playback
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-
+  
   // Check either isPublic or is_public field
   const isPublic = dream.is_public || dream.isPublic;
-
+  
   // Use either likeCount or like_count, ensuring we have a consistent value
-  const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : dream.like_count || 0;
-
+  const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : (dream.like_count || 0);
+  
   // Similarly handle comment count
-  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : dream.comment_count || 0;
+  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
+
   console.log("DreamCard rendering with audio URL:", audioUrl, "for dream:", dream.title);
 
   // Get user info from profiles if available
@@ -56,6 +60,7 @@ const DreamCard = ({
   // Effect to sync local playing state with prop
   useEffect(() => {
     setIsPlaying(isAudioPlaying || false);
+    
     if (isAudioPlaying && audioUrl && !isPlaying) {
       playAudio();
     } else if (!isAudioPlaying && isPlaying) {
@@ -72,35 +77,41 @@ const DreamCard = ({
       }
     };
   }, []);
+
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
       e.stopPropagation();
       onUserClick();
     }
   };
-
+  
   // Create audio element and play
   const playAudio = () => {
     if (!audioUrl) {
       toast.error("No audio recording available");
       return;
     }
+    
     try {
       if (!audioRef.current) {
         console.log("Creating new audio element with URL:", audioUrl);
         const audio = new Audio(audioUrl);
+        
         audio.addEventListener('ended', () => {
           setIsPlaying(false);
           if (onToggleAudio) onToggleAudio();
         });
-        audio.addEventListener('error', e => {
+        
+        audio.addEventListener('error', (e) => {
           console.error('Error playing audio:', e);
           toast.error("Could not play audio recording");
           setIsPlaying(false);
           if (onToggleAudio) onToggleAudio();
         });
+        
         audioRef.current = audio;
       }
+      
       audioRef.current.play().catch(err => {
         console.error('Error playing audio:', err);
         toast.error("Could not play audio recording");
@@ -114,18 +125,18 @@ const DreamCard = ({
       if (onToggleAudio) onToggleAudio();
     }
   };
-
+  
   // Pause audio
   const pauseAudio = () => {
     if (audioRef.current) {
       audioRef.current.pause();
     }
   };
-
+  
   // Handle audio playback
   const toggleAudio = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
-
+    
     if (onToggleAudio) {
       onToggleAudio();
     } else {
@@ -139,8 +150,22 @@ const DreamCard = ({
       }
     }
   };
-  return <Card className="dream-card h-full cursor-pointer transition-all relative" onClick={onClick}>
-      {audioUrl}
+
+  return (
+    <Card 
+      className="dream-card h-full cursor-pointer transition-all relative"
+      onClick={onClick}
+    >
+      {audioUrl && (
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="absolute top-2 right-2 z-10 bg-background/80 hover:bg-background"
+          onClick={toggleAudio}
+        >
+          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
+        </Button>
+      )}
       
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
@@ -154,20 +179,49 @@ const DreamCard = ({
         </div>
       </CardHeader>
       <CardContent className="p-4 pt-2">
-        {showUser && <DreamCardUser username={username} displayName={displayName} avatarUrl={avatarUrl} onUserClick={handleUserClick} />}
+        {showUser && (
+          <DreamCardUser
+            username={username}
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            onUserClick={handleUserClick}
+          />
+        )}
         
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {dream.content}
         </p>
         
-        <DreamCardTags tags={tags} dreamTags={dream.tags} lucid={dream.lucid} audioUrl={audioUrl} isPlaying={isPlaying} onTagClick={onTagClick} onToggleAudio={toggleAudio} />
+        <DreamCardTags
+          tags={tags}
+          dreamTags={dream.tags}
+          lucid={dream.lucid}
+          audioUrl={audioUrl}
+          isPlaying={isPlaying}
+          onTagClick={onTagClick}
+          onToggleAudio={toggleAudio}
+        />
         
-        {dream.generatedImage && <div className="mt-2 h-20 w-full overflow-hidden rounded-md">
-            <img src={dream.generatedImage} alt="Dream visualization" className="h-full w-full object-cover" />
-          </div>}
+        {dream.generatedImage && (
+          <div className="mt-2 h-20 w-full overflow-hidden rounded-md">
+            <img
+              src={dream.generatedImage}
+              alt="Dream visualization"
+              className="h-full w-full object-cover"
+            />
+          </div>
+        )}
         
-        <DreamCardSocial isPublic={isPublic} likeCount={likeCount} commentCount={commentCount} liked={dream.liked} onLike={onLike} />
+        <DreamCardSocial
+          isPublic={isPublic}
+          likeCount={likeCount}
+          commentCount={commentCount}
+          liked={dream.liked}
+          onLike={onLike}
+        />
       </CardContent>
-    </Card>;
+    </Card>
+  );
 };
+
 export default DreamCard;
