@@ -1,50 +1,36 @@
 
-export type DreamTag = {
+export interface DreamEntry {
   id: string;
-  name: string;
-  color: string;
-};
-
-export type DreamEntry = {
-  id: string;
-  date: string; // ISO string
+  date: string;
   title: string;
   content: string;
-  tags: string[]; // Array of tag IDs
+  tags: string[];
   mood?: string;
   lucid: boolean;
-  imagePrompt?: string;
-  generatedImage?: string;
+  user_id?: string;
   analysis?: string;
-  is_public?: boolean; // Whether dream is shared to Lucid Repo
-  isPublic?: boolean; // Legacy field - keeping for backward compatibility
-  like_count?: number; // Supabase field name
-  likeCount?: number; // App field name
-  comment_count?: number; // Supabase field name
-  commentCount?: number; // App field name
-  created_at?: string; // Added for Supabase timestamp
-  updated_at?: string; // Added for Supabase timestamp
-  user_id?: string; // Added for Supabase user ID
-  userId?: string; // For consistency with other fields
-  view_count?: number; // Added for Supabase view count
-  liked?: boolean; // Whether the current user has liked this dream
-  // Add profiles field for joined queries
+  generatedImage?: string;
+  imagePrompt?: string;
+  is_public?: boolean;
+  isPublic?: boolean;
+  like_count?: number;
+  likeCount?: number;
+  comment_count?: number;
+  commentCount?: number;
+  liked?: boolean;
+  userId?: string;
   profiles?: {
     username?: string;
     display_name?: string;
     avatar_url?: string;
-    [key: string]: any;
   };
-};
+  audioUrl?: string;
+  audio_url?: string;
+}
 
-export type DreamStore = {
-  entries: DreamEntry[];
-  tags: DreamTag[];
-};
-
-export type SocialLinks = {
-  twitter?: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
-};
+export interface DreamTag {
+  id: string;
+  name: string;
+  color: string;
+  user_id?: string;
+}

@@ -1,10 +1,10 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Moon } from "lucide-react";
+import { Heart, MessageCircle, Moon, Play, Pause } from "lucide-react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,9 @@ const DreamCard = ({
   onTagClick
 }: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
+  // New state to track audio playback
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   
   // Check either isPublic or is_public field
   const isPublic = dream.is_public || dream.isPublic;
@@ -37,6 +40,9 @@ const DreamCard = ({
   
   // Similarly handle comment count
   const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
+
+  // For audio URL, check both snake_case and camelCase properties
+  const audioUrl = dream.audioUrl || dream.audio_url;
 
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
@@ -55,6 +61,35 @@ const DreamCard = ({
     if (onTagClick) {
       e.stopPropagation();
       onTagClick(tagId);
+    }
+  };
+  
+  // Handle audio playback
+  const toggleAudio = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (!audioUrl) return;
+    
+    if (!audioElement) {
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('ended', () => setIsPlaying(false));
+      setAudioElement(audio);
+      
+      audio.play().catch(err => {
+        console.error('Error playing audio:', err);
+      });
+      setIsPlaying(true);
+    } else {
+      if (isPlaying) {
+        audioElement.pause();
+        setIsPlaying(false);
+      } else {
+        audioElement.currentTime = 0;
+        audioElement.play().catch(err => {
+          console.error('Error playing audio:', err);
+        });
+        setIsPlaying(true);
+      }
     }
   };
   
@@ -122,6 +157,25 @@ const DreamCard = ({
               className="text-xs font-normal bg-dream-lavender/20 text-dream-lavender"
             >
               Lucid
+            </Badge>
+          )}
+          {audioUrl && (
+            <Badge
+              variant="outline"
+              className={`text-xs font-normal cursor-pointer flex items-center gap-1 ${
+                isPlaying ? "bg-green-500/20 text-green-600 border-green-500" : "bg-blue-500/10 text-blue-600 border-blue-400"
+              }`}
+              onClick={toggleAudio}
+            >
+              {isPlaying ? (
+                <>
+                  <Pause size={10} /> Pause Audio
+                </>
+              ) : (
+                <>
+                  <Play size={10} /> Play Audio
+                </>
+              )}
             </Badge>
           )}
         </div>

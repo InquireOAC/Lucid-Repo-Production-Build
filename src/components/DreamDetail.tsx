@@ -1,317 +1,225 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { DreamEntry, DreamTag } from "@/types/dream";
-import DreamAnalysis from "./DreamAnalysis";
-import DreamComments from "./DreamComments";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Moon, Globe, Trash2, Lock, MessageCircle, Heart } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Edit, Heart, Globe, Lock, Trash2, Play, Pause } from "lucide-react";
+import { toast } from "sonner";
 
 interface DreamDetailProps {
   dream: DreamEntry;
   tags: DreamTag[];
   onClose: () => void;
-  onUpdate: (id: string, updates: Partial<DreamEntry>) => void;
-  onDelete: (id: string) => void;
-  isAuthenticated: boolean;
+  onUpdate?: (id: string, updates: Partial<DreamEntry>) => void;
+  onDelete?: (id: string) => void;
+  isAuthenticated?: boolean;
 }
 
-const DreamDetail = ({
-  dream,
-  tags,
-  onClose,
-  onUpdate,
-  onDelete,
-  isAuthenticated,
-}: DreamDetailProps) => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const formattedDate = format(new Date(dream.date), "EEEE, MMMM d, yyyy");
-  const formattedTime = format(new Date(dream.date), "h:mm a");
-  
-  const dreamTags = dream.tags
-    .map((tagId) => tags.find((t) => t.id === tagId))
-    .filter(Boolean) as DreamTag[];
-  
-  // Use is_public for consistency with the database field
-  const [isPublic, setIsPublic] = useState(dream.is_public || dream.isPublic || false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showComments, setShowComments] = useState(false);
-  const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
-  
-  // Get user info from profiles if available
-  const username = dream.profiles?.username || "Anonymous";
-  const displayName = dream.profiles?.display_name || "Anonymous User";
-  const avatarUrl = dream.profiles?.avatar_url || "";
+const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
 
-  const handleAnalysisComplete = (analysis: string) => {
-    onUpdate(dream.id, { analysis });
-  };
+  // For audio URL, check both snake_case and camelCase properties
+  const audioUrl = dream.audioUrl || dream.audio_url;
+  
+  // Clean up audio element on unmount
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        setAudioElement(null);
+      }
+    };
+  }, []);
 
-  const handleShareToggle = (checked: boolean) => {
-    if (!isAuthenticated) {
-      return;
+  const handleTogglePublic = async () => {
+    if (onUpdate) {
+      const newStatus = !(dream.is_public || dream.isPublic);
+      await onUpdate(dream.id, { 
+        is_public: newStatus,
+        isPublic: newStatus
+      });
     }
-    
-    setIsPublic(checked);
-    onUpdate(dream.id, { 
-      is_public: checked,
-      isPublic: checked // Update both fields for consistency
-    });
   };
 
-  const handleDelete = () => {
-    setIsDeleting(true);
-    try {
+  const handleDeleteDream = async () => {
+    if (onDelete) {
       onDelete(dream.id);
-    } finally {
-      setDeleteDialogOpen(false);
     }
   };
 
-  const handleNavigateToProfile = () => {
-    if (dream.user_id) {
-      onClose();
-      navigate(`/profile/${dream.user_id}`);
+  const toggleAudio = () => {
+    if (!audioUrl) return;
+    
+    if (!audioElement) {
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('ended', () => setIsPlaying(false));
+      setAudioElement(audio);
+      
+      audio.play().catch(err => {
+        console.error('Error playing audio:', err);
+        toast.error("Could not play audio recording");
+      });
+      setIsPlaying(true);
+    } else {
+      if (isPlaying) {
+        audioElement.pause();
+        setIsPlaying(false);
+      } else {
+        audioElement.currentTime = 0;
+        audioElement.play().catch(err => {
+          console.error('Error playing audio:', err);
+          toast.error("Could not play audio recording");
+        });
+        setIsPlaying(true);
+      }
     }
   };
   
-  const canModifyDream = user && dream.user_id === user.id;
-  
-  // Use either likeCount or like_count, ensuring we have a consistent value
-  const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : (dream.like_count || 0);
-  const isLiked = dream.liked || false;
+  // Check either isPublic or is_public field
+  const isPublic = dream.is_public || dream.isPublic;
+
+  // Map tag IDs to tag objects
+  const dreamTags = dream.tags
+    .map((tagId) => tags.find((tag) => tag.id === tagId))
+    .filter(Boolean) as DreamTag[];
+
+  const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
 
   return (
-    <Dialog open={true} onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex justify-between items-start">
-            <DialogTitle className="text-xl gradient-text">
-              {dream.title}
-            </DialogTitle>
-            {dream.user_id && (
-              <div 
-                className="flex items-center space-x-2 cursor-pointer hover:underline"
-                onClick={handleNavigateToProfile}
-              >
-                <Avatar className="h-6 w-6">
-                  <AvatarImage src={avatarUrl} alt={username} />
-                  <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium">{displayName}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center text-sm text-muted-foreground">
-            <Moon size={14} className="mr-1" /> {formattedDate} at {formattedTime}
-          </div>
-        </DialogHeader>
-        
-        <div className="space-y-6">
-          {/* Tags Section - Moved to top for better visibility */}
-          {dreamTags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
-              {dreamTags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                  className="text-sm font-normal border px-3 py-1"
-                >
-                  {tag.name}
-                </Badge>
-              ))}
-            </div>
-          )}
+    <>
+      <Dialog open onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
+          </DialogHeader>
           
-          {/* Add mood and lucid status in a more visible way */}
-          <div className="flex flex-wrap gap-2">
-            {dream.lucid && (
-              <Badge
-                variant="secondary"
-                className="text-sm font-normal bg-dream-lavender/20 text-dream-lavender px-3 py-1"
-              >
-                Lucid Dream
-              </Badge>
-            )}
-            {dream.mood && (
-              <Badge
-                variant="outline"
-                className="text-sm font-normal px-3 py-1"
-              >
-                Mood: {dream.mood}
-              </Badge>
-            )}
-          </div>
-          
-          {/* Image */}
-          {dream.generatedImage && (
-            <div className="rounded-md overflow-hidden">
-              <img
-                src={dream.generatedImage}
-                alt="Dream visualization"
-                className="w-full h-auto object-cover"
-              />
-              {dream.imagePrompt && (
-                <p className="mt-1 text-xs text-muted-foreground italic px-2">
-                  "{dream.imagePrompt}"
-                </p>
-              )}
-            </div>
-          )}
-          
-          {/* Dream Content */}
-          <div>
-            <p className="whitespace-pre-wrap">
-              {dream.content}
-            </p>
-          </div>
-          
-          {/* Social actions */}
-          {isPublic && (
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className={cn(
-                    "flex items-center gap-1",
-                    isLiked && "text-red-500 border-red-200 bg-red-50"
-                  )}
-                  onClick={() => onUpdate(dream.id, { liked: !isLiked })}
-                  disabled={!isAuthenticated}
-                >
-                  <Heart size={16} />
-                  <span>{likeCount}</span>
-                </Button>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={() => setShowComments(!showComments)}
-                >
-                  <MessageCircle size={16} />
-                  <span>{commentCount}</span>
-                </Button>
-              </div>
-              
-              {canModifyDream && (
-                <div className="flex items-center space-x-2">
-                  <Switch 
-                    id="share-dream"
-                    checked={isPublic}
-                    onCheckedChange={handleShareToggle}
-                  />
-                  <Label htmlFor="share-dream" className="flex gap-1 items-center">
-                    {isPublic ? (
-                      <>
-                        <Globe size={16} className="text-dream-purple" />
-                        <span>Public</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock size={16} />
-                        <span>Private</span>
-                      </>
-                    )}
-                  </Label>
-                </div>
-              )}
-            </div>
-          )}
-          
-          {showComments && (
-            <>
-              <Separator />
-              <DreamComments 
-                dreamId={dream.id} 
-                onCommentCountChange={(count) => {
-                  setCommentCount(count);
-                  onUpdate(dream.id, { commentCount: count });
-                }}
-              />
-            </>
-          )}
-          
-          {/* Analysis Third - Only show if it's the user's own dream or if analysis already exists */}
-          {(dream.analysis || canModifyDream) && (
-            <>
-              <Separator />
-              <DreamAnalysis
-                dreamContent={dream.content}
-                existingAnalysis={dream.analysis}
-                onAnalysisComplete={handleAnalysisComplete}
-                disabled={!canModifyDream}
-              />
-            </>
-          )}
-          
-          {/* Delete button for owners only */}
-          {canModifyDream && (
-            <>
-              <Separator />
-              <div className="flex justify-end">
+          <div className="space-y-4 mt-2">
+            {/* Date */}
+            <div className="text-sm text-muted-foreground">{formattedDate}</div>
+            
+            {/* Content */}
+            <div className="text-sm whitespace-pre-wrap">{dream.content}</div>
+            
+            {/* Audio recording */}
+            {audioUrl && (
+              <div className="mt-4">
                 <Button
-                  variant="outline" 
+                  variant="outline"
                   size="sm"
-                  onClick={() => setDeleteDialogOpen(true)}
-                  className="text-destructive border-destructive hover:bg-destructive/10"
-                  disabled={isDeleting}
+                  className={`flex items-center gap-2 ${
+                    isPlaying ? "bg-green-500/10 text-green-600 border-green-400" : "bg-blue-500/10 text-blue-600 border-blue-400"
+                  }`}
+                  onClick={toggleAudio}
                 >
-                  <Trash2 size={14} className="mr-1" />
-                  Delete
+                  {isPlaying ? (
+                    <>
+                      <Pause size={16} /> Pause Audio Recording
+                    </>
+                  ) : (
+                    <>
+                      <Play size={16} /> Play Audio Recording
+                    </>
+                  )}
                 </Button>
               </div>
-            </>
-          )}
-          
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={onClose}
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </div>
-      </DialogContent>
+            )}
+            
+            {/* Tags */}
+            {dreamTags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-4">
+                {dreamTags.map((tag) => (
+                  <Badge
+                    key={tag.id}
+                    style={{ backgroundColor: tag.color + "40", color: tag.color }}
+                    className="text-xs font-normal border"
+                  >
+                    {tag.name}
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Dream Image */}
+            {dream.generatedImage && (
+              <div className="mt-4">
+                <img 
+                  src={dream.generatedImage} 
+                  alt="Dream visualization" 
+                  className="rounded-md w-full h-auto"
+                />
+              </div>
+            )}
+
+            {/* Dream Analysis */}
+            {dream.analysis && (
+              <div className="mt-4 p-3 bg-muted/40 rounded-md">
+                <h3 className="text-sm font-medium mb-1">Dream Analysis</h3>
+                <div className="text-sm text-muted-foreground">{dream.analysis}</div>
+              </div>
+            )}
+
+            {/* Footer actions - Only show actions if user is authenticated */}
+            {isAuthenticated && (
+              <div className="flex justify-between items-center mt-6">
+                <div className="flex gap-2">
+                  {onDelete && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setIsDeleteDialogOpen(true)}
+                    >
+                      <Trash2 size={14} className="mr-1" /> Delete
+                    </Button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {onUpdate && (
+                    <Button
+                      variant={isPublic ? "outline" : "default"}
+                      size="sm"
+                      onClick={handleTogglePublic}
+                    >
+                      {isPublic ? (
+                        <>
+                          <Lock size={14} className="mr-1" /> Make Private
+                        </>
+                      ) : (
+                        <>
+                          <Globe size={14} className="mr-1" /> Share
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
       
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this dream from your journal.
-              This action cannot be undone.
+              This action cannot be undone. The dream will be permanently deleted from your journal.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleDelete}
-              className="bg-destructive hover:bg-destructive/90"
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
+            <AlertDialogAction onClick={handleDeleteDream}>
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Dialog>
+    </>
   );
 };
 

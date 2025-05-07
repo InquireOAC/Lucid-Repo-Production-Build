@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamTag } from "@/types/dream";
@@ -17,7 +18,8 @@ import {
 } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import { X } from "lucide-react";
+import VoiceRecorder from "./VoiceRecorder";
+import { Check, Mic, MicOff, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface DreamEntryFormProps {
@@ -29,6 +31,7 @@ interface DreamEntryFormProps {
     tags: string[];
     lucid: boolean;
     mood: string;
+    audioUrl?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -52,7 +55,8 @@ const DreamEntryForm = ({
     analysis: existingDream?.analysis || "",
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
-    lucid: existingDream?.lucid || false, // We'll keep this in the state but not show UI for it
+    lucid: existingDream?.lucid || false,
+    audioUrl: existingDream?.audioUrl || "",
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -110,6 +114,14 @@ const DreamEntryForm = ({
     }
   };
 
+  const handleAudioRecorded = (audioUrl: string) => {
+    setFormData(prev => ({
+      ...prev,
+      audioUrl
+    }));
+    toast.success("Voice recording saved");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
@@ -122,6 +134,7 @@ const DreamEntryForm = ({
         tags: formData.tags,
         lucid: formData.lucid,
         mood: formData.mood,
+        audioUrl: formData.audioUrl,
       });
       return;
     }
@@ -138,7 +151,8 @@ const DreamEntryForm = ({
       is_public: false,
       image_url: formData.generatedImage,
       image_prompt: formData.imagePrompt,
-      lucid: formData.lucid
+      lucid: formData.lucid,
+      audio_url: formData.audioUrl
     };
 
     try {
@@ -191,15 +205,24 @@ const DreamEntryForm = ({
             className="dream-input"
             required
           />
-          <Textarea
-            name="content"
-            placeholder="Dream Description"
-            value={formData.content}
-            onChange={handleChange}
-            className="dream-input resize-none"
-            rows={4}
-            required
-          />
+          
+          {/* Voice Recorder */}
+          <div className="space-y-2">
+            <Label className="flex justify-between">
+              <span>Dream Description</span>
+              <VoiceRecorder onRecordingComplete={handleAudioRecorded} existingAudioUrl={formData.audioUrl} />
+            </Label>
+            <Textarea
+              name="content"
+              placeholder="Dream Description"
+              value={formData.content}
+              onChange={handleChange}
+              className="dream-input resize-none"
+              rows={4}
+              required
+            />
+          </div>
+          
           <Input
             type="date"
             name="date"
@@ -260,17 +283,27 @@ const DreamEntryForm = ({
           )}
           
           <div className="flex flex-wrap gap-1">
-            {availableTags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant={formData.tags.includes(tag.id) ? "default" : "outline"}
-                onClick={() => handleTagSelect(tag.id)}
-                style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                className="cursor-pointer text-xs font-normal border"
-              >
-                {tag.name}
-              </Badge>
-            ))}
+            {availableTags.map((tag) => {
+              const isSelected = formData.tags.includes(tag.id);
+              return (
+                <Badge
+                  key={tag.id}
+                  variant={isSelected ? "default" : "outline"}
+                  onClick={() => handleTagSelect(tag.id)}
+                  style={{ 
+                    backgroundColor: isSelected ? tag.color : tag.color + "10", 
+                    color: isSelected ? "#fff" : tag.color,
+                    borderColor: tag.color
+                  }}
+                  className="cursor-pointer text-xs font-normal border transition-all duration-200 relative pl-6"
+                >
+                  <span className={`absolute left-2 top-1/2 transform -translate-y-1/2 ${isSelected ? 'opacity-100' : 'opacity-0'}`}>
+                    <Check size={12} className="stroke-white" />
+                  </span>
+                  {tag.name}
+                </Badge>
+              );
+            })}
           </div>
         </div>
 
