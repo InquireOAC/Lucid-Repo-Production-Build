@@ -121,7 +121,42 @@ const DreamDetail = ({
         </DialogHeader>
         
         <div className="space-y-6">
-          {/* Image First */}
+          {/* Tags Section - Moved to top for better visibility */}
+          {dreamTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {dreamTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  style={{ backgroundColor: tag.color + "40", color: tag.color }}
+                  className="text-sm font-normal border px-3 py-1"
+                >
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          )}
+          
+          {/* Add mood and lucid status in a more visible way */}
+          <div className="flex flex-wrap gap-2">
+            {dream.lucid && (
+              <Badge
+                variant="secondary"
+                className="text-sm font-normal bg-dream-lavender/20 text-dream-lavender px-3 py-1"
+              >
+                Lucid Dream
+              </Badge>
+            )}
+            {dream.mood && (
+              <Badge
+                variant="outline"
+                className="text-sm font-normal px-3 py-1"
+              >
+                Mood: {dream.mood}
+              </Badge>
+            )}
+          </div>
+          
+          {/* Image */}
           {dream.generatedImage && (
             <div className="rounded-md overflow-hidden">
               <img
@@ -137,36 +172,8 @@ const DreamDetail = ({
             </div>
           )}
           
-          {/* Dream Content Second */}
+          {/* Dream Content */}
           <div>
-            <div className="flex flex-wrap gap-1 mb-3">
-              {dreamTags.map((tag) => (
-                <Badge
-                  key={tag.id}
-                  style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                  className="text-xs font-normal border"
-                >
-                  {tag.name}
-                </Badge>
-              ))}
-              {dream.lucid && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs font-normal bg-dream-lavender/20 text-dream-lavender"
-                >
-                  Lucid
-                </Badge>
-              )}
-              {dream.mood && (
-                <Badge
-                  variant="outline"
-                  className="text-xs font-normal"
-                >
-                  Mood: {dream.mood}
-                </Badge>
-              )}
-            </div>
-
             <p className="whitespace-pre-wrap">
               {dream.content}
             </p>

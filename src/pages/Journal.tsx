@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Pencil, Book, Moon, Calendar, Globe, Lock, Edit, Trash2 } from "lucide-react";
+import { Pencil, Book, Moon, Calendar, Globe, Lock, Edit, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { useDreamStore } from "@/store/dreamStore";
 import DreamCard from "@/components/DreamCard";
@@ -52,6 +51,9 @@ const Journal = () => {
   const [dreamToDelete, setDreamToDelete] = useState<string | null>(null);
   const [dailyQuote, setDailyQuote] = useState("");
   const { user } = useAuth();
+  
+  // Add state to track active tag filters
+  const [activeTagIds, setActiveTagIds] = useState<string[]>([]);
   
   // Set daily quote based on the date
   useEffect(() => {
@@ -134,9 +136,9 @@ const Journal = () => {
             user_id: user.id,
             title: newDream.title,
             content: newDream.content,
-            tags: newDream.tags,
-            mood: newDream.mood,
-            lucid: newDream.lucid,
+            tags: dreamData.tags,
+            mood: dreamData.mood,
+            lucid: dreamData.lucid,
             date: newDream.date,
             is_public: false // Use is_public in database
           });
@@ -275,6 +277,29 @@ const Journal = () => {
       toast.error("Failed to update dream visibility");
     }
   };
+  
+  // Add a new function to handle tag clicks
+  const handleTagClick = (tagId: string) => {
+    setActiveTagIds(prev => {
+      if (prev.includes(tagId)) {
+        return prev.filter(id => id !== tagId);
+      } else {
+        return [...prev, tagId];
+      }
+    });
+  };
+  
+  // Filter dreams by active tags
+  const filteredDreams = activeTagIds.length > 0
+    ? entries.filter(dream => 
+        dream.tags.some(tagId => activeTagIds.includes(tagId))
+      )
+    : entries;
+  
+  // Get unique tags used in dreams for display in filter bar
+  const uniqueTagsInDreams = tags.filter(tag => 
+    entries.some(dream => dream.tags.includes(tag.id))
+  );
 
   const renderDreamCards = (dreams: DreamEntry[]) => {
     if (dreams.length === 0) {
@@ -304,6 +329,7 @@ const Journal = () => {
             dream={dream}
             tags={tags}
             onClick={() => setSelectedDream(dream)}
+            onTagClick={handleTagClick}
           />
         </div>
         
@@ -382,6 +408,43 @@ const Journal = () => {
           <span>Record Dream</span>
         </Button>
       </div>
+      
+      {/* Tag filter bar */}
+      {uniqueTagsInDreams.length > 0 && (
+        <div className="mb-4 overflow-x-auto pb-2">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Filter by:</span>
+            <div className="flex gap-2 items-center">
+              {uniqueTagsInDreams.map(tag => (
+                <Badge
+                  key={tag.id}
+                  style={{ 
+                    backgroundColor: activeTagIds.includes(tag.id) ? tag.color : tag.color + "40", 
+                    color: activeTagIds.includes(tag.id) ? "#fff" : tag.color
+                  }}
+                  className="cursor-pointer transition-colors"
+                  onClick={() => handleTagClick(tag.id)}
+                >
+                  {tag.name}
+                  {activeTagIds.includes(tag.id) && (
+                    <X size={14} className="ml-1" />
+                  )}
+                </Badge>
+              ))}
+            </div>
+            {activeTagIds.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-xs h-7 px-2" 
+                onClick={() => setActiveTagIds([])}
+              >
+                Clear all
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       <Tabs defaultValue="all" className="mb-6">
         <TabsList className="grid w-full md:w-[400px] grid-cols-2">
@@ -411,14 +474,14 @@ const Journal = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {renderDreamCards(entries)}
+              {renderDreamCards(filteredDreams)}
             </div>
           )}
         </TabsContent>
         
         <TabsContent value="recent">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {renderDreamCards(entries.slice(0, 6))}
+            {renderDreamCards(filteredDreams.slice(0, 6))}
           </div>
         </TabsContent>
       </Tabs>

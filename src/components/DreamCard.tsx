@@ -10,9 +10,10 @@ interface DreamCardProps {
   dream: DreamEntry;
   tags: DreamTag[];
   onClick: () => void;
+  onTagClick?: (tagId: string) => void;
 }
 
-const DreamCard = ({ dream, tags, onClick }: DreamCardProps) => {
+const DreamCard = ({ dream, tags, onClick, onTagClick }: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
   const dreamTags = dream.tags
     .map((tagId) => tags.find((t) => t.id === tagId))
@@ -24,8 +25,13 @@ const DreamCard = ({ dream, tags, onClick }: DreamCardProps) => {
   // Use either likeCount or like_count, ensuring we have a consistent value
   const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : (dream.like_count || 0);
   
-  // Similarly handle comment count
-  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
+  // Handle tag click without propagating to the card
+  const handleTagClick = (e: React.MouseEvent, tagId: string) => {
+    e.stopPropagation();
+    if (onTagClick) {
+      onTagClick(tagId);
+    }
+  };
 
   return (
     <Card 
@@ -47,12 +53,13 @@ const DreamCard = ({ dream, tags, onClick }: DreamCardProps) => {
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {dream.content}
         </p>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1 mb-2">
           {dreamTags.map((tag) => (
             <Badge
               key={tag.id}
               style={{ backgroundColor: tag.color + "40", color: tag.color }}
-              className="text-xs font-normal border"
+              className="text-xs font-normal border cursor-pointer hover:opacity-80"
+              onClick={(e) => handleTagClick(e, tag.id)}
             >
               {tag.name}
             </Badge>

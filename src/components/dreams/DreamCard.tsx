@@ -5,18 +5,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, MessageCircle, Moon } from "lucide-react";
-import { DreamEntry } from "@/types/dream";
+import { DreamEntry, DreamTag } from "@/types/dream";
 import { cn } from "@/lib/utils";
 
 interface DreamCardProps {
   dream: DreamEntry;
+  tags?: DreamTag[];
   onLike?: () => void;
   showUser?: boolean;
   onClick?: () => void;
   onUserClick?: () => void;
+  onTagClick?: (tagId: string) => void;
 }
 
-const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: DreamCardProps) => {
+const DreamCard = ({ 
+  dream, 
+  tags = [], 
+  onLike, 
+  showUser = false, 
+  onClick, 
+  onUserClick,
+  onTagClick
+}: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
   
   // Check either isPublic or is_public field
@@ -39,6 +49,21 @@ const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: Dr
       onUserClick();
     }
   };
+  
+  // Handle tag click
+  const handleTagClick = (e: React.MouseEvent, tagId: string) => {
+    if (onTagClick) {
+      e.stopPropagation();
+      onTagClick(tagId);
+    }
+  };
+  
+  // Get dream tags if we have tag data
+  const dreamTags = tags?.length && dream.tags ? 
+    dream.tags
+      .map(tagId => tags.find(t => t.id === tagId))
+      .filter(Boolean) as DreamTag[] 
+    : [];
 
   return (
     <Card 
@@ -74,6 +99,22 @@ const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: Dr
           {dream.content}
         </p>
         
+        {/* Render tags if we have them */}
+        {dreamTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {dreamTags.map(tag => (
+              <Badge
+                key={tag.id}
+                style={{ backgroundColor: tag.color + "40", color: tag.color }}
+                className="text-xs font-normal border cursor-pointer hover:opacity-80"
+                onClick={(e) => handleTagClick(e, tag.id)}
+              >
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+        
         <div className="flex flex-wrap gap-1 mb-2">
           {dream.lucid && (
             <Badge
@@ -98,7 +139,13 @@ const DreamCard = ({ dream, onLike, showUser = false, onClick, onUserClick }: Dr
         {/* Show social stats if dream is public */}
         {isPublic && (
           <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-            <div className={cn("flex items-center", dream.liked && "text-red-500")}>
+            <div 
+              className={cn("flex items-center cursor-pointer", dream.liked && "text-red-500")}
+              onClick={(e) => {
+                e.stopPropagation();
+                onLike?.();
+              }}
+            >
               <Heart size={12} className="mr-1" />
               <span>{likeCount}</span>
             </div>
