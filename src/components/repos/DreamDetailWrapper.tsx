@@ -37,15 +37,15 @@ const DreamDetailWrapper = ({
       
       // Show success message
       toast.success("Dream deleted successfully");
-      
-      // Force refresh the dreams list
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
     } catch (error) {
       console.error("Error deleting dream:", error);
       toast.error("Failed to delete dream");
     }
+  };
+  
+  const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
+    // Call the provided update handler
+    onUpdate(id, updates);
   };
   
   return (
@@ -53,7 +53,7 @@ const DreamDetailWrapper = ({
       dream={selectedDream}
       tags={tags}
       onClose={onClose}
-      onUpdate={onUpdate}
+      onUpdate={handleUpdate}
       onDelete={handleDeleteDream}
       isAuthenticated={isAuthenticated}
     />

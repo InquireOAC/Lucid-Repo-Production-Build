@@ -39,6 +39,8 @@ export function useDreams() {
   const fetchPublicDreams = async () => {
     setIsLoading(true);
     try {
+      console.log("Fetching public dreams with sort:", sortBy);
+      
       let query = supabase
         .from("dream_entries")
         .select("*, profiles:user_id(username, display_name, avatar_url)")
@@ -56,6 +58,8 @@ export function useDreams() {
 
       if (error) throw error;
 
+      console.log("Fetched public dreams:", data.length);
+
       // Transform data to match our DreamEntry type
       const transformedDreams = data.map((dream: any) => ({
         ...dream,
@@ -63,16 +67,9 @@ export function useDreams() {
         likeCount: dream.like_count || 0,
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
-        audioUrl: dream.audio_url, // Ensure audio_url is mapped to audioUrl
+        audioUrl: dream.audio_url, 
         profiles: dream.profiles
       }));
-
-      console.log("Fetched dreams with audio:", transformedDreams.map(d => ({ 
-        id: d.id, 
-        title: d.title,
-        audioUrl: d.audioUrl, 
-        audio_url: d.audio_url 
-      })));
       
       setDreams(transformedDreams);
     } catch (error) {
@@ -103,5 +100,6 @@ export function useDreams() {
     handleLike,
     handleToggleAudio,
     handleUpdateDream,
+    fetchPublicDreams, // Export the refresh function
   };
 }

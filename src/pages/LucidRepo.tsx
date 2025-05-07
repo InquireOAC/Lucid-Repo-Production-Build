@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -28,8 +28,14 @@ const LucidRepo = () => {
     playingAudioId,
     handleLike,
     handleToggleAudio,
-    handleUpdateDream
+    handleUpdateDream,
+    fetchPublicDreams
   } = useDreams();
+
+  // Refresh dreams when component mounts
+  useEffect(() => {
+    fetchPublicDreams();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +74,12 @@ const LucidRepo = () => {
     }
     
     handleLike(dreamId);
+  };
+  
+  const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
+    handleUpdateDream(id, updates);
+    // After updating dream, refresh all public dreams to ensure changes are reflected
+    fetchPublicDreams();
   };
 
   // Filter dreams based on search query
@@ -113,7 +125,7 @@ const LucidRepo = () => {
         selectedDream={selectedDream}
         tags={dreamTags}
         onClose={handleCloseDream}
-        onUpdate={handleUpdateDream}
+        onUpdate={handleDreamUpdate}
         isAuthenticated={!!user}
       />
 

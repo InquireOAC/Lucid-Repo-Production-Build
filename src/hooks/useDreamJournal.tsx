@@ -58,12 +58,10 @@ export const useDreamJournal = () => {
           user_id: dream.user_id
         }));
         
-        console.log("Synced dreams with audio:", formattedDreams.map(d => ({
-          id: d.id,
-          title: d.title,
-          audioUrl: d.audioUrl,
-          audio_url: d.audio_url
-        })));
+        // Update the local store with dreams from the database
+        formattedDreams.forEach(dream => {
+          updateEntry(dream.id, dream);
+        });
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);
@@ -179,15 +177,29 @@ export const useDreamJournal = () => {
           dbUpdates.is_public = dbUpdates.isPublic;
           delete dbUpdates.isPublic;
         }
+        
+        // Convert audioUrl to audio_url for database
+        if ('audioUrl' in dbUpdates) {
+          dbUpdates.audio_url = dbUpdates.audioUrl;
+          delete dbUpdates.audioUrl;
+        }
+        
+        console.log("Updating dream in database:", id, dbUpdates);
+        
         const { error } = await supabase
           .from("dream_entries")
           .update(dbUpdates)
           .eq("id", id)
           .eq("user_id", user.id);
-        if (error) throw error;
-      }
-      if (updates.is_public || updates.isPublic) {
-        toast.success("Dream shared to Lucid Repo!");
+          
+        if (error) {
+          console.error("Database error:", error);
+          toast.error("Failed to update dream in database");
+        } else if (updates.is_public || updates.isPublic) {
+          toast.success("Dream shared to Lucid Repo!");
+          // Trigger an immediate refetch since we made this public
+          syncDreamsFromDb();
+        }
       }
     } catch (error) {
       console.error("Error updating dream:", error);
@@ -281,6 +293,7 @@ export const useDreamJournal = () => {
     handleTogglePublic,
     handleTagClick,
     setActiveTagIds,
-    user
+    user,
+    syncDreamsFromDb
   };
 };

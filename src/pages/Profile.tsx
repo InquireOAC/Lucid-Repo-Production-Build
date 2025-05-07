@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -73,6 +74,35 @@ const Profile = () => {
       fetchSubscription();
     }
   }, [user]);
+
+  // Refresh public dreams every time the profile is loaded
+  useEffect(() => {
+    if (isOwnProfile || (userId && user)) {
+      // Add a small delay to ensure profile data is loaded
+      const timer = setTimeout(() => {
+        refreshDreams();
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOwnProfile, userId, user]);
+  
+  const refreshDreams = () => {
+    try {
+      // @ts-ignore - These functions exist in the hook return
+      if (typeof fetchPublicDreams === 'function') {
+        // @ts-ignore
+        fetchPublicDreams();
+      }
+      // @ts-ignore
+      if (typeof fetchLikedDreams === 'function') {
+        // @ts-ignore
+        fetchLikedDreams();
+      }
+    } catch (error) {
+      console.error("Error refreshing dreams:", error);
+    }
+  };
   
   // Loading state
   if (!user) {
@@ -109,6 +139,7 @@ const Profile = () => {
           publicDreams={publicDreams}
           likedDreams={likedDreams}
           isOwnProfile={isOwnProfile}
+          refreshDreams={refreshDreams}
         />
       </div>
       

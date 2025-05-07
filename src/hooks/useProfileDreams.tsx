@@ -6,13 +6,17 @@ import { DreamEntry } from "@/types/dream";
 export function useProfileDreams(user: any, userId?: string) {
   const [publicDreams, setPublicDreams] = useState<DreamEntry[]>([]);
   const [likedDreams, setLikedDreams] = useState<DreamEntry[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchPublicDreams = async () => {
     if (!user) return;
     
     const targetUserId = userId || user.id;
+    setIsLoading(true);
     
     try {
+      console.log("Fetching public dreams for user:", targetUserId);
+      
       const { data, error } = await supabase
         .from("dream_entries")
         .select("*")
@@ -22,6 +26,8 @@ export function useProfileDreams(user: any, userId?: string) {
       
       if (error) throw error;
       
+      console.log("Fetched public dreams:", data?.length || 0);
+      
       // Map Supabase field names to our app's field names for consistency
       const transformedDreams = data.map((dream: any) => ({
         ...dream,
@@ -29,17 +35,21 @@ export function useProfileDreams(user: any, userId?: string) {
         likeCount: dream.like_count || 0,
         commentCount: dream.comment_count || 0, 
         userId: dream.user_id,
+        audioUrl: dream.audio_url,
         profiles: dream.profiles
       }));
       
       setPublicDreams(transformedDreams || []);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const fetchLikedDreams = async () => {
     if (!user) return;
+    setIsLoading(true);
     
     try {
       // For viewing own profile or someone else's
@@ -73,6 +83,7 @@ export function useProfileDreams(user: any, userId?: string) {
           likeCount: dream.like_count || 0,
           commentCount: dream.comment_count || 0,
           userId: dream.user_id,
+          audioUrl: dream.audio_url,
           profiles: dream.profiles
         }));
         
@@ -82,12 +93,15 @@ export function useProfileDreams(user: any, userId?: string) {
       }
     } catch (error) {
       console.error("Error fetching liked dreams:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   return {
     publicDreams,
     likedDreams,
+    isLoading,
     fetchPublicDreams,
     fetchLikedDreams
   };

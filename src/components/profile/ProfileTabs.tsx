@@ -8,9 +8,10 @@ interface ProfileTabsProps {
   publicDreams: any[];
   likedDreams: any[];
   isOwnProfile: boolean;
+  refreshDreams?: () => void;
 }
 
-const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile }: ProfileTabsProps) => {
+const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile, refreshDreams }: ProfileTabsProps) => {
   return (
     <Tabs defaultValue="dreams" className="mt-6">
       <TabsList className="grid w-full grid-cols-2">
@@ -30,6 +31,7 @@ const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile }: ProfileTabsPro
           emptyIcon={<Moon size={32} className="mx-auto mb-2 text-muted-foreground" />}
           actionLink="/"
           actionText="Go to Journal"
+          refreshDreams={refreshDreams}
         />
       </TabsContent>
       
@@ -46,6 +48,7 @@ const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile }: ProfileTabsPro
           emptyIcon={<Heart size={32} className="mx-auto mb-2 text-muted-foreground" />}
           actionLink="/lucidrepo"
           actionText="Explore Dreams"
+          refreshDreams={refreshDreams}
         />
       </TabsContent>
     </Tabs>
