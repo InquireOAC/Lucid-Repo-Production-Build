@@ -16,7 +16,8 @@ const DreamDetailAudio = ({ audioUrl }: DreamDetailAudioProps) => {
     (typeof audioUrl === 'string' && audioUrl.length > 0) && 
     !(typeof audioUrl === 'object'); // Make sure it's not an object
   
-  const { isPlaying, togglePlayback, cleanup } = useAudioPlayback(validAudioUrl || null);
+  // Use the actual string URL or null, not a boolean value
+  const { isPlaying, togglePlayback, cleanup } = useAudioPlayback(validAudioUrl ? audioUrl : null);
   
   React.useEffect(() => {
     return () => {
