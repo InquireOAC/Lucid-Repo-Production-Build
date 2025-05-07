@@ -14,7 +14,12 @@ const DreamDetailAudio = ({
   isPlaying,
   toggleAudio
 }: DreamDetailAudioProps) => {
-  if (!audioUrl) return null;
+  console.log("DreamDetailAudio rendering with URL:", audioUrl);
+  
+  if (!audioUrl) {
+    console.log("No audio URL provided, not rendering audio component");
+    return null;
+  }
 
   return (
     <div className="mt-4">

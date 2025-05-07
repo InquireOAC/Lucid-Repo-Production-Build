@@ -56,6 +56,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     if (!audioUrl) return;
     
     if (!audioElement) {
+      console.log("Creating new audio element with URL:", audioUrl);
       const audio = new Audio(audioUrl);
       audio.addEventListener('ended', () => setIsPlaying(false));
       setAudioElement(audio);
@@ -90,6 +91,8 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
 
   const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
 
+  console.log("Dream detail rendering with audio URL:", audioUrl);
+  
   return (
     <>
       <Dialog open onOpenChange={onClose}>

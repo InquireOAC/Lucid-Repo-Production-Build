@@ -75,9 +75,11 @@ const LucidRepo = () => {
         likeCount: dream.like_count || 0,
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
+        audioUrl: dream.audio_url, // Ensure audio_url is mapped to audioUrl
         profiles: dream.profiles
       }));
 
+      console.log("Fetched dreams with audio:", transformedDreams);
       setDreams(transformedDreams);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
@@ -182,6 +184,7 @@ const LucidRepo = () => {
   };
 
   const handleOpenDream = (dream: DreamEntry) => {
+    console.log("Opening dream with audio:", dream.audioUrl || dream.audio_url);
     setSelectedDream(dream);
   };
 
