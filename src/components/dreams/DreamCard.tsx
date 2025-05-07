@@ -1,8 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Moon } from "lucide-react";
+import { toast } from "sonner";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCardUser from "./DreamCardUser";
 import DreamCardTags from "./DreamCardTags";
@@ -49,6 +50,17 @@ const DreamCard = ({
   const displayName = dream.profiles?.display_name || "Anonymous User";
   const avatarUrl = dream.profiles?.avatar_url || "";
 
+  // Clean up audio element on unmount
+  useEffect(() => {
+    return () => {
+      if (audioElement) {
+        audioElement.pause();
+        setIsPlaying(false);
+        setAudioElement(null);
+      }
+    };
+  }, []);
+
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
       e.stopPropagation();
@@ -60,16 +72,29 @@ const DreamCard = ({
   const toggleAudio = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click
     
-    if (!audioUrl) return;
+    if (!audioUrl) {
+      toast.error("No audio recording available");
+      return;
+    }
     
     if (!audioElement) {
+      console.log("Creating new audio element with URL:", audioUrl);
       const audio = new Audio(audioUrl);
       audio.addEventListener('ended', () => setIsPlaying(false));
+      audio.addEventListener('error', (e) => {
+        console.error('Error playing audio:', e);
+        toast.error("Could not play audio recording");
+        setIsPlaying(false);
+      });
+      
       setAudioElement(audio);
       
       audio.play().catch(err => {
         console.error('Error playing audio:', err);
+        toast.error("Could not play audio recording");
+        setIsPlaying(false);
       });
+      
       setIsPlaying(true);
     } else {
       if (isPlaying) {
@@ -79,6 +104,8 @@ const DreamCard = ({
         audioElement.currentTime = 0;
         audioElement.play().catch(err => {
           console.error('Error playing audio:', err);
+          toast.error("Could not play audio recording");
+          setIsPlaying(false);
         });
         setIsPlaying(true);
       }
