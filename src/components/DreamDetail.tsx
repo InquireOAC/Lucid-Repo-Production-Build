@@ -20,35 +20,11 @@ interface DreamDetailProps {
 
 const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-
+  
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
   
   console.log("DreamDetail rendering with dream:", dream.title, "audio URL:", audioUrl);
-  
-  // Clean up audio element on unmount
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  // Also clean up when closing the dialog
-  useEffect(() => {
-    const handleClose = () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        setIsPlaying(false);
-      }
-    };
-    
-    return handleClose;
-  }, [onClose]);
 
   const handleTogglePublic = async () => {
     if (onUpdate) {
@@ -83,63 +59,6 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
       setIsDeleteDialogOpen(false);
     }
   };
-
-  const toggleAudio = () => {
-    if (!audioUrl) {
-      console.log("No audio URL provided");
-      toast.error("No audio recording available");
-      return;
-    }
-
-    if (isPlaying) {
-      // Pause audio
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      setIsPlaying(false);
-    } else {
-      // Play audio
-      if (!audioRef.current) {
-        console.log("Creating new audio element with URL:", audioUrl);
-        const audio = new Audio(audioUrl);
-        
-        audio.addEventListener('ended', () => {
-          console.log("Audio playback ended");
-          setIsPlaying(false);
-        });
-        
-        audio.addEventListener('error', (e) => {
-          console.error('Error playing audio:', e);
-          toast.error("Could not play audio recording");
-          setIsPlaying(false);
-        });
-        
-        audioRef.current = audio;
-      }
-      
-      // Try to reacquire the audio element if URL has changed
-      if (audioRef.current.src !== audioUrl) {
-        audioRef.current = new Audio(audioUrl);
-        audioRef.current.addEventListener('ended', () => {
-          setIsPlaying(false);
-        });
-        
-        audioRef.current.addEventListener('error', (e) => {
-          console.error('Error playing audio:', e);
-          toast.error("Could not play audio recording");
-          setIsPlaying(false);
-        });
-      }
-      
-      audioRef.current.play().catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error("Could not play audio recording");
-        setIsPlaying(false);
-      });
-      
-      setIsPlaying(true);
-    }
-  };
   
   // Check either isPublic or is_public field
   const isPublic = dream.is_public || dream.isPublic;
@@ -170,11 +89,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           />
           
           {audioUrl && (
-            <DreamDetailAudio
-              audioUrl={audioUrl}
-              isPlaying={isPlaying}
-              toggleAudio={toggleAudio}
-            />
+            <DreamDetailAudio audioUrl={audioUrl} />
           )}
           
           <DreamDetailActions

@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import { useAudioPlayback } from "@/hooks/useAudioPlayback";
@@ -18,12 +18,11 @@ const DreamDetailAudio = ({ audioUrl }: DreamDetailAudioProps) => {
   
   const { isPlaying, togglePlayback, cleanup } = useAudioPlayback(validAudioUrl || null);
   
-  // Cleanup audio when component unmounts
-  useEffect(() => {
+  React.useEffect(() => {
     return () => {
       cleanup();
     };
-  }, []);
+  }, [cleanup]);
   
   if (!validAudioUrl) {
     console.log("No valid audio URL provided, not rendering audio component");
