@@ -86,6 +86,9 @@ export function useDreams() {
         dream.id === id ? { ...dream, ...updates } : dream
       )
     );
+    
+    // Refresh the dreams list after updating a dream
+    fetchPublicDreams();
   };
 
   return {

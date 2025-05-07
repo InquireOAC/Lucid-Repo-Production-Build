@@ -44,8 +44,16 @@ const DreamDetailWrapper = ({
   };
   
   const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
-    // Call the provided update handler
-    onUpdate(id, updates);
+    try {
+      // Call the provided update handler
+      onUpdate(id, updates);
+      
+      // Show success message
+      toast.success("Dream updated successfully");
+    } catch (error) {
+      console.error("Error updating dream:", error);
+      toast.error("Failed to update dream");
+    }
   };
   
   return (

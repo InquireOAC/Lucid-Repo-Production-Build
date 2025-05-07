@@ -97,12 +97,19 @@ export function useProfileDreams(user: any, userId?: string) {
       setIsLoading(false);
     }
   };
+
+  // Function to refresh all dream data
+  const refreshDreams = () => {
+    fetchPublicDreams();
+    fetchLikedDreams();
+  };
   
   return {
     publicDreams,
     likedDreams,
     isLoading,
     fetchPublicDreams,
-    fetchLikedDreams
+    fetchLikedDreams,
+    refreshDreams
   };
 }

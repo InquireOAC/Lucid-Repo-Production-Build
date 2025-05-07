@@ -22,6 +22,7 @@ interface DreamGridProps {
   emptyIcon: React.ReactNode;
   actionLink: string;
   actionText: string;
+  refreshDreams?: () => void; // Add this prop to the interface
 }
 
 const DreamGrid = ({
@@ -33,6 +34,7 @@ const DreamGrid = ({
   emptyIcon,
   actionLink,
   actionText,
+  refreshDreams,
 }: DreamGridProps) => {
   const [selectedDream, setSelectedDream] = useState<any>(null);
   // Track which dream audio is playing
@@ -74,6 +76,11 @@ const DreamGrid = ({
       
       // Show success message
       toast.success("Dream deleted successfully");
+      
+      // Refresh dreams if the callback is provided
+      if (refreshDreams) {
+        refreshDreams();
+      }
     } catch (error) {
       console.error("Error deleting dream:", error);
       toast.error("Failed to delete dream");
@@ -104,6 +111,11 @@ const DreamGrid = ({
       
       // Show success message
       toast.success("Dream updated successfully");
+      
+      // Refresh dreams if the callback is provided
+      if (refreshDreams) {
+        refreshDreams();
+      }
     } catch (error) {
       console.error("Error updating dream:", error);
       toast.error("Failed to update dream");
