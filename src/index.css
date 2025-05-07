@@ -56,6 +56,10 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+    touch-action: pan-x pan-y;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
   }
 
   /* Make sure the content doesn't scroll under the fixed tab bar */
@@ -64,6 +68,7 @@
     width: 100%;
     overflow-x: hidden;
     position: relative;
+    touch-action: pan-x pan-y;
   }
 }
 
