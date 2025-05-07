@@ -16,6 +16,7 @@ const LucidRepo = () => {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
 
+  // Using the refactored hook
   const {
     dreams,
     dreamTags,
