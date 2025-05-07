@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Moon } from "lucide-react";
+import { Moon, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCardUser from "./DreamCardUser";
