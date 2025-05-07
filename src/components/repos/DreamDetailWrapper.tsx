@@ -45,11 +45,14 @@ const DreamDetailWrapper = ({
   
   const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
     try {
-      // Call the provided update handler
-      onUpdate(id, updates);
+      // First remove audioUrl from updates if it exists to avoid database error
+      const cleanedUpdates = {...updates};
+      if ('audioUrl' in cleanedUpdates) {
+        delete cleanedUpdates.audioUrl;
+      }
       
-      // Show success message
-      toast.success("Dream updated successfully");
+      // Call the provided update handler
+      onUpdate(id, cleanedUpdates);
     } catch (error) {
       console.error("Error updating dream:", error);
       toast.error("Failed to update dream");

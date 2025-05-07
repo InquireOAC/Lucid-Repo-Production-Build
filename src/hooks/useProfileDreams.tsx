@@ -104,6 +104,14 @@ export function useProfileDreams(user: any, userId?: string) {
     fetchLikedDreams();
   };
   
+  // Initial fetch when component mounts or user/userId changes
+  useEffect(() => {
+    if (user) {
+      fetchPublicDreams();
+      fetchLikedDreams();
+    }
+  }, [user, userId]);
+  
   return {
     publicDreams,
     likedDreams,

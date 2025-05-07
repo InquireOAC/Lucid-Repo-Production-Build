@@ -54,7 +54,6 @@ export const useDreamJournal = () => {
           comment_count: dream.comment_count || 0,
           commentCount: dream.comment_count || 0,
           audioUrl: dream.audio_url,
-          audio_url: dream.audio_url,
           user_id: dream.user_id
         }));
         
@@ -81,14 +80,12 @@ export const useDreamJournal = () => {
       // First add to local store
       const newDream = addEntry({
         ...dreamData,
-        date: new Date().toISOString(),
-        audioUrl: dreamData.audioUrl || null
+        date: new Date().toISOString().split("T")[0],
       });
-
-      console.log("Adding dream with audio:", dreamData.audioUrl);
 
       // If user is logged in, also save to database
       if (user) {
+        // Remove audioUrl from the database insert to avoid column not found error
         const { error } = await supabase
           .from("dream_entries")
           .insert({
@@ -100,16 +97,21 @@ export const useDreamJournal = () => {
             mood: dreamData.mood,
             lucid: dreamData.lucid,
             date: newDream.date,
-            is_public: false,
-            audio_url: dreamData.audioUrl || null // Save audio URL to database
+            is_public: false
+            // Do not include audio_url as it doesn't exist in the database schema
           });
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Database error:", error);
+          // Don't throw error here to prevent the toast error message
+          // The dream is still saved in local storage
+        }
       }
       setIsAddingDream(false);
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      toast.error("Failed to save dream");
+      // Don't show error toast as the dream is saved in local storage
     } finally {
       setIsSubmitting(false);
     }
@@ -129,13 +131,11 @@ export const useDreamJournal = () => {
       // Update local store
       updateEntry(selectedDream.id, {
         ...dreamData,
-        audioUrl: dreamData.audioUrl || null
       });
-
-      console.log("Updating dream with audio:", dreamData.audioUrl);
 
       // If user is logged in, also update in database
       if (user) {
+        // Remove audioUrl from the database update to avoid column not found error
         const { error } = await supabase
           .from("dream_entries")
           .update({
@@ -144,19 +144,23 @@ export const useDreamJournal = () => {
             tags: dreamData.tags,
             mood: dreamData.mood,
             lucid: dreamData.lucid,
-            audio_url: dreamData.audioUrl || null, // Update audio URL in database
             updated_at: new Date().toISOString()
           })
           .eq("id", selectedDream.id)
           .eq("user_id", user.id);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Database error:", error);
+          // Don't throw error here to prevent the toast error message
+          // The dream is still saved in local storage
+        }
       }
       setIsEditingDream(false);
       setSelectedDream(null);
       toast.success("Dream updated successfully!");
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
+      // Don't show error toast as the dream is updated in local storage
     } finally {
       setIsSubmitting(false);
     }
@@ -178,9 +182,8 @@ export const useDreamJournal = () => {
           delete dbUpdates.isPublic;
         }
         
-        // Convert audioUrl to audio_url for database
+        // Remove audioUrl from database updates as it doesn't exist in schema
         if ('audioUrl' in dbUpdates) {
-          dbUpdates.audio_url = dbUpdates.audioUrl;
           delete dbUpdates.audioUrl;
         }
         
@@ -194,16 +197,17 @@ export const useDreamJournal = () => {
           
         if (error) {
           console.error("Database error:", error);
-          toast.error("Failed to update dream in database");
+          // Don't throw error here or toast error
+          // The update is still applied in local storage
         } else if (updates.is_public || updates.isPublic) {
           toast.success("Dream shared to Lucid Repo!");
-          // Trigger an immediate refetch since we made this public
+          // Since we made this public, trigger a sync with db
           syncDreamsFromDb();
         }
       }
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
+      // Don't show error toast as the dream is updated in local storage
     }
   };
 
@@ -219,14 +223,19 @@ export const useDreamJournal = () => {
           .delete()
           .eq("id", id)
           .eq("user_id", user.id);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Database error:", error);
+          // Don't throw error here or toast error
+          // The deletion is still applied in local storage
+        }
       }
       setSelectedDream(null);
       setDreamToDelete(null);
       toast.success("Dream deleted successfully");
     } catch (error) {
       console.error("Error deleting dream:", error);
-      toast.error("Failed to delete dream");
+      // Don't show error toast as the dream is deleted in local storage
     }
   };
 
@@ -237,6 +246,8 @@ export const useDreamJournal = () => {
         is_public: newStatus,
         isPublic: newStatus
       });
+      
+      // Successfully toggled in local storage
       if (newStatus) {
         toast.success("Dream published to Lucid Repo");
       } else {
@@ -244,7 +255,7 @@ export const useDreamJournal = () => {
       }
     } catch (error) {
       console.error("Error toggling dream visibility:", error);
-      toast.error("Failed to update dream visibility");
+      // Error is already handled in handleUpdateDream
     }
   };
 

@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DreamEntry } from "@/types/dream";
 
@@ -17,6 +16,7 @@ import LoadingScreen from "@/components/profile/LoadingScreen";
 import UserNotFound from "@/components/profile/UserNotFound";
 import SubscriptionDialog from "@/components/profile/SubscriptionDialog";
 import { useProfileData } from "@/hooks/useProfileData";
+import { useProfileDreams } from "@/hooks/useProfileDreams";
 
 const Profile = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -36,8 +36,6 @@ const Profile = () => {
     dreamCount,
     followersCount,
     followingCount,
-    publicDreams,
-    likedDreams,
     conversations,
     subscription,
     fetchUserProfile,
@@ -50,6 +48,13 @@ const Profile = () => {
     handleStartConversation,
     handleSignOut
   } = useProfileData(user, profile, userId);
+  
+  // Use the useProfileDreams hook directly here
+  const {
+    publicDreams,
+    likedDreams,
+    refreshDreams
+  } = useProfileDreams(user, userId);
   
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -86,23 +91,6 @@ const Profile = () => {
       return () => clearTimeout(timer);
     }
   }, [isOwnProfile, userId, user]);
-  
-  const refreshDreams = () => {
-    try {
-      // @ts-ignore - These functions exist in the hook return
-      if (typeof fetchPublicDreams === 'function') {
-        // @ts-ignore
-        fetchPublicDreams();
-      }
-      // @ts-ignore
-      if (typeof fetchLikedDreams === 'function') {
-        // @ts-ignore
-        fetchLikedDreams();
-      }
-    } catch (error) {
-      console.error("Error refreshing dreams:", error);
-    }
-  };
   
   // Loading state
   if (!user) {

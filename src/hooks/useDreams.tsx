@@ -80,15 +80,23 @@ export function useDreams() {
     }
   };
 
-  const handleUpdateDream = (id: string, updates: Partial<DreamEntry>) => {
-    setDreams(prevDreams => 
-      prevDreams.map(dream => 
-        dream.id === id ? { ...dream, ...updates } : dream
-      )
-    );
-    
-    // Refresh the dreams list after updating a dream
-    fetchPublicDreams();
+  const handleUpdateDream = async (id: string, updates: Partial<DreamEntry>) => {
+    try {
+      // Update the local dream array
+      setDreams(prevDreams => 
+        prevDreams.map(dream => 
+          dream.id === id ? { ...dream, ...updates } : dream
+        )
+      );
+      
+      // Refresh public dreams to ensure we have the latest data from the database
+      fetchPublicDreams();
+      
+      return true; // Indicate success
+    } catch (error) {
+      console.error("Error updating dream:", error);
+      return false;
+    }
   };
 
   return {

@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamTag } from "@/types/dream";
@@ -19,7 +18,7 @@ import {
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 import VoiceRecorder from "./VoiceRecorder";
-import { Check, Mic, MicOff, X } from "lucide-react";
+import { Check } from "lucide-react";
 import { toast } from "sonner";
 
 interface DreamEntryFormProps {
@@ -135,7 +134,7 @@ const DreamEntryForm = ({
         tags: formData.tags,
         lucid: formData.lucid,
         mood: formData.mood,
-        audioUrl: formData.audioUrl,
+        // Don't pass audioUrl to prevent database errors
       });
       return;
     }
@@ -153,10 +152,8 @@ const DreamEntryForm = ({
       image_url: formData.generatedImage,
       image_prompt: formData.imagePrompt,
       lucid: formData.lucid,
-      audio_url: formData.audioUrl // Make sure audio_url is being saved to database
+      // Don't include audio_url since it doesn't exist in the database schema
     };
-
-    console.log("Saving dream data with audio:", dreamData.audio_url);
 
     try {
       if (existingDream) {
@@ -171,15 +168,18 @@ const DreamEntryForm = ({
           .insert(dreamData);
         if (error) throw error;
       }
+      
+      // Only navigate away on success
+      toast.success("Dream saved successfully");
       navigate(-1);
     } catch (err) {
       console.error(err);
+      toast.error("Failed to save dream");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle close - just navigate back or reset form state
   const handleClose = () => {
     // If using in a dialog, just reset form state
     if (onSubmit) {

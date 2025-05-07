@@ -32,9 +32,16 @@ const LucidRepo = () => {
     fetchPublicDreams
   } = useDreams();
 
-  // Refresh dreams when component mounts
+  // Refresh dreams when component mounts and periodically
   useEffect(() => {
     fetchPublicDreams();
+    
+    // Refresh dreams every 30 seconds to catch newly shared dreams
+    const refreshInterval = setInterval(() => {
+      fetchPublicDreams();
+    }, 30000);
+    
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -77,9 +84,11 @@ const LucidRepo = () => {
   };
   
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    handleUpdateDream(id, updates);
-    // After updating dream, refresh all public dreams to ensure changes are reflected
-    fetchPublicDreams();
+    const success = handleUpdateDream(id, updates);
+    if (success) {
+      // After successfully updating dream, refresh all public dreams
+      fetchPublicDreams();
+    }
   };
 
   // Filter dreams based on search query
