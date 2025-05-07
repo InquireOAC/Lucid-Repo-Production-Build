@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import VoiceRecorder from "./VoiceRecorder";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,7 +29,6 @@ interface DreamEntryFormProps {
     tags: string[];
     lucid: boolean;
     mood: string;
-    audioUrl?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -55,7 +53,6 @@ const DreamEntryForm = ({
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
     lucid: existingDream?.lucid || false,
-    audioUrl: existingDream?.audio_url || existingDream?.audioUrl || "",
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,15 +110,6 @@ const DreamEntryForm = ({
     }
   };
 
-  const handleAudioRecorded = (audioUrl: string) => {
-    console.log("Audio recorded, URL:", audioUrl);
-    setFormData(prev => ({
-      ...prev,
-      audioUrl
-    }));
-    toast.success("Voice recording saved");
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
@@ -134,7 +122,6 @@ const DreamEntryForm = ({
         tags: formData.tags,
         lucid: formData.lucid,
         mood: formData.mood,
-        // Don't pass audioUrl to prevent database errors
       });
       return;
     }
@@ -152,7 +139,6 @@ const DreamEntryForm = ({
       image_url: formData.generatedImage,
       image_prompt: formData.imagePrompt,
       lucid: formData.lucid,
-      // Don't include audio_url since it doesn't exist in the database schema
     };
 
     try {
@@ -209,12 +195,8 @@ const DreamEntryForm = ({
             required
           />
           
-          {/* Voice Recorder */}
           <div className="space-y-2">
-            <Label className="flex justify-between">
-              <span>Dream Description</span>
-              <VoiceRecorder onRecordingComplete={handleAudioRecorded} existingAudioUrl={formData.audioUrl} />
-            </Label>
+            <Label>Dream Description</Label>
             <Textarea
               name="content"
               placeholder="Dream Description"
