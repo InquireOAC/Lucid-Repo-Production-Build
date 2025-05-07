@@ -42,6 +42,7 @@ const DreamGrid = ({
           onTagClick={onTagClick}
           isAudioPlaying={playingAudioId === dream.id}
           onToggleAudio={() => handleToggleAudio(dream.id)}
+          showSharedBadge={false} // Explicitly disable shared badge in Lucid Repo
         />
       ))}
     </div>

@@ -288,7 +288,13 @@ const Journal = () => {
         
         {/* Dream card */}
         <div onClick={() => setSelectedDream(dream)}>
-          <DreamCard dream={dream} tags={tags} onClick={() => setSelectedDream(dream)} onTagClick={handleTagClick} />
+          <DreamCard 
+            dream={dream} 
+            tags={tags} 
+            onClick={() => setSelectedDream(dream)} 
+            onTagClick={handleTagClick}
+            showSharedBadge={true} // Explicitly enable shared badge in Journal
+          />
         </div>
         
         {/* Action buttons - ALWAYS visible, not just on hover */}

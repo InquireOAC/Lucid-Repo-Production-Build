@@ -19,6 +19,8 @@ interface DreamCardProps {
   onTagClick?: (tagId: string) => void;
   isAudioPlaying?: boolean;
   onToggleAudio?: () => void;
+  // New prop to control badge visibility
+  showSharedBadge?: boolean;
 }
 
 const DreamCard = ({ 
@@ -30,7 +32,9 @@ const DreamCard = ({
   onUserClick,
   onTagClick,
   isAudioPlaying = false,
-  onToggleAudio
+  onToggleAudio,
+  // Default to false so it's only shown when explicitly requested
+  showSharedBadge = false
 }: DreamCardProps) => {
   // Format the dream date
   const formattedDate = dream.date ? format(new Date(dream.date), "MMM d, yyyy") : "No date";
@@ -159,9 +163,9 @@ const DreamCard = ({
       className="dream-card h-full cursor-pointer transition-all relative"
       onClick={onClick}
     >
-      {/* Only one Shared badge positioned in the middle right and adjusted up */}
-      {(dream.is_public || dream.isPublic) && (
-        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-y-[-4rem] z-10">
+      {/* Only show Shared badge when specifically requested AND the dream is public */}
+      {showSharedBadge && isPublic && (
+        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-y-[-1rem] z-10">
           <div className="bg-dream-purple text-white text-xs py-1 px-2 rounded-l-md flex items-center gap-1">
             <Globe size={12} /> Shared
           </div>
