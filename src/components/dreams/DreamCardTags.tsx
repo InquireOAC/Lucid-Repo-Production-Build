@@ -1,88 +1,90 @@
 
 import React from "react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume, VolumeX } from "lucide-react";
 import { DreamTag } from "@/types/dream";
 
 interface DreamCardTagsProps {
-  tags: DreamTag[];
-  dreamTags: string[];
-  lucid: boolean;
+  tags?: DreamTag[];
+  dreamTags?: string[];
+  lucid?: boolean;
   audioUrl?: string;
-  isPlaying: boolean;
+  isPlaying?: boolean;
   onTagClick?: (tagId: string) => void;
-  onToggleAudio: (e: React.MouseEvent) => void;
+  onToggleAudio?: (e: React.MouseEvent) => void;
 }
 
 const DreamCardTags = ({
-  tags,
-  dreamTags,
+  tags = [],
+  dreamTags = [],
   lucid,
   audioUrl,
   isPlaying,
   onTagClick,
-  onToggleAudio
+  onToggleAudio,
 }: DreamCardTagsProps) => {
-  // Get dream tags if we have tag data
-  const displayTags = tags?.length && dreamTags ? 
-    dreamTags
-      .map(tagId => tags.find(t => t.id === tagId))
-      .filter(Boolean) as DreamTag[] 
+  // Find tag data from the supplied tags array
+  const tagData = dreamTags
+    ? tags.filter((tag) => dreamTags.includes(tag.id))
     : [];
 
-  // Handle tag click
-  const handleTagClick = (e: React.MouseEvent, tagId: string) => {
-    if (onTagClick) {
-      e.stopPropagation();
-      onTagClick(tagId);
-    }
+  // Get available tag colors
+  const getTagColor = (index: number) => {
+    const colors = [
+      "bg-blue-500/20 text-blue-500",
+      "bg-green-500/20 text-green-500",
+      "bg-purple-500/20 text-purple-500",
+      "bg-amber-500/20 text-amber-500",
+      "bg-pink-500/20 text-pink-500",
+    ];
+    return colors[index % colors.length];
   };
-  
+
   return (
-    <div className="flex flex-wrap gap-1 mb-2">
-      {/* Render tags if we have them */}
-      {displayTags.map(tag => (
-        <Badge
-          key={tag.id}
-          style={{ backgroundColor: tag.color + "40", color: tag.color }}
-          className="text-xs font-normal border cursor-pointer hover:opacity-80"
-          onClick={(e) => handleTagClick(e, tag.id)}
-        >
-          {tag.name}
-        </Badge>
-      ))}
-      
-      {lucid && (
-        <Badge
-          variant="secondary"
-          className="text-xs font-normal bg-dream-lavender/20 text-dream-lavender"
-        >
-          Lucid
-        </Badge>
-      )}
+    <div className="flex justify-between items-center mb-2">
+      <div className="flex flex-wrap gap-1 items-center">
+        {lucid && (
+          <Badge
+            variant="outline"
+            className="bg-dream-purple/20 text-dream-purple text-xs"
+          >
+            Lucid
+          </Badge>
+        )}
+        
+        {tagData.map((tag, index) => (
+          <Badge
+            key={tag.id}
+            variant="outline"
+            className={cn(
+              "text-xs cursor-pointer",
+              getTagColor(index)
+            )}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onTagClick) onTagClick(tag.id);
+            }}
+          >
+            {tag.name}
+          </Badge>
+        ))}
+      </div>
       
       {audioUrl && (
-        <div className="mt-1 w-full">
-          <Button
-            variant="outline"
-            size="sm"
-            className={`w-full flex items-center justify-center gap-1 ${
-              isPlaying ? "bg-green-500/10 text-green-600 border-green-400" : "bg-blue-500/10 text-blue-600 border-blue-400"
-            }`}
-            onClick={onToggleAudio}
-          >
-            {isPlaying ? (
-              <>
-                <Pause size={16} /> Pause Audio
-              </>
-            ) : (
-              <>
-                <Play size={16} /> Play Audio
-              </>
-            )}
-          </Button>
-        </div>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onToggleAudio}
+          className="h-6 w-6 p-0.5 rounded-full"
+        >
+          {isPlaying ? (
+            <Pause size={16} className="text-dream-purple" />
+          ) : (
+            <Play size={16} className="text-dream-purple" />
+          )}
+        </Button>
       )}
     </div>
   );

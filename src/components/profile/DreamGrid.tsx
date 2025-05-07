@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Heart } from "lucide-react";
+import { Moon, Heart, Play, Pause } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -130,24 +130,62 @@ const DreamGrid = ({
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {dreams.map((dream: any) => {
           // Check for audio URL
-          const hasAudio = !!(dream.audioUrl || dream.audio_url);
+          const audioUrl = dream.audioUrl || dream.audio_url;
+          const hasAudio = !!audioUrl;
+          const isPlaying = playingAudioId === dream.id;
           
           return (
             <Card 
               key={dream.id} 
-              className="overflow-hidden cursor-pointer hover:shadow-md transition-all"
+              className="overflow-hidden cursor-pointer hover:shadow-md transition-all relative"
               onClick={() => setSelectedDream(dream)}
             >
               <CardContent className="p-0">
                 {dream.generatedImage ? (
-                  <img 
-                    src={dream.generatedImage} 
-                    alt={dream.title}
-                    className="aspect-square object-cover w-full"
-                  />
+                  <div className="relative">
+                    <img 
+                      src={dream.generatedImage} 
+                      alt={dream.title}
+                      className="aspect-square object-cover w-full"
+                    />
+                    {hasAudio && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 h-6 w-6 p-0.5 bg-black/40 rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPlayingAudioId(isPlaying ? null : dream.id);
+                        }}
+                      >
+                        {isPlaying ? (
+                          <Pause size={16} className="text-white" />
+                        ) : (
+                          <Play size={16} className="text-white" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 ) : (
-                  <div className="aspect-square flex items-center justify-center bg-dream-purple/10">
+                  <div className="aspect-square flex items-center justify-center bg-dream-purple/10 relative">
                     <Moon size={32} className="text-dream-purple opacity-50" />
+                    {hasAudio && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="absolute top-2 right-2 h-6 w-6 p-0.5 bg-black/40 rounded-full"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPlayingAudioId(isPlaying ? null : dream.id);
+                        }}
+                      >
+                        {isPlaying ? (
+                          <Pause size={16} className="text-white" />
+                        ) : (
+                          <Play size={16} className="text-white" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                 )}
                 <div className="p-2">

@@ -49,8 +49,6 @@ const DreamCard = ({
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
 
-  console.log("DreamCard rendering with audio URL:", audioUrl, "for dream:", dream.title);
-
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
   const displayName = dream.profiles?.display_name || "Anonymous User";
