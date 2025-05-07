@@ -2,11 +2,11 @@
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Heart, MessageCircle, Moon, Play, Pause } from "lucide-react";
+import { Moon } from "lucide-react";
 import { DreamEntry, DreamTag } from "@/types/dream";
-import { cn } from "@/lib/utils";
+import DreamCardUser from "./DreamCardUser";
+import DreamCardTags from "./DreamCardTags";
+import DreamCardSocial from "./DreamCardSocial";
 
 interface DreamCardProps {
   dream: DreamEntry;
@@ -28,7 +28,7 @@ const DreamCard = ({
   onTagClick
 }: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
-  // New state to track audio playback
+  // State to track audio playback
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   
@@ -53,14 +53,6 @@ const DreamCard = ({
     if (onUserClick) {
       e.stopPropagation();
       onUserClick();
-    }
-  };
-  
-  // Handle tag click
-  const handleTagClick = (e: React.MouseEvent, tagId: string) => {
-    if (onTagClick) {
-      e.stopPropagation();
-      onTagClick(tagId);
     }
   };
   
@@ -92,13 +84,6 @@ const DreamCard = ({
       }
     }
   };
-  
-  // Get dream tags if we have tag data
-  const dreamTags = tags?.length && dream.tags ? 
-    dream.tags
-      .map(tagId => tags.find(t => t.id === tagId))
-      .filter(Boolean) as DreamTag[] 
-    : [];
 
   return (
     <Card 
@@ -118,67 +103,27 @@ const DreamCard = ({
       </CardHeader>
       <CardContent className="p-4 pt-2">
         {showUser && (
-          <div 
-            className="flex items-center mb-3 cursor-pointer hover:underline" 
-            onClick={handleUserClick}
-          >
-            <Avatar className="h-6 w-6 mr-2">
-              <AvatarImage src={avatarUrl} alt={username} />
-              <AvatarFallback>{username.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <span className="text-sm font-medium">{displayName}</span>
-          </div>
+          <DreamCardUser
+            username={username}
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+            onUserClick={handleUserClick}
+          />
         )}
         
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {dream.content}
         </p>
         
-        {/* Render tags if we have them */}
-        {dreamTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-2">
-            {dreamTags.map(tag => (
-              <Badge
-                key={tag.id}
-                style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                className="text-xs font-normal border cursor-pointer hover:opacity-80"
-                onClick={(e) => handleTagClick(e, tag.id)}
-              >
-                {tag.name}
-              </Badge>
-            ))}
-          </div>
-        )}
-        
-        <div className="flex flex-wrap gap-1 mb-2">
-          {dream.lucid && (
-            <Badge
-              variant="secondary"
-              className="text-xs font-normal bg-dream-lavender/20 text-dream-lavender"
-            >
-              Lucid
-            </Badge>
-          )}
-          {audioUrl && (
-            <Badge
-              variant="outline"
-              className={`text-xs font-normal cursor-pointer flex items-center gap-1 ${
-                isPlaying ? "bg-green-500/20 text-green-600 border-green-500" : "bg-blue-500/10 text-blue-600 border-blue-400"
-              }`}
-              onClick={toggleAudio}
-            >
-              {isPlaying ? (
-                <>
-                  <Pause size={10} /> Pause Audio
-                </>
-              ) : (
-                <>
-                  <Play size={10} /> Play Audio
-                </>
-              )}
-            </Badge>
-          )}
-        </div>
+        <DreamCardTags
+          tags={tags}
+          dreamTags={dream.tags}
+          lucid={dream.lucid}
+          audioUrl={audioUrl}
+          isPlaying={isPlaying}
+          onTagClick={onTagClick}
+          onToggleAudio={toggleAudio}
+        />
         
         {dream.generatedImage && (
           <div className="mt-2 h-20 w-full overflow-hidden rounded-md">
@@ -190,25 +135,13 @@ const DreamCard = ({
           </div>
         )}
         
-        {/* Show social stats if dream is public */}
-        {isPublic && (
-          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-            <div 
-              className={cn("flex items-center cursor-pointer", dream.liked && "text-red-500")}
-              onClick={(e) => {
-                e.stopPropagation();
-                onLike?.();
-              }}
-            >
-              <Heart size={12} className="mr-1" />
-              <span>{likeCount}</span>
-            </div>
-            <div className="flex items-center">
-              <MessageCircle size={12} className="mr-1" />
-              <span>{commentCount || 0}</span>
-            </div>
-          </div>
-        )}
+        <DreamCardSocial
+          isPublic={isPublic}
+          likeCount={likeCount}
+          commentCount={commentCount}
+          liked={dream.liked}
+          onLike={onLike}
+        />
       </CardContent>
     </Card>
   );

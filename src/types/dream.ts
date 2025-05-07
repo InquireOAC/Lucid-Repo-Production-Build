@@ -34,3 +34,8 @@ export interface DreamTag {
   color: string;
   user_id?: string;
 }
+
+export interface DreamStore {
+  entries: DreamEntry[];
+  tags: DreamTag[];
+}

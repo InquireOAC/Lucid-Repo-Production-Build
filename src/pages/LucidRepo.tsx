@@ -3,17 +3,14 @@ import React, { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Heart, MessageCircle, Search, Filter, Loader2 } from "lucide-react";
-import DreamCard from "@/components/dreams/DreamCard";
-import EmptyState from "@/components/ui/empty-state";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { MessageCircle, Loader2 } from "lucide-react";
 import DreamDetail from "@/components/DreamDetail";
+import EmptyState from "@/components/ui/empty-state";
 import { useNavigate } from "react-router-dom";
+import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
+import DreamGrid from "@/components/repos/DreamGrid";
 
 const LucidRepo = () => {
   const { user } = useAuth();
@@ -201,8 +198,15 @@ const LucidRepo = () => {
     setSelectedDream(null);
   };
 
-  const handleNavigateToProfile = (userId: string) => {
-    navigate(`/profile/${userId}`);
+  const handleNavigateToProfile = (userId: string | undefined) => {
+    if (userId) {
+      navigate(`/profile/${userId}`);
+    }
+  };
+
+  const handleTagClick = (tagId: string) => {
+    // Future implementation: filter by tag
+    console.log("Tag clicked:", tagId);
   };
 
   const filteredDreams = dreams.filter((dream) => {
@@ -222,73 +226,29 @@ const LucidRepo = () => {
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
 
-      <div className="mb-6 space-y-4">
-        <form onSubmit={handleSearch} className="flex gap-2">
-          <Input
-            placeholder="Search dreams..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
-          <Button type="submit" variant="secondary">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
-        </form>
-
-        <div className="flex justify-between items-center">
-          <Tabs
-            defaultValue="all"
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="all">All Dreams</TabsTrigger>
-              <TabsTrigger value="following">Following</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-
-        <div className="flex justify-end">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
-              <div className="flex items-center">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Sort by" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="oldest">Oldest First</SelectItem>
-              <SelectItem value="most_liked">Most Liked</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      <LucidRepoHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        handleSearch={handleSearch}
+      />
 
       {isLoading ? (
         <div className="flex justify-center items-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
         </div>
       ) : filteredDreams.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {filteredDreams.map((dream) => (
-            <DreamCard
-              key={dream.id}
-              dream={dream}
-              tags={dreamTags}
-              onLike={() => handleLike(dream.id)}
-              showUser={true}
-              onClick={() => handleOpenDream(dream)}
-              onUserClick={() => dream.user_id && handleNavigateToProfile(dream.user_id)}
-              onTagClick={(tagId) => {
-                // Future implementation: filter by tag
-                console.log("Tag clicked:", tagId);
-              }}
-            />
-          ))}
-        </div>
+        <DreamGrid
+          dreams={filteredDreams}
+          tags={dreamTags}
+          onLike={handleLike}
+          onOpenDream={handleOpenDream}
+          onUserClick={handleNavigateToProfile}
+          onTagClick={handleTagClick}
+        />
       ) : (
         <EmptyState
           icon={<MessageCircle className="h-12 w-12 text-muted-foreground" />}

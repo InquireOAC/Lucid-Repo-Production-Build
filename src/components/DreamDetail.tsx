@@ -2,12 +2,12 @@
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { DreamEntry, DreamTag } from "@/types/dream";
-import { Edit, Heart, Globe, Lock, Trash2, Play, Pause } from "lucide-react";
 import { toast } from "sonner";
+import DreamDetailContent from "@/components/dreams/DreamDetailContent";
+import DreamDetailAudio from "@/components/dreams/DreamDetailAudio";
+import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 
 interface DreamDetailProps {
   dream: DreamEntry;
@@ -98,107 +98,26 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 mt-2">
-            {/* Date */}
-            <div className="text-sm text-muted-foreground">{formattedDate}</div>
-            
-            {/* Content */}
-            <div className="text-sm whitespace-pre-wrap">{dream.content}</div>
-            
-            {/* Audio recording */}
-            {audioUrl && (
-              <div className="mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={`flex items-center gap-2 ${
-                    isPlaying ? "bg-green-500/10 text-green-600 border-green-400" : "bg-blue-500/10 text-blue-600 border-blue-400"
-                  }`}
-                  onClick={toggleAudio}
-                >
-                  {isPlaying ? (
-                    <>
-                      <Pause size={16} /> Pause Audio Recording
-                    </>
-                  ) : (
-                    <>
-                      <Play size={16} /> Play Audio Recording
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
-            
-            {/* Tags */}
-            {dreamTags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-4">
-                {dreamTags.map((tag) => (
-                  <Badge
-                    key={tag.id}
-                    style={{ backgroundColor: tag.color + "40", color: tag.color }}
-                    className="text-xs font-normal border"
-                  >
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-            )}
-
-            {/* Dream Image */}
-            {dream.generatedImage && (
-              <div className="mt-4">
-                <img 
-                  src={dream.generatedImage} 
-                  alt="Dream visualization" 
-                  className="rounded-md w-full h-auto"
-                />
-              </div>
-            )}
-
-            {/* Dream Analysis */}
-            {dream.analysis && (
-              <div className="mt-4 p-3 bg-muted/40 rounded-md">
-                <h3 className="text-sm font-medium mb-1">Dream Analysis</h3>
-                <div className="text-sm text-muted-foreground">{dream.analysis}</div>
-              </div>
-            )}
-
-            {/* Footer actions - Only show actions if user is authenticated */}
-            {isAuthenticated && (
-              <div className="flex justify-between items-center mt-6">
-                <div className="flex gap-2">
-                  {onDelete && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                    >
-                      <Trash2 size={14} className="mr-1" /> Delete
-                    </Button>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  {onUpdate && (
-                    <Button
-                      variant={isPublic ? "outline" : "default"}
-                      size="sm"
-                      onClick={handleTogglePublic}
-                    >
-                      {isPublic ? (
-                        <>
-                          <Lock size={14} className="mr-1" /> Make Private
-                        </>
-                      ) : (
-                        <>
-                          <Globe size={14} className="mr-1" /> Share
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <DreamDetailContent
+            content={dream.content}
+            formattedDate={formattedDate}
+            dreamTags={dreamTags}
+            generatedImage={dream.generatedImage}
+            analysis={dream.analysis}
+          />
+          
+          <DreamDetailAudio
+            audioUrl={audioUrl}
+            isPlaying={isPlaying}
+            toggleAudio={toggleAudio}
+          />
+          
+          <DreamDetailActions
+            isAuthenticated={isAuthenticated}
+            isPublic={isPublic}
+            onDelete={() => setIsDeleteDialogOpen(true)}
+            onTogglePublic={handleTogglePublic}
+          />
         </DialogContent>
       </Dialog>
       
