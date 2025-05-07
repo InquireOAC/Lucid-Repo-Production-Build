@@ -16,11 +16,9 @@ const DreamDetailAudio = ({
 }: DreamDetailAudioProps) => {
   console.log("DreamDetailAudio rendering with URL:", audioUrl);
   
-  // Changed to show audio controls even if audioUrl is null or undefined
-  // This helps us debug if there are issues with the audio URL
   if (!audioUrl) {
     console.log("No audio URL provided, not rendering audio component");
-    return null; // Still return null if no URL exists
+    return null; // Don't render anything if no audio URL is provided
   }
 
   return (

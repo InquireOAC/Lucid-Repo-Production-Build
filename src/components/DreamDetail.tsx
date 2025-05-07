@@ -61,8 +61,26 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   };
 
   const handleDeleteDream = async () => {
-    if (onDelete) {
-      onDelete(dream.id);
+    try {
+      if (onDelete) {
+        // First close the dialog to prevent UI freezing
+        setIsDeleteDialogOpen(false);
+        
+        // Small delay to ensure dialog closes
+        setTimeout(() => {
+          onDelete(dream.id);
+          // Close the main dream dialog
+          onClose();
+          toast.success("Dream deleted successfully");
+        }, 100);
+      } else {
+        setIsDeleteDialogOpen(false);
+        toast.error("Cannot delete dream - no delete handler provided");
+      }
+    } catch (error) {
+      console.error("Error deleting dream:", error);
+      toast.error("Failed to delete dream");
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -113,8 +131,10 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
 
   // Map tag IDs to tag objects
   const dreamTags = dream.tags
-    .map((tagId) => tags.find((tag) => tag.id === tagId))
-    .filter(Boolean) as DreamTag[];
+    ? dream.tags
+        .map((tagId) => tags.find((tag) => tag.id === tagId))
+        .filter(Boolean) as DreamTag[]
+    : [];
 
   const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
   
@@ -143,7 +163,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           <DreamDetailActions
             isAuthenticated={isAuthenticated}
             isPublic={isPublic}
-            onDelete={() => setIsDeleteDialogOpen(true)}
+            onDelete={onDelete ? () => setIsDeleteDialogOpen(true) : undefined}
             onTogglePublic={handleTogglePublic}
           />
         </DialogContent>

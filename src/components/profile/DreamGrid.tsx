@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DreamDetail from "@/components/DreamDetail";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface DreamGridProps {
   dreams: any[];
@@ -49,6 +51,63 @@ const DreamGrid = ({
   const handleCloseDream = () => {
     setPlayingAudioId(null);
     setSelectedDream(null);
+  };
+  
+  // Handle dream deletion
+  const handleDeleteDream = async (id: string) => {
+    try {
+      // Delete the dream from Supabase
+      const { error } = await supabase
+        .from("dream_entries")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      // Close the dream detail modal
+      setSelectedDream(null);
+      
+      // Remove the dream from the local list
+      // This avoids having to refresh the page
+      const updatedDreams = dreams.filter(dream => dream.id !== id);
+      dreams.splice(0, dreams.length, ...updatedDreams);
+      
+      // Show success message
+      toast.success("Dream deleted successfully");
+    } catch (error) {
+      console.error("Error deleting dream:", error);
+      toast.error("Failed to delete dream");
+    }
+  };
+  
+  // Handle dream update
+  const handleUpdateDream = async (id: string, updates: any) => {
+    try {
+      // Update the dream in Supabase
+      const { error } = await supabase
+        .from("dream_entries")
+        .update(updates)
+        .eq("id", id);
+      
+      if (error) throw error;
+      
+      // Update the dream in the local list
+      const dreamIndex = dreams.findIndex(dream => dream.id === id);
+      if (dreamIndex !== -1) {
+        dreams[dreamIndex] = { ...dreams[dreamIndex], ...updates };
+      }
+      
+      // Update the selected dream if it's the one being edited
+      if (selectedDream && selectedDream.id === id) {
+        setSelectedDream({ ...selectedDream, ...updates });
+      }
+      
+      // Show success message
+      toast.success("Dream updated successfully");
+    } catch (error) {
+      console.error("Error updating dream:", error);
+      toast.error("Failed to update dream");
+    }
   };
 
   if (dreams.length === 0) {
@@ -137,8 +196,8 @@ const DreamGrid = ({
           dream={selectedDream}
           tags={[]} // Pass tags if available
           onClose={handleCloseDream}
-          onUpdate={() => {}} // Implement if needed
-          onDelete={() => {}} // Implement if needed
+          onUpdate={handleUpdateDream}
+          onDelete={isOwnProfile ? handleDeleteDream : undefined}
           isAuthenticated={true}
         />
       )}
