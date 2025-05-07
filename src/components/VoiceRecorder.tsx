@@ -112,6 +112,13 @@ const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       }
       setAudioUrl(null);
       onRecordingComplete('');
+      
+      // Make sure audio playback is stopped
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+        setIsPlaying(false);
+      }
     }
   };
 
