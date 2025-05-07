@@ -1,7 +1,8 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Volume } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface DreamDetailAudioProps {
   audioUrl?: string;
@@ -19,6 +20,30 @@ const DreamDetailAudio = ({
   if (!audioUrl) {
     console.log("No audio URL provided, not rendering audio component");
     return null;
+  }
+
+  const isValidAudioUrl = (url: string): boolean => {
+    try {
+      if (url.startsWith('blob:') || 
+          url.startsWith('http://') || 
+          url.startsWith('https://') ||
+          url.startsWith('data:audio/')) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  if (!isValidAudioUrl(audioUrl)) {
+    return (
+      <Alert variant="destructive" className="mt-4">
+        <AlertDescription>
+          Invalid audio URL format. Audio playback is unavailable.
+        </AlertDescription>
+      </Alert>
+    );
   }
 
   return (

@@ -89,31 +89,74 @@ const DreamCard = ({
       return;
     }
     
-    if (!audioRef.current) {
-      console.log("Creating new audio element with URL:", audioUrl);
-      const audio = new Audio(audioUrl);
+    // Check if the URL is valid
+    if (!isValidAudioUrl(audioUrl)) {
+      console.error('Invalid audio URL format:', audioUrl);
+      toast.error("Could not play audio recording - invalid URL format");
+      setIsPlaying(false);
+      if (onToggleAudio) onToggleAudio();
+      return;
+    }
+    
+    try {
+      if (!audioRef.current) {
+        console.log("Creating new audio element with URL:", audioUrl);
+        const audio = new Audio(audioUrl);
+        
+        audio.addEventListener('ended', () => {
+          setIsPlaying(false);
+          if (onToggleAudio) onToggleAudio();
+        });
+        
+        audio.addEventListener('error', (e) => {
+          console.error('Error playing audio:', e);
+          toast.error("Could not play audio recording");
+          setIsPlaying(false);
+          if (onToggleAudio) onToggleAudio();
+        });
+        
+        audioRef.current = audio;
+      }
       
-      audio.addEventListener('ended', () => {
-        setIsPlaying(false);
-        if (onToggleAudio) onToggleAudio();
-      });
-      
-      audio.addEventListener('error', (e) => {
-        console.error('Error playing audio:', e);
+      audioRef.current.play().catch(err => {
+        console.error('Error playing audio:', err);
         toast.error("Could not play audio recording");
         setIsPlaying(false);
         if (onToggleAudio) onToggleAudio();
       });
-      
-      audioRef.current = audio;
-    }
-    
-    audioRef.current.play().catch(err => {
-      console.error('Error playing audio:', err);
+    } catch (err) {
+      console.error('Exception playing audio:', err);
       toast.error("Could not play audio recording");
       setIsPlaying(false);
       if (onToggleAudio) onToggleAudio();
-    });
+    }
+  };
+  
+  // Check if URL is valid for audio playback
+  const isValidAudioUrl = (url: string): boolean => {
+    // Check if it's a valid URL format
+    try {
+      // For blob URLs
+      if (url.startsWith('blob:')) {
+        return true;
+      }
+      
+      // For http/https URLs
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        return true;
+      }
+      
+      // For data URLs
+      if (url.startsWith('data:audio/')) {
+        return true;
+      }
+      
+      // Not a recognized audio URL format
+      return false;
+    } catch (e) {
+      console.error('Error validating URL:', e);
+      return false;
+    }
   };
   
   // Pause audio

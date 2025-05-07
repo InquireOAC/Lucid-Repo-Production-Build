@@ -52,32 +52,67 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     }
   };
 
-  const toggleAudio = () => {
-    if (!audioUrl) return;
+  const isValidAudioUrl = (url: string): boolean => {
+    if (!url) return false;
     
-    if (!audioElement) {
-      console.log("Creating new audio element with URL:", audioUrl);
-      const audio = new Audio(audioUrl);
-      audio.addEventListener('ended', () => setIsPlaying(false));
-      setAudioElement(audio);
-      
-      audio.play().catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error("Could not play audio recording");
-      });
-      setIsPlaying(true);
-    } else {
-      if (isPlaying) {
-        audioElement.pause();
-        setIsPlaying(false);
-      } else {
-        audioElement.currentTime = 0;
-        audioElement.play().catch(err => {
+    try {
+      if (url.startsWith('blob:') || 
+          url.startsWith('http://') || 
+          url.startsWith('https://') || 
+          url.startsWith('data:audio/')) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      console.error('Error validating audio URL:', e);
+      return false;
+    }
+  };
+
+  const toggleAudio = () => {
+    if (!audioUrl || !isValidAudioUrl(audioUrl)) {
+      console.error('Invalid audio URL:', audioUrl);
+      toast.error("Could not play audio recording - invalid URL");
+      return;
+    }
+    
+    try {
+      if (!audioElement) {
+        console.log("Creating new audio element with URL:", audioUrl);
+        const audio = new Audio(audioUrl);
+        audio.addEventListener('ended', () => setIsPlaying(false));
+        audio.addEventListener('error', (err) => {
+          console.error('Audio playback error:', err);
+          toast.error("Could not play audio recording");
+          setIsPlaying(false);
+        });
+        
+        setAudioElement(audio);
+        
+        audio.play().catch(err => {
           console.error('Error playing audio:', err);
           toast.error("Could not play audio recording");
+          setIsPlaying(false);
         });
         setIsPlaying(true);
+      } else {
+        if (isPlaying) {
+          audioElement.pause();
+          setIsPlaying(false);
+        } else {
+          audioElement.currentTime = 0;
+          audioElement.play().catch(err => {
+            console.error('Error playing audio:', err);
+            toast.error("Could not play audio recording");
+            setIsPlaying(false);
+          });
+          setIsPlaying(true);
+        }
       }
+    } catch (err) {
+      console.error('Exception in audio playback:', err);
+      toast.error("Could not play audio recording");
+      setIsPlaying(false);
     }
   };
   

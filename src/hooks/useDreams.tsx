@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 export function useDreams() {
   const { user } = useAuth();
@@ -68,10 +69,17 @@ export function useDreams() {
         profiles: dream.profiles
       }));
 
-      console.log("Fetched dreams with audio:", transformedDreams);
+      console.log("Fetched dreams with audio:", transformedDreams.map(d => ({ 
+        id: d.id, 
+        title: d.title,
+        audioUrl: d.audioUrl, 
+        audio_url: d.audio_url 
+      })));
+      
       setDreams(transformedDreams);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
+      toast.error("Failed to fetch dreams");
     } finally {
       setIsLoading(false);
     }
@@ -135,6 +143,7 @@ export function useDreams() {
       return true;
     } catch (error) {
       console.error("Error handling like:", error);
+      toast.error("Failed to update like");
       return false;
     }
   };
@@ -168,8 +177,14 @@ export function useDreams() {
   };
 
   const handleToggleAudio = (dreamId: string) => {
-    // Only allow one audio to play at a time
-    setPlayingAudioId(prev => prev === dreamId ? null : dreamId);
+    // Stop any currently playing audio before starting a new one
+    setPlayingAudioId(prev => {
+      if (prev && prev !== dreamId) {
+        // Log stopping previous audio
+        console.log("Stopping audio for dream:", prev);
+      }
+      return prev === dreamId ? null : dreamId;
+    });
   };
 
   const handleUpdateDream = (id: string, updates: Partial<DreamEntry>) => {
