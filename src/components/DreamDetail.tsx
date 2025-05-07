@@ -26,6 +26,8 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
   
+  console.log("DreamDetail rendering with dream:", dream.title, "audio URL:", audioUrl);
+  
   // Clean up audio element on unmount
   useEffect(() => {
     return () => {
@@ -115,8 +117,6 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     .filter(Boolean) as DreamTag[];
 
   const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
-
-  console.log("Dream detail rendering with audio URL:", audioUrl);
   
   return (
     <>

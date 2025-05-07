@@ -49,6 +49,8 @@ const DreamCard = ({
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
 
+  console.log("DreamCard rendering with audio URL:", audioUrl, "for dream:", dream.title);
+
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
   const displayName = dream.profiles?.display_name || "Anonymous User";
@@ -89,15 +91,6 @@ const DreamCard = ({
       return;
     }
     
-    // Check if the URL is valid
-    if (!isValidAudioUrl(audioUrl)) {
-      console.error('Invalid audio URL format:', audioUrl);
-      toast.error("Could not play audio recording - invalid URL format");
-      setIsPlaying(false);
-      if (onToggleAudio) onToggleAudio();
-      return;
-    }
-    
     try {
       if (!audioRef.current) {
         console.log("Creating new audio element with URL:", audioUrl);
@@ -129,33 +122,6 @@ const DreamCard = ({
       toast.error("Could not play audio recording");
       setIsPlaying(false);
       if (onToggleAudio) onToggleAudio();
-    }
-  };
-  
-  // Check if URL is valid for audio playback
-  const isValidAudioUrl = (url: string): boolean => {
-    // Check if it's a valid URL format
-    try {
-      // For blob URLs
-      if (url.startsWith('blob:')) {
-        return true;
-      }
-      
-      // For http/https URLs
-      if (url.startsWith('http://') || url.startsWith('https://')) {
-        return true;
-      }
-      
-      // For data URLs
-      if (url.startsWith('data:audio/')) {
-        return true;
-      }
-      
-      // Not a recognized audio URL format
-      return false;
-    } catch (e) {
-      console.error('Error validating URL:', e);
-      return false;
     }
   };
   
