@@ -23,6 +23,7 @@ const LucidRepo = () => {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
   const [dreamTags, setDreamTags] = useState<DreamTag[]>([]);
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPublicDreams();
@@ -183,8 +184,30 @@ const LucidRepo = () => {
     // Filter dreams based on search query is done client-side in the filteredDreams variable
   };
 
+  const handleToggleAudio = (dreamId: string) => {
+    // Only allow one audio to play at a time
+    setPlayingAudioId(prev => prev === dreamId ? null : dreamId);
+    
+    // If we have a dream detail open and it's the same dream, update its audio state too
+    if (selectedDream && selectedDream.id === dreamId) {
+      setSelectedDream(prev => {
+        if (prev) {
+          return {
+            ...prev,
+            isAudioPlaying: prev.id === dreamId && prev.id !== playingAudioId
+          };
+        }
+        return prev;
+      });
+    }
+  };
+
   const handleOpenDream = (dream: DreamEntry) => {
     console.log("Opening dream with audio:", dream.audioUrl || dream.audio_url);
+    // Stop any playing audio when opening dream detail
+    if (playingAudioId) {
+      setPlayingAudioId(null);
+    }
     setSelectedDream(dream);
   };
 

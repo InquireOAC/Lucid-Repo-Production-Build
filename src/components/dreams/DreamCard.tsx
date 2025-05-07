@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Moon } from "lucide-react";
@@ -17,6 +17,8 @@ interface DreamCardProps {
   onClick?: () => void;
   onUserClick?: () => void;
   onTagClick?: (tagId: string) => void;
+  isAudioPlaying?: boolean;
+  onToggleAudio?: () => void;
 }
 
 const DreamCard = ({ 
@@ -26,12 +28,14 @@ const DreamCard = ({
   showUser = false, 
   onClick, 
   onUserClick,
-  onTagClick
+  onTagClick,
+  isAudioPlaying = false,
+  onToggleAudio
 }: DreamCardProps) => {
   const formattedDate = format(new Date(dream.date), "MMM d, yyyy");
   // State to track audio playback
   const [isPlaying, setIsPlaying] = useState(false);
-  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   // Check either isPublic or is_public field
   const isPublic = dream.is_public || dream.isPublic;
@@ -50,13 +54,23 @@ const DreamCard = ({
   const displayName = dream.profiles?.display_name || "Anonymous User";
   const avatarUrl = dream.profiles?.avatar_url || "";
 
+  // Effect to sync local playing state with prop
+  useEffect(() => {
+    setIsPlaying(isAudioPlaying || false);
+    
+    if (isAudioPlaying && audioUrl && !isPlaying) {
+      playAudio();
+    } else if (!isAudioPlaying && isPlaying) {
+      pauseAudio();
+    }
+  }, [isAudioPlaying, audioUrl]);
+
   // Clean up audio element on unmount
   useEffect(() => {
     return () => {
-      if (audioElement) {
-        audioElement.pause();
-        setIsPlaying(false);
-        setAudioElement(null);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);
@@ -68,45 +82,60 @@ const DreamCard = ({
     }
   };
   
-  // Handle audio playback
-  const toggleAudio = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    
+  // Create audio element and play
+  const playAudio = () => {
     if (!audioUrl) {
       toast.error("No audio recording available");
       return;
     }
     
-    if (!audioElement) {
+    if (!audioRef.current) {
       console.log("Creating new audio element with URL:", audioUrl);
       const audio = new Audio(audioUrl);
-      audio.addEventListener('ended', () => setIsPlaying(false));
+      
+      audio.addEventListener('ended', () => {
+        setIsPlaying(false);
+        if (onToggleAudio) onToggleAudio();
+      });
+      
       audio.addEventListener('error', (e) => {
         console.error('Error playing audio:', e);
         toast.error("Could not play audio recording");
         setIsPlaying(false);
+        if (onToggleAudio) onToggleAudio();
       });
       
-      setAudioElement(audio);
-      
-      audio.play().catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error("Could not play audio recording");
-        setIsPlaying(false);
-      });
-      
-      setIsPlaying(true);
+      audioRef.current = audio;
+    }
+    
+    audioRef.current.play().catch(err => {
+      console.error('Error playing audio:', err);
+      toast.error("Could not play audio recording");
+      setIsPlaying(false);
+      if (onToggleAudio) onToggleAudio();
+    });
+  };
+  
+  // Pause audio
+  const pauseAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+  };
+  
+  // Handle audio playback
+  const toggleAudio = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    
+    if (onToggleAudio) {
+      onToggleAudio();
     } else {
+      // Fallback for direct control if external handler isn't provided
       if (isPlaying) {
-        audioElement.pause();
+        pauseAudio();
         setIsPlaying(false);
       } else {
-        audioElement.currentTime = 0;
-        audioElement.play().catch(err => {
-          console.error('Error playing audio:', err);
-          toast.error("Could not play audio recording");
-          setIsPlaying(false);
-        });
+        playAudio();
         setIsPlaying(true);
       }
     }
