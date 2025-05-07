@@ -21,7 +21,7 @@ const DreamCardSocial = ({
   if (!isPublic) return null;
   
   return (
-    <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+    <div className="mt-3 flex items-center gap-3 text-xs text-muted-foreground">
       <div 
         className={cn("flex items-center cursor-pointer", liked && "text-red-500")}
         onClick={(e) => {
