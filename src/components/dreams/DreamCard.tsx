@@ -2,12 +2,13 @@
 import React, { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Moon, Globe } from "lucide-react";
+import { Moon, Globe, Pencil, Trash2, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCardUser from "./DreamCardUser";
 import DreamCardTags from "./DreamCardTags";
 import DreamCardSocial from "./DreamCardSocial";
+import { Button } from "@/components/ui/button";
 
 interface DreamCardProps {
   dream: DreamEntry;
@@ -19,7 +20,12 @@ interface DreamCardProps {
   onTagClick?: (tagId: string) => void;
   isAudioPlaying?: boolean;
   onToggleAudio?: () => void;
-  // New prop to control badge visibility
+  // New props for actions
+  showActions?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  onTogglePublic?: () => void;
+  // Prop to control badge visibility
   showSharedBadge?: boolean;
 }
 
@@ -33,6 +39,11 @@ const DreamCard = ({
   onTagClick,
   isAudioPlaying = false,
   onToggleAudio,
+  // New action props with defaults
+  showActions = false,
+  onEdit,
+  onDelete,
+  onTogglePublic,
   // Default to false so it's only shown when explicitly requested
   showSharedBadge = false
 }: DreamCardProps) => {
@@ -54,8 +65,6 @@ const DreamCard = ({
 
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
-  
-  console.log("DreamCard rendering with audio URL:", audioUrl);
 
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
@@ -158,6 +167,28 @@ const DreamCard = ({
     }
   };
 
+  // Handle action button clicks
+  const handleEdit = (e: React.MouseEvent) => {
+    if (onEdit) {
+      e.stopPropagation(); // Prevent card click
+      onEdit();
+    }
+  };
+  
+  const handleDelete = (e: React.MouseEvent) => {
+    if (onDelete) {
+      e.stopPropagation(); // Prevent card click
+      onDelete();
+    }
+  };
+  
+  const handleTogglePublic = (e: React.MouseEvent) => {
+    if (onTogglePublic) {
+      e.stopPropagation(); // Prevent card click
+      onTogglePublic();
+    }
+  };
+
   return (
     <Card 
       className="dream-card h-full cursor-pointer transition-all relative"
@@ -224,6 +255,46 @@ const DreamCard = ({
           liked={dream.liked}
           onLike={onLike}
         />
+        
+        {/* Action buttons - shown only when showActions is true */}
+        {showActions && (
+          <div className="flex justify-end gap-1 mt-2">
+            <Button
+              size="sm"
+              variant="secondary"
+              className="h-8"
+              onClick={handleEdit}
+            >
+              <Pencil size={14} className="mr-1" /> Edit
+            </Button>
+
+            <Button
+              size="sm"
+              variant={isPublic ? "outline" : "default"}
+              className={`h-8 ${isPublic ? "bg-white text-gray-800" : "bg-dream-purple"}`}
+              onClick={handleTogglePublic}
+            >
+              {isPublic ? (
+                <>
+                  <Lock size={14} className="mr-1" /> Private
+                </>
+              ) : (
+                <>
+                  <Globe size={14} className="mr-1" /> Share
+                </>
+              )}
+            </Button>
+
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8"
+              onClick={handleDelete}
+            >
+              <Trash2 size={14} className="mr-1" /> Delete
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

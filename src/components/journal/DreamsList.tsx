@@ -2,7 +2,6 @@
 import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCard from "@/components/dreams/DreamCard";
-import DreamCardActions from "./DreamCardActions";
 
 interface DreamsListProps {
   dreams: DreamEntry[];
@@ -34,22 +33,17 @@ const DreamsList = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {dreams.map((dream) => (
-        <div key={dream.id} className="relative">
-          <div onClick={() => onSelect(dream)}>
-            <DreamCard
-              dream={dream}
-              tags={tags}
-              onClick={() => onSelect(dream)}
-              onTagClick={onTagClick}
-              showSharedBadge={true} // Explicitly enable shared badge in Journal
-            />
-          </div>
-          
-          <DreamCardActions 
+        <div key={dream.id}>
+          <DreamCard
             dream={dream}
-            onEdit={onEdit}
-            onTogglePublic={onTogglePublic}
-            onDelete={onDelete}
+            tags={tags}
+            onClick={() => onSelect(dream)}
+            onTagClick={onTagClick}
+            showSharedBadge={true} // Explicitly enable shared badge in Journal
+            showActions={true} // Enable action buttons
+            onEdit={() => onEdit(dream)}
+            onTogglePublic={() => onTogglePublic(dream)}
+            onDelete={() => onDelete(dream.id)}
           />
         </div>
       ))}
