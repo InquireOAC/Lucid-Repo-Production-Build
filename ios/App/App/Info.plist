@@ -54,7 +54,5 @@
 	<true/>
 	<key>UIStatusBarStyle</key>
 	<string>UIStatusBarStyleDarkContent</string>
-	<key>NSUserNotificationsUsageDescription</key>
-	<string>We need to send you morning reminders to record your dreams</string>
 </dict>
 </plist>

@@ -14,13 +14,12 @@ import LucidRepo from "./pages/LucidRepo";
 import Profile from "./pages/Profile";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
-import { loadNotificationSettings, setupMorningNotification } from "./utils/notificationUtils";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    const setupNativeFeatures = async () => {
+    const setupStatusBar = async () => {
       if (Capacitor.isPluginAvailable('StatusBar')) {
         try {
           // Set status bar to be opaque with dark text
@@ -31,22 +30,9 @@ const App = () => {
           console.error('Error configuring status bar:', error);
         }
       }
-
-      // Initialize notifications
-      if (Capacitor.isNativePlatform()) {
-        const settings = loadNotificationSettings();
-        if (settings.enabled) {
-          try {
-            await setupMorningNotification(settings);
-            console.log('Morning notifications initialized');
-          } catch (error) {
-            console.error('Error initializing notifications:', error);
-          }
-        }
-      }
     };
     
-    setupNativeFeatures();
+    setupStatusBar();
   }, []);
 
   return (

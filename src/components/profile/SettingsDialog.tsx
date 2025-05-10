@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,7 +6,7 @@ import { LogOut, CreditCard } from "lucide-react";
 interface SettingsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  handleSignOut: () => Promise<void>;
+  handleSignOut: () => void;
   onSubscriptionClick: () => void;
 }
 

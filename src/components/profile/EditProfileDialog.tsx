@@ -22,8 +22,8 @@ interface EditProfileDialogProps {
   setBio: (value: string) => void;
   avatarUrl: string;
   isUploading: boolean;
-  onAvatarChange: (url: string) => void;
-  onUpdate: () => Promise<void>;
+  handleAvatarChange: (url: string) => void;
+  handleUpdateProfile: () => void;
   userId: string;
 }
 
@@ -38,21 +38,11 @@ const EditProfileDialog = ({
   setBio,
   avatarUrl,
   isUploading,
-  onAvatarChange,
-  onUpdate,
+  handleAvatarChange,
+  handleUpdateProfile,
   userId
 }: EditProfileDialogProps) => {
-  const [localDisplayName, setLocalDisplayName] = useState(displayName);
-  const [localUsername, setLocalUsername] = useState(username);
-  const [localBio, setLocalBio] = useState(bio);
   const [localIsUploading, setLocalIsUploading] = useState(false);
-
-  // Update local state when props change
-  React.useEffect(() => {
-    setLocalDisplayName(displayName);
-    setLocalUsername(username);
-    setLocalBio(bio);
-  }, [displayName, username, bio, isOpen]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +89,7 @@ const EditProfileDialog = ({
         .getPublicUrl(filePath);
       
       if (publicUrl) {
-        onAvatarChange(publicUrl.publicUrl);
+        handleAvatarChange(publicUrl.publicUrl);
         toast.success("Avatar uploaded successfully!");
       }
       
@@ -109,19 +99,6 @@ const EditProfileDialog = ({
     } finally {
       setLocalIsUploading(false);
     }
-  };
-
-  const handleSave = async () => {
-    // Update parent state
-    setDisplayName(localDisplayName);
-    setUsername(localUsername);
-    setBio(localBio);
-    
-    // Call the update function
-    await onUpdate();
-    
-    // Close the dialog
-    onOpenChange(false);
   };
 
   return (
@@ -168,8 +145,8 @@ const EditProfileDialog = ({
             <Label htmlFor="displayName">Display Name</Label>
             <Input
               id="displayName"
-              value={localDisplayName}
-              onChange={(e) => setLocalDisplayName(e.target.value)}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
             />
           </div>
@@ -178,8 +155,8 @@ const EditProfileDialog = ({
             <Label htmlFor="username">Username</Label>
             <Input
               id="username"
-              value={localUsername}
-              onChange={(e) => setLocalUsername(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               placeholder="Your username"
             />
           </div>
@@ -188,8 +165,8 @@ const EditProfileDialog = ({
             <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
-              value={localBio}
-              onChange={(e) => setLocalBio(e.target.value)}
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
               placeholder="Tell others about yourself..."
               rows={3}
             />
@@ -201,7 +178,7 @@ const EditProfileDialog = ({
             Cancel
           </Button>
           <Button 
-            onClick={handleSave}
+            onClick={handleUpdateProfile}
             className="bg-gradient-to-r from-dream-lavender to-dream-purple"
             disabled={isUploading || localIsUploading}
           >

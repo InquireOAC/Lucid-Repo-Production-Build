@@ -1,4 +1,3 @@
-
 import UIKit
 import Capacitor
 import WebKit
@@ -13,15 +12,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Check if the root view controller is a Capacitor web view
         if let webViewController = self.window?.rootViewController as? CAPBridgeViewController {
-            // Directly access the webView as WKWebView (it's already a WKWebView)
+            // Directly access the webView as WKWebView (it’s already a WKWebView)
             let wkWebView = webViewController.webView as? WKWebView
             
             // If it is a WKWebView, set the contentInsetAdjustmentBehavior to always
             wkWebView?.scrollView.contentInsetAdjustmentBehavior = .always
         }
-
-        // Register for push notifications
-        UNUserNotificationCenter.current().delegate = self
 
         return true
     }
@@ -52,18 +48,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
         return ApplicationDelegateProxy.shared.application(application, continue: userActivity, restorationHandler: restorationHandler)
-    }
-}
-
-// MARK: - UNUserNotificationCenterDelegate
-extension AppDelegate: UNUserNotificationCenterDelegate {
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        // Show notification when app is in foreground
-        completionHandler([.alert, .sound, .badge])
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
-        // Handle notification response
-        completionHandler()
     }
 }

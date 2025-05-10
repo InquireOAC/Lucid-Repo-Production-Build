@@ -2,30 +2,28 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useProfileData } from "@/hooks/useProfileData";
-import LoadingScreen from "@/components/profile/LoadingScreen";
-import UserNotFound from "@/components/profile/UserNotFound";
+import { toast } from "sonner";
+import { DreamEntry } from "@/types/dream";
+
+// Import refactored components
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import EditProfileDialog from "@/components/profile/EditProfileDialog";
 import SocialLinksDialog from "@/components/profile/SocialLinksDialog";
-import MessagesDialog from "@/components/profile/MessagesDialog";
 import SettingsDialog from "@/components/profile/SettingsDialog";
+import MessagesDialog from "@/components/profile/MessagesDialog";
+import LoadingScreen from "@/components/profile/LoadingScreen";
+import UserNotFound from "@/components/profile/UserNotFound";
 import SubscriptionDialog from "@/components/profile/SubscriptionDialog";
-import NotificationsDialog from "@/components/profile/NotificationsDialog";
+import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 
 const Profile = () => {
-  const { userId } = useParams();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { userId } = useParams<{ userId: string }>();
+  const { user, profile, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
+  // Using the refactored hook
   const {
     isOwnProfile,
     viewedProfile,
@@ -38,8 +36,6 @@ const Profile = () => {
     dreamCount,
     followersCount,
     followingCount,
-    publicDreams,
-    likedDreams,
     conversations,
     subscription,
     fetchUserProfile,
@@ -52,111 +48,134 @@ const Profile = () => {
     handleStartConversation,
     handleSignOut
   } = useProfileData(user, profile, userId);
-
-  const { refreshDreams } = useProfileDreams(user, userId);
+  
+  // Use the useProfileDreams hook directly here
+  const {
+    publicDreams,
+    likedDreams,
+    refreshDreams
+  } = useProfileDreams(user, userId);
+  
+  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
+  const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
+  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   
   useEffect(() => {
-    if (userId && user) {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    if (!isOwnProfile && userId) {
       fetchUserProfile(userId);
       checkIfFollowing(userId);
     }
-    
-    if (user && !userId) {
+  }, [user, profile, userId]);
+
+  useEffect(() => {
+    if (user) {
       fetchSubscription();
     }
-  }, [userId, user]);
+  }, [user]);
+
+  // Refresh public dreams every time the profile is loaded
+  useEffect(() => {
+    if (isOwnProfile || (userId && user)) {
+      // Add a small delay to ensure profile data is loaded
+      const timer = setTimeout(() => {
+        refreshDreams();
+      }, 300);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isOwnProfile, userId, user]);
   
-  // Show loading screen while authentication is in progress
-  if (authLoading) {
+  // Loading state
+  if (!user) {
     return <LoadingScreen />;
   }
   
-  // Show not found if no user is logged in and no userId is provided
-  if (!user && !userId) {
-    return <UserNotFound />;
+  // User not found state
+  if (!isOwnProfile && !viewedProfile) {
+    return <UserNotFound onGoBack={() => navigate("/")} />;
   }
   
-  // For other users' profiles, show not found if the profile wasn't found
-  if (userId && !viewedProfile && !authLoading) {
-    return <UserNotFound />;
-  }
-
+  const profileToShow = isOwnProfile ? profile : viewedProfile;
+  
+  // Main render
   return (
     <div className="min-h-screen dream-background p-4">
-      <ProfileHeader
-        isOwnProfile={isOwnProfile}
-        profile={viewedProfile || profile}
-        displayName={displayName}
-        username={username}
-        avatarUrl={avatarUrl}
-        dreamCount={dreamCount}
-        followersCount={followersCount}
-        followingCount={followingCount}
-        bio={bio}
-        isFollowing={isFollowing}
-        onEditProfile={() => setIsEditProfileOpen(true)}
-        onEditSocialLinks={() => setIsSocialLinksOpen(true)}
-        onFollow={() => handleFollow()}
-        onMessage={() => handleStartConversation()}
-        onSettings={() => setIsSettingsOpen(true)}
-        onManageSubscription={() => setIsSubscriptionOpen(true)}
-        onNotifications={() => setIsNotificationsOpen(true)}
-      />
+      <div className="max-w-3xl mx-auto">
+        <ProfileHeader 
+          profileToShow={profileToShow}
+          isOwnProfile={isOwnProfile}
+          dreamCount={dreamCount}
+          followersCount={followersCount}
+          followingCount={followingCount}
+          isFollowing={isFollowing}
+          setIsEditProfileOpen={setIsEditProfileOpen}
+          setIsMessagesOpen={setIsMessagesOpen}
+          setIsSettingsOpen={setIsSettingsOpen}
+          setIsSocialLinksOpen={setIsSocialLinksOpen}
+          handleFollow={handleFollow}
+          handleStartConversation={handleStartConversation}
+        />
+        
+        <ProfileTabs 
+          publicDreams={publicDreams}
+          likedDreams={likedDreams}
+          isOwnProfile={isOwnProfile}
+          refreshDreams={refreshDreams}
+        />
+      </div>
       
-      <ProfileTabs
-        isOwnProfile={isOwnProfile}
-        publicDreams={publicDreams}
-        likedDreams={likedDreams}
-        refreshDreams={refreshDreams}
-      />
-
       {/* Dialogs */}
-      <EditProfileDialog
+      <EditProfileDialog 
         isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
         displayName={displayName}
+        setDisplayName={(name) => handleAvatarChange(avatarUrl)}
         username={username}
-        bio={bio}
-        avatarUrl={avatarUrl}
-        onUpdate={handleUpdateProfile}
-        onAvatarChange={handleAvatarChange}
-        userId={user?.id || ""}
-        isUploading={false}
-        setDisplayName={() => {}}
         setUsername={() => {}}
+        bio={bio}
         setBio={() => {}}
+        avatarUrl={avatarUrl}
+        isUploading={false}
+        handleAvatarChange={handleAvatarChange}
+        handleUpdateProfile={handleUpdateProfile}
+        userId={user.id}
       />
       
-      <SocialLinksDialog
+      <SocialLinksDialog 
         isOpen={isSocialLinksOpen}
         onOpenChange={setIsSocialLinksOpen}
         socialLinks={socialLinks}
-        handleUpdateSocialLinks={handleUpdateSocialLinks}
         setSocialLinks={() => {}}
+        handleUpdateSocialLinks={handleUpdateSocialLinks}
       />
       
-      <MessagesDialog
-        isOpen={isMessagesOpen}
-        onOpenChange={setIsMessagesOpen}
-        conversations={conversations || []}
-      />
-      
-      <SettingsDialog
+      <SettingsDialog 
         isOpen={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
         handleSignOut={handleSignOut}
-        onSubscriptionClick={() => setIsSubscriptionOpen(true)}
+        onSubscriptionClick={() => {
+          setIsSettingsOpen(false);
+          setIsSubscriptionOpen(true);
+        }}
       />
       
+      <MessagesDialog 
+        isOpen={isMessagesOpen}
+        onOpenChange={setIsMessagesOpen}
+        conversations={conversations}
+      />
+
       <SubscriptionDialog
         isOpen={isSubscriptionOpen}
         onOpenChange={setIsSubscriptionOpen}
         subscription={subscription}
-      />
-      
-      <NotificationsDialog
-        open={isNotificationsOpen}
-        onOpenChange={setIsNotificationsOpen}
       />
     </div>
   );
