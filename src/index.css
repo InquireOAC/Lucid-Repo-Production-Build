@@ -52,7 +52,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-nexa;
+    @apply bg-background text-foreground;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -69,16 +69,6 @@
     overflow-x: hidden;
     position: relative;
     touch-action: pan-x pan-y;
-  }
-  
-  /* Apply Nexa font to all headings */
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-nexa;
-  }
-  
-  /* Apply Nexa font to buttons */
-  button, input, textarea, select {
-    @apply font-nexa;
   }
 }
 
