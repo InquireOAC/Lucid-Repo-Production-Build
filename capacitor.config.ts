@@ -29,6 +29,11 @@ const config: CapacitorConfig = {
       style: 'dark',
       backgroundColor: '#1E1A2B',
       overlay: false // Set to false to make the status bar opaque
+    },
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon_config_sample",
+      iconColor: "#9F8FD9",
+      sound: "beep.wav"
     }
   }
 };
