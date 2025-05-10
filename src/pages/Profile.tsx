@@ -30,10 +30,15 @@ const Profile = () => {
     viewedProfile,
     isFollowing,
     displayName,
+    setDisplayName,
     username,
+    setUsername,
     bio,
+    setBio,
     avatarUrl,
+    setAvatarUrl,
     socialLinks,
+    setSocialLinks,
     dreamCount,
     followersCount,
     followingCount,
@@ -138,18 +143,23 @@ const Profile = () => {
         isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
         displayName={displayName}
+        setDisplayName={setDisplayName}
         username={username}
+        setUsername={setUsername}
         bio={bio}
+        setBio={setBio}
         avatarUrl={avatarUrl}
         isUploading={false}
         handleAvatarChange={handleAvatarChange}
         handleUpdateProfile={handleUpdateProfile}
+        userId={user.id}
       />
       
       <SocialLinksDialog 
         isOpen={isSocialLinksOpen}
         onOpenChange={setIsSocialLinksOpen}
         socialLinks={socialLinks}
+        setSocialLinks={setSocialLinks}
         handleUpdateSocialLinks={handleUpdateSocialLinks}
       />
       
