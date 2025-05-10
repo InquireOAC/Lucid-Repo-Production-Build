@@ -14,6 +14,7 @@ import LucidRepo from "./pages/LucidRepo";
 import Profile from "./pages/Profile";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
+import { initializeNotifications } from "./utils/notificationUtils";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,9 @@ const App = () => {
     };
     
     setupStatusBar();
+    
+    // Initialize notifications
+    initializeNotifications().catch(console.error);
   }, []);
 
   return (

@@ -15,6 +15,7 @@ import MessagesDialog from "@/components/profile/MessagesDialog";
 import LoadingScreen from "@/components/profile/LoadingScreen";
 import UserNotFound from "@/components/profile/UserNotFound";
 import SubscriptionDialog from "@/components/profile/SubscriptionDialog";
+import NotificationsDialog from "@/components/profile/NotificationsDialog";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 
@@ -61,6 +62,7 @@ const Profile = () => {
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
   const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
   useEffect(() => {
     if (!user) {
@@ -136,23 +138,18 @@ const Profile = () => {
         isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
         displayName={displayName}
-        setDisplayName={(name) => handleAvatarChange(avatarUrl)}
         username={username}
-        setUsername={() => {}}
         bio={bio}
-        setBio={() => {}}
         avatarUrl={avatarUrl}
         isUploading={false}
         handleAvatarChange={handleAvatarChange}
         handleUpdateProfile={handleUpdateProfile}
-        userId={user.id}
       />
       
       <SocialLinksDialog 
         isOpen={isSocialLinksOpen}
         onOpenChange={setIsSocialLinksOpen}
         socialLinks={socialLinks}
-        setSocialLinks={() => {}}
         handleUpdateSocialLinks={handleUpdateSocialLinks}
       />
       
@@ -160,6 +157,10 @@ const Profile = () => {
         isOpen={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
         handleSignOut={handleSignOut}
+        onNotificationsClick={() => {
+          setIsSettingsOpen(false);
+          setIsNotificationsOpen(true);
+        }}
         onSubscriptionClick={() => {
           setIsSettingsOpen(false);
           setIsSubscriptionOpen(true);
@@ -176,6 +177,11 @@ const Profile = () => {
         isOpen={isSubscriptionOpen}
         onOpenChange={setIsSubscriptionOpen}
         subscription={subscription}
+      />
+      
+      <NotificationsDialog
+        isOpen={isNotificationsOpen}
+        onOpenChange={setIsNotificationsOpen}
       />
     </div>
   );
