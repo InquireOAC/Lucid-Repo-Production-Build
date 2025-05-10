@@ -35,10 +35,10 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
         // Parse social links from profile
         if (profile.social_links) {
           setSocialLinks({
-            twitter: profile.social_links.twitter || "",
-            instagram: profile.social_links.instagram || "",
-            facebook: profile.social_links.facebook || "",
-            website: profile.social_links.website || ""
+            twitter: profile.social_links?.twitter || "",
+            instagram: profile.social_links?.instagram || "",
+            facebook: profile.social_links?.facebook || "",
+            website: profile.social_links?.website || ""
           });
         }
       }
@@ -87,10 +87,15 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
     viewedProfile,
     isFollowing,
     displayName,
+    setDisplayName,
     username,
+    setUsername,
     bio,
+    setBio,
     avatarUrl,
+    setAvatarUrl,
     socialLinks,
+    setSocialLinks,
     dreamCount,
     followersCount,
     followingCount,
