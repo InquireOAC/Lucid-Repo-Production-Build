@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ interface SocialLinksDialogProps {
   onOpenChange: (open: boolean) => void;
   socialLinks: SocialLinks;
   setSocialLinks: (value: SocialLinks) => void;
-  handleUpdateSocialLinks: () => void;
+  handleUpdateSocialLinks: () => Promise<void>;
 }
 
 const SocialLinksDialog = ({
@@ -28,6 +28,42 @@ const SocialLinksDialog = ({
   setSocialLinks,
   handleUpdateSocialLinks
 }: SocialLinksDialogProps) => {
+  const [localLinks, setLocalLinks] = useState<SocialLinks>({
+    twitter: "",
+    instagram: "",
+    facebook: "",
+    website: ""
+  });
+
+  useEffect(() => {
+    if (isOpen && socialLinks) {
+      setLocalLinks({
+        twitter: socialLinks.twitter || "",
+        instagram: socialLinks.instagram || "",
+        facebook: socialLinks.facebook || "",
+        website: socialLinks.website || ""
+      });
+    }
+  }, [isOpen, socialLinks]);
+
+  const handleChange = (network: keyof SocialLinks, value: string) => {
+    setLocalLinks(prev => ({
+      ...prev,
+      [network]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    // Update parent state
+    setSocialLinks(localLinks);
+    
+    // Call the update function
+    await handleUpdateSocialLinks();
+    
+    // Close the dialog
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -42,8 +78,8 @@ const SocialLinksDialog = ({
             </Label>
             <Input
               id="twitter"
-              value={socialLinks.twitter}
-              onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})}
+              value={localLinks.twitter}
+              onChange={(e) => handleChange("twitter", e.target.value)}
               placeholder="username (without @)"
             />
           </div>
@@ -55,8 +91,8 @@ const SocialLinksDialog = ({
             </Label>
             <Input
               id="instagram"
-              value={socialLinks.instagram}
-              onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})}
+              value={localLinks.instagram}
+              onChange={(e) => handleChange("instagram", e.target.value)}
               placeholder="username"
             />
           </div>
@@ -68,8 +104,8 @@ const SocialLinksDialog = ({
             </Label>
             <Input
               id="facebook"
-              value={socialLinks.facebook}
-              onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})}
+              value={localLinks.facebook}
+              onChange={(e) => handleChange("facebook", e.target.value)}
               placeholder="username"
             />
           </div>
@@ -81,8 +117,8 @@ const SocialLinksDialog = ({
             </Label>
             <Input
               id="website"
-              value={socialLinks.website}
-              onChange={(e) => setSocialLinks({...socialLinks, website: e.target.value})}
+              value={localLinks.website}
+              onChange={(e) => handleChange("website", e.target.value)}
               placeholder="https://yourwebsite.com"
             />
           </div>
@@ -93,7 +129,7 @@ const SocialLinksDialog = ({
             Cancel
           </Button>
           <Button 
-            onClick={handleUpdateSocialLinks}
+            onClick={handleSave}
             className="bg-gradient-to-r from-dream-lavender to-dream-purple"
           >
             Save Links

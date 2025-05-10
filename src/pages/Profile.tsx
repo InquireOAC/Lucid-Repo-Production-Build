@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfileData } from "@/hooks/useProfileData";
 import LoadingScreen from "@/components/profile/LoadingScreen";
@@ -14,11 +14,11 @@ import SettingsDialog from "@/components/profile/SettingsDialog";
 import SubscriptionDialog from "@/components/profile/SubscriptionDialog";
 import NotificationsDialog from "@/components/profile/NotificationsDialog";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
-import { useEffect as useEffectOnce } from "react";
 
 const Profile = () => {
   const { userId } = useParams();
   const { user, profile, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
   const [isMessagesOpen, setIsMessagesOpen] = useState(false);
@@ -53,12 +53,12 @@ const Profile = () => {
     handleSignOut
   } = useProfileData(user, profile, userId);
 
-  const { refetchPublicDreams } = useProfileDreams(user, userId);
+  const { refreshDreams } = useProfileDreams(user, userId);
   
   useEffect(() => {
     if (userId && user) {
       fetchUserProfile(userId);
-      checkIfFollowing();
+      checkIfFollowing(userId);
     }
     
     if (user && !userId) {
@@ -96,8 +96,8 @@ const Profile = () => {
         isFollowing={isFollowing}
         onEditProfile={() => setIsEditProfileOpen(true)}
         onEditSocialLinks={() => setIsSocialLinksOpen(true)}
-        onFollow={handleFollow}
-        onMessage={() => handleStartConversation(userId as string)}
+        onFollow={() => handleFollow()}
+        onMessage={() => handleStartConversation()}
         onSettings={() => setIsSettingsOpen(true)}
         onManageSubscription={() => setIsSubscriptionOpen(true)}
         onNotifications={() => setIsNotificationsOpen(true)}
@@ -107,11 +107,12 @@ const Profile = () => {
         isOwnProfile={isOwnProfile}
         publicDreams={publicDreams}
         likedDreams={likedDreams}
+        refreshDreams={refreshDreams}
       />
 
       {/* Dialogs */}
       <EditProfileDialog
-        open={isEditProfileOpen}
+        isOpen={isEditProfileOpen}
         onOpenChange={setIsEditProfileOpen}
         displayName={displayName}
         username={username}
@@ -119,29 +120,36 @@ const Profile = () => {
         avatarUrl={avatarUrl}
         onUpdate={handleUpdateProfile}
         onAvatarChange={handleAvatarChange}
+        userId={user?.id || ""}
+        isUploading={false}
+        setDisplayName={() => {}}
+        setUsername={() => {}}
+        setBio={() => {}}
       />
       
       <SocialLinksDialog
-        open={isSocialLinksOpen}
+        isOpen={isSocialLinksOpen}
         onOpenChange={setIsSocialLinksOpen}
         socialLinks={socialLinks}
-        onUpdate={handleUpdateSocialLinks}
+        handleUpdateSocialLinks={handleUpdateSocialLinks}
+        setSocialLinks={() => {}}
       />
       
       <MessagesDialog
-        open={isMessagesOpen}
+        isOpen={isMessagesOpen}
         onOpenChange={setIsMessagesOpen}
-        conversations={conversations}
+        conversations={conversations || []}
       />
       
       <SettingsDialog
-        open={isSettingsOpen}
+        isOpen={isSettingsOpen}
         onOpenChange={setIsSettingsOpen}
-        onSignOut={handleSignOut}
+        handleSignOut={handleSignOut}
+        onSubscriptionClick={() => setIsSubscriptionOpen(true)}
       />
       
       <SubscriptionDialog
-        open={isSubscriptionOpen}
+        isOpen={isSubscriptionOpen}
         onOpenChange={setIsSubscriptionOpen}
         subscription={subscription}
       />

@@ -1,65 +1,66 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function useFollowing(user: any, userId?: string, setFollowersCount?: (value: React.SetStateAction<number>) => void) {
+export function useFollowing(user: any, userId?: string) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
 
-  const checkIfFollowing = async (targetUserId: string) => {
-    if (!user) return;
+  const checkIfFollowing = async (targetUserId?: string) => {
+    if (!user || !targetUserId || user.id === targetUserId) return;
     
     try {
       const { data, error } = await supabase
-        .from("followers")
-        .select("*")
-        .eq("follower_id", user.id)
-        .eq("following_id", targetUserId)
+        .from('followers')
+        .select('*')
+        .eq('follower_id', user.id)
+        .eq('following_id', targetUserId)
         .single();
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows returned" error
+        
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
       
       setIsFollowing(!!data);
     } catch (error) {
-      console.error("Error checking follow status:", error);
+      console.error('Error checking follow status:', error);
     }
   };
-  
+
   const handleFollow = async () => {
-    if (!user || isOwnProfile) return;
+    if (!user || !userId || user.id === userId) return;
     
     try {
       if (isFollowing) {
-        // Unfollow
-        await supabase
-          .from("followers")
+        // Unfollow user
+        const { error } = await supabase
+          .from('followers')
           .delete()
-          .eq("follower_id", user.id)
-          .eq("following_id", userId);
+          .eq('follower_id', user.id)
+          .eq('following_id', userId);
+          
+        if (error) throw error;
         
         setIsFollowing(false);
-        if (setFollowersCount) {
-          setFollowersCount(prev => Math.max(0, prev - 1));
-        }
-        toast.success("Unfollowed user");
+        toast.success('Unfollowed successfully');
       } else {
-        // Follow
-        await supabase
-          .from("followers")
-          .insert({ follower_id: user.id, following_id: userId });
+        // Follow user
+        const { error } = await supabase
+          .from('followers')
+          .insert({
+            follower_id: user.id,
+            following_id: userId
+          });
+          
+        if (error) throw error;
         
         setIsFollowing(true);
-        if (setFollowersCount) {
-          setFollowersCount(prev => prev + 1);
-        }
-        toast.success("Now following user");
+        toast.success('Following successfully');
       }
     } catch (error) {
-      console.error("Error updating follow status:", error);
-      toast.error("Failed to update follow");
+      console.error('Error following/unfollowing:', error);
+      toast.error('Failed to update follow status');
     }
   };
   
