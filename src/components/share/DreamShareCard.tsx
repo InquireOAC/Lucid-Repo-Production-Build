@@ -1,8 +1,8 @@
 
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
-import { elementToPngBlob, shareContent } from "@/utils/shareUtils";
+import { elementToPngBlob } from "@/utils/shareUtils";
 import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -18,7 +18,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   // Ensure we have the proper image from either camelCase or snake_case field
   const dreamImage = dream.generatedImage || dream.image_url;
 
-  // Handle share with pre-loaded elements to ensure immediate download
+  // Handle share with direct download
   const handleShare = async () => {
     if (!shareCardRef.current) {
       toast.error("Unable to generate share image");
@@ -27,32 +27,20 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
     
     try {
       setIsSharing(true);
-      console.log("Generating share image for dream:", dream.title);
-      console.log("Image URL:", dreamImage);
       
-      // Generate the image blob immediately
+      // Generate the image blob
       const blob = await elementToPngBlob(shareCardRef.current);
       
       if (!blob) {
-        console.error("Failed to generate image blob");
         toast.error("Failed to generate share image");
         setIsSharing(false);
         return;
       }
       
-      // Directly download without waiting
+      // Always download the image directly for reliable behavior
       downloadImageDirectly(blob, `${dream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
       toast.success("Dream image downloaded");
-      
-      // Also try to use the share API if available
-      shareContent(
-        blob,
-        `${dream.title} - Dream Story`,
-        "Check out my dream from Lucid Repo!"
-      ).then(() => {
-        console.log("Share operation completed");
-        setIsSharing(false);
-      });
+      setIsSharing(false);
     } catch (error) {
       console.error("Share error:", error);
       toast.error("Failed to share dream");
@@ -60,7 +48,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
     }
   };
 
-  // Direct download function to ensure immediate download
+  // Direct download function
   const downloadImageDirectly = (blob: Blob, fileName: string): void => {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -104,7 +92,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         >
           {/* App Name at the top with improved size and alignment */}
           <div className="mb-16 mt-8 flex flex-col items-center justify-center">
-            <h1 className="text-8xl font-bold text-white text-center">Lucid Repo</h1>
+            <h1 className="text-9xl font-bold text-white text-center">Lucid Repo</h1>
             <div className="h-3 w-64 bg-dream-lavender rounded-full mt-6"></div>
           </div>
           
@@ -138,7 +126,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </div>
           )}
           
-          {/* Dream Image */}
+          {/* Dream Image with simplified rendering */}
           {dreamImage && (
             <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
               <img 
@@ -162,7 +150,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           {/* App Footer with improved styling */}
           <div className="mt-auto flex items-center justify-between">
             <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-16 w-64 rounded-md"></div>
-            <div className="text-3xl py-5 px-10 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
+            <div className="text-4xl py-6 px-12 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
               Download the app
             </div>
           </div>
