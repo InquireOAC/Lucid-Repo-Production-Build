@@ -114,11 +114,11 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         )}
         
         {/* Dream Visualization - full width with rounded corners */}
-        {dreamImageUrl && (
+        {dream.generatedImage && (
           <div className="mb-[60px] flex items-center justify-center">
             <div className="w-full overflow-hidden rounded-[24px] shadow-lg relative">
               <img 
-                src={dreamImageUrl}
+                src={dream.generatedImage}
                 alt="Dream Visualization"
                 className="w-full object-cover dream-image-container"
                 style={{ 
