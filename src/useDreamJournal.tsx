@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,12 +57,18 @@ export const useDreamJournal = () => {
           user_id: dream.user_id
         }));
         
-        console.log("Synced dreams with audio:", formattedDreams.map(d => ({
+        console.log("Synced dreams with audio and images:", formattedDreams.map(d => ({
           id: d.id,
           title: d.title,
           audioUrl: d.audioUrl,
-          audio_url: d.audio_url
+          audio_url: d.audio_url,
+          hasImage: !!d.generatedImage
         })));
+        
+        // Update the local store with dreams from the database
+        formattedDreams.forEach(dream => {
+          updateEntry(dream.id, dream);
+        });
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);
@@ -77,6 +82,9 @@ export const useDreamJournal = () => {
     lucid: boolean;
     mood: string;
     audioUrl?: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
   }) => {
     setIsSubmitting(true);
     try {
@@ -84,10 +92,17 @@ export const useDreamJournal = () => {
       const newDream = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
-        audioUrl: dreamData.audioUrl || null
+        audioUrl: dreamData.audioUrl || null,
+        analysis: dreamData.analysis || null,
+        generatedImage: dreamData.generatedImage || null,
+        imagePrompt: dreamData.imagePrompt || null
       });
 
-      console.log("Adding dream with audio:", dreamData.audioUrl);
+      console.log("Adding dream with:", {
+        audio: Boolean(dreamData.audioUrl),
+        image: Boolean(dreamData.generatedImage),
+        imagePrompt: Boolean(dreamData.imagePrompt)
+      });
 
       // If user is logged in, also save to database
       if (user) {
@@ -103,7 +118,10 @@ export const useDreamJournal = () => {
             lucid: dreamData.lucid,
             date: newDream.date,
             is_public: false,
-            audio_url: dreamData.audioUrl || null // Save audio URL to database
+            audio_url: dreamData.audioUrl || null,
+            // Save both field names for image data for compatibility
+            generatedImage: dreamData.generatedImage || null,
+            imagePrompt: dreamData.imagePrompt || null
           });
         if (error) {
           console.error("Database error:", error);
@@ -127,6 +145,9 @@ export const useDreamJournal = () => {
     lucid: boolean;
     mood: string;
     audioUrl?: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
   }) => {
     if (!selectedDream) return;
     setIsSubmitting(true);
@@ -134,10 +155,17 @@ export const useDreamJournal = () => {
       // Update local store
       updateEntry(selectedDream.id, {
         ...dreamData,
-        audioUrl: dreamData.audioUrl || null
+        audioUrl: dreamData.audioUrl || selectedDream.audioUrl || null,
+        analysis: dreamData.analysis || selectedDream.analysis || null,
+        generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
+        imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null
       });
 
-      console.log("Updating dream with audio:", dreamData.audioUrl);
+      console.log("Updating dream with:", {
+        audio: Boolean(dreamData.audioUrl),
+        image: Boolean(dreamData.generatedImage),
+        imagePrompt: Boolean(dreamData.imagePrompt)
+      });
 
       // If user is logged in, also update in database
       if (user) {
@@ -149,7 +177,10 @@ export const useDreamJournal = () => {
             tags: dreamData.tags,
             mood: dreamData.mood,
             lucid: dreamData.lucid,
-            audio_url: dreamData.audioUrl || null, // Update audio URL in database
+            audio_url: dreamData.audioUrl || selectedDream.audioUrl || null,
+            // Update both field names for image data for compatibility
+            generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
+            imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null,
             updated_at: new Date().toISOString()
           })
           .eq("id", selectedDream.id)
@@ -180,17 +211,26 @@ export const useDreamJournal = () => {
         // Convert the updates to database format
         const dbUpdates: any = { ...updates };
 
-        // Remove isPublic from database updates and use is_public instead
+        // Handle compatibility between camelCase and snake_case fields
         if ('isPublic' in dbUpdates) {
           dbUpdates.is_public = dbUpdates.isPublic;
           delete dbUpdates.isPublic;
         }
         
-        // Convert audioUrl to audio_url for database
-        if ('audioUrl' in dbUpdates) {
-          dbUpdates.audio_url = dbUpdates.audioUrl;
-          delete dbUpdates.audioUrl;
+        // Make sure we keep both versions of image fields for database compatibility
+        if ('generatedImage' in dbUpdates) {
+          // Keep the image_url field synced with generatedImage
+          dbUpdates.image_url = dbUpdates.generatedImage;
         }
+        
+        if ('imagePrompt' in dbUpdates) {
+          // Keep the image_prompt field synced with imagePrompt
+          dbUpdates.image_prompt = dbUpdates.imagePrompt;
+        }
+        
+        console.log("Updating dream in database:", id, {
+          has_image: Boolean(dbUpdates.generatedImage || dbUpdates.image_url)
+        });
         
         const { error } = await supabase
           .from("dream_entries")
@@ -300,6 +340,7 @@ export const useDreamJournal = () => {
     handleTogglePublic,
     handleTagClick,
     setActiveTagIds,
-    user
+    user,
+    syncDreamsFromDb
   };
 };

@@ -31,12 +31,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   };
 
   // Log the normalized dream for debugging
-  console.log("Normalized dream for sharing:", {
+  console.log("Dream being shared:", {
     id: normalizedDream.id,
     title: normalizedDream.title,
     hasImage: !!normalizedDream.generatedImage,
-    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0,
-    imageUrl: normalizedDream.generatedImage ? normalizedDream.generatedImage.substring(0, 50) + '...' : 'none'
+    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0
   });
 
   // Validate required fields

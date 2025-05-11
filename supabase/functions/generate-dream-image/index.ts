@@ -41,9 +41,13 @@ serve(async (req) => {
 
     console.log("Image generation successful, returning URL")
     
-    // The response from OpenAI will include data.data[0].url
+    // Return both field names for compatibility
     return new Response(
-      JSON.stringify({ imageUrl: data.data[0].url, image_url: data.data[0].url }), // Return both formats for compatibility
+      JSON.stringify({ 
+        imageUrl: data.data[0].url, 
+        image_url: data.data[0].url,
+        generatedImage: data.data[0].url 
+      }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {

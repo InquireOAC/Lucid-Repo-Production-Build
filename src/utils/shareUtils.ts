@@ -31,7 +31,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
             }
             
             img.onload = () => {
-              console.log(`Image loaded: ${img.src.slice(0, 30)}...`);
+              console.log(`Image loaded successfully`);
               resolve();
             };
             
@@ -45,11 +45,10 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
             // Short timeout
             setTimeout(() => {
               if (!img.complete) {
-                console.warn("Image load timeout:", img.src.slice(0, 30));
-                img.dispatchEvent(new Event('error'));
+                console.warn("Image load timeout");
                 resolve();
               }
-            }, 2000);
+            }, 3000);
           });
         })
       );
@@ -59,7 +58,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     // Generate canvas with optimized settings
     const canvas = await html2canvas(element, { 
-      scale: 2,
+      scale: 1.5, // Reduced from 2 for better performance
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -69,16 +68,10 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     console.log("Canvas generated successfully");
     
     return new Promise<Blob | null>((resolve) => {
-      const blobTimeout = setTimeout(() => {
-        console.warn("Blob creation timed out");
-        resolve(null);
-      }, 3000);
-      
       canvas.toBlob((blob) => {
-        clearTimeout(blobTimeout);
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.8);
+      }, "image/png", 0.7); // Reduced quality for better performance
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
