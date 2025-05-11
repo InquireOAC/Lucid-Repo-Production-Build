@@ -78,7 +78,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </div>
           )}
           
-          {/* Dream Title and Date */}
+          {/* Dream Title and Date - ENHANCED */}
           <div className="mb-8">
             <h1 className="text-7xl mb-4 font-bold gradient-text">{dream.title}</h1>
             <p className="text-3xl text-dream-lavender">{formattedDate}</p>
@@ -102,10 +102,10 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </blockquote>
           )}
           
-          {/* App Footer */}
+          {/* App Footer - ENHANCED */}
           <div className="mt-auto pt-8 flex items-center justify-between">
             <div className="text-4xl font-bold gradient-text">Lucid Repo</div>
-            <div className="text-2xl text-dream-lavender/80">Download the app</div>
+            <div className="text-2xl font-semibold bg-dream-lavender/20 px-4 py-2 rounded-full text-white">Download the app</div>
           </div>
         </div>
       </div>

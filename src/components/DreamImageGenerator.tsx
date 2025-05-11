@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from "@/lib/stripe";
+import { showSubscriptionPrompt } from "@/lib/stripe";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -25,14 +26,20 @@ const DreamImageGenerator = ({
   const [prompt, setPrompt] = useState(existingPrompt || "");
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(existingImage);
+  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
 
   const handleSuggestPrompt = async () => {
     setLoading(true);
     try {
       // Check if the user has access to this feature
-      const hasAccess = await checkFeatureAccess('image');
+      const hasAccess = await canUseFeature('image');
       if (!hasAccess) {
-        showSubscriptionPrompt('image');
+        if (hasUsedFeature('image')) {
+          showSubscriptionPrompt('image');
+        } else {
+          markFeatureAsUsed('image');
+          toast.success("Using your free trial!", { duration: 3000 });
+        }
         return;
       }
       
@@ -45,7 +52,20 @@ const DreamImageGenerator = ({
 
       if (error) throw error;
       setPrompt(data.analysis);
-      toast.success("Prompt suggestion created!");
+      
+      // If this was a free trial use, mark the feature as used
+      if (!hasUsedFeature('image')) {
+        markFeatureAsUsed('image');
+        toast.success("Free trial used! Subscribe for more image generations.", {
+          duration: 5000,
+          action: {
+            label: "Subscribe",
+            onClick: () => window.location.href = '/profile?tab=subscription'
+          }
+        });
+      } else {
+        toast.success("Prompt suggestion created!");
+      }
     } catch (error) {
       console.error("Error suggesting prompt:", error);
       toast.error("Failed to suggest prompt. Please try again.");
@@ -63,9 +83,10 @@ const DreamImageGenerator = ({
     setLoading(true);
     try {
       // Check if the user has access to this feature
-      const hasAccess = await checkFeatureAccess('image');
+      const hasAccess = await canUseFeature('image');
       if (!hasAccess) {
         showSubscriptionPrompt('image');
+        setLoading(false);
         return;
       }
       
@@ -75,8 +96,19 @@ const DreamImageGenerator = ({
 
       if (error) throw error;
       
-      // Increment usage counter after successful generation
-      await incrementFeatureUsage('image');
+      // If user has a subscription, increment usage counter
+      const { data: customerData } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+        
+      if (customerData?.customer_id) {
+        await supabase.rpc('increment_subscription_usage', { 
+          customer_id: customerData.customer_id,
+          credit_type: 'image'
+        });
+      }
       
       setImageUrl(data.imageUrl);
       onImageGenerated(data.imageUrl, prompt);
@@ -116,7 +148,7 @@ const DreamImageGenerator = ({
               className="whitespace-nowrap border-dream-lavender text-dream-lavender hover:bg-dream-lavender/10"
               disabled={loading}
             >
-              Suggest Prompt
+              {hasUsedFeature('image') ? "Get Premium" : "Suggest Prompt"}
             </Button>
           </div>
           <Button
@@ -124,8 +156,13 @@ const DreamImageGenerator = ({
             disabled={loading || !prompt.trim()}
             className="w-full bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
           >
-            {loading ? "Generating..." : "Generate Image"}
+            {loading ? "Generating..." : hasUsedFeature('image') ? "Subscribe to Generate" : "Generate Image"}
           </Button>
+          {hasUsedFeature('image') && !imageUrl && (
+            <p className="text-xs text-center text-muted-foreground">
+              You've used your free trial. Subscribe for more image generations.
+            </p>
+          )}
         </div>
 
         {imageUrl && (

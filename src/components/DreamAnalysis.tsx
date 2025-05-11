@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { showSubscriptionPrompt } from "@/lib/stripe";
 
 interface DreamAnalysisProps {
   dreamContent: string;
@@ -22,6 +24,7 @@ const DreamAnalysis = ({
   disabled = false
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
+  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
@@ -34,77 +37,67 @@ const DreamAnalysis = ({
       return;
     }
 
-    // Check if user has subscription credits for analysis
     try {
-      const { data: customerData, error: customerError } = await supabase
+      // Check if user can use the feature (free trial or subscription)
+      const canUse = await canUseFeature('analysis');
+      
+      if (!canUse) {
+        // User has used their free trial and doesn't have a subscription
+        showSubscriptionPrompt('analysis');
+        return;
+      }
+      
+      setIsGenerating(true);
+      setShowInfo(false);
+
+      const { data: customerData } = await supabase
         .from('stripe_customers')
         .select('customer_id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (customerError) {
-        if (customerError.code !== 'PGRST116') { // Not found error
-          toast.error("Error checking subscription: " + customerError.message);
-          return;
-        }
-        // If no customer record, treat as no subscription
-        toast.error("You need a subscription to analyze dreams. Please subscribe in your profile.");
-        return;
+      // Set up request body with or without customer ID (for tracking subscription usage)
+      const requestBody: any = {
+        dream_content: dreamContent
+      };
+      
+      // Add customer_id only if it exists (user has a subscription)
+      if (customerData?.customer_id) {
+        requestBody.customer_id = customerData.customer_id;
       }
 
-      if (customerData) {
-        // Check if user has analysis credits
-        const { data: canAnalyze, error: creditError } = await supabase
-          .rpc('check_subscription_credits', { 
-            customer_id: customerData.customer_id,
-            credit_type: 'analysis'
+      const response = await fetch('/api/analyze-dream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(error);
+      }
+
+      const result = await response.json();
+      
+      if (result.analysis) {
+        setAnalysis(result.analysis);
+        onAnalysisComplete(result.analysis);
+        
+        // If this was a free trial use, mark the feature as used
+        if (!hasUsedFeature('analysis')) {
+          markFeatureAsUsed('analysis');
+          toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
+            duration: 5000,
+            action: {
+              label: "Subscribe",
+              onClick: () => window.location.href = '/profile?tab=subscription'
+            }
           });
-
-        if (creditError) {
-          toast.error("Error checking analysis credits: " + creditError.message);
-          return;
         }
-
-        if (!canAnalyze) {
-          toast.error("You've used all your dream analysis credits for this billing period.");
-          return;
-        }
-
-        // If we get here, user has credits, proceed with analysis
-        setIsGenerating(true);
-        setShowInfo(false);
-
-        try {
-          const response = await fetch('/api/analyze-dream', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              dream_content: dreamContent,
-              customer_id: customerData.customer_id
-            }),
-          });
-
-          if (!response.ok) {
-            const error = await response.text();
-            throw new Error(error);
-          }
-
-          const result = await response.json();
-          
-          if (result.analysis) {
-            setAnalysis(result.analysis);
-            onAnalysisComplete(result.analysis);
-          }
-        } catch (error: any) {
-          toast.error(`Analysis failed: ${error.message}`);
-        } finally {
-          setIsGenerating(false);
-        }
-      } else {
-        toast.error("You need a subscription to analyze dreams. Please subscribe in your profile.");
       }
     } catch (error: any) {
-      toast.error(`Error: ${error.message}`);
+      toast.error(`Analysis failed: ${error.message}`);
+    } finally {
       setIsGenerating(false);
     }
   };
@@ -123,7 +116,9 @@ const DreamAnalysis = ({
             <p className="text-sm text-muted-foreground">
               {disabled 
                 ? "Only the dream owner can analyze this dream."
-                : "Generate an AI-powered analysis of your dream's symbolism and meaning."
+                : hasUsedFeature('analysis') 
+                  ? "You've used your free analysis. Subscribe to analyze more dreams."
+                  : "Generate an AI-powered analysis of your dream's symbolism and meaning. (Free trial available)"
               }
             </p>
             {!disabled && (
@@ -131,7 +126,8 @@ const DreamAnalysis = ({
                 onClick={generateAnalysis}
                 className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
               >
-                <Sparkles className="h-4 w-4 mr-2" /> Analyze Dream
+                <Sparkles className="h-4 w-4 mr-2" /> 
+                {hasUsedFeature('analysis') ? "Subscribe to Analyze" : "Analyze Dream"}
               </Button>
             )}
           </div>
