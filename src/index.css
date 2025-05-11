@@ -125,6 +125,11 @@
 #dream-share-card img {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
   transition: transform 0.3s ease;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 700px;
+  object-fit: cover;
 }
 
 #dream-share-card blockquote {

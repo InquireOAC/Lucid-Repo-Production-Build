@@ -26,8 +26,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     generatedImage: dream.generatedImage || dream.image_url,
     imagePrompt: dream.imagePrompt || dream.image_prompt,
     content: dream.content || "No dream content available.",
-    analysis: dream.analysis || ""
+    analysis: dream.analysis || "",
+    date: dream.date || new Date().toISOString()
   };
+
+  console.log("ShareButton - Dream data:", normalizedDream);
+  console.log("ShareButton - Image URL:", normalizedDream.generatedImage);
 
   return (
     <DreamShareCard dream={normalizedDream} />
