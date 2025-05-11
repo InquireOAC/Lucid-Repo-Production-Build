@@ -60,6 +60,9 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   
   // Truncate analysis to shorter length
   const truncatedAnalysis = truncateText(dream.analysis || "", 140);
+  
+  // Log the image URL for debugging
+  console.log("Dream image in share card:", dreamImageUrl);
 
   return (
     <div 
@@ -75,7 +78,8 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           padding: '80px 80px', 
           display: 'flex',
           flexDirection: 'column',
-          position: 'relative'
+          position: 'relative',
+          background: 'linear-gradient(to bottom, #6344A5, #8976BF)'
         }}
       >
         {/* App Name at the top - 48px bold white centered */}
@@ -114,16 +118,17 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         )}
         
         {/* Dream Visualization - full width with rounded corners */}
-        {dream.generatedImage && (
+        {dreamImageUrl && (
           <div className="mb-[60px] flex items-center justify-center">
             <div className="w-full overflow-hidden rounded-[24px] shadow-lg relative">
               <img 
-                src={dream.generatedImage}
+                src={dreamImageUrl}
                 alt="Dream Visualization"
                 className="w-full object-cover dream-image-container"
                 style={{ 
                   borderRadius: '24px',
-                  boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)'
+                  boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)',
+                  maxHeight: '500px',
                 }}
                 crossOrigin="anonymous"
               />
@@ -151,10 +156,10 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           
           {/* Center: Download Text */}
           <div className="flex-1 flex justify-center">
-           <div className="text-[64px] font-bold text-white">
-             Download Lucid Repo
+            <div className="text-[64px] font-bold text-white">
+              Download Lucid Repo
+            </div>
           </div>
-        </div>
           
           {/* Right: QR Code */}
           <div className="flex items-center justify-center">

@@ -1,3 +1,4 @@
+
 import html2canvas from "html2canvas";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
@@ -26,20 +27,25 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
         
         // Force image loading before generation
         if (!img.complete) {
-          console.log("Image not yet loaded, waiting...");
+          console.log("Image not yet loaded, waiting for:", img.src);
           
           // If image fails to load, log the error but continue
           img.addEventListener('error', () => {
             console.log("Image failed to load:", img.src);
           });
+          
+          // Add load event listener for debugging
+          img.addEventListener('load', () => {
+            console.log("Image successfully loaded:", img.src);
+          });
         } else {
-          console.log("Image already loaded:", img.src.substring(0, 50) + "...");
+          console.log("Image already loaded:", img.src ? (img.src.substring(0, 50) + "...") : "no source");
         }
       });
       
       // Give a small timeout to ensure all styles are applied and images are loaded
       console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Increased timeout for image loading
     }
     
     console.log("Generating canvas");
@@ -49,9 +55,9 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       scale: 2.0, // Optimized scale for good quality without excessive size
       useCORS: true,
       allowTaint: true,
-      logging: false,
+      logging: true, // Enable logging for debugging
       backgroundColor: null,
-      imageTimeout: 7000, // Extended timeout for image processing
+      imageTimeout: 10000, // Extended timeout for image processing
     });
     
     console.log("Canvas generated successfully");

@@ -16,7 +16,7 @@ interface ShareButtonProps {
 const ShareButton: React.FC<ShareButtonProps> = ({
   dream,
   variant = "outline",
-  size = "default", // Changed default from "icon" to "default"
+  size = "default",
   className = ""
 }) => {
   const [isSharing, setIsSharing] = useState(false);
@@ -33,6 +33,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     analysis: dream.analysis || "",
     date: dream.date || new Date().toISOString()
   };
+  
+  console.log("Dream in ShareButton:", normalizedDream);
+  console.log("Image URL in ShareButton:", normalizedDream.generatedImage);
 
   const handleShareClick = async () => {
     if (isSharing) return;

@@ -25,10 +25,13 @@ const DreamDetailWrapper = ({
   // Ensure we have all possible fields from both camelCase and snake_case versions
   const normalizedDream = {
     ...selectedDream,
-    generatedImage: selectedDream.generatedImage,
-    imagePrompt: selectedDream.imagePrompt,
+    generatedImage: selectedDream.generatedImage || selectedDream.image_url,
+    imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt,
     isPublic: selectedDream.is_public || selectedDream.isPublic,
   };
+  
+  console.log("Normalized dream in wrapper:", normalizedDream);
+  console.log("Image URL in wrapper:", normalizedDream.generatedImage);
   
   const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
     try {

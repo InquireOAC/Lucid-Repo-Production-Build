@@ -20,6 +20,12 @@ interface DreamDetailProps {
 const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
+  // Ensure we normalize the dream data for consistency
+  const normalizedDream = {
+    ...dream,
+    generatedImage: dream.generatedImage || dream.image_url || null
+  };
+  
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
 
@@ -88,7 +94,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             content={dream.content}
             formattedDate={formattedDate}
             dreamTags={dreamTags}
-            generatedImage={dream.generatedImage}
+            generatedImage={normalizedDream.generatedImage}
             analysis={dream.analysis}
           />
           
@@ -97,7 +103,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           )}
           
           <div className="flex justify-between items-center mt-4">
-            <ShareButton dream={dream} />
+            <ShareButton dream={normalizedDream} />
             
             <DreamDetailActions
               isAuthenticated={isAuthenticated}
