@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { elementToPngBlob, shareContent } from "@/utils/shareUtils";
 import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface DreamShareCardProps {
   dream: DreamEntry;
@@ -14,6 +15,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   
   // Ensure we have the proper image from either camelCase or snake_case field
   const dreamImage = dream.generatedImage || dream.image_url;
@@ -44,6 +46,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   const handleShare = async () => {
     if (shareCardRef.current) {
       try {
+        setIsSharing(true);
         console.log("Generating share image for dream:", dream.title);
         console.log("Image URL:", dreamImage);
         
@@ -53,6 +56,8 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         const blob = await elementToPngBlob(shareCardRef.current);
         if (!blob) {
           console.error("Failed to generate image blob");
+          toast.error("Failed to generate share image");
+          setIsSharing(false);
           return;
         }
         
@@ -61,8 +66,13 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           `${dream.title} - Dream Story`,
           "Check out my dream from Lucid Repo!"
         );
+        
+        toast.success("Dream shared successfully");
       } catch (error) {
         console.error("Share error:", error);
+        toast.error("Failed to share dream");
+      } finally {
+        setIsSharing(false);
       }
     }
   };
@@ -78,9 +88,10 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         onClick={handleShare}
         variant="outline" 
         className="flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10"
+        disabled={isSharing}
       >
         <Share size={18} />
-        <span>Share</span>
+        <span>{isSharing ? "Sharing..." : "Share"}</span>
       </Button>
       
       {/* Hidden Share Card (positioned off-screen) */}

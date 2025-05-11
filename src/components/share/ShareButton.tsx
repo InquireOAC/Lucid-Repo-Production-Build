@@ -23,7 +23,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const normalizedDream = {
     ...dream,
     title: dream.title || "Untitled Dream", // Ensure we always have a title
-    generatedImage: dream.generatedImage || dream.image_url || dream.imageUrl,
+    generatedImage: dream.generatedImage || dream.image_url || null,
     imagePrompt: dream.imagePrompt || dream.image_prompt,
     content: dream.content || "No dream content available.",
     analysis: dream.analysis || "",
@@ -33,9 +33,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   console.log("ShareButton - Dream data:", normalizedDream);
   console.log("ShareButton - Image URL:", normalizedDream.generatedImage);
 
-  return (
-    <DreamShareCard dream={normalizedDream} />
-  );
+  return <DreamShareCard dream={normalizedDream} />;
 };
 
 export default ShareButton;
