@@ -21,7 +21,6 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         return;
       }
       
-      // Start loading toast
       const toastId = toast.loading("Creating shareable image...");
       
       try {
@@ -90,17 +89,22 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
           background: 'linear-gradient(145deg, rgba(96, 76, 170, 1) 0%, rgba(59, 49, 120, 1) 100%)',
         }}
       >
-        {/* App Name at the top */}
-        <div className="mb-8 pt-4">
-          <div className="w-16 h-1 bg-white/50 mb-12"></div>
-          <h1 className="text-6xl font-bold leading-tight mb-1 text-white">
+        {/* Centered Decorative Element */}
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-48 h-10 rounded-md bg-gradient-to-r from-purple-400 to-blue-400 mb-2"></div>
+          <div className="w-24 h-1 bg-white/30"></div>
+        </div>
+        
+        {/* Dream Title */}
+        <div className="mt-4">
+          <h1 className="text-6xl font-bold leading-tight mb-2 text-white">
             {dream.title || "Untitled Dream"}
           </h1>
-          <p className="text-xl text-white/80">{formattedDate}</p>
+          <p className="text-xl opacity-80">{formattedDate}</p>
         </div>
         
         {/* Dream Content */}
-        <div className="mb-8 bg-black/20 p-6 rounded-lg text-lg">
+        <div className="mt-10 mb-8 p-6 rounded-lg text-lg bg-purple-800/20">
           <p className="leading-relaxed">
             {truncatedContent}
           </p>
@@ -109,8 +113,8 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         {/* Dream Analysis Section */}
         {dreamAnalysis && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold mb-2 text-white/90">Dream Analysis</h2>
-            <div className="pl-4 border-l-2 border-white/30 italic text-white/80">
+            <h2 className="text-xl font-bold mb-2 opacity-90">Dream Analysis</h2>
+            <div className="pl-4 border-l-2 border-white/30 italic opacity-80">
               <p className="text-base leading-relaxed">
                 {truncatedAnalysis}
               </p>
@@ -120,7 +124,8 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         
         {/* Dream Image */}
         {dream.generatedImage && (
-          <div className="mb-8 rounded-lg overflow-hidden h-[200px] flex items-center justify-center">
+          <div className="mt-auto mb-8 rounded-lg overflow-hidden">
+            <div className="text-center mb-2 opacity-90 text-xl">Dream Visualization</div>
             <img 
               src={dream.generatedImage}
               alt="Dream Visualization"

@@ -37,7 +37,6 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       backgroundColor: null,
       // Improved rendering options
       imageTimeout: 2000
-      // Removed the 'async' property as it's not a valid option in html2canvas
     });
     
     console.log("Canvas generated successfully");

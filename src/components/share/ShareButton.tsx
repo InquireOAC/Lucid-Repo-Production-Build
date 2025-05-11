@@ -26,7 +26,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     ...dream,
     id: dream.id || `dream-${Date.now()}`,
     title: dream.title || "Untitled Dream",
-    // Prioritize the field that actually contains data
     generatedImage: dream.generatedImage || dream.image_url || null,
     imagePrompt: dream.imagePrompt || dream.image_prompt || "",
     content: dream.content || "No dream content available.",
@@ -46,7 +45,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         setIsSharing(false);
         toast.error("Share process timed out. Please try again.");
       }
-    }, 10000);
+    }, 15000); // Extended timeout for better reliability
   };
 
   // Validate required fields
