@@ -18,7 +18,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   // Ensure we have the proper image from either camelCase or snake_case field
   const dreamImage = dream.generatedImage || dream.image_url;
 
-  // Handle share with direct download
+  // Handle share with improved error handling and timeout safety
   const handleShare = async () => {
     if (!shareCardRef.current) {
       toast.error("Unable to generate share image");
@@ -28,34 +28,51 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
     try {
       setIsSharing(true);
       
-      // Generate the image blob
-      const blob = await elementToPngBlob(shareCardRef.current);
+      // Add a safety timeout to prevent UI from being stuck
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Share operation timed out")), 8000);
+      });
+      
+      // Generate the image blob with timeout protection
+      const blobPromise = elementToPngBlob(shareCardRef.current);
+      
+      // Race between the blob generation and timeout
+      const blob = await Promise.race([blobPromise, timeoutPromise]) as Blob | null;
       
       if (!blob) {
-        toast.error("Failed to generate share image");
-        setIsSharing(false);
-        return;
+        throw new Error("Failed to generate image");
       }
       
-      // Always download the image directly for reliable behavior
+      // Download the image
       downloadImageDirectly(blob, `${dream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
       toast.success("Dream image downloaded");
-      setIsSharing(false);
     } catch (error) {
       console.error("Share error:", error);
-      toast.error("Failed to share dream");
+      toast.error("Failed to share dream. Please try again.");
+    } finally {
+      // Always reset sharing state, even if there was an error
       setIsSharing(false);
     }
   };
 
-  // Direct download function
+  // Direct download function with improved error handling
   const downloadImageDirectly = (blob: Blob, fileName: string): void => {
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+      }, 100);
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to download image");
+    }
   };
 
   const formattedDate = dream.date 
@@ -64,7 +81,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
 
   return (
     <>
-      {/* Visible Share Button */}
+      {/* Visible Share Button with better feedback */}
       <Button 
         onClick={handleShare}
         variant="outline" 
@@ -72,7 +89,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         disabled={isSharing}
       >
         <Share size={18} />
-        <span>{isSharing ? "Sharing..." : "Share"}</span>
+        <span>{isSharing ? "Processing..." : "Share"}</span>
       </Button>
       
       {/* Hidden Share Card (positioned off-screen) */}
@@ -126,7 +143,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </div>
           )}
           
-          {/* Dream Image with simplified rendering */}
+          {/* Dream Image with simplified rendering and size optimization */}
           {dreamImage && (
             <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
               <img 
@@ -134,6 +151,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
                 alt={dream.title || "Dream Visualization"}
                 className="w-full h-[600px] object-cover"
                 crossOrigin="anonymous"
+                loading="eager"
               />
             </div>
           )}

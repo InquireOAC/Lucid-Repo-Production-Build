@@ -1,8 +1,7 @@
-
 import html2canvas from "html2canvas";
 
 /**
- * Converts an HTML element to a PNG blob
+ * Converts an HTML element to a PNG blob with improved reliability
  */
 export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | null> => {
   try {
@@ -14,6 +13,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     if (images.length > 0) {
       console.log(`Waiting for ${images.length} images to load`);
       
+      // Force all images to load or fail before continuing
       await Promise.all(
         images.map(img => {
           // If image is already loaded, resolve immediately
@@ -44,10 +44,11 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
               resolve();
             };
             
-            // Set a timeout in case the image takes too long
+            // Set a short timeout in case the image takes too long
             setTimeout(() => {
               if (!img.complete) {
                 console.warn("Image load timeout:", img.src.slice(0, 50));
+                img.dispatchEvent(new Event('error'));
                 resolve();
               }
             }, 3000);
@@ -64,26 +65,26 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       useCORS: true,
       allowTaint: true,
       logging: false,
+      backgroundColor: null,
       onclone: (doc, ele) => {
         console.log("Canvas cloned, processing");
-        // Force all images to be visible in clone
-        const clonedImages = ele.querySelectorAll('img');
-        clonedImages.forEach(img => {
-          img.crossOrigin = "anonymous";
-          if (!img.complete || img.naturalHeight === 0) {
-            console.warn("Image not completely loaded in clone:", img.src?.slice(0, 50));
-          }
-        });
       }
     });
     
     console.log("Canvas generated successfully");
     
+    // Use a shorter timeout for blob creation
     return new Promise<Blob | null>((resolve) => {
+      const blobTimeout = setTimeout(() => {
+        console.warn("Blob creation timed out");
+        resolve(null);
+      }, 3000);
+      
       canvas.toBlob((blob) => {
+        clearTimeout(blobTimeout);
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png");
+      }, "image/png", 0.95);
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
@@ -92,7 +93,23 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
+ * Downloads a blob as a file
+ */
+export const downloadImage = (blob: Blob, fileName: string): void => {
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  }, 100);
+};
+
+/**
  * Shares content via Web Share API or falls back to download
+ * Note: This is kept for reference but no longer used in favor of direct downloads
  */
 export const shareContent = async (blob: Blob | null, title: string, text: string): Promise<boolean> => {
   if (!blob) {
@@ -125,16 +142,4 @@ export const shareContent = async (blob: Blob | null, title: string, text: strin
     downloadImage(blob, "dream-story.png");
     return true;
   }
-};
-
-/**
- * Downloads a blob as a file
- */
-const downloadImage = (blob: Blob, fileName: string): void => {
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 };
