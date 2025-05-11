@@ -39,7 +39,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     
     // Start sharing process
     setIsSharing(true);
-    toast.loading("Preparing dream to share...");
     
     try {
       // Trigger the share process via the ref
@@ -47,7 +46,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         const success = await shareCardRef.current.shareDream();
         
         if (success) {
-          toast.success("Dream ready to share!");
+          // Success message removed
         } else {
           toast.error("Couldn't prepare dream for sharing");
         }
