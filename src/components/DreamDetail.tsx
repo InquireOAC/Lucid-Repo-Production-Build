@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -7,6 +8,7 @@ import { toast } from "sonner";
 import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailAudio from "@/components/dreams/DreamDetailAudio";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
+import ShareButton from "@/components/share/ShareButton";
 
 interface DreamDetailProps {
   dream: DreamEntry;
@@ -79,7 +81,10 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
+              <ShareButton dream={dream} />
+            </div>
           </DialogHeader>
           
           <DreamDetailContent

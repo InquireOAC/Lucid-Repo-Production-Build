@@ -100,3 +100,18 @@
 .gradient-text {
   @apply text-transparent bg-clip-text bg-gradient-to-r from-dream-purple to-blue-400;
 }
+
+/* Share card specific styles */
+.share-card-background {
+  background: radial-gradient(circle at top right, rgba(126, 105, 171, 0.4), transparent 80%),
+              radial-gradient(circle at bottom left, rgba(155, 135, 245, 0.3), transparent 80%),
+              hsl(260, 20%, 10%);
+}
+
+.share-card-text {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.share-card-quote {
+  background: linear-gradient(90deg, rgba(155, 135, 245, 0.1), transparent);
+}
