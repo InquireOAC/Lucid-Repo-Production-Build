@@ -116,9 +116,9 @@
   background: linear-gradient(90deg, rgba(155, 135, 245, 0.1), transparent);
 }
 
-/* Enhanced share card styles */
+/* Enhanced share card styles - Updated for new design */
 #dream-share-card {
-  background: linear-gradient(135deg, rgba(30, 26, 43, 0.95) 0%, rgba(18, 15, 30, 0.98) 100%);
+  background: linear-gradient(135deg, rgba(99, 73, 166, 1) 0%, rgba(33, 48, 113, 1) 100%);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 

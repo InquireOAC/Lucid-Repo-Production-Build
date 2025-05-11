@@ -19,10 +19,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   className = "",
 }) => {
   // Make sure we have all possible image fields in the dream object
+  // This ensures that the share card has access to the images regardless of field naming
   const normalizedDream = {
     ...dream,
+    title: dream.title || "Untitled Dream", // Ensure we always have a title
     generatedImage: dream.generatedImage || dream.image_url,
-    imagePrompt: dream.imagePrompt || dream.image_prompt
+    imagePrompt: dream.imagePrompt || dream.image_prompt,
+    content: dream.content || "No dream content available.",
+    analysis: dream.analysis || ""
   };
 
   return (
