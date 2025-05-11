@@ -22,7 +22,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const [isSharing, setIsSharing] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
 
-  // Ensure we have all necessary fields with proper fallbacks
+  // Enhanced normalization to ensure image is available
   const normalizedDream = {
     ...dream,
     id: dream.id || `dream-${Date.now()}`,
@@ -40,26 +40,28 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const handleShareClick = async () => {
     if (isSharing) return;
 
-    // Start sharing process
+    // Force a small delay to ensure all data is loaded
     setIsSharing(true);
-    try {
-      // Trigger the share process via the ref
-      if (shareCardRef.current) {
-        const success = await shareCardRef.current.shareDream();
-        if (success) {
-          // Success message removed
+    
+    // Add a small delay to ensure the component is fully rendered
+    setTimeout(async () => {
+      try {
+        // Trigger the share process via the ref
+        if (shareCardRef.current) {
+          const success = await shareCardRef.current.shareDream();
+          if (!success) {
+            toast.error("Couldn't prepare dream for sharing");
+          }
         } else {
-          toast.error("Couldn't prepare dream for sharing");
+          toast.error("Share component not initialized properly");
         }
-      } else {
-        toast.error("Share component not initialized properly");
+      } catch (error) {
+        console.error("Share error:", error);
+        toast.error("Failed to share dream");
+      } finally {
+        setIsSharing(false);
       }
-    } catch (error) {
-      console.error("Share error:", error);
-      toast.error("Failed to share dream");
-    } finally {
-      setIsSharing(false);
-    }
+    }, 500);
 
     // Reset sharing state after a timeout if something goes wrong
     setTimeout(() => {

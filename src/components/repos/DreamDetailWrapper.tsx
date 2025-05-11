@@ -25,9 +25,9 @@ const DreamDetailWrapper = ({
   // Ensure we have all possible fields from both camelCase and snake_case versions
   const normalizedDream = {
     ...selectedDream,
-    generatedImage: selectedDream.generatedImage || selectedDream.image_url,
-    imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt,
-    isPublic: selectedDream.is_public || selectedDream.isPublic,
+    generatedImage: selectedDream.generatedImage || selectedDream.image_url || null,
+    imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt || "",
+    isPublic: selectedDream.is_public || selectedDream.isPublic || false,
   };
   
   console.log("Normalized dream in wrapper:", normalizedDream);

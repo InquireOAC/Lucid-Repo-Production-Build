@@ -25,27 +25,27 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
             'linear-gradient(to right, #6344A5, #8976BF)';
         }
         
-        // Force image loading before generation
-        if (!img.complete) {
-          console.log("Image not yet loaded, waiting for:", img.src);
-          
-          // If image fails to load, log the error but continue
-          img.addEventListener('error', () => {
-            console.log("Image failed to load:", img.src);
-          });
-          
-          // Add load event listener for debugging
-          img.addEventListener('load', () => {
-            console.log("Image successfully loaded:", img.src);
-          });
+        // Verify image URLs and make sure they're not empty
+        if (!img.src || img.src === '') {
+          console.error("Image has empty source", img);
         } else {
-          console.log("Image already loaded:", img.src ? (img.src.substring(0, 50) + "...") : "no source");
+          console.log("Image src:", img.src.substring(0, 100) + '...');
         }
+        
+        // Add load event listener for debugging
+        img.addEventListener('load', () => {
+          console.log("Image successfully loaded:", img.src ? (img.src.substring(0, 50) + "...") : "no source");
+        });
+        
+        // Add error event listener for debugging
+        img.addEventListener('error', (e) => {
+          console.error("Image failed to load:", img.src, e);
+        });
       });
       
       // Give a small timeout to ensure all styles are applied and images are loaded
       console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Increased timeout for image loading
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Increased timeout for image loading
     }
     
     console.log("Generating canvas");
@@ -57,7 +57,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       allowTaint: true,
       logging: true, // Enable logging for debugging
       backgroundColor: null,
-      imageTimeout: 10000, // Extended timeout for image processing
+      imageTimeout: 15000, // Extended timeout for image processing
     });
     
     console.log("Canvas generated successfully");

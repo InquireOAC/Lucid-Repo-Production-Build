@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -99,7 +100,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           />
           
           {audioUrl && (
-            <DreamDetailAudio audioUrl={audioUrl} />
+            <div className="mt-4">
+              <audio src={audioUrl} controls className="w-full" />
+            </div>
           )}
           
           <div className="flex justify-between items-center mt-4">

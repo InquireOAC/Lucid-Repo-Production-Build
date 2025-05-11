@@ -1,5 +1,5 @@
 
-import React, { useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
 import { shareDream } from "@/utils/shareUtils";
@@ -22,6 +22,13 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   onShareComplete 
 }, ref) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  
+  // Log when the component renders with the current dream data
+  useEffect(() => {
+    console.log("DreamShareCard rendering with dream:", dream);
+    console.log("DreamShareCard image URL:", dream.generatedImage || dream.image_url);
+  }, [dream]);
   
   // Expose the shareDream method via ref
   useImperativeHandle(ref, () => ({
@@ -29,6 +36,37 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
       if (!shareCardRef.current) return false;
       
       if (onShareStart) onShareStart();
+      
+      // Ensure image has loaded before proceeding
+      if (imgRef.current && dream.generatedImage && !imgRef.current.complete) {
+        console.log("Image not loaded yet, waiting...");
+        await new Promise<void>((resolve) => {
+          const img = imgRef.current;
+          if (!img) {
+            resolve();
+            return;
+          }
+          
+          const onLoad = () => {
+            console.log("Image loaded successfully");
+            resolve();
+          };
+          
+          const onError = () => {
+            console.log("Image failed to load");
+            resolve();
+          };
+          
+          img.addEventListener('load', onLoad, { once: true });
+          img.addEventListener('error', onError, { once: true });
+          
+          // If already complete, resolve immediately
+          if (img.complete) {
+            console.log("Image was already loaded");
+            resolve();
+          }
+        });
+      }
       
       // Process share card using the shareDream utility
       const success = await shareDream(
@@ -120,8 +158,9 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         {/* Dream Visualization - full width with rounded corners */}
         {dreamImageUrl && (
           <div className="mb-[60px] flex items-center justify-center">
-            <div className="w-full overflow-hidden rounded-[24px] shadow-lg relative">
+            <div className="w-full overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
               <img 
+                ref={imgRef}
                 src={dreamImageUrl}
                 alt="Dream Visualization"
                 className="w-full object-cover dream-image-container"
@@ -129,8 +168,11 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
                   borderRadius: '24px',
                   boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)',
                   maxHeight: '500px',
+                  backgroundColor: '#8976BF'
                 }}
                 crossOrigin="anonymous"
+                onLoad={() => console.log("Image loaded in ShareCard")}
+                onError={(e) => console.error("Image failed to load in ShareCard:", e)}
               />
             </div>
           </div>
