@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -82,40 +81,39 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
       <div 
         ref={shareCardRef}
         id="dream-share-card" 
-        className="w-[500px] h-[860px] p-8 flex flex-col"
-        style={{
-          fontFamily: "'basis-grotesque-pro', sans-serif",
-          color: '#fff',
-          background: 'linear-gradient(145deg, rgba(96, 76, 170, 1) 0%, rgba(59, 49, 120, 1) 100%)',
-        }}
+        className="w-[1080px] h-[1080px] p-10 flex flex-col"
       >
-        {/* Centered Decorative Element */}
-        <div className="flex flex-col items-center mb-6">
-          <div className="w-48 h-10 rounded-md bg-gradient-to-r from-purple-400 to-blue-400 mb-2"></div>
-          <div className="w-24 h-1 bg-white/30"></div>
+        {/* App Name at the top, centered */}
+        <div className="flex flex-col items-center mb-8">
+          <h2 className="text-3xl font-bold tracking-wide text-white mb-2">LUCID REPO</h2>
+          <div className="w-24 h-1 bg-white/40"></div>
+        </div>
+        
+        {/* Date of the Dream */}
+        <div className="mb-6 text-center">
+          <p className="text-xl opacity-90 uppercase tracking-wider">{formattedDate}</p>
         </div>
         
         {/* Dream Title */}
-        <div className="mt-4">
-          <h1 className="text-6xl font-bold leading-tight mb-2 text-white">
+        <div className="mb-8 text-center">
+          <h1 className="text-5xl font-bold leading-tight text-white">
             {dream.title || "Untitled Dream"}
           </h1>
-          <p className="text-xl opacity-80">{formattedDate}</p>
         </div>
         
-        {/* Dream Content */}
-        <div className="mt-10 mb-8 p-6 rounded-lg text-lg bg-purple-800/20">
-          <p className="leading-relaxed">
-            {truncatedContent}
+        {/* Dream Story Snippet */}
+        <div className="mb-8 p-6 rounded-lg text-lg bg-white/10 backdrop-blur-sm">
+          <p className="leading-relaxed italic">
+            "{truncatedContent}"
           </p>
         </div>
         
         {/* Dream Analysis Section */}
         {dreamAnalysis && (
           <div className="mb-8">
-            <h2 className="text-xl font-bold mb-2 opacity-90">Dream Analysis</h2>
-            <div className="pl-4 border-l-2 border-white/30 italic opacity-80">
-              <p className="text-base leading-relaxed">
+            <h3 className="text-xl font-bold mb-3 opacity-90 text-center">ANALYSIS</h3>
+            <div className="p-5 bg-purple-800/20 rounded-lg">
+              <p className="text-base leading-relaxed text-center">
                 {truncatedAnalysis}
               </p>
             </div>
@@ -124,12 +122,11 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         
         {/* Dream Image */}
         {dream.generatedImage && (
-          <div className="mt-auto mb-8 rounded-lg overflow-hidden">
-            <div className="text-center mb-2 opacity-90 text-xl">Dream Visualization</div>
+          <div className="flex-1 flex flex-col items-center justify-center mb-8">
             <img 
               src={dream.generatedImage}
               alt="Dream Visualization"
-              className="w-full h-full object-cover rounded-lg"
+              className="max-h-[350px] rounded-lg shadow-xl"
               crossOrigin="anonymous"
               onError={(e) => {
                 console.log("Image failed to load");
@@ -139,13 +136,10 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
           </div>
         )}
         
-        {/* App Footer */}
-        <div className="mt-auto flex items-center justify-between">
-          <div className="bg-purple-500/30 rounded-full py-2 px-5 text-white/90">
-            Lucid Repo
-          </div>
-          <div className="text-base py-2 px-5 bg-white/20 rounded-full text-white">
-            Download the app
+        {/* App Call to Action at the bottom */}
+        <div className="mt-auto flex items-center justify-center">
+          <div className="text-center py-3 px-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full text-white font-medium shadow-lg">
+            Download the app to explore your dreams
           </div>
         </div>
       </div>

@@ -37,7 +37,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     if (isSharing) return;
     
     setIsSharing(true);
-    toast.info("Creating dream image to share...");
+    toast.info("Creating Instagram-ready dream image...");
     
     // Reset sharing state after a timeout even if the share process fails
     setTimeout(() => {
@@ -45,7 +45,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         setIsSharing(false);
         toast.error("Share process timed out. Please try again.");
       }
-    }, 15000); // Extended timeout for better reliability
+    }, 20000); // Extended timeout for better image generation
   };
 
   // Validate required fields

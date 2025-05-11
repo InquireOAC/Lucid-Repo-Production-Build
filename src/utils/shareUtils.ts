@@ -28,15 +28,14 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("Generating canvas");
     
-    // Generate canvas with optimized settings
+    // Generate canvas with optimized settings for Instagram-quality images
     const canvas = await html2canvas(element, { 
-      scale: 1.5,
+      scale: 2.0, // Higher scale for better quality on Instagram
       useCORS: true,
       allowTaint: true,
       logging: false,
       backgroundColor: null,
-      // Improved rendering options
-      imageTimeout: 2000
+      imageTimeout: 3000, // Extended timeout for image processing
     });
     
     console.log("Canvas generated successfully");
@@ -45,7 +44,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       canvas.toBlob((blob) => {
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.85);
+      }, "image/png", 0.95); // Higher quality for social sharing
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
