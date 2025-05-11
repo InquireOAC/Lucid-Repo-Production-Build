@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { useAuth } from "@/contexts/AuthContext"; // Added missing import
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -27,6 +28,7 @@ const DreamImageGenerator = ({
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(existingImage);
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
+  const { user } = useAuth(); // Added to access the user object
 
   const handleSuggestPrompt = async () => {
     setLoading(true);
