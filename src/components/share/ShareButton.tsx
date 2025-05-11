@@ -45,7 +45,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         setIsSharing(false);
         toast.error("Share process timed out. Please try again.");
       }
-    }, 20000); // Extended timeout for better image generation
+    }, 25000); // Extended timeout for better image generation
   };
 
   // Validate required fields

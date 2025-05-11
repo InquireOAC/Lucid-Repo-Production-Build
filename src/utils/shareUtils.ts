@@ -30,7 +30,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     // Generate canvas with optimized settings for Instagram-quality images
     const canvas = await html2canvas(element, { 
-      scale: 2.0, // Higher scale for better quality on Instagram
+      scale: 3.0, // Higher scale for better quality on Instagram's vertical format
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -44,7 +44,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       canvas.toBlob((blob) => {
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.95); // Higher quality for social sharing
+      }, "image/png", 0.98); // Higher quality for social sharing
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);

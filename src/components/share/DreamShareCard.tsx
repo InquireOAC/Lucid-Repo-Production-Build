@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -81,39 +82,40 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
       <div 
         ref={shareCardRef}
         id="dream-share-card" 
-        className="w-[1080px] h-[1080px] p-10 flex flex-col"
+        className="w-[1080px] h-[1920px] p-12 flex flex-col"
       >
-        {/* App Name at the top, centered */}
-        <div className="flex flex-col items-center mb-8">
+        {/* App Logo/Name at the top */}
+        <div className="flex flex-col items-center mb-10">
+          <div className="w-64 h-10 mb-3 bg-gradient-to-r from-purple-500 to-blue-400 rounded-lg"></div>
           <h2 className="text-3xl font-bold tracking-wide text-white mb-2">LUCID REPO</h2>
-          <div className="w-24 h-1 bg-white/40"></div>
+          <div className="w-32 h-1 bg-white/40 mt-2"></div>
         </div>
         
         {/* Date of the Dream */}
-        <div className="mb-6 text-center">
-          <p className="text-xl opacity-90 uppercase tracking-wider">{formattedDate}</p>
+        <div className="mt-12 mb-3 text-white/80">
+          <p className="text-2xl font-light">{formattedDate}</p>
         </div>
         
         {/* Dream Title */}
-        <div className="mb-8 text-center">
-          <h1 className="text-5xl font-bold leading-tight text-white">
+        <div className="mb-16">
+          <h1 className="text-7xl font-bold leading-tight text-white">
             {dream.title || "Untitled Dream"}
           </h1>
         </div>
         
         {/* Dream Story Snippet */}
-        <div className="mb-8 p-6 rounded-lg text-lg bg-white/10 backdrop-blur-sm">
-          <p className="leading-relaxed italic">
-            "{truncatedContent}"
+        <div className="mb-16 py-8 px-4 rounded-lg text-2xl bg-white/10 text-white">
+          <p className="leading-relaxed">
+            {truncatedContent}
           </p>
         </div>
         
         {/* Dream Analysis Section */}
         {dreamAnalysis && (
-          <div className="mb-8">
-            <h3 className="text-xl font-bold mb-3 opacity-90 text-center">ANALYSIS</h3>
-            <div className="p-5 bg-purple-800/20 rounded-lg">
-              <p className="text-base leading-relaxed text-center">
+          <div className="mb-16">
+            <h3 className="text-3xl font-light mb-4 text-white/90">Dream Analysis</h3>
+            <div className="border-l-4 border-white/30 pl-6">
+              <p className="text-xl leading-relaxed text-white/80 italic">
                 {truncatedAnalysis}
               </p>
             </div>
@@ -122,23 +124,28 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         
         {/* Dream Image */}
         {dream.generatedImage && (
-          <div className="flex-1 flex flex-col items-center justify-center mb-8">
-            <img 
-              src={dream.generatedImage}
-              alt="Dream Visualization"
-              className="max-h-[350px] rounded-lg shadow-xl"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.log("Image failed to load");
-                e.currentTarget.style.display = "none";
-              }}
-            />
+          <div className="flex-1 flex flex-col items-center justify-center my-12">
+            <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden relative flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center text-white text-3xl bg-gradient-to-br from-purple-600/50 to-blue-500/50">
+                Dream Visualization
+              </div>
+              <img 
+                src={dream.generatedImage}
+                alt="Dream Visualization"
+                className="w-full h-full object-cover"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.log("Image failed to load");
+                  e.currentTarget.style.display = "none";
+                }}
+              />
+            </div>
           </div>
         )}
         
         {/* App Call to Action at the bottom */}
-        <div className="mt-auto flex items-center justify-center">
-          <div className="text-center py-3 px-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full text-white font-medium shadow-lg">
+        <div className="mt-auto flex items-center justify-center py-8">
+          <div className="text-center py-4 px-8 bg-white/15 backdrop-blur-sm rounded-xl text-white font-medium shadow-lg border border-white/20">
             Download the app to explore your dreams
           </div>
         </div>
