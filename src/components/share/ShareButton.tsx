@@ -1,9 +1,9 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
-import DreamShareCard from "./DreamShareCard";
+import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
 import { Button } from "@/components/ui/button";
-import { Share, Download } from "lucide-react";
+import { Share } from "lucide-react";
 import { toast } from "sonner";
 
 interface ShareButtonProps {
@@ -20,6 +20,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   className = "",
 }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const shareCardRef = useRef<DreamShareCardRef>(null);
   
   // Ensure we have all necessary fields with proper fallbacks
   const normalizedDream = {
@@ -33,19 +34,40 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     date: dream.date || new Date().toISOString()
   };
 
-  const handleShareClick = () => {
+  const handleShareClick = async () => {
     if (isSharing) return;
     
+    // Start sharing process
     setIsSharing(true);
-    toast.info("Creating Instagram-ready dream image...");
+    toast.loading("Preparing dream to share...");
     
-    // Reset sharing state after a timeout even if the share process fails
+    try {
+      // Trigger the share process via the ref
+      if (shareCardRef.current) {
+        const success = await shareCardRef.current.shareDream();
+        
+        if (success) {
+          toast.success("Dream ready to share!");
+        } else {
+          toast.error("Couldn't prepare dream for sharing");
+        }
+      } else {
+        toast.error("Share component not initialized properly");
+      }
+    } catch (error) {
+      console.error("Share error:", error);
+      toast.error("Failed to share dream");
+    } finally {
+      setIsSharing(false);
+    }
+    
+    // Reset sharing state after a timeout if something goes wrong
     setTimeout(() => {
       if (isSharing) {
         setIsSharing(false);
         toast.error("Share process timed out. Please try again.");
       }
-    }, 25000); // Extended timeout for better image generation
+    }, 20000);
   };
 
   // Validate required fields
@@ -54,19 +76,26 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   }
 
   return (
-    <Button 
-      onClick={handleShareClick}
-      variant={variant} 
-      size={size}
-      className={`flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10 ${className}`}
-      disabled={isSharing}
-    >
-      {isSharing ? <Download size={18} /> : <Share size={18} />}
-      <span>{size !== 'icon' && (isSharing ? "Processing..." : "Share")}</span>
+    <>
+      <Button 
+        onClick={handleShareClick}
+        variant={variant} 
+        size={size}
+        className={`flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10 ${className}`}
+        disabled={isSharing}
+      >
+        <Share size={18} />
+        <span>{size !== 'icon' && (isSharing ? "Sharing..." : "Share")}</span>
+      </Button>
       
-      {/* The actual share card component (kept hidden until needed) */}
-      {isSharing && <DreamShareCard dream={normalizedDream} onComplete={() => setIsSharing(false)} />}
-    </Button>
+      {/* The hidden share card component (mounted all the time but invisible) */}
+      <DreamShareCard 
+        ref={shareCardRef}
+        dream={normalizedDream}
+        onShareStart={() => setIsSharing(true)} 
+        onShareComplete={() => setIsSharing(false)}
+      />
+    </>
   );
 };
 

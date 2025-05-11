@@ -101,12 +101,9 @@
   @apply text-transparent bg-clip-text bg-gradient-to-r from-dream-purple to-blue-400;
 }
 
-/* Share card specific styles - Updated for Instagram design */
-.share-card-background {
-  background: linear-gradient(150deg, rgba(96, 76, 170, 1) 0%, rgba(59, 49, 120, 1) 100%);
-}
+/* Share card specific styles - Instagram-optimized */
 
-/* Enhanced share card styles for Instagram-ready design */
+/* Main share card container */
 #dream-share-card {
   background: linear-gradient(160deg, #5D4CA5 0%, #39298C 100%);
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
@@ -114,9 +111,9 @@
   color: #fff;
   position: relative;
   overflow: hidden;
-  aspect-ratio: 9/16;
 }
 
+/* Background effects */
 #dream-share-card::before {
   content: '';
   position: absolute;
@@ -144,45 +141,34 @@
   z-index: 1;
 }
 
-#dream-share-card img {
+/* Custom shadow for the dream image */
+#dream-share-card .dream-image-container {
   filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.3));
   transition: transform 0.3s ease;
   object-fit: cover;
 }
 
-#dream-share-card h1 {
-  font-size: 3.5rem;
-  line-height: 1.1;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  font-weight: 700;
-}
-
-#dream-share-card h2 {
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-#dream-share-card h3 {
-  letter-spacing: 0.02em;
-}
-
-#dream-share-card p {
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
-  line-height: 1.6;
+/* Dream text container style - enforce max-width rule for readability */
+#dream-share-card .dream-text-container {
+  /* Ensures approx 40-45 chars per line at 32px font size */
+  max-width: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  hyphens: auto;
-  max-height: 100%;
-  overflow: hidden;
-}
-
-/* Better text handling for share cards */
-#dream-share-card .rounded-lg p,
-#dream-share-card .border-l-4 p {
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 10;
+  -webkit-box-orient: vertical;
+}
+
+/* Dream analysis container style */
+#dream-share-card .dream-analysis-container {
+  max-width: 100%;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 5;
+  -webkit-box-orient: vertical;
 }

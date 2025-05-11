@@ -1,5 +1,7 @@
 
 import html2canvas from "html2canvas";
+import { Share } from "@capacitor/share";
+import { Capacitor } from "@capacitor/core";
 
 /**
  * Converts an HTML element to a PNG blob with optimized settings for reliability
@@ -8,7 +10,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
   try {
     console.log("Starting HTML to Canvas conversion");
     
-    // Process any images in the element first
+    // Process any images and fonts in the element first
     const images = Array.from(element.querySelectorAll('img'));
     
     if (images.length > 0) {
@@ -50,7 +52,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     // Generate canvas with optimized settings for Instagram-quality images
     const canvas = await html2canvas(element, { 
-      scale: 3.0, // Higher scale for better quality on Instagram's vertical format
+      scale: 2.0, // Optimized scale for good quality without excessive size
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -64,7 +66,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       canvas.toBlob((blob) => {
         console.log("Blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
         resolve(blob);
-      }, "image/png", 0.98); // Higher quality for social sharing
+      }, "image/png", 0.92); // High quality for social sharing
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
@@ -73,7 +75,22 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
- * Downloads a blob as a file
+ * Converts a blob to a data URL string
+ */
+export const blobToDataURL = (blob: Blob): Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      resolve(result);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
+
+/**
+ * Downloads a blob as a file (fallback for non-capacitor environments)
  */
 export const downloadImage = (blob: Blob, fileName: string): void => {
   try {
@@ -93,5 +110,51 @@ export const downloadImage = (blob: Blob, fileName: string): void => {
   } catch (error) {
     console.error("Error downloading image:", error);
     throw new Error("Failed to download image");
+  }
+};
+
+/**
+ * Shares a dream using the native share sheet on iOS or downloads on web
+ */
+export const shareDream = async (
+  element: HTMLElement, 
+  title: string, 
+  text: string
+): Promise<boolean> => {
+  try {
+    console.log("Starting dream share process");
+    
+    // Generate image blob from the element
+    const blob = await elementToPngBlob(element);
+    if (!blob) {
+      throw new Error("Failed to generate share image");
+    }
+    
+    // If on a capacitor native platform (iOS/Android)
+    if (Capacitor.isNativePlatform()) {
+      console.log("Using native sharing");
+      
+      // Convert blob to data URL for capacitor share
+      const dataUrl = await blobToDataURL(blob);
+      
+      // Share using capacitor's native share plugin
+      await Share.share({
+        title: title,
+        text: text,
+        url: dataUrl,
+        dialogTitle: 'Share Your Dream',
+      });
+      
+      console.log("Native share completed");
+      return true;
+    } 
+    
+    // Fallback for web: download the image
+    console.log("Using web fallback for sharing");
+    downloadImage(blob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+    return true;
+  } catch (error) {
+    console.error("Error sharing dream:", error);
+    return false;
   }
 };
