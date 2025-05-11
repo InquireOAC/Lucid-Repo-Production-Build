@@ -15,7 +15,7 @@ interface ShareButtonProps {
 const ShareButton: React.FC<ShareButtonProps> = ({ 
   dream, 
   variant = "outline",
-  size = "sm",
+  size = "icon",
   className = "",
 }) => {
   return (

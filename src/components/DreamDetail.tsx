@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -83,7 +82,6 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
-              <ShareButton dream={dream} />
             </div>
           </DialogHeader>
           
@@ -99,11 +97,15 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             <DreamDetailAudio audioUrl={audioUrl} />
           )}
           
-          <DreamDetailActions
-            isAuthenticated={isAuthenticated}
-            isPublic={isPublic}
-            onTogglePublic={onUpdate ? handleTogglePublic : undefined}
-          />
+          <div className="flex justify-between items-center">
+            <ShareButton dream={dream} />
+            
+            <DreamDetailActions
+              isAuthenticated={isAuthenticated}
+              isPublic={isPublic}
+              onTogglePublic={onUpdate ? handleTogglePublic : undefined}
+            />
+          </div>
         </DialogContent>
       </Dialog>
       
