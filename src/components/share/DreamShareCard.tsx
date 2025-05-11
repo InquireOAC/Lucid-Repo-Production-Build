@@ -144,18 +144,18 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             <img 
               src="/lovable-uploads/75f9ca02-53e1-46b7-9296-dc40e6ad23fe.png" 
               alt="Lucid Repo Logo" 
-              className="w-[125px] h-[125px]" 
+              className="w-[64px] h-[64px]" 
             />
           </div>
           
           {/* Center: Download Text */}
-          <div className="text-[28px] font-bold text-white">
+          <div className="text-[56px] font-bold text-white">
             Download Lucid Repo
           </div>
           
           {/* Right: QR Code */}
           <div className="flex items-center justify-center">
-            <QrCode size={64} className="text-white" />
+            <QrCode size={72} className="text-white" />
           </div>
         </div>
       </div>
