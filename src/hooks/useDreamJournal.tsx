@@ -43,8 +43,8 @@ export const useDreamJournal = () => {
           tags: dream.tags || [],
           mood: dream.mood,
           lucid: dream.lucid || false,
-          imagePrompt: dream.imagePrompt || dream.image_prompt,
-          generatedImage: dream.generatedImage || dream.image_url,
+          imagePrompt: dream.imagePrompt,
+          generatedImage: dream.generatedImage,
           analysis: dream.analysis,
           is_public: dream.is_public || false,
           isPublic: dream.is_public || false,
@@ -111,12 +111,7 @@ export const useDreamJournal = () => {
           analysis: dreamData.analysis || null,
           generatedImage: dreamData.generatedImage || null,
           imagePrompt: dreamData.imagePrompt || null,
-          image_url: dreamData.generatedImage || null,
-          image_prompt: dreamData.imagePrompt || null,
         };
-        
-        // Remove audio_url if it's not in the database schema
-        // This prevents the PGRST204 error
         
         const { error } = await supabase
           .from("dream_entries")
@@ -177,8 +172,6 @@ export const useDreamJournal = () => {
           analysis: dreamData.analysis || null,
           generatedImage: dreamData.generatedImage || null,
           imagePrompt: dreamData.imagePrompt || null,
-          image_url: dreamData.generatedImage || null,
-          image_prompt: dreamData.imagePrompt || null,
           updated_at: new Date().toISOString()
         };
           
@@ -224,12 +217,8 @@ export const useDreamJournal = () => {
           delete dbUpdates.audioUrl;  // Remove this field as it doesn't exist in DB
         }
         
-        if ('generatedImage' in dbUpdates) {
-          dbUpdates.image_url = dbUpdates.generatedImage;
-        }
-        
-        if ('imagePrompt' in dbUpdates) {
-          dbUpdates.image_prompt = dbUpdates.imagePrompt;
+        if ('audio_url' in dbUpdates) {
+          delete dbUpdates.audio_url;  // Remove this field as it doesn't exist in DB
         }
         
         console.log("Updating dream in database:", id, dbUpdates);

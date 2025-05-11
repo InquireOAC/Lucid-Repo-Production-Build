@@ -25,8 +25,8 @@ const DreamDetailWrapper = ({
   // Ensure we have all possible fields from both camelCase and snake_case versions
   const normalizedDream = {
     ...selectedDream,
-    generatedImage: selectedDream.generatedImage || selectedDream.image_url,
-    imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt,
+    generatedImage: selectedDream.generatedImage,
+    imagePrompt: selectedDream.imagePrompt,
     isPublic: selectedDream.is_public || selectedDream.isPublic,
   };
   
@@ -40,15 +40,6 @@ const DreamDetailWrapper = ({
         const newPublicState = cleanedUpdates.is_public ?? cleanedUpdates.isPublic;
         cleanedUpdates.is_public = newPublicState;
         cleanedUpdates.isPublic = newPublicState;
-      }
-      
-      // Handle image and analysis data compatibility
-      if ('generatedImage' in cleanedUpdates) {
-        cleanedUpdates.image_url = cleanedUpdates.generatedImage;
-      }
-      
-      if ('imagePrompt' in cleanedUpdates) {
-        cleanedUpdates.image_prompt = cleanedUpdates.imagePrompt;
       }
       
       // Call the provided update handler (which will refresh the dream list)
