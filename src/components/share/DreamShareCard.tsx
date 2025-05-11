@@ -144,12 +144,12 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             <img 
               src="/lovable-uploads/75f9ca02-53e1-46b7-9296-dc40e6ad23fe.png" 
               alt="Lucid Repo Logo" 
-              className="w-[64px] h-[64px]" 
+              className="w-[125px] h-[125px]" 
             />
           </div>
           
           {/* Center: Download Text */}
-          <div className="text-[56px] font-bold text-white">
+          <div className="text-[72px] font-bold text-white flex items-center justify-center">
             Download Lucid Repo
           </div>
           
