@@ -41,11 +41,11 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
       {/* Visible Share Button */}
       <Button 
         onClick={handleShare}
-        variant="ghost" 
-        size="icon" 
-        className="text-dream-lavender hover:bg-dream-lavender/10"
+        variant="outline" 
+        className="flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10"
       >
-        <Share size={16} />
+        <Share size={18} />
+        <span>Share</span>
       </Button>
       
       {/* Hidden Share Card (positioned off-screen) */}

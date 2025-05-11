@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -97,7 +98,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             <DreamDetailAudio audioUrl={audioUrl} />
           )}
           
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mt-4">
             <ShareButton dream={dream} />
             
             <DreamDetailActions
