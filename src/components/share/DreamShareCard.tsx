@@ -19,62 +19,57 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   
   // Ensure we have the proper image from either camelCase or snake_case field
   const dreamImage = dream.generatedImage || dream.image_url;
-  
-  // Preload custom fonts and image if available
-  useEffect(() => {
-    // Preload the dream image if it exists
-    if (dreamImage) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = dreamImage;
-      img.onload = () => {
-        console.log("Dream image preloaded successfully:", dreamImage);
-        setImageLoaded(true);
-      };
-      img.onerror = () => {
-        console.error("Failed to preload dream image:", dreamImage);
-        setImageError(true);
-      };
+
+  // Handle share with pre-loaded elements to ensure immediate download
+  const handleShare = async () => {
+    if (!shareCardRef.current) {
+      toast.error("Unable to generate share image");
+      return;
     }
     
-    // Ensure all fonts are loaded
-    document.fonts.ready.then(() => {
-      console.log("All fonts loaded");
-    });
-  }, [dreamImage]);
-
-  const handleShare = async () => {
-    if (shareCardRef.current) {
-      try {
-        setIsSharing(true);
-        console.log("Generating share image for dream:", dream.title);
-        console.log("Image URL:", dreamImage);
-        
-        // Add a small delay to ensure everything is rendered
-        await new Promise(resolve => setTimeout(resolve, 300));
-        
-        const blob = await elementToPngBlob(shareCardRef.current);
-        if (!blob) {
-          console.error("Failed to generate image blob");
-          toast.error("Failed to generate share image");
-          setIsSharing(false);
-          return;
-        }
-        
-        await shareContent(
-          blob,
-          `${dream.title} - Dream Story`,
-          "Check out my dream from Lucid Repo!"
-        );
-        
-        toast.success("Dream shared successfully");
-      } catch (error) {
-        console.error("Share error:", error);
-        toast.error("Failed to share dream");
-      } finally {
+    try {
+      setIsSharing(true);
+      console.log("Generating share image for dream:", dream.title);
+      console.log("Image URL:", dreamImage);
+      
+      // Generate the image blob immediately
+      const blob = await elementToPngBlob(shareCardRef.current);
+      
+      if (!blob) {
+        console.error("Failed to generate image blob");
+        toast.error("Failed to generate share image");
         setIsSharing(false);
+        return;
       }
+      
+      // Directly download without waiting
+      downloadImageDirectly(blob, `${dream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+      toast.success("Dream image downloaded");
+      
+      // Also try to use the share API if available
+      shareContent(
+        blob,
+        `${dream.title} - Dream Story`,
+        "Check out my dream from Lucid Repo!"
+      ).then(() => {
+        console.log("Share operation completed");
+      });
+    } catch (error) {
+      console.error("Share error:", error);
+      toast.error("Failed to share dream");
+    } finally {
+      setIsSharing(false);
     }
+  };
+
+  // Direct download function to ensure immediate download
+  const downloadImageDirectly = (blob: Blob, fileName: string): void => {
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const formattedDate = dream.date 
@@ -157,14 +152,13 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
                 onLoad={() => console.log("Image loaded in card:", dreamImage)}
                 onError={(e) => {
                   console.error("Image failed to load in card:", dreamImage);
-                  // Fall back to a colorful gradient placeholder instead of a plain placeholder
-                  e.currentTarget.style.display = 'none';
-                  e.currentTarget.parentElement!.style.background = 
-                    'linear-gradient(to right, rgba(155, 135, 245, 0.8), rgba(126, 105, 171, 0.8))';
-                  e.currentTarget.parentElement!.innerHTML += 
-                    '<div class="flex items-center justify-center h-full">' +
-                    '<span class="text-4xl text-white font-medium">Dream Visualization</span>' +
-                    '</div>';
+                  // Apply gradient directly
+                  if (e.currentTarget.parentElement) {
+                    e.currentTarget.parentElement.innerHTML = 
+                      '<div class="h-[500px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">' +
+                      '<div class="text-4xl font-medium text-white">Dream Visualization</div>' +
+                      '</div>';
+                  }
                 }}
               />
             ) : (
