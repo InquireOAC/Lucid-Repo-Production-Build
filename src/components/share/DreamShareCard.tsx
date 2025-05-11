@@ -102,10 +102,10 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             background: 'linear-gradient(135deg, rgba(99, 73, 166, 1) 0%, rgba(33, 48, 113, 1) 100%)',
           }}
         >
-          {/* App Name at the top - IMPROVED FORMATTING */}
+          {/* App Name at the top with improved size and alignment */}
           <div className="mb-16 mt-8 flex flex-col items-center justify-center">
-            <h1 className="text-7xl font-bold text-white text-center gradient-text">Lucid Repo</h1>
-            <div className="h-3 w-40 bg-dream-lavender rounded-full mt-5"></div>
+            <h1 className="text-8xl font-bold text-white text-center">Lucid Repo</h1>
+            <div className="h-3 w-64 bg-dream-lavender rounded-full mt-6"></div>
           </div>
           
           {/* Dream Title - Large and Bold */}
@@ -138,41 +138,31 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </div>
           )}
           
-          {/* Dream Image - Below the analysis */}
-          <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
-            {dreamImage ? (
-              <div className="relative w-full h-[600px]">
-                <img 
-                  src={dreamImage}
-                  alt={dream.title || "Dream Visualization"}
-                  className="w-full h-full object-cover"
-                  crossOrigin="anonymous"
-                  style={{ display: 'block' }}
-                  onLoad={() => console.log("Image loaded in card:", dreamImage)}
-                  onError={(e) => {
-                    console.error("Image failed to load in card:", dreamImage);
-                    const target = e.currentTarget;
-                    if (target.parentElement) {
-                      target.style.display = 'none';
-                      target.parentElement.innerHTML = 
-                        '<div class="h-full w-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">' +
-                        '<div class="text-4xl font-medium text-white">Dream Visualization</div>' +
-                        '</div>';
-                    }
-                  }}
-                />
-              </div>
-            ) : (
+          {/* Dream Image */}
+          {dreamImage && (
+            <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
+              <img 
+                src={dreamImage}
+                alt={dream.title || "Dream Visualization"}
+                className="w-full h-[600px] object-cover"
+                crossOrigin="anonymous"
+              />
+            </div>
+          )}
+          
+          {/* Fallback for no image */}
+          {!dreamImage && (
+            <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
               <div className="h-[600px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
                 <div className="text-4xl font-medium text-white">Dream Visualization</div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
           
-          {/* App Footer - IMPROVED FORMATTING */}
+          {/* App Footer with improved styling */}
           <div className="mt-auto flex items-center justify-between">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-12 w-64 rounded-md"></div>
-            <div className="text-2xl py-4 px-8 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
+            <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-16 w-64 rounded-md"></div>
+            <div className="text-3xl py-5 px-10 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
               Download the app
             </div>
           </div>
