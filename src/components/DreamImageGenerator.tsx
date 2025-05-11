@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,17 +74,22 @@ const DreamImageGenerator = ({
       }
       
       setImagePrompt(generatedPrompt);
+      console.log("Generated prompt:", generatedPrompt);
       
-      // Then, generate the image using the prompt and Dall-E/Stable Diffusion
+      // Then, generate the image using the prompt and Dall-E
       const imageResult = await supabase.functions.invoke('generate-dream-image', {
         body: { prompt: generatedPrompt }
       });
       
       if (imageResult.error) {
+        console.error("Image generation API error:", imageResult.error);
         throw new Error(imageResult.error.message || 'Failed to generate image');
       }
       
-      const imageUrl = imageResult.data?.image_url;
+      // Check both possible response formats
+      const imageUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
+      console.log("Image result data:", imageResult.data);
+      
       if (!imageUrl) {
         throw new Error('No image URL was returned');
       }

@@ -15,6 +15,8 @@ serve(async (req) => {
   try {
     const { prompt } = await req.json()
     
+    console.log("Generating image with prompt:", prompt)
+    
     const response = await fetch('https://api.openai.com/v1/images/generations', {
       method: 'POST',
       headers: {
@@ -33,17 +35,21 @@ serve(async (req) => {
 
     const data = await response.json()
     if (data.error) {
+      console.error("OpenAI API error:", data.error)
       throw new Error(data.error.message)
     }
 
+    console.log("Image generation successful, returning URL")
+    
+    // The response from OpenAI will include data.data[0].url
     return new Response(
-      JSON.stringify({ imageUrl: data.data[0].url }),
+      JSON.stringify({ imageUrl: data.data[0].url, image_url: data.data[0].url }), // Return both formats for compatibility
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error:', error)
     return new Response(
-      JSON.stringify({ error: 'Failed to generate image' }),
+      JSON.stringify({ error: error.message || 'Failed to generate image' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
