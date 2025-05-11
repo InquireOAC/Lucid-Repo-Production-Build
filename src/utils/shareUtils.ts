@@ -1,3 +1,4 @@
+
 import html2canvas from "html2canvas";
 
 /**
@@ -18,7 +19,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
           // If image is already loaded, resolve immediately
           if (img.complete && img.naturalHeight !== 0) {
             console.log(`Image already loaded: ${img.src.slice(0, 50)}...`);
-            return Promise.resolve<void>();
+            return Promise.resolve();
           }
           
           // Otherwise wait for the image to load or fail
