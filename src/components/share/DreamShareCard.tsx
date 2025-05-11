@@ -150,7 +150,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
           
           {/* Center: Download Text */}
-          <div className="text-[66px] font-bold text-white flex items-center justify-center">
+          <div className="text-[64px] font-bold text-white">
             Download Lucid Repo
           </div>
           

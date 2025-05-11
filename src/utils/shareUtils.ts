@@ -17,6 +17,8 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       
       // Set gradient backgrounds on all image containers as fallbacks
       images.forEach(img => {
+        if (img.alt === 'Lucid Repo Logo') return;
+        
         if (img.parentElement) {
           img.parentElement.style.background = 
             'linear-gradient(to right, #6344A5, #8976BF)';
@@ -37,7 +39,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       
       // Give a small timeout to ensure all styles are applied and images are loaded
       console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
     
     console.log("Generating canvas");
@@ -49,7 +51,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       allowTaint: true,
       logging: false,
       backgroundColor: null,
-      imageTimeout: 5000, // Extended timeout for image processing
+      imageTimeout: 7000, // Extended timeout for image processing
     });
     
     console.log("Canvas generated successfully");
