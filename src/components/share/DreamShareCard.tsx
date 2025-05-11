@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
 import { elementToPngBlob, shareContent } from "@/utils/shareUtils";
@@ -12,20 +12,43 @@ interface DreamShareCardProps {
 
 const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [imageError, setImageError] = useState(false);
   
-  // Preload custom fonts if needed
+  // Ensure we have the proper image from either camelCase or snake_case field
+  const dreamImage = dream.generatedImage || dream.image_url;
+  
+  // Preload custom fonts and image if available
   useEffect(() => {
-    // This ensures all assets are loaded before sharing
+    // Preload the dream image if it exists
+    if (dreamImage) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = dreamImage;
+      img.onload = () => {
+        console.log("Dream image preloaded successfully:", dreamImage);
+        setImageLoaded(true);
+      };
+      img.onerror = () => {
+        console.error("Failed to preload dream image:", dreamImage);
+        setImageError(true);
+      };
+    }
+    
+    // Ensure all fonts are loaded
     document.fonts.ready.then(() => {
       console.log("All fonts loaded");
     });
-  }, []);
+  }, [dreamImage]);
 
   const handleShare = async () => {
     if (shareCardRef.current) {
       try {
         console.log("Generating share image for dream:", dream.title);
-        console.log("Image URL:", dream.generatedImage || dream.image_url);
+        console.log("Image URL:", dreamImage);
+        
+        // Add a small delay to ensure everything is rendered
+        await new Promise(resolve => setTimeout(resolve, 300));
         
         const blob = await elementToPngBlob(shareCardRef.current);
         if (!blob) {
@@ -44,8 +67,6 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
     }
   };
 
-  // Ensure we have the proper image from either camelCase or snake_case field
-  const dreamImage = dream.generatedImage || dream.image_url;
   const formattedDate = dream.date 
     ? format(new Date(dream.date), "MMMM d, yyyy")
     : "Unknown Date";
@@ -114,25 +135,33 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           )}
           
           {/* Dream Image - Below the analysis */}
-          {dreamImage ? (
-            <div className="mb-16 rounded-3xl overflow-hidden shadow-2xl">
+          <div className="mb-16 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '400px' }}>
+            {dreamImage ? (
               <img 
-                src={dreamImage} 
+                src={dreamImage}
                 alt={dream.title || "Dream Visualization"}
                 className="w-full object-cover"
-                style={{ maxHeight: '700px' }}
+                style={{ height: '500px', objectFit: 'cover' }}
                 crossOrigin="anonymous"
+                onLoad={() => console.log("Image loaded in card:", dreamImage)}
                 onError={(e) => {
-                  console.error("Image failed to load:", e);
-                  e.currentTarget.src = "https://placehold.co/600x400/6B5B95/ffffff?text=Dream+Image";
+                  console.error("Image failed to load in card:", dreamImage);
+                  // Fall back to a colorful gradient placeholder instead of a plain placeholder
+                  e.currentTarget.style.display = 'none';
+                  e.currentTarget.parentElement!.style.background = 
+                    'linear-gradient(to right, rgba(155, 135, 245, 0.8), rgba(126, 105, 171, 0.8))';
+                  e.currentTarget.parentElement!.innerHTML += 
+                    '<div class="flex items-center justify-center h-full">' +
+                    '<span class="text-4xl text-white font-medium">Dream Visualization</span>' +
+                    '</div>';
                 }}
               />
-            </div>
-          ) : (
-            <div className="mb-16 h-80 bg-gradient-to-r from-purple-500/30 to-blue-500/30 rounded-3xl flex items-center justify-center shadow-2xl">
-              <div className="text-5xl font-medium text-white">Dream Visualization</div>
-            </div>
-          )}
+            ) : (
+              <div className="h-[500px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                <div className="text-4xl font-medium text-white">Dream Visualization</div>
+              </div>
+            )}
+          </div>
           
           {/* App Footer */}
           <div className="mt-auto flex items-center justify-between">

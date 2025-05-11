@@ -23,7 +23,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const normalizedDream = {
     ...dream,
     title: dream.title || "Untitled Dream", // Ensure we always have a title
-    generatedImage: dream.generatedImage || dream.image_url,
+    generatedImage: dream.generatedImage || dream.image_url || dream.imageUrl,
     imagePrompt: dream.imagePrompt || dream.image_prompt,
     content: dream.content || "No dream content available.",
     analysis: dream.analysis || "",
