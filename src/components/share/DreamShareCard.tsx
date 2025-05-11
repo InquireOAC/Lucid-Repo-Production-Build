@@ -144,7 +144,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             <img 
               src="/lovable-uploads/75f9ca02-53e1-46b7-9296-dc40e6ad23fe.png" 
               alt="Lucid Repo Logo" 
-              className="w-[94px] h-[94px]" 
+              className="w-[125px] h-[125px]" 
             />
           </div>
           
