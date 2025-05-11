@@ -1,14 +1,13 @@
-
 import html2canvas from "html2canvas";
 
 /**
- * Converts an HTML element to a PNG blob with improved reliability
+ * Converts an HTML element to a PNG blob with optimized settings for reliability
  */
 export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | null> => {
   try {
     console.log("Starting HTML to Canvas conversion");
     
-    // Wait for all images to load completely
+    // Wait for all images to load completely before attempting conversion
     const images = Array.from(element.querySelectorAll('img'));
     
     if (images.length > 0) {
@@ -30,13 +29,14 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
               resolve();
             };
             
+            // Handle image errors by replacing with a gradient
             img.onerror = () => {
               console.error("Image failed to load:", img.src.slice(0, 50));
               // Replace with gradient instead of placeholder
               img.style.display = 'none';
               if (img.parentElement) {
                 img.parentElement.style.background = 
-                  'linear-gradient(to right, rgba(155, 135, 245, 0.8), rgba(126, 105, 171, 0.8))';
+                  'linear-gradient(to right, #6344A5, #8976BF)';
                 img.parentElement.innerHTML += 
                   '<div style="display: flex; align-items: center; justify-content: center; height: 100%;">' +
                   '<span style="font-size: 2rem; color: white; font-weight: 500;">Dream Visualization</span>' +
@@ -45,14 +45,14 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
               resolve();
             };
             
-            // Set a longer timeout for image loading
+            // Set a shorter timeout for image loading - faster fail
             setTimeout(() => {
               if (!img.complete) {
                 console.warn("Image load timeout:", img.src.slice(0, 50));
                 img.dispatchEvent(new Event('error'));
                 resolve();
               }
-            }, 5000); // Increased from 3000 to 5000ms
+            }, 3000); // Reduced to 3 seconds for faster processing
           });
         })
       );
@@ -60,32 +60,28 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("All images processed, generating canvas");
     
-    // Use a scale of 1 for better performance and faster processing
+    // Use lower scale and quality settings for faster processing
     const canvas = await html2canvas(element, { 
-      scale: 1.5, // Decreased from 2 to 1.5 for better performance
+      scale: 1, // Reduced scale for faster processing
       useCORS: true,
       allowTaint: true,
       logging: false,
-      backgroundColor: null,
-      onclone: (doc, ele) => {
-        console.log("Canvas cloned, processing");
-      }
+      backgroundColor: null
     });
     
     console.log("Canvas generated successfully");
     
-    // Use a longer timeout for blob creation
     return new Promise<Blob | null>((resolve) => {
       const blobTimeout = setTimeout(() => {
         console.warn("Blob creation timed out");
         resolve(null);
-      }, 5000); // Increased from 3000 to 5000ms
+      }, 3000); // Reduced to 3 seconds
       
       canvas.toBlob((blob) => {
         clearTimeout(blobTimeout);
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.9); // Decreased quality slightly from 0.95 to 0.9 for better performance
+      }, "image/png", 0.8); // Lower quality for better performance
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
@@ -94,7 +90,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
- * Downloads a blob as a file
+ * Downloads a blob as a file with improved reliability
  */
 export const downloadImage = (blob: Blob, fileName: string): void => {
   const link = document.createElement("a");
@@ -102,6 +98,8 @@ export const downloadImage = (blob: Blob, fileName: string): void => {
   link.download = fileName;
   document.body.appendChild(link);
   link.click();
+  
+  // Clean up faster
   setTimeout(() => {
     document.body.removeChild(link);
     URL.revokeObjectURL(link.href);

@@ -2,6 +2,7 @@
 import React from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard from "./DreamShareCard";
+import { toast } from "sonner";
 
 interface ShareButtonProps {
   dream: DreamEntry;
@@ -16,18 +17,31 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   size = "icon",
   className = "",
 }) => {
-  // Make sure we have all possible image fields in the dream object
+  // Ensure we have all necessary fields with proper fallbacks
   const normalizedDream = {
     ...dream,
-    id: dream.id,
+    id: dream.id || `dream-${Date.now()}`,
     title: dream.title || "Untitled Dream",
-    // Ensure we always have consistent image field access
+    // Prioritize the field that actually contains data
     generatedImage: dream.generatedImage || dream.image_url || null,
-    imagePrompt: dream.imagePrompt || dream.image_prompt,
+    imagePrompt: dream.imagePrompt || dream.image_prompt || "",
     content: dream.content || "No dream content available.",
     analysis: dream.analysis || "",
     date: dream.date || new Date().toISOString()
   };
+
+  // Log the normalized dream to help with debugging
+  console.log("Normalized dream for sharing:", {
+    id: normalizedDream.id,
+    title: normalizedDream.title,
+    hasImage: !!normalizedDream.generatedImage,
+    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0
+  });
+
+  if (!normalizedDream.title || !normalizedDream.content) {
+    toast.error("Cannot share dream - missing required information");
+    return null;
+  }
 
   return <DreamShareCard dream={normalizedDream} />;
 };
