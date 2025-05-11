@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DreamEntry } from "@/types/dream";

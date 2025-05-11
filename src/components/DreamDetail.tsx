@@ -36,7 +36,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
         isPublic: newStatus
       });
       
-      // Success toast is shown by the parent component
+      toast.success(newStatus ? "Dream is now public" : "Dream is now private");
     } catch (error) {
       console.error("Error toggling visibility:", error);
     }

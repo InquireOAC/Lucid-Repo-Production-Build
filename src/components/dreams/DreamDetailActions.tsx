@@ -2,11 +2,11 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Globe, Lock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface DreamDetailActionsProps {
   isAuthenticated?: boolean;
   isPublic?: boolean;
-  onDelete?: () => void;
   onTogglePublic?: () => void;
 }
 
@@ -19,23 +19,27 @@ const DreamDetailActions = ({
 
   return (
     <div className="flex justify-end items-center mt-6">
-      <div className="flex gap-2">
+      <div className="flex items-center gap-3">
         {onTogglePublic && (
-          <Button
-            variant={isPublic ? "outline" : "default"}
-            size="sm"
-            onClick={onTogglePublic}
-          >
-            {isPublic ? (
-              <>
-                <Lock size={14} className="mr-1" /> Make Private
-              </>
-            ) : (
-              <>
-                <Globe size={14} className="mr-1" /> Share
-              </>
-            )}
-          </Button>
+          <>
+            <span className="text-sm text-muted-foreground flex items-center">
+              {isPublic ? (
+                <>
+                  <Globe size={14} className="mr-1" /> Public
+                </>
+              ) : (
+                <>
+                  <Lock size={14} className="mr-1" /> Private
+                </>
+              )}
+            </span>
+            <Switch
+              checked={isPublic}
+              onCheckedChange={onTogglePublic}
+              aria-label="Toggle public/private"
+              className="data-[state=checked]:bg-dream-lavender"
+            />
+          </>
         )}
       </div>
     </div>
