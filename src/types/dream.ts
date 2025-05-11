@@ -11,7 +11,9 @@ export interface DreamEntry {
   userId?: string;
   analysis?: string;
   generatedImage?: string;
+  image_url?: string; // Added to fix type errors
   imagePrompt?: string;
+  image_prompt?: string; // Added to fix type errors
   is_public?: boolean;
   isPublic?: boolean;
   like_count?: number;
