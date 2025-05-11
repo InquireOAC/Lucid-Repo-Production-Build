@@ -22,21 +22,35 @@ const DreamDetailWrapper = ({
 }: DreamDetailWrapperProps) => {
   if (!selectedDream) return null;
   
+  // Ensure we have all possible fields from both camelCase and snake_case versions
+  const normalizedDream = {
+    ...selectedDream,
+    generatedImage: selectedDream.generatedImage || selectedDream.image_url,
+    imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt,
+    audioUrl: selectedDream.audioUrl || selectedDream.audio_url,
+    is_public: selectedDream.is_public || selectedDream.isPublic,
+    isPublic: selectedDream.is_public || selectedDream.isPublic,
+  };
+  
   const handleUpdate = async (id: string, updates: Partial<DreamEntry>) => {
     try {
       // First make sure we're only sending valid database fields
       const cleanedUpdates: Partial<DreamEntry> = {...updates};
-      
-      // Remove client-side only fields that would cause database errors
-      if ('audioUrl' in cleanedUpdates) {
-        delete cleanedUpdates.audioUrl;
-      }
       
       // Make sure both is_public and isPublic are set correctly
       if ('is_public' in cleanedUpdates || 'isPublic' in cleanedUpdates) {
         const newPublicState = cleanedUpdates.is_public ?? cleanedUpdates.isPublic;
         cleanedUpdates.is_public = newPublicState;
         cleanedUpdates.isPublic = newPublicState;
+      }
+      
+      // Handle image and analysis data compatibility
+      if ('generatedImage' in cleanedUpdates) {
+        cleanedUpdates.image_url = cleanedUpdates.generatedImage;
+      }
+      
+      if ('imagePrompt' in cleanedUpdates) {
+        cleanedUpdates.image_prompt = cleanedUpdates.imagePrompt;
       }
       
       // Call the provided update handler (which will refresh the dream list)
@@ -56,7 +70,7 @@ const DreamDetailWrapper = ({
   
   return (
     <DreamDetail
-      dream={selectedDream}
+      dream={normalizedDream}
       tags={tags}
       onClose={onClose}
       onUpdate={handleUpdate}

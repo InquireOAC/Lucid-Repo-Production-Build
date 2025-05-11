@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -29,6 +30,10 @@ interface DreamEntryFormProps {
     tags: string[];
     lucid: boolean;
     mood: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
+    audioUrl?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -53,6 +58,7 @@ const DreamEntryForm = ({
     generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
     imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
     lucid: existingDream?.lucid || false,
+    audioUrl: existingDream?.audioUrl || existingDream?.audio_url || null,
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,6 +128,10 @@ const DreamEntryForm = ({
         tags: formData.tags,
         lucid: formData.lucid,
         mood: formData.mood,
+        analysis: formData.analysis,
+        generatedImage: formData.generatedImage,
+        imagePrompt: formData.imagePrompt,
+        audioUrl: formData.audioUrl,
       });
       return;
     }
@@ -136,9 +146,12 @@ const DreamEntryForm = ({
       user_id: user?.id,
       analysis: formData.analysis,
       is_public: false,
-      image_url: formData.generatedImage,
-      image_prompt: formData.imagePrompt,
+      generatedImage: formData.generatedImage,
+      imagePrompt: formData.imagePrompt, 
+      image_url: formData.generatedImage, // Save to both fields for compatibility
+      image_prompt: formData.imagePrompt, // Save to both fields for compatibility
       lucid: formData.lucid,
+      audio_url: formData.audioUrl,
     };
 
     try {

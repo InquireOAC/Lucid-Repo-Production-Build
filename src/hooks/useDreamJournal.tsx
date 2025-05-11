@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,8 +53,17 @@ export const useDreamJournal = () => {
           comment_count: dream.comment_count || 0,
           commentCount: dream.comment_count || 0,
           audioUrl: dream.audio_url,
+          audio_url: dream.audio_url,
           user_id: dream.user_id
         }));
+        
+        console.log("Synced dreams with analysis and images:", formattedDreams.map(d => ({
+          id: d.id,
+          title: d.title,
+          analysis: Boolean(d.analysis),
+          generatedImage: Boolean(d.generatedImage),
+          audioUrl: d.audioUrl
+        })));
         
         // Update the local store with dreams from the database
         formattedDreams.forEach(dream => {
@@ -73,6 +81,9 @@ export const useDreamJournal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
     audioUrl?: string;
   }) => {
     setIsSubmitting(true);
@@ -80,12 +91,18 @@ export const useDreamJournal = () => {
       // First add to local store
       const newDream = addEntry({
         ...dreamData,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString(),
+        audioUrl: dreamData.audioUrl || null
+      });
+
+      console.log("Adding dream with:", {
+        audioUrl: dreamData.audioUrl,
+        analysis: Boolean(dreamData.analysis),
+        generatedImage: Boolean(dreamData.generatedImage)
       });
 
       // If user is logged in, also save to database
       if (user) {
-        // Remove audioUrl from the database insert to avoid column not found error
         const { error } = await supabase
           .from("dream_entries")
           .insert({
@@ -97,21 +114,25 @@ export const useDreamJournal = () => {
             mood: dreamData.mood,
             lucid: dreamData.lucid,
             date: newDream.date,
-            is_public: false
-            // Do not include audio_url as it doesn't exist in the database schema
+            is_public: false,
+            audio_url: dreamData.audioUrl || null,
+            analysis: dreamData.analysis || null,
+            generatedImage: dreamData.generatedImage || null, // Use camelCase
+            imagePrompt: dreamData.imagePrompt || null, // Use camelCase
+            image_url: dreamData.generatedImage || null, // Also use snake_case for DB compatibility
+            image_prompt: dreamData.imagePrompt || null // Also use snake_case for DB compatibility
           });
           
         if (error) {
           console.error("Database error:", error);
-          // Don't throw error here to prevent the toast error message
-          // The dream is still saved in local storage
+          throw error;
         }
       }
       setIsAddingDream(false);
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      // Don't show error toast as the dream is saved in local storage
+      toast.error("Failed to save dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,6 +144,9 @@ export const useDreamJournal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
     audioUrl?: string;
   }) => {
     if (!selectedDream) return;
@@ -131,11 +155,21 @@ export const useDreamJournal = () => {
       // Update local store
       updateEntry(selectedDream.id, {
         ...dreamData,
+        audioUrl: dreamData.audioUrl || null,
+        analysis: dreamData.analysis || null,
+        generatedImage: dreamData.generatedImage || null,
+        imagePrompt: dreamData.imagePrompt || null
+      });
+
+      console.log("Updating dream with:", {
+        audioUrl: dreamData.audioUrl,
+        analysis: Boolean(dreamData.analysis),
+        generatedImage: Boolean(dreamData.generatedImage),
+        imagePrompt: Boolean(dreamData.imagePrompt)
       });
 
       // If user is logged in, also update in database
       if (user) {
-        // Remove audioUrl from the database update to avoid column not found error
         const { error } = await supabase
           .from("dream_entries")
           .update({
@@ -144,6 +178,12 @@ export const useDreamJournal = () => {
             tags: dreamData.tags,
             mood: dreamData.mood,
             lucid: dreamData.lucid,
+            audio_url: dreamData.audioUrl || null,
+            analysis: dreamData.analysis || null,
+            generatedImage: dreamData.generatedImage || null, // Use camelCase  
+            imagePrompt: dreamData.imagePrompt || null, // Use camelCase
+            image_url: dreamData.generatedImage || null, // Also use snake_case for DB compatibility
+            image_prompt: dreamData.imagePrompt || null, // Also use snake_case for DB compatibility
             updated_at: new Date().toISOString()
           })
           .eq("id", selectedDream.id)
@@ -151,8 +191,7 @@ export const useDreamJournal = () => {
           
         if (error) {
           console.error("Database error:", error);
-          // Don't throw error here to prevent the toast error message
-          // The dream is still saved in local storage
+          throw error;
         }
       }
       setIsEditingDream(false);
@@ -160,7 +199,7 @@ export const useDreamJournal = () => {
       toast.success("Dream updated successfully!");
     } catch (error) {
       console.error("Error updating dream:", error);
-      // Don't show error toast as the dream is updated in local storage
+      toast.error("Failed to update dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,15 +215,23 @@ export const useDreamJournal = () => {
         // Convert the updates to database format
         const dbUpdates: any = { ...updates };
 
-        // Remove isPublic from database updates and use is_public instead
+        // Handle compatibility between camelCase and snake_case fields
         if ('isPublic' in dbUpdates) {
           dbUpdates.is_public = dbUpdates.isPublic;
           delete dbUpdates.isPublic;
         }
         
-        // Remove audioUrl from database updates as it doesn't exist in schema
         if ('audioUrl' in dbUpdates) {
+          dbUpdates.audio_url = dbUpdates.audioUrl;
           delete dbUpdates.audioUrl;
+        }
+        
+        if ('generatedImage' in dbUpdates) {
+          dbUpdates.image_url = dbUpdates.generatedImage;
+        }
+        
+        if ('imagePrompt' in dbUpdates) {
+          dbUpdates.image_prompt = dbUpdates.imagePrompt;
         }
         
         console.log("Updating dream in database:", id, dbUpdates);
@@ -194,20 +241,17 @@ export const useDreamJournal = () => {
           .update(dbUpdates)
           .eq("id", id)
           .eq("user_id", user.id);
-          
         if (error) {
           console.error("Database error:", error);
-          // Don't throw error here or toast error
-          // The update is still applied in local storage
-        } else if (updates.is_public || updates.isPublic) {
-          toast.success("Dream shared to Lucid Repo!");
-          // Since we made this public, trigger a sync with db
-          syncDreamsFromDb();
+          throw error;
         }
+      }
+      if (updates.is_public || updates.isPublic) {
+        toast.success("Dream shared to Lucid Repo!");
       }
     } catch (error) {
       console.error("Error updating dream:", error);
-      // Don't show error toast as the dream is updated in local storage
+      toast.error("Failed to update dream");
     }
   };
 

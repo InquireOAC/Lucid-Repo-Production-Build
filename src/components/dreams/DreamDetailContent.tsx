@@ -44,6 +44,7 @@ const DreamDetailContent = ({
       {/* Dream Image */}
       {generatedImage && (
         <div className="mt-4">
+          <h3 className="text-sm font-medium mb-2">Dream Visualization</h3>
           <img 
             src={generatedImage} 
             alt="Dream visualization" 
