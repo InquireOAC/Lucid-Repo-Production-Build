@@ -73,7 +73,9 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
     ? `${dreamAnalysis.slice(0, 100)}...`
     : dreamAnalysis;
 
-  // Default placeholder image URL
+  // Get the dream image from the dream entry
+  const dreamImageUrl = dream.generatedImage || dream.image_url || null;
+  // Use placeholder only if absolutely no image is available
   const placeholderImageUrl = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1000&auto=format&fit=crop";
 
   return (
@@ -108,7 +110,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         
         {/* Dream Story Snippet */}
         <div className="mb-12 py-8 px-6 rounded-lg bg-white/10 text-white">
-          <p className="text-3xl leading-relaxed break-words overflow-hidden">
+          <p className="text-4xl leading-relaxed break-words overflow-hidden">
             {truncatedContent}
           </p>
         </div>
@@ -118,7 +120,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
           <div className="mb-12">
             <h3 className="text-3xl font-light mb-4 text-white/90">Dream Analysis</h3>
             <div className="border-l-4 border-white/30 pl-6">
-              <p className="text-2xl leading-relaxed text-white/80 italic break-words overflow-hidden">
+              <p className="text-3xl leading-relaxed text-white/80 italic break-words overflow-hidden">
                 {truncatedAnalysis}
               </p>
             </div>
@@ -128,20 +130,30 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         {/* Dream Image */}
         <div className="flex-1 flex flex-col items-center justify-center my-8">
           <div className="w-full max-h-[600px] aspect-[4/3] rounded-2xl overflow-hidden relative flex items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center text-white text-3xl bg-gradient-to-br from-purple-600/50 to-blue-500/50 z-10">
-              Dream Visualization
-            </div>
-            <img 
-              src={dream.generatedImage || dream.image_url || placeholderImageUrl}
-              alt="Dream Visualization"
-              className="w-full h-full object-cover"
-              crossOrigin="anonymous"
-              onError={(e) => {
-                console.log("Image failed to load");
-                // If main image fails, use placeholder
-                e.currentTarget.src = placeholderImageUrl;
-              }}
-            />
+            {dreamImageUrl ? (
+              <img 
+                src={dreamImageUrl}
+                alt="Dream Visualization"
+                className="w-full h-full object-cover"
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.log("Dream image failed to load, using placeholder");
+                  e.currentTarget.src = placeholderImageUrl;
+                }}
+              />
+            ) : (
+              <>
+                <div className="absolute inset-0 flex items-center justify-center text-white text-3xl bg-gradient-to-br from-purple-600/50 to-blue-500/50 z-10">
+                  Dream Visualization
+                </div>
+                <img 
+                  src={placeholderImageUrl}
+                  alt="Dream Visualization Placeholder"
+                  className="w-full h-full object-cover opacity-60"
+                  crossOrigin="anonymous"
+                />
+              </>
+            )}
           </div>
         </div>
         

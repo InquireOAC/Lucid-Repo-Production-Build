@@ -21,24 +21,29 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
             'linear-gradient(to right, #6344A5, #8976BF)';
         }
         
-        // Ensure image has loaded or set a placeholder
+        // Force image loading before generation
         if (!img.complete) {
+          console.log("Image not yet loaded, waiting...");
           img.style.opacity = '0.9'; // Slightly transparent until loaded
+          
+          // If image loads successfully, make it fully visible
           img.addEventListener('load', () => {
+            console.log("Image loaded successfully");
             img.style.opacity = '1';
           });
           
-          // If image fails to load after 1 second, ensure we continue
-          setTimeout(() => {
-            if (!img.complete || img.naturalHeight === 0) {
-              console.log("Image taking too long to load, continuing anyway");
-            }
-          }, 1000);
+          // If image fails to load, log the error but continue
+          img.addEventListener('error', () => {
+            console.log("Image failed to load:", img.src);
+          });
+        } else {
+          console.log("Image already loaded:", img.src.substring(0, 50) + "...");
         }
       });
       
-      // Give a small timeout to ensure all styles are applied
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Give a small timeout to ensure all styles are applied and images are loaded
+      console.log("Waiting for images to load completely...");
+      await new Promise(resolve => setTimeout(resolve, 800));
     }
     
     console.log("Generating canvas");
@@ -57,7 +62,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => {
-        console.log("Blob created:", blob ? "success" : "failed");
+        console.log("Blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
         resolve(blob);
       }, "image/png", 0.98); // Higher quality for social sharing
     });

@@ -173,13 +173,16 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
-}
-
-#dream-share-card .dream-content,
-#dream-share-card .dream-analysis {
   max-height: 100%;
   overflow: hidden;
+}
+
+/* Better text handling for share cards */
+#dream-share-card .rounded-lg p,
+#dream-share-card .border-l-4 p {
   display: -webkit-box;
   -webkit-line-clamp: 6;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
