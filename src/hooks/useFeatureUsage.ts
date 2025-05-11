@@ -24,11 +24,22 @@ export const useFeatureUsage = () => {
 
   const hasUsedFeature = (featureType: FeatureType): boolean => {
     if (!user) return false;
+    
+    // Special case for app creator - always return false to indicate feature has not been used
+    if (user.email === "inquireoac@gmail.com") {
+      return false;
+    }
+    
     return usageState[featureType];
   };
 
   const markFeatureAsUsed = (featureType: FeatureType): void => {
     if (!user) return;
+    
+    // Special case for app creator - don't mark features as used
+    if (user.email === "inquireoac@gmail.com") {
+      return;
+    }
     
     const newUsageState = {
       ...usageState,
@@ -42,6 +53,11 @@ export const useFeatureUsage = () => {
   // Function to check if user can use the feature (free trial or subscription)
   const canUseFeature = async (featureType: FeatureType): Promise<boolean> => {
     if (!user) return false;
+    
+    // Special case for app creator - always return true
+    if (user.email === "inquireoac@gmail.com") {
+      return true;
+    }
     
     // Check if user has already used their free trial
     const hasUsed = hasUsedFeature(featureType);

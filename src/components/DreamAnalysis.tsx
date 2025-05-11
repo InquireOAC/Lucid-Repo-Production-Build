@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -37,8 +38,11 @@ const DreamAnalysis = ({
     }
 
     try {
-      // Check if user can use the feature (free trial or subscription)
-      const canUse = await canUseFeature('analysis');
+      // Special case for app creator - bypass the feature usage check
+      const isAppCreator = user.email === "inquireoac@gmail.com";
+      
+      // Check if user can use the feature (free trial, subscription, or is app creator)
+      const canUse = isAppCreator || await canUseFeature('analysis');
       
       if (!canUse) {
         // User has used their free trial and doesn't have a subscription
@@ -66,8 +70,8 @@ const DreamAnalysis = ({
         setAnalysis(data.analysis);
         onAnalysisComplete(data.analysis);
         
-        // If this was a free trial use, mark the feature as used
-        if (!hasUsedFeature('analysis')) {
+        // If this was a free trial use and not the app creator, mark the feature as used
+        if (!isAppCreator && !hasUsedFeature('analysis')) {
           markFeatureAsUsed('analysis');
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
@@ -104,7 +108,7 @@ const DreamAnalysis = ({
             <p className="text-sm text-muted-foreground">
               {disabled 
                 ? "Only the dream owner can analyze this dream."
-                : hasUsedFeature('analysis') 
+                : hasUsedFeature('analysis') && user?.email !== "inquireoac@gmail.com"
                   ? "You've used your free analysis. Subscribe to analyze more dreams."
                   : "Generate an AI-powered analysis of your dream's symbolism and meaning. (Free trial available)"
               }
@@ -115,7 +119,7 @@ const DreamAnalysis = ({
                 className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
               >
                 <Sparkles className="h-4 w-4 mr-2" /> 
-                {hasUsedFeature('analysis') ? "Subscribe to Analyze" : "Analyze Dream"}
+                {hasUsedFeature('analysis') && user?.email !== "inquireoac@gmail.com" ? "Subscribe to Analyze" : "Analyze Dream"}
               </Button>
             )}
           </div>

@@ -1,64 +1,100 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Card, CardContent } from "@/components/ui/card";
-import { Pencil } from "lucide-react";
-import { toast } from "sonner";
+import { Loader2, Sparkles, ImagePlus } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { showSubscriptionPrompt } from "@/lib/stripe";
+import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
-import { useAuth } from "@/contexts/AuthContext"; // Added missing import
+import { showSubscriptionPrompt } from "@/lib/stripe";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
   existingPrompt?: string;
   existingImage?: string;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
+  disabled?: boolean;
 }
 
 const DreamImageGenerator = ({
   dreamContent,
-  existingPrompt,
-  existingImage,
+  existingPrompt = "",
+  existingImage = "",
   onImageGenerated,
+  disabled = false
 }: DreamImageGeneratorProps) => {
-  const [prompt, setPrompt] = useState(existingPrompt || "");
-  const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState<string | undefined>(existingImage);
+  const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  const { user } = useAuth(); // Added to access the user object
+  const [imagePrompt, setImagePrompt] = useState(existingPrompt);
+  const [generatedImage, setGeneratedImage] = useState(existingImage);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [showInfo, setShowInfo] = useState(!existingImage);
 
-  const handleSuggestPrompt = async () => {
-    setLoading(true);
+  const generateImage = async () => {
+    if (!user || disabled) return;
+
+    if (dreamContent.trim().length < 20) {
+      toast.error("Dream description is too short for image generation.");
+      return;
+    }
+    
     try {
-      // Check if the user has access to this feature
-      const hasAccess = await canUseFeature('image');
-      if (!hasAccess) {
-        if (hasUsedFeature('image')) {
-          showSubscriptionPrompt('image');
-        } else {
-          markFeatureAsUsed('image');
-          toast.success("Using your free trial!", { duration: 3000 });
-        }
+      // Special case for app creator - bypass the feature usage check
+      const isAppCreator = user.email === "inquireoac@gmail.com";
+      
+      // Check if user can use the feature (free trial, subscription, or is app creator)
+      const canUse = isAppCreator || await canUseFeature('image');
+      
+      if (!canUse) {
+        // User has used their free trial and doesn't have a subscription
+        showSubscriptionPrompt('image');
         return;
       }
       
-      const { data, error } = await supabase.functions.invoke('analyze-dream', {
+      setIsGenerating(true);
+      setShowInfo(false);
+      
+      // First, generate a prompt for the image using OpenAI
+      const promptResult = await supabase.functions.invoke('analyze-dream', {
         body: { 
-          dreamContent,
-          task: 'create_image_prompt'
+          dreamContent, 
+          task: 'create_image_prompt' 
         }
       });
-
-      if (error) throw error;
-      setPrompt(data.analysis);
       
-      // If this was a free trial use, mark the feature as used
-      if (!hasUsedFeature('image')) {
+      if (promptResult.error) {
+        throw new Error(promptResult.error.message || 'Failed to generate image prompt');
+      }
+      
+      const generatedPrompt = promptResult.data?.analysis || '';
+      if (!generatedPrompt) {
+        throw new Error('No image prompt was generated');
+      }
+      
+      setImagePrompt(generatedPrompt);
+      
+      // Then, generate the image using the prompt and Dall-E/Stable Diffusion
+      const imageResult = await supabase.functions.invoke('generate-dream-image', {
+        body: { prompt: generatedPrompt }
+      });
+      
+      if (imageResult.error) {
+        throw new Error(imageResult.error.message || 'Failed to generate image');
+      }
+      
+      const imageUrl = imageResult.data?.image_url;
+      if (!imageUrl) {
+        throw new Error('No image URL was returned');
+      }
+      
+      setGeneratedImage(imageUrl);
+      onImageGenerated(imageUrl, generatedPrompt);
+      
+      // If this was a free trial use and not the app creator, mark the feature as used
+      if (!isAppCreator && !hasUsedFeature('image')) {
         markFeatureAsUsed('image');
-        toast.success("Free trial used! Subscribe for more image generations.", {
+        toast.success("Free trial used! Subscribe to continue generating dream images.", {
           duration: 5000,
           action: {
             label: "Subscribe",
@@ -66,120 +102,101 @@ const DreamImageGenerator = ({
           }
         });
       } else {
-        toast.success("Prompt suggestion created!");
+        toast.success("Dream image generated!");
       }
-    } catch (error) {
-      console.error("Error suggesting prompt:", error);
-      toast.error("Failed to suggest prompt. Please try again.");
+    } catch (error: any) {
+      console.error('Image generation error:', error);
+      toast.error(`Image generation failed: ${error.message}`);
     } finally {
-      setLoading(false);
+      setIsGenerating(false);
     }
   };
 
-  const handleGenerateImage = async () => {
-    if (!prompt.trim()) {
-      toast.error("Please enter an image prompt");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Check if the user has access to this feature
-      const hasAccess = await canUseFeature('image');
-      if (!hasAccess) {
-        showSubscriptionPrompt('image');
-        setLoading(false);
-        return;
-      }
-      
-      const { data, error } = await supabase.functions.invoke('generate-dream-image', {
-        body: { prompt }
-      });
-
-      if (error) throw error;
-      
-      // If user has a subscription, increment usage counter
-      const { data: customerData } = await supabase
-        .from('stripe_customers')
-        .select('customer_id')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-        
-      if (customerData?.customer_id) {
-        await supabase.rpc('increment_subscription_usage', { 
-          customer_id: customerData.customer_id,
-          credit_type: 'image'
-        });
-      }
-      
-      setImageUrl(data.imageUrl);
-      onImageGenerated(data.imageUrl, prompt);
-      toast.success("Dream image generated!");
-    } catch (error) {
-      console.error("Error generating image:", error);
-      toast.error("Failed to generate image. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (showInfo && !generatedImage && !isGenerating) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-lg">
+            <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
+            Dream Image
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {disabled
+                ? "Only the dream owner can generate an image for this dream."
+                : hasUsedFeature('image') && user?.email !== "inquireoac@gmail.com"
+                  ? "You've used your free image generation. Subscribe to generate more dream images."
+                  : "Generate a unique image inspired by your dream's content. (Free trial available)"
+              }
+            </p>
+            {!disabled && (
+              <Button
+                onClick={generateImage}
+                className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
+              >
+                <ImagePlus className="h-4 w-4 mr-2" />
+                {hasUsedFeature('image') && user?.email !== "inquireoac@gmail.com" ? "Subscribe to Generate" : "Generate Image"}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-medium gradient-text flex items-center gap-2">
-          <Pencil size={18} />
-          Dream Visualization
-        </h3>
-      </div>
-
-      <Separator />
-
-      <div className="space-y-4">
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Describe how your dream should look..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              className="dream-input flex-1"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSuggestPrompt}
-              className="whitespace-nowrap border-dream-lavender text-dream-lavender hover:bg-dream-lavender/10"
-              disabled={loading}
-            >
-              {hasUsedFeature('image') ? "Get Premium" : "Suggest Prompt"}
-            </Button>
-          </div>
-          <Button
-            onClick={handleGenerateImage}
-            disabled={loading || !prompt.trim()}
-            className="w-full bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
-          >
-            {loading ? "Generating..." : hasUsedFeature('image') ? "Subscribe to Generate" : "Generate Image"}
-          </Button>
-          {hasUsedFeature('image') && !imageUrl && (
-            <p className="text-xs text-center text-muted-foreground">
-              You've used your free trial. Subscribe for more image generations.
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center text-lg">
+          <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
+          Dream Image
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isGenerating ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
+            <p className="mt-2 text-sm text-muted-foreground">
+              Generating your dream image...
             </p>
-          )}
-        </div>
-
-        {imageUrl && (
-          <Card className="overflow-hidden bg-dream-purple/5 border-dream-lavender/20">
-            <CardContent className="p-0">
-              <img
-                src={imageUrl}
-                alt="Generated dream visualization"
-                className="w-full h-auto object-cover"
-              />
-            </CardContent>
-          </Card>
+          </div>
+        ) : (
+          <>
+            {generatedImage && (
+              <div className="mb-4">
+                <img
+                  src={generatedImage}
+                  alt="Dream"
+                  className="w-full rounded-md aspect-square object-cover"
+                />
+              </div>
+            )}
+            <Input
+              type="text"
+              placeholder="Generated Prompt"
+              value={imagePrompt}
+              onChange={(e) => setImagePrompt(e.target.value)}
+              className="dream-input mb-3"
+              disabled={disabled}
+            />
+            {!disabled && (
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={generateImage}
+                  disabled={isGenerating}
+                >
+                  <Sparkles className="h-4 w-4 mr-1" /> Regenerate
+                </Button>
+              </div>
+            )}
+          </>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
