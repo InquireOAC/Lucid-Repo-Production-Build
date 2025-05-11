@@ -1,4 +1,3 @@
-
 import html2canvas from "html2canvas";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
@@ -26,13 +25,6 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
         // Force image loading before generation
         if (!img.complete) {
           console.log("Image not yet loaded, waiting...");
-          img.style.opacity = '0.9'; // Slightly transparent until loaded
-          
-          // If image loads successfully, make it fully visible
-          img.addEventListener('load', () => {
-            console.log("Image loaded successfully");
-            img.style.opacity = '1';
-          });
           
           // If image fails to load, log the error but continue
           img.addEventListener('error', () => {

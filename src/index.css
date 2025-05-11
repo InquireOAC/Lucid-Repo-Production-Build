@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -149,26 +148,9 @@
 }
 
 /* Dream text container style - enforce max-width rule for readability */
-#dream-share-card .dream-text-container {
+#dream-share-card p {
   /* Ensures approx 40-45 chars per line at 32px font size */
   max-width: 100%;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 10;
-  -webkit-box-orient: vertical;
-}
-
-/* Dream analysis container style */
-#dream-share-card .dream-analysis-container {
-  max-width: 100%;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 5;
-  -webkit-box-orient: vertical;
 }
