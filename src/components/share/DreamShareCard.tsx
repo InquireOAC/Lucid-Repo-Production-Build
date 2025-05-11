@@ -46,11 +46,20 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
     ? format(new Date(dream.date), "MMMM d, yyyy")
     : "Unknown Date";
 
-  // Extract dream content for display
-  const dreamContent = dream.content || "No dream content recorded.";
+  // Truncate dream content for display (limit to around 280 characters with ellipsis)
+  const truncateText = (text: string, maxLength: number) => {
+    if (!text || text.length <= maxLength) return text || "";
+    return text.substring(0, maxLength) + "...";
+  };
+  
+  // Extract dream content for display - truncated
+  const dreamContent = truncateText(dream.content || "No dream content recorded.", 280);
   
   // Get the dream image - use generatedImage, image_url, or imageUrl properties
   const dreamImageUrl = dream.generatedImage || dream.image_url || "";
+  
+  // Truncate analysis to shorter length
+  const truncatedAnalysis = truncateText(dream.analysis || "", 140);
 
   return (
     <div 
@@ -94,11 +103,11 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         </div>
         
         {/* Dream Analysis - if it exists, height adjusts to fit content */}
-        {dream.analysis && (
+        {truncatedAnalysis && (
           <div className="mb-[60px]">
             <div className="border-l-[2px] border-purple-300 pl-[20px]">
               <p className="text-[28px] italic text-white/90 text-left">
-                {dream.analysis}
+                {truncatedAnalysis}
               </p>
             </div>
           </div>
