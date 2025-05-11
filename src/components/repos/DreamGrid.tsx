@@ -22,19 +22,27 @@ const DreamGrid = ({
 }: DreamGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {dreams.map((dream) => (
-        <DreamCard
-          key={dream.id}
-          dream={dream}
-          tags={tags}
-          onLike={() => onLike(dream.id)}
-          showUser={true}
-          onClick={() => onOpenDream(dream)}
-          onUserClick={() => onUserClick(dream.user_id)}
-          onTagClick={onTagClick}
-          showSharedBadge={false} // Explicitly disable shared badge in Lucid Repo
-        />
-      ))}
+      {dreams.map((dream) => {
+        // Ensure dream has consistent image field
+        const normalizedDream = {
+          ...dream,
+          generatedImage: dream.generatedImage || dream.image_url
+        };
+        
+        return (
+          <DreamCard
+            key={normalizedDream.id}
+            dream={normalizedDream}
+            tags={tags}
+            onLike={() => onLike(normalizedDream.id)}
+            showUser={true}
+            onClick={() => onOpenDream(normalizedDream)}
+            onUserClick={() => onUserClick(normalizedDream.user_id)}
+            onTagClick={onTagClick}
+            showSharedBadge={false} // Explicitly disable shared badge in Lucid Repo
+          />
+        );
+      })}
     </div>
   );
 };
