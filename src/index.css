@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -169,4 +170,16 @@
 #dream-share-card p {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+#dream-share-card .dream-content,
+#dream-share-card .dream-analysis {
+  max-height: 100%;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 6;
+  -webkit-box-orient: vertical;
 }

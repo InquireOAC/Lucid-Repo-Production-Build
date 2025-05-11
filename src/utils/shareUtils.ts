@@ -20,10 +20,25 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
           img.parentElement.style.background = 
             'linear-gradient(to right, #6344A5, #8976BF)';
         }
+        
+        // Ensure image has loaded or set a placeholder
+        if (!img.complete) {
+          img.style.opacity = '0.9'; // Slightly transparent until loaded
+          img.addEventListener('load', () => {
+            img.style.opacity = '1';
+          });
+          
+          // If image fails to load after 1 second, ensure we continue
+          setTimeout(() => {
+            if (!img.complete || img.naturalHeight === 0) {
+              console.log("Image taking too long to load, continuing anyway");
+            }
+          }, 1000);
+        }
       });
       
       // Give a small timeout to ensure all styles are applied
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 500));
     }
     
     console.log("Generating canvas");
@@ -35,7 +50,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       allowTaint: true,
       logging: false,
       backgroundColor: null,
-      imageTimeout: 3000, // Extended timeout for image processing
+      imageTimeout: 5000, // Extended timeout for image processing
     });
     
     console.log("Canvas generated successfully");

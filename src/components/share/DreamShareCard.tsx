@@ -25,7 +25,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
       
       try {
         // Allow time for images to load and render properly
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 800));
         
         // Generate the image blob
         const blob = await elementToPngBlob(shareCardRef.current);
@@ -63,15 +63,18 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
 
   // Extract dream content and limit length
   const dreamContent = dream.content || "No dream content recorded.";
-  const truncatedContent = dreamContent.length > 280 
-    ? `${dreamContent.slice(0, 280)}...` 
+  const truncatedContent = dreamContent.length > 200 
+    ? `${dreamContent.slice(0, 200)}...` 
     : dreamContent;
 
   // Extract dream analysis and limit length
   const dreamAnalysis = dream.analysis || "";
-  const truncatedAnalysis = dreamAnalysis.length > 120
-    ? `${dreamAnalysis.slice(0, 120)}...`
+  const truncatedAnalysis = dreamAnalysis.length > 100
+    ? `${dreamAnalysis.slice(0, 100)}...`
     : dreamAnalysis;
+
+  // Default placeholder image URL
+  const placeholderImageUrl = "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1000&auto=format&fit=crop";
 
   return (
     // Using fixed positioning to keep it hidden
@@ -92,30 +95,30 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         </div>
         
         {/* Date of the Dream */}
-        <div className="mt-12 mb-3 text-white/80">
-          <p className="text-2xl font-light">{formattedDate}</p>
+        <div className="mt-10 mb-3 text-white/80">
+          <p className="text-3xl font-light">{formattedDate}</p>
         </div>
         
         {/* Dream Title */}
-        <div className="mb-16">
+        <div className="mb-12">
           <h1 className="text-7xl font-bold leading-tight text-white">
             {dream.title || "Untitled Dream"}
           </h1>
         </div>
         
         {/* Dream Story Snippet */}
-        <div className="mb-16 py-8 px-4 rounded-lg text-2xl bg-white/10 text-white">
-          <p className="leading-relaxed">
+        <div className="mb-12 py-8 px-6 rounded-lg bg-white/10 text-white">
+          <p className="text-3xl leading-relaxed break-words overflow-hidden">
             {truncatedContent}
           </p>
         </div>
         
         {/* Dream Analysis Section */}
         {dreamAnalysis && (
-          <div className="mb-16">
+          <div className="mb-12">
             <h3 className="text-3xl font-light mb-4 text-white/90">Dream Analysis</h3>
             <div className="border-l-4 border-white/30 pl-6">
-              <p className="text-xl leading-relaxed text-white/80 italic">
+              <p className="text-2xl leading-relaxed text-white/80 italic break-words overflow-hidden">
                 {truncatedAnalysis}
               </p>
             </div>
@@ -123,29 +126,28 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
         )}
         
         {/* Dream Image */}
-        {dream.generatedImage && (
-          <div className="flex-1 flex flex-col items-center justify-center my-12">
-            <div className="w-full aspect-[4/3] rounded-2xl overflow-hidden relative flex items-center justify-center">
-              <div className="absolute inset-0 flex items-center justify-center text-white text-3xl bg-gradient-to-br from-purple-600/50 to-blue-500/50">
-                Dream Visualization
-              </div>
-              <img 
-                src={dream.generatedImage}
-                alt="Dream Visualization"
-                className="w-full h-full object-cover"
-                crossOrigin="anonymous"
-                onError={(e) => {
-                  console.log("Image failed to load");
-                  e.currentTarget.style.display = "none";
-                }}
-              />
+        <div className="flex-1 flex flex-col items-center justify-center my-8">
+          <div className="w-full max-h-[600px] aspect-[4/3] rounded-2xl overflow-hidden relative flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center text-white text-3xl bg-gradient-to-br from-purple-600/50 to-blue-500/50 z-10">
+              Dream Visualization
             </div>
+            <img 
+              src={dream.generatedImage || dream.image_url || placeholderImageUrl}
+              alt="Dream Visualization"
+              className="w-full h-full object-cover"
+              crossOrigin="anonymous"
+              onError={(e) => {
+                console.log("Image failed to load");
+                // If main image fails, use placeholder
+                e.currentTarget.src = placeholderImageUrl;
+              }}
+            />
           </div>
-        )}
+        </div>
         
         {/* App Call to Action at the bottom */}
         <div className="mt-auto flex items-center justify-center py-8">
-          <div className="text-center py-4 px-8 bg-white/15 backdrop-blur-sm rounded-xl text-white font-medium shadow-lg border border-white/20">
+          <div className="text-center py-5 px-8 bg-white/15 backdrop-blur-sm rounded-xl text-white text-2xl font-medium shadow-lg border border-white/20">
             Download the app to explore your dreams
           </div>
         </div>
