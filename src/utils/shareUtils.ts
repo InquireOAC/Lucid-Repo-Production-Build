@@ -13,8 +13,8 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     await Promise.all(
       images.map(img => {
         if (img.complete) return Promise.resolve();
-        return new Promise((resolve, reject) => {
-          img.onload = resolve;
+        return new Promise<void>((resolve, reject) => {
+          img.onload = () => resolve();
           img.onerror = () => {
             console.error("Image failed to load:", img.src);
             img.src = "https://placehold.co/600x400/6B5B95/ffffff?text=Dream+Image";
@@ -47,7 +47,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("Canvas generated successfully");
     
-    return new Promise((resolve) => {
+    return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => {
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
