@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useSortAndFilter } from "./useSortAndFilter";
-import { useAudioPlayer } from "./useAudioPlayer";
 import { useLikes } from "./useLikes";
 
 export function useDreams() {
@@ -15,7 +14,6 @@ export function useDreams() {
   const [isLoading, setIsLoading] = useState(true);
   
   const { sortBy, setSortBy, activeTab, setActiveTab } = useSortAndFilter();
-  const { playingAudioId, handleToggleAudio } = useAudioPlayer();
   const { handleLike } = useLikes(user, dreams);
 
   useEffect(() => {
@@ -67,7 +65,6 @@ export function useDreams() {
         likeCount: dream.like_count || 0,
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
-        audioUrl: dream.audio_url, 
         profiles: dream.profiles
       }));
       
@@ -101,7 +98,7 @@ export function useDreams() {
 
       // Prepare other updates (omitting client-only fields)
       Object.entries(updates).forEach(([key, value]) => {
-        if (key !== 'isPublic' && key !== 'audioUrl') {
+        if (key !== 'isPublic') {
           dbUpdates[key] = value;
         }
       });
@@ -144,9 +141,7 @@ export function useDreams() {
     setSortBy,
     activeTab,
     setActiveTab,
-    playingAudioId,
     handleLike,
-    handleToggleAudio,
     handleUpdateDream,
     fetchPublicDreams, // Export the refresh function
   };

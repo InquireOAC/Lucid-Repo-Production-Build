@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,7 +5,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { toast } from "sonner";
 import DreamDetailContent from "@/components/dreams/DreamDetailContent";
-import DreamDetailAudio from "@/components/dreams/DreamDetailAudio";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
 

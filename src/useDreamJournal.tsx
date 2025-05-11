@@ -52,16 +52,12 @@ export const useDreamJournal = () => {
           likeCount: dream.like_count || 0,
           comment_count: dream.comment_count || 0,
           commentCount: dream.comment_count || 0,
-          audioUrl: dream.audio_url,
-          audio_url: dream.audio_url,
           user_id: dream.user_id
         }));
         
-        console.log("Synced dreams with audio and images:", formattedDreams.map(d => ({
+        console.log("Synced dreams with images:", formattedDreams.map(d => ({
           id: d.id,
           title: d.title,
-          audioUrl: d.audioUrl,
-          audio_url: d.audio_url,
           hasImage: !!d.generatedImage
         })));
         
@@ -81,7 +77,6 @@ export const useDreamJournal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
-    audioUrl?: string;
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
@@ -92,14 +87,12 @@ export const useDreamJournal = () => {
       const newDream = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
-        audioUrl: dreamData.audioUrl || null,
         analysis: dreamData.analysis || null,
         generatedImage: dreamData.generatedImage || null,
         imagePrompt: dreamData.imagePrompt || null
       });
 
       console.log("Adding dream with:", {
-        audio: Boolean(dreamData.audioUrl),
         image: Boolean(dreamData.generatedImage),
         imagePrompt: Boolean(dreamData.imagePrompt)
       });
@@ -118,7 +111,6 @@ export const useDreamJournal = () => {
             lucid: dreamData.lucid,
             date: newDream.date,
             is_public: false,
-            audio_url: dreamData.audioUrl || null,
             // Save both field names for image data for compatibility
             generatedImage: dreamData.generatedImage || null,
             imagePrompt: dreamData.imagePrompt || null
@@ -144,7 +136,6 @@ export const useDreamJournal = () => {
     tags: string[];
     lucid: boolean;
     mood: string;
-    audioUrl?: string;
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
@@ -155,14 +146,12 @@ export const useDreamJournal = () => {
       // Update local store
       updateEntry(selectedDream.id, {
         ...dreamData,
-        audioUrl: dreamData.audioUrl || selectedDream.audioUrl || null,
         analysis: dreamData.analysis || selectedDream.analysis || null,
         generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
         imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null
       });
 
       console.log("Updating dream with:", {
-        audio: Boolean(dreamData.audioUrl),
         image: Boolean(dreamData.generatedImage),
         imagePrompt: Boolean(dreamData.imagePrompt)
       });
@@ -177,7 +166,6 @@ export const useDreamJournal = () => {
             tags: dreamData.tags,
             mood: dreamData.mood,
             lucid: dreamData.lucid,
-            audio_url: dreamData.audioUrl || selectedDream.audioUrl || null,
             // Update both field names for image data for compatibility
             generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
             imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null,

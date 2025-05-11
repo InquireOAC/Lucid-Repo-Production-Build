@@ -2,28 +2,20 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Play, Pause } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { DreamTag } from "@/types/dream";
 
 interface DreamCardTagsProps {
   tags?: DreamTag[];
   dreamTags?: string[];
   lucid?: boolean;
-  audioUrl?: string;
-  isPlaying?: boolean;
   onTagClick?: (tagId: string) => void;
-  onToggleAudio?: (e: React.MouseEvent) => void;
 }
 
 const DreamCardTags = ({
   tags = [],
   dreamTags = [],
   lucid,
-  audioUrl,
-  isPlaying,
   onTagClick,
-  onToggleAudio,
 }: DreamCardTagsProps) => {
   // Find tag data from the supplied tags array
   const tagData = dreamTags
@@ -71,21 +63,6 @@ const DreamCardTags = ({
           </Badge>
         ))}
       </div>
-      
-      {audioUrl && (
-        <Button
-          size="icon"
-          variant="ghost"
-          onClick={onToggleAudio}
-          className="h-6 w-6 p-0.5 rounded-full"
-        >
-          {isPlaying ? (
-            <Pause size={16} className="text-dream-purple" />
-          ) : (
-            <Play size={16} className="text-dream-purple" />
-          )}
-        </Button>
-      )}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Moon, Heart, Play, Pause } from "lucide-react";
+import { Moon, Heart, Globe } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,7 @@ interface DreamGridProps {
   emptyIcon: React.ReactNode;
   actionLink: string;
   actionText: string;
-  refreshDreams?: () => void; // Add this prop to the interface
+  refreshDreams?: () => void;
 }
 
 const DreamGrid = ({
@@ -37,23 +37,6 @@ const DreamGrid = ({
   refreshDreams,
 }: DreamGridProps) => {
   const [selectedDream, setSelectedDream] = useState<any>(null);
-  // Track which dream audio is playing
-  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
-
-  // Handle audio toggle for dream detail
-  const handleToggleAudio = () => {
-    if (playingAudioId) {
-      setPlayingAudioId(null);
-    } else if (selectedDream) {
-      setPlayingAudioId(selectedDream.id);
-    }
-  };
-
-  // When closing dream detail, stop audio playback
-  const handleCloseDream = () => {
-    setPlayingAudioId(null);
-    setSelectedDream(null);
-  };
   
   // Handle dream deletion
   const handleDeleteDream = async (id: string) => {
@@ -140,112 +123,71 @@ const DreamGrid = ({
   return (
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-        {dreams.map((dream: any) => {
-          // Check for audio URL
-          const audioUrl = dream.audioUrl || dream.audio_url;
-          const hasAudio = !!audioUrl;
-          const isPlaying = playingAudioId === dream.id;
-          
-          return (
-            <Card 
-              key={dream.id} 
-              className="overflow-hidden cursor-pointer hover:shadow-md transition-all relative"
-              onClick={() => setSelectedDream(dream)}
-            >
-              <CardContent className="p-0">
-                {dream.generatedImage ? (
-                  <div className="relative">
-                    <img 
-                      src={dream.generatedImage} 
-                      alt={dream.title}
-                      className="aspect-square object-cover w-full"
-                    />
-                    {hasAudio && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-2 right-2 h-6 w-6 p-0.5 bg-black/40 rounded-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPlayingAudioId(isPlaying ? null : dream.id);
-                        }}
-                      >
-                        {isPlaying ? (
-                          <Pause size={16} className="text-white" />
-                        ) : (
-                          <Play size={16} className="text-white" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <div className="aspect-square flex items-center justify-center bg-dream-purple/10 relative">
-                    <Moon size={32} className="text-dream-purple opacity-50" />
-                    {hasAudio && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="absolute top-2 right-2 h-6 w-6 p-0.5 bg-black/40 rounded-full"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setPlayingAudioId(isPlaying ? null : dream.id);
-                        }}
-                      >
-                        {isPlaying ? (
-                          <Pause size={16} className="text-white" />
-                        ) : (
-                          <Play size={16} className="text-white" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                )}
-                <div className="p-2">
-                  <p className="text-sm font-semibold truncate">{dream.title}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    {isLiked ? (
-                      <div className="flex items-center gap-1">
-                        <Avatar className="h-4 w-4">
-                          <AvatarImage src={dream.profiles?.avatar_url} />
-                          <AvatarFallback className="bg-dream-purple/20 text-[8px]">
-                            {dream.profiles?.username?.[0]?.toUpperCase() || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-xs text-muted-foreground truncate max-w-[70px]">
-                          {dream.profiles?.display_name || dream.profiles?.username || "User"}
-                        </span>
-                      </div>
-                    ) : (
-                      <Badge variant="outline" className="text-xs">
-                        {new Date(dream.created_at).toLocaleDateString()}
-                      </Badge>
-                    )}
-                    
-                    {!isLiked && (
-                      <div className="flex items-center text-muted-foreground">
-                        <Heart size={12} className="mr-1" />
-                        <span className="text-xs">{dream.like_count || 0}</span>
-                      </div>
-                    )}
-                    
-                    {isLiked && (
-                      <Badge variant="outline" className="text-xs">
-                        {new Date(dream.created_at).toLocaleDateString()}
-                      </Badge>
-                    )}
-                  </div>
+        {dreams.map((dream: any) => (
+          <Card 
+            key={dream.id} 
+            className="overflow-hidden cursor-pointer hover:shadow-md transition-all relative"
+            onClick={() => setSelectedDream(dream)}
+          >
+            <CardContent className="p-0">
+              {dream.generatedImage ? (
+                <div className="relative">
+                  <img 
+                    src={dream.generatedImage} 
+                    alt={dream.title}
+                    className="aspect-square object-cover w-full"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              ) : (
+                <div className="aspect-square flex items-center justify-center bg-dream-purple/10 relative">
+                  <Moon size={32} className="text-dream-purple opacity-50" />
+                </div>
+              )}
+              <div className="p-2">
+                <p className="text-sm font-semibold truncate">{dream.title}</p>
+                <div className="flex items-center justify-between mt-1">
+                  {isLiked ? (
+                    <div className="flex items-center gap-1">
+                      <Avatar className="h-4 w-4">
+                        <AvatarImage src={dream.profiles?.avatar_url} />
+                        <AvatarFallback className="bg-dream-purple/20 text-[8px]">
+                          {dream.profiles?.username?.[0]?.toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-xs text-muted-foreground truncate max-w-[70px]">
+                        {dream.profiles?.display_name || dream.profiles?.username || "User"}
+                      </span>
+                    </div>
+                  ) : (
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(dream.created_at).toLocaleDateString()}
+                    </Badge>
+                  )}
+                  
+                  {!isLiked && (
+                    <div className="flex items-center text-muted-foreground">
+                      <Heart size={12} className="mr-1" />
+                      <span className="text-xs">{dream.like_count || 0}</span>
+                    </div>
+                  )}
+                  
+                  {isLiked && (
+                    <Badge variant="outline" className="text-xs">
+                      {new Date(dream.created_at).toLocaleDateString()}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {selectedDream && (
         <DreamDetail
           dream={selectedDream}
           tags={[]} // Pass tags if available
-          onClose={handleCloseDream}
+          onClose={() => setSelectedDream(null)}
           onUpdate={handleUpdateDream}
           onDelete={isOwnProfile ? handleDeleteDream : undefined}
           isAuthenticated={true}

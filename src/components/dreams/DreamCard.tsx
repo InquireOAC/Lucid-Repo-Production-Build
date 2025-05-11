@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Moon, Globe, Pencil, Trash2, Lock } from "lucide-react";
@@ -18,8 +18,7 @@ interface DreamCardProps {
   onClick?: () => void;
   onUserClick?: () => void;
   onTagClick?: (tagId: string) => void;
-  isAudioPlaying?: boolean;
-  onToggleAudio?: () => void;
+  // Removed audio props
   // New props for actions
   showActions?: boolean;
   onEdit?: () => void;
@@ -37,8 +36,7 @@ const DreamCard = ({
   onClick, 
   onUserClick,
   onTagClick,
-  isAudioPlaying = false,
-  onToggleAudio,
+  // Removed audio props
   // New action props with defaults
   showActions = false,
   onEdit,
@@ -50,10 +48,6 @@ const DreamCard = ({
   // Format the dream date
   const formattedDate = dream.date ? format(new Date(dream.date), "MMM d, yyyy") : "No date";
   
-  // State to track audio playback
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  
   // Check either isPublic or is_public field
   const isPublic = dream.is_public || dream.isPublic;
   
@@ -63,107 +57,15 @@ const DreamCard = ({
   // Similarly handle comment count
   const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
-  // For audio URL, check both snake_case and camelCase properties
-  const audioUrl = dream.audioUrl || dream.audio_url;
-
   // Get user info from profiles if available
   const username = dream.profiles?.username || "Anonymous";
   const displayName = dream.profiles?.display_name || "Anonymous User";
   const avatarUrl = dream.profiles?.avatar_url || "";
 
-  // Effect to sync local playing state with prop
-  useEffect(() => {
-    setIsPlaying(isAudioPlaying || false);
-    
-    if (isAudioPlaying && audioUrl && !isPlaying) {
-      playAudio();
-    } else if (!isAudioPlaying && isPlaying) {
-      pauseAudio();
-    }
-  }, [isAudioPlaying, audioUrl]);
-
-  // Clean up audio element on unmount
-  useEffect(() => {
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
       e.stopPropagation();
       onUserClick();
-    }
-  };
-  
-  // Create audio element and play
-  const playAudio = () => {
-    if (!audioUrl) {
-      console.log("No audio URL available to play");
-      toast.error("No audio recording available");
-      return;
-    }
-    
-    try {
-      if (!audioRef.current) {
-        console.log("Creating new audio element with URL:", audioUrl);
-        const audio = new Audio(audioUrl);
-        
-        audio.addEventListener('ended', () => {
-          console.log("Audio playback ended");
-          setIsPlaying(false);
-          if (onToggleAudio) onToggleAudio();
-        });
-        
-        audio.addEventListener('error', (e) => {
-          console.error('Error playing audio:', e);
-          toast.error("Could not play audio recording");
-          setIsPlaying(false);
-          if (onToggleAudio) onToggleAudio();
-        });
-        
-        audioRef.current = audio;
-      }
-      
-      audioRef.current.play().catch(err => {
-        console.error('Error playing audio:', err);
-        toast.error("Could not play audio recording");
-        setIsPlaying(false);
-        if (onToggleAudio) onToggleAudio();
-      });
-    } catch (err) {
-      console.error('Exception playing audio:', err);
-      toast.error("Could not play audio recording");
-      setIsPlaying(false);
-      if (onToggleAudio) onToggleAudio();
-    }
-  };
-  
-  // Pause audio
-  const pauseAudio = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-  };
-  
-  // Handle audio playback
-  const toggleAudio = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    
-    if (onToggleAudio) {
-      onToggleAudio();
-    } else {
-      // Fallback for direct control if external handler isn't provided
-      if (isPlaying) {
-        pauseAudio();
-        setIsPlaying(false);
-      } else {
-        playAudio();
-        setIsPlaying(true);
-      }
     }
   };
 
@@ -232,10 +134,6 @@ const DreamCard = ({
           tags={tags}
           dreamTags={dream.tags}
           lucid={dream.lucid}
-          audioUrl={audioUrl}
-          isPlaying={isPlaying}
-          onTagClick={onTagClick}
-          onToggleAudio={toggleAudio}
         />
         
         {dream.generatedImage && (

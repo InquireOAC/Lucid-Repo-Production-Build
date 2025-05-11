@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,9 +26,7 @@ const LucidRepo = () => {
     setSortBy,
     activeTab,
     setActiveTab,
-    playingAudioId,
     handleLike,
-    handleToggleAudio,
     handleUpdateDream,
     fetchPublicDreams
   } = useDreams();
@@ -50,10 +49,6 @@ const LucidRepo = () => {
   };
 
   const handleOpenDream = (dream: DreamEntry) => {
-    // Stop any playing audio when opening dream detail
-    if (playingAudioId) {
-      handleToggleAudio(playingAudioId);
-    }
     setSelectedDream(dream);
   };
 
