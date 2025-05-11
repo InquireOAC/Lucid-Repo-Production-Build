@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -50,38 +49,22 @@ const DreamAnalysis = ({
       setIsGenerating(true);
       setShowInfo(false);
 
-      const { data: customerData } = await supabase
-        .from('stripe_customers')
-        .select('customer_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      // Set up request body with or without customer ID (for tracking subscription usage)
-      const requestBody: any = {
-        dream_content: dreamContent
-      };
-      
-      // Add customer_id only if it exists (user has a subscription)
-      if (customerData?.customer_id) {
-        requestBody.customer_id = customerData.customer_id;
-      }
-
-      const response = await fetch('/api/analyze-dream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody),
+      // Call directly to the analyze-dream function
+      const { data, error } = await supabase.functions.invoke('analyze-dream', {
+        body: { 
+          dreamContent,
+          task: 'analyze_dream'
+        }
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error);
+      if (error) {
+        console.error('Analysis error:', error);
+        throw new Error(error.message || 'Failed to generate analysis');
       }
-
-      const result = await response.json();
       
-      if (result.analysis) {
-        setAnalysis(result.analysis);
-        onAnalysisComplete(result.analysis);
+      if (data?.analysis) {
+        setAnalysis(data.analysis);
+        onAnalysisComplete(data.analysis);
         
         // If this was a free trial use, mark the feature as used
         if (!hasUsedFeature('analysis')) {
@@ -93,10 +76,15 @@ const DreamAnalysis = ({
               onClick: () => window.location.href = '/profile?tab=subscription'
             }
           });
+        } else {
+          toast.success("Dream analysis complete!");
         }
+      } else {
+        throw new Error('No analysis data returned');
       }
     } catch (error: any) {
       toast.error(`Analysis failed: ${error.message}`);
+      console.error('Analysis error details:', error);
     } finally {
       setIsGenerating(false);
     }
