@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard from "./DreamShareCard";
 import { Button } from "@/components/ui/button";
-import { Share } from "lucide-react";
+import { Share, Download } from "lucide-react";
 import { toast } from "sonner";
 
 interface ShareButtonProps {
@@ -36,10 +36,17 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 
   const handleShareClick = () => {
     if (isSharing) return;
+    
     setIsSharing(true);
+    toast.info("Creating dream image to share...");
     
     // Reset sharing state after a timeout even if the share process fails
-    setTimeout(() => setIsSharing(false), 5000);
+    setTimeout(() => {
+      if (isSharing) {
+        setIsSharing(false);
+        toast.error("Share process timed out. Please try again.");
+      }
+    }, 10000);
   };
 
   // Validate required fields
@@ -55,7 +62,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       className={`flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10 ${className}`}
       disabled={isSharing}
     >
-      <Share size={18} />
+      {isSharing ? <Download size={18} /> : <Share size={18} />}
       <span>{size !== 'icon' && (isSharing ? "Processing..." : "Share")}</span>
       
       {/* The actual share card component (kept hidden until needed) */}

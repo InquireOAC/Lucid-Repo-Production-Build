@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -61,6 +62,18 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
     ? format(new Date(dream.date), "MMMM d, yyyy")
     : "Unknown Date";
 
+  // Extract dream content and limit length
+  const dreamContent = dream.content || "No dream content recorded.";
+  const truncatedContent = dreamContent.length > 280 
+    ? `${dreamContent.slice(0, 280)}...` 
+    : dreamContent;
+
+  // Extract dream analysis and limit length
+  const dreamAnalysis = dream.analysis || "";
+  const truncatedAnalysis = dreamAnalysis.length > 120
+    ? `${dreamAnalysis.slice(0, 120)}...`
+    : dreamAnalysis;
+
   return (
     // Using fixed positioning to keep it hidden
     <div 
@@ -70,55 +83,63 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream, onComplete }) =>
       <div 
         ref={shareCardRef}
         id="dream-share-card" 
-        className="w-[400px] h-[500px] p-6 flex flex-col"
+        className="w-[500px] h-[860px] p-8 flex flex-col"
         style={{
           fontFamily: "'basis-grotesque-pro', sans-serif",
           color: '#fff',
-          background: 'linear-gradient(135deg, rgba(99, 73, 166, 1) 0%, rgba(33, 48, 113, 1) 100%)',
+          background: 'linear-gradient(145deg, rgba(96, 76, 170, 1) 0%, rgba(59, 49, 120, 1) 100%)',
         }}
       >
         {/* App Name at the top */}
-        <div className="mb-4 flex items-center justify-center">
-          <h1 className="text-4xl font-bold text-white">Lucid Repo</h1>
-        </div>
-        
-        {/* Dream Title */}
-        <div className="mb-3">
-          <h2 className="text-2xl font-bold leading-tight text-white">{dream.title || "Untitled Dream"}</h2>
-          <p className="text-lg text-dream-lavender">{formattedDate}</p>
+        <div className="mb-8 pt-4">
+          <div className="w-16 h-1 bg-white/50 mb-12"></div>
+          <h1 className="text-6xl font-bold leading-tight mb-1 text-white">
+            {dream.title || "Untitled Dream"}
+          </h1>
+          <p className="text-xl text-white/80">{formattedDate}</p>
         </div>
         
         {/* Dream Content */}
-        <div className="mb-4 bg-black/20 p-3 rounded-lg">
-          <p className="text-base">
-            {dream.content && dream.content.length > 100 
-              ? `${dream.content.slice(0, 100)}...` 
-              : dream.content || "No dream content recorded."}
+        <div className="mb-8 bg-black/20 p-6 rounded-lg text-lg">
+          <p className="leading-relaxed">
+            {truncatedContent}
           </p>
         </div>
         
+        {/* Dream Analysis Section */}
+        {dreamAnalysis && (
+          <div className="mb-8">
+            <h2 className="text-xl font-bold mb-2 text-white/90">Dream Analysis</h2>
+            <div className="pl-4 border-l-2 border-white/30 italic text-white/80">
+              <p className="text-base leading-relaxed">
+                {truncatedAnalysis}
+              </p>
+            </div>
+          </div>
+        )}
+        
         {/* Dream Image */}
-        <div className="mb-4 rounded-lg overflow-hidden h-[200px] flex items-center justify-center bg-gradient-to-r from-purple-500 to-blue-500">
-          {dream.generatedImage ? (
+        {dream.generatedImage && (
+          <div className="mb-8 rounded-lg overflow-hidden h-[200px] flex items-center justify-center">
             <img 
               src={dream.generatedImage}
               alt="Dream Visualization"
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover rounded-lg"
               crossOrigin="anonymous"
               onError={(e) => {
-                // Handle image load error by showing placeholder background instead
                 console.log("Image failed to load");
                 e.currentTarget.style.display = "none";
               }}
             />
-          ) : (
-            <div className="text-2xl font-medium text-white">Dream Visualization</div>
-          )}
-        </div>
+          </div>
+        )}
         
         {/* App Footer */}
-        <div className="mt-auto flex items-center justify-center">
-          <div className="text-lg py-2 px-4 bg-white/20 rounded-full text-white">
+        <div className="mt-auto flex items-center justify-between">
+          <div className="bg-purple-500/30 rounded-full py-2 px-5 text-white/90">
+            Lucid Repo
+          </div>
+          <div className="text-base py-2 px-5 bg-white/20 rounded-full text-white">
             Download the app
           </div>
         </div>
