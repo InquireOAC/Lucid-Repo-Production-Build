@@ -18,8 +18,15 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   size = "icon",
   className = "",
 }) => {
+  // Make sure we have all possible image fields in the dream object
+  const normalizedDream = {
+    ...dream,
+    generatedImage: dream.generatedImage || dream.image_url,
+    imagePrompt: dream.imagePrompt || dream.image_prompt
+  };
+
   return (
-    <DreamShareCard dream={dream} />
+    <DreamShareCard dream={normalizedDream} />
   );
 };
 

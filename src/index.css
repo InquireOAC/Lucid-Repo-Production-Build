@@ -115,3 +115,28 @@
 .share-card-quote {
   background: linear-gradient(90deg, rgba(155, 135, 245, 0.1), transparent);
 }
+
+/* Enhanced share card styles */
+#dream-share-card {
+  background: linear-gradient(135deg, rgba(30, 26, 43, 0.95) 0%, rgba(18, 15, 30, 0.98) 100%);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+#dream-share-card img {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+#dream-share-card blockquote {
+  position: relative;
+}
+
+#dream-share-card blockquote::before {
+  content: '"';
+  font-size: 6rem;
+  position: absolute;
+  left: -0.5rem;
+  top: -2rem;
+  opacity: 0.2;
+  color: #9F8FD9;
+}
