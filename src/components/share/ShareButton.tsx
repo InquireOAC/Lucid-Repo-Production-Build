@@ -1,7 +1,9 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard from "./DreamShareCard";
+import { Button } from "@/components/ui/button";
+import { Share } from "lucide-react";
 import { toast } from "sonner";
 
 interface ShareButtonProps {
@@ -17,12 +19,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   size = "icon",
   className = "",
 }) => {
+  const [isSharing, setIsSharing] = useState(false);
+  
   // Ensure we have all necessary fields with proper fallbacks
   const normalizedDream = {
     ...dream,
     id: dream.id || `dream-${Date.now()}`,
     title: dream.title || "Untitled Dream",
-    // Prioritize the field that actually contains data - check both possible field names
+    // Prioritize the field that actually contains data
     generatedImage: dream.generatedImage || dream.image_url || null,
     imagePrompt: dream.imagePrompt || dream.image_prompt || "",
     content: dream.content || "No dream content available.",
@@ -30,21 +34,34 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     date: dream.date || new Date().toISOString()
   };
 
-  // Log the normalized dream for debugging
-  console.log("Dream being shared:", {
-    id: normalizedDream.id,
-    title: normalizedDream.title,
-    hasImage: !!normalizedDream.generatedImage,
-    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0
-  });
+  const handleShareClick = () => {
+    if (isSharing) return;
+    setIsSharing(true);
+    
+    // Reset sharing state after a timeout even if the share process fails
+    setTimeout(() => setIsSharing(false), 5000);
+  };
 
   // Validate required fields
   if (!normalizedDream.title || !normalizedDream.content) {
-    toast.error("Cannot share dream - missing required information");
     return null;
   }
 
-  return <DreamShareCard dream={normalizedDream} />;
+  return (
+    <Button 
+      onClick={handleShareClick}
+      variant={variant} 
+      size={size}
+      className={`flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10 ${className}`}
+      disabled={isSharing}
+    >
+      <Share size={18} />
+      <span>{size !== 'icon' && (isSharing ? "Processing..." : "Share")}</span>
+      
+      {/* The actual share card component (kept hidden until needed) */}
+      {isSharing && <DreamShareCard dream={normalizedDream} onComplete={() => setIsSharing(false)} />}
+    </Button>
+  );
 };
 
 export default ShareButton;

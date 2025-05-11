@@ -39,14 +39,15 @@ serve(async (req) => {
       throw new Error(data.error.message)
     }
 
+    const imageUrl = data.data[0].url;
     console.log("Image generation successful, returning URL")
     
-    // Return both field names for compatibility
+    // Return with multiple field names for compatibility with different parts of the app
     return new Response(
       JSON.stringify({ 
-        imageUrl: data.data[0].url, 
-        image_url: data.data[0].url,
-        generatedImage: data.data[0].url 
+        imageUrl: imageUrl, 
+        image_url: imageUrl,
+        generatedImage: imageUrl 
       }), 
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
