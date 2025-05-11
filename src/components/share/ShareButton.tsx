@@ -1,19 +1,22 @@
+
 import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
 import { Button } from "@/components/ui/button";
 import { Share } from "lucide-react";
 import { toast } from "sonner";
+
 interface ShareButtonProps {
   dream: DreamEntry;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
+
 const ShareButton: React.FC<ShareButtonProps> = ({
   dream,
   variant = "outline",
-  size = "icon",
+  size = "default", // Changed default from "icon" to "default"
   className = ""
 }) => {
   const [isSharing, setIsSharing] = useState(false);
@@ -30,6 +33,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     analysis: dream.analysis || "",
     date: dream.date || new Date().toISOString()
   };
+
   const handleShareClick = async () => {
     if (isSharing) return;
 
@@ -67,14 +71,24 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   if (!normalizedDream.title || !normalizedDream.content) {
     return null;
   }
-  return <>
-      <Button onClick={handleShareClick} variant={variant} size={size} disabled={isSharing} className="">
+
+  return (
+    <>
+      <Button 
+        onClick={handleShareClick} 
+        variant={variant} 
+        size={size} 
+        disabled={isSharing} 
+        className={`flex items-center justify-center gap-2 ${className}`}
+      >
         <Share size={18} />
-        <span>{size !== 'icon' && (isSharing ? "Sharing..." : "Share")}</span>
+        <span>{isSharing ? "Sharing..." : "Share"}</span>
       </Button>
       
       {/* The hidden share card component (mounted all the time but invisible) */}
       <DreamShareCard ref={shareCardRef} dream={normalizedDream} onShareStart={() => setIsSharing(true)} onShareComplete={() => setIsSharing(false)} />
-    </>;
+    </>
+  );
 };
+
 export default ShareButton;
