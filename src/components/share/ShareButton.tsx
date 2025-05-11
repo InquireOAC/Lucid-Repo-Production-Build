@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DreamEntry } from "@/types/dream";
@@ -18,14 +18,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   size = "icon",
   className = "",
 }) => {
-  const [showShareCard, setShowShareCard] = useState(false);
-  
   // Make sure we have all possible image fields in the dream object
   // This ensures that the share card has access to the images regardless of field naming
   const normalizedDream = {
     ...dream,
     title: dream.title || "Untitled Dream", // Ensure we always have a title
-    generatedImage: dream.generatedImage || dream.image_url, // Using image_url instead of imageUrl
+    generatedImage: dream.generatedImage || dream.image_url || dream.imageUrl,
     imagePrompt: dream.imagePrompt || dream.image_prompt,
     content: dream.content || "No dream content available.",
     analysis: dream.analysis || "",
@@ -34,25 +32,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 
   console.log("ShareButton - Dream data:", normalizedDream);
   console.log("ShareButton - Image URL:", normalizedDream.generatedImage);
-  
-  const toggleShareCard = () => {
-    setShowShareCard(!showShareCard);
-  };
 
   return (
-    <>
-      <Button 
-        onClick={toggleShareCard}
-        variant={variant} 
-        size={size}
-        className={`flex items-center gap-2 text-dream-lavender border-dream-lavender hover:bg-dream-lavender/10 ${className}`}
-      >
-        <Share size={18} />
-        <span>Share</span>
-      </Button>
-      
-      {showShareCard && <DreamShareCard dream={normalizedDream} />}
-    </>
+    <DreamShareCard dream={normalizedDream} />
   );
 };
 
