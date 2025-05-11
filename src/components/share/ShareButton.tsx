@@ -22,7 +22,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     ...dream,
     id: dream.id || `dream-${Date.now()}`,
     title: dream.title || "Untitled Dream",
-    // Prioritize the field that actually contains data
+    // Prioritize the field that actually contains data - check both possible field names
     generatedImage: dream.generatedImage || dream.image_url || null,
     imagePrompt: dream.imagePrompt || dream.image_prompt || "",
     content: dream.content || "No dream content available.",
@@ -30,12 +30,13 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     date: dream.date || new Date().toISOString()
   };
 
-  // Log the normalized dream to help with debugging
+  // Log the normalized dream for debugging - include more details
   console.log("Normalized dream for sharing:", {
     id: normalizedDream.id,
     title: normalizedDream.title,
     hasImage: !!normalizedDream.generatedImage,
-    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0
+    imageLength: normalizedDream.generatedImage ? normalizedDream.generatedImage.length : 0,
+    imageUrl: normalizedDream.generatedImage ? normalizedDream.generatedImage.substring(0, 50) + '...' : 'none'
   });
 
   if (!normalizedDream.title || !normalizedDream.content) {

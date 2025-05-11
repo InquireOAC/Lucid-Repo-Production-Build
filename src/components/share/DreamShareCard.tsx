@@ -15,25 +15,33 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   
-  // Ensure we have the proper image from either camelCase or snake_case field
-  const dreamImage = dream.generatedImage || dream.image_url;
-
-  // Handle share with simplified approach focused on reliability
+  // Handle share with ultra-simplified approach focused on reliability
   const handleShare = async () => {
     if (!shareCardRef.current) {
       toast.error("Unable to generate share image");
       return;
     }
     
+    // Start loading toast with specific ID for later dismissal
+    const toastId = "share-toast";
+    
     try {
+      // Guard against multiple simultaneous share attempts
+      if (isSharing) {
+        return;
+      }
+      
       setIsSharing(true);
       toast.loading("Creating shareable image...", {
-        id: "share-toast",
-        duration: 10000 // longer duration since we'll dismiss manually
+        id: toastId,
+        duration: 6000 // Shorter duration for better UX
       });
       
       // Generate the image blob with no race condition
       const blob = await elementToPngBlob(shareCardRef.current);
+      
+      // Make sure the loading toast is dismissed even if we return early
+      toast.dismiss(toastId);
       
       // Check if blob was created
       if (!blob) {
@@ -45,11 +53,10 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
       downloadImage(blob, fileName);
       
       // Success message
-      toast.dismiss("share-toast");
       toast.success("Dream image downloaded successfully!");
     } catch (error) {
       console.error("Share error:", error);
-      toast.dismiss("share-toast");
+      toast.dismiss(toastId);
       toast.error("Failed to share dream. Please try again.");
     } finally {
       // Always reset sharing state
@@ -74,7 +81,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         <span>{isSharing ? "Processing..." : "Share"}</span>
       </Button>
       
-      {/* Hidden Share Card (positioned off-screen) - SIMPLIFIED VERSION */}
+      {/* Extremely Simplified Share Card (positioned off-screen) */}
       <div 
         className="fixed left-[-9999px] top-[-9999px] overflow-hidden"
         aria-hidden="true"
@@ -82,7 +89,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         <div 
           ref={shareCardRef}
           id="dream-share-card" 
-          className="w-[600px] h-[900px] p-8 flex flex-col"
+          className="w-[400px] h-[500px] p-6 flex flex-col"
           style={{
             fontFamily: "'basis-grotesque-pro', sans-serif",
             color: '#fff',
@@ -90,49 +97,44 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           }}
         >
           {/* App Name at the top */}
-          <div className="mb-8 flex items-center justify-center">
-            <h1 className="text-6xl font-bold text-white">Lucid Repo</h1>
+          <div className="mb-4 flex items-center justify-center">
+            <h1 className="text-4xl font-bold text-white">Lucid Repo</h1>
           </div>
           
           {/* Dream Title */}
-          <div className="mb-4">
-            <h2 className="text-3xl font-bold leading-tight text-white">{dream.title || "Untitled Dream"}</h2>
-            <p className="text-xl text-dream-lavender">{formattedDate}</p>
+          <div className="mb-3">
+            <h2 className="text-2xl font-bold leading-tight text-white">{dream.title || "Untitled Dream"}</h2>
+            <p className="text-lg text-dream-lavender">{formattedDate}</p>
           </div>
           
-          {/* Dream Content - simplified */}
-          <div className="mb-6 bg-black/20 p-4 rounded-lg">
-            <p className="text-lg">
-              {dream.content && dream.content.length > 150 
-                ? `${dream.content.slice(0, 150)}...` 
+          {/* Dream Content - extremely simplified */}
+          <div className="mb-4 bg-black/20 p-3 rounded-lg">
+            <p className="text-base">
+              {dream.content && dream.content.length > 100 
+                ? `${dream.content.slice(0, 100)}...` 
                 : dream.content || "No dream content recorded."}
             </p>
           </div>
           
-          {/* Dream Image with simplified rendering */}
-          {dreamImage && (
-            <div className="mb-6 rounded-lg overflow-hidden" style={{ maxHeight: '300px' }}>
+          {/* Dream Image with static fallback */}
+          <div className="mb-4 rounded-lg overflow-hidden h-[200px]">
+            {dream.generatedImage ? (
               <img 
-                src={dreamImage}
+                src={dream.generatedImage}
                 alt="Dream Visualization"
-                className="w-full h-[300px] object-cover"
+                className="w-full h-full object-cover"
                 crossOrigin="anonymous"
               />
-            </div>
-          )}
-          
-          {/* Fallback for no image */}
-          {!dreamImage && (
-            <div className="mb-6 rounded-lg overflow-hidden" style={{ height: '300px' }}>
-              <div className="h-[300px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+            ) : (
+              <div className="h-full w-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
                 <div className="text-2xl font-medium text-white">Dream Visualization</div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
           
           {/* App Footer */}
           <div className="mt-auto flex items-center justify-center">
-            <div className="text-xl py-2 px-4 bg-white/20 rounded-full text-white">
+            <div className="text-lg py-2 px-4 bg-white/20 rounded-full text-white">
               Download the app
             </div>
           </div>
