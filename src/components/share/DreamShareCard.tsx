@@ -2,7 +2,7 @@
 import React, { useRef, useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
-import { elementToPngBlob } from "@/utils/shareUtils";
+import { elementToPngBlob, downloadImage } from "@/utils/shareUtils";
 import { Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -27,10 +27,11 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
     
     try {
       setIsSharing(true);
+      toast.info("Preparing dream image...");
       
       // Add a safety timeout to prevent UI from being stuck
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error("Share operation timed out")), 8000);
+        setTimeout(() => reject(new Error("Share operation timed out")), 15000); // Increased from 8000 to 15000ms
       });
       
       // Generate the image blob with timeout protection
@@ -44,34 +45,15 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
       }
       
       // Download the image
-      downloadImageDirectly(blob, `${dream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
-      toast.success("Dream image downloaded");
+      const fileName = `${dream.title?.replace(/[^a-z0-9]/gi, '-').toLowerCase() || 'dream'}-${Date.now()}.png`;
+      downloadImage(blob, fileName);
+      toast.success("Dream image downloaded successfully!");
     } catch (error) {
       console.error("Share error:", error);
       toast.error("Failed to share dream. Please try again.");
     } finally {
       // Always reset sharing state, even if there was an error
       setIsSharing(false);
-    }
-  };
-
-  // Direct download function with improved error handling
-  const downloadImageDirectly = (blob: Blob, fileName: string): void => {
-    try {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = fileName;
-      document.body.appendChild(link);
-      link.click();
-      
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-      }, 100);
-    } catch (error) {
-      console.error("Download error:", error);
-      toast.error("Failed to download image");
     }
   };
 
@@ -100,7 +82,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         <div 
           ref={shareCardRef}
           id="dream-share-card" 
-          className="w-[1080px] h-[1920px] p-16 flex flex-col"
+          className="w-[800px] h-[1200px] p-12 flex flex-col"
           style={{
             fontFamily: "'basis-grotesque-pro', sans-serif",
             color: '#fff',
@@ -108,35 +90,35 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           }}
         >
           {/* App Name at the top with improved size and alignment */}
-          <div className="mb-16 mt-8 flex flex-col items-center justify-center">
-            <h1 className="text-9xl font-bold text-white text-center">Lucid Repo</h1>
-            <div className="h-3 w-64 bg-dream-lavender rounded-full mt-6"></div>
+          <div className="mb-12 mt-6 flex flex-col items-center justify-center">
+            <h1 className="text-7xl font-bold text-white text-center">Lucid Repo</h1>
+            <div className="h-2 w-40 bg-dream-lavender rounded-full mt-4"></div>
           </div>
           
           {/* Dream Title - Large and Bold */}
-          <div className="mb-16">
-            <h2 className="text-8xl font-bold leading-tight text-white mb-6">{dream.title || "Untitled Dream"}</h2>
-            <p className="text-4xl text-dream-lavender">{formattedDate}</p>
+          <div className="mb-8">
+            <h2 className="text-5xl font-bold leading-tight text-white mb-4">{dream.title || "Untitled Dream"}</h2>
+            <p className="text-3xl text-dream-lavender">{formattedDate}</p>
           </div>
           
           {/* Dream Content - Better typography and background */}
-          <div className="mb-20 bg-black/20 backdrop-blur-sm rounded-xl p-10">
-            <p className="text-3xl leading-relaxed">
-              {dream.content && dream.content.length > 300 
-                ? `${dream.content.slice(0, 300)}...` 
+          <div className="mb-8 bg-black/20 backdrop-blur-sm rounded-xl p-6">
+            <p className="text-2xl leading-relaxed">
+              {dream.content && dream.content.length > 200 
+                ? `${dream.content.slice(0, 200)}...` 
                 : dream.content || "No dream content recorded."}
             </p>
           </div>
           
-          {/* Analysis Section */}
+          {/* Analysis Section - only if present */}
           {dream.analysis && (
-            <div className="mb-20">
-              <div className="text-3xl mb-4 font-medium text-dream-lavender">Dream Analysis</div>
-              <div className="flex mb-6">
-                <div className="w-1 bg-dream-lavender mr-4 self-stretch"></div>
-                <blockquote className="text-2xl italic text-white/90">
-                  {dream.analysis.length > 150 
-                    ? `${dream.analysis.slice(0, 150)}...` 
+            <div className="mb-8">
+              <div className="text-2xl mb-2 font-medium text-dream-lavender">Dream Analysis</div>
+              <div className="flex mb-4">
+                <div className="w-1 bg-dream-lavender mr-3 self-stretch"></div>
+                <blockquote className="text-xl italic text-white/90">
+                  {dream.analysis.length > 100 
+                    ? `${dream.analysis.slice(0, 100)}...` 
                     : dream.analysis}
                 </blockquote>
               </div>
@@ -145,30 +127,30 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
           
           {/* Dream Image with simplified rendering and size optimization */}
           {dreamImage && (
-            <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
+            <div className="mb-12 rounded-2xl overflow-hidden shadow-lg" style={{ minHeight: '400px' }}>
               <img 
                 src={dreamImage}
                 alt={dream.title || "Dream Visualization"}
-                className="w-full h-[600px] object-cover"
+                className="w-full h-[400px] object-cover"
                 crossOrigin="anonymous"
                 loading="eager"
               />
             </div>
           )}
           
-          {/* Fallback for no image */}
+          {/* Fallback for no image - simpler gradient */}
           {!dreamImage && (
-            <div className="mb-24 rounded-3xl overflow-hidden shadow-2xl" style={{ minHeight: '600px' }}>
-              <div className="h-[600px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
-                <div className="text-4xl font-medium text-white">Dream Visualization</div>
+            <div className="mb-12 rounded-2xl overflow-hidden shadow-lg" style={{ minHeight: '400px' }}>
+              <div className="h-[400px] bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center">
+                <div className="text-3xl font-medium text-white">Dream Visualization</div>
               </div>
             </div>
           )}
           
           {/* App Footer with improved styling */}
           <div className="mt-auto flex items-center justify-between">
-            <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-16 w-64 rounded-md"></div>
-            <div className="text-4xl py-6 px-12 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
+            <div className="bg-gradient-to-r from-purple-500 to-blue-500 h-12 w-40 rounded-md"></div>
+            <div className="text-2xl py-3 px-6 bg-white/20 backdrop-blur-md rounded-full text-white border border-white/30 shadow-lg">
               Download the app
             </div>
           </div>

@@ -1,3 +1,4 @@
+
 import html2canvas from "html2canvas";
 
 /**
@@ -44,14 +45,14 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
               resolve();
             };
             
-            // Set a short timeout in case the image takes too long
+            // Set a longer timeout for image loading
             setTimeout(() => {
               if (!img.complete) {
                 console.warn("Image load timeout:", img.src.slice(0, 50));
                 img.dispatchEvent(new Event('error'));
                 resolve();
               }
-            }, 3000);
+            }, 5000); // Increased from 3000 to 5000ms
           });
         })
       );
@@ -59,9 +60,9 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("All images processed, generating canvas");
     
-    // Use a scale of 2 for higher resolution
+    // Use a scale of 1 for better performance and faster processing
     const canvas = await html2canvas(element, { 
-      scale: 2,
+      scale: 1.5, // Decreased from 2 to 1.5 for better performance
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -73,18 +74,18 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("Canvas generated successfully");
     
-    // Use a shorter timeout for blob creation
+    // Use a longer timeout for blob creation
     return new Promise<Blob | null>((resolve) => {
       const blobTimeout = setTimeout(() => {
         console.warn("Blob creation timed out");
         resolve(null);
-      }, 3000);
+      }, 5000); // Increased from 3000 to 5000ms
       
       canvas.toBlob((blob) => {
         clearTimeout(blobTimeout);
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.95);
+      }, "image/png", 0.9); // Decreased quality slightly from 0.95 to 0.9 for better performance
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
