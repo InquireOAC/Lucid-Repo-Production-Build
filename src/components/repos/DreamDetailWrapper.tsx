@@ -27,8 +27,6 @@ const DreamDetailWrapper = ({
     ...selectedDream,
     generatedImage: selectedDream.generatedImage || selectedDream.image_url,
     imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt,
-    audioUrl: selectedDream.audioUrl || selectedDream.audio_url,
-    is_public: selectedDream.is_public || selectedDream.isPublic,
     isPublic: selectedDream.is_public || selectedDream.isPublic,
   };
   

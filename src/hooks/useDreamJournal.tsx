@@ -52,8 +52,6 @@ export const useDreamJournal = () => {
           likeCount: dream.like_count || 0,
           comment_count: dream.comment_count || 0,
           commentCount: dream.comment_count || 0,
-          audioUrl: dream.audio_url,
-          audio_url: dream.audio_url,
           user_id: dream.user_id
         }));
         
@@ -61,8 +59,7 @@ export const useDreamJournal = () => {
           id: d.id,
           title: d.title,
           analysis: Boolean(d.analysis),
-          generatedImage: Boolean(d.generatedImage),
-          audioUrl: d.audioUrl
+          generatedImage: Boolean(d.generatedImage)
         })));
         
         // Update the local store with dreams from the database
@@ -92,36 +89,38 @@ export const useDreamJournal = () => {
       const newDream = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
-        audioUrl: dreamData.audioUrl || null
       });
 
       console.log("Adding dream with:", {
-        audioUrl: dreamData.audioUrl,
         analysis: Boolean(dreamData.analysis),
         generatedImage: Boolean(dreamData.generatedImage)
       });
 
       // If user is logged in, also save to database
       if (user) {
+        const dbSaveDream = {
+          id: newDream.id,
+          user_id: user.id,
+          title: newDream.title,
+          content: newDream.content,
+          tags: dreamData.tags,
+          mood: dreamData.mood,
+          lucid: dreamData.lucid,
+          date: newDream.date,
+          is_public: false,
+          analysis: dreamData.analysis || null,
+          generatedImage: dreamData.generatedImage || null,
+          imagePrompt: dreamData.imagePrompt || null,
+          image_url: dreamData.generatedImage || null,
+          image_prompt: dreamData.imagePrompt || null,
+        };
+        
+        // Remove audio_url if it's not in the database schema
+        // This prevents the PGRST204 error
+        
         const { error } = await supabase
           .from("dream_entries")
-          .insert({
-            id: newDream.id,
-            user_id: user.id,
-            title: newDream.title,
-            content: newDream.content,
-            tags: dreamData.tags,
-            mood: dreamData.mood,
-            lucid: dreamData.lucid,
-            date: newDream.date,
-            is_public: false,
-            audio_url: dreamData.audioUrl || null,
-            analysis: dreamData.analysis || null,
-            generatedImage: dreamData.generatedImage || null, // Use camelCase
-            imagePrompt: dreamData.imagePrompt || null, // Use camelCase
-            image_url: dreamData.generatedImage || null, // Also use snake_case for DB compatibility
-            image_prompt: dreamData.imagePrompt || null // Also use snake_case for DB compatibility
-          });
+          .insert(dbSaveDream);
           
         if (error) {
           console.error("Database error:", error);
@@ -155,14 +154,12 @@ export const useDreamJournal = () => {
       // Update local store
       updateEntry(selectedDream.id, {
         ...dreamData,
-        audioUrl: dreamData.audioUrl || null,
         analysis: dreamData.analysis || null,
         generatedImage: dreamData.generatedImage || null,
         imagePrompt: dreamData.imagePrompt || null
       });
 
       console.log("Updating dream with:", {
-        audioUrl: dreamData.audioUrl,
         analysis: Boolean(dreamData.analysis),
         generatedImage: Boolean(dreamData.generatedImage),
         imagePrompt: Boolean(dreamData.imagePrompt)
@@ -170,22 +167,24 @@ export const useDreamJournal = () => {
 
       // If user is logged in, also update in database
       if (user) {
+        // Create a database-safe update object (excluding any fields not in the schema)
+        const dbUpdateData = {
+          title: dreamData.title,
+          content: dreamData.content,
+          tags: dreamData.tags,
+          mood: dreamData.mood,
+          lucid: dreamData.lucid,
+          analysis: dreamData.analysis || null,
+          generatedImage: dreamData.generatedImage || null,
+          imagePrompt: dreamData.imagePrompt || null,
+          image_url: dreamData.generatedImage || null,
+          image_prompt: dreamData.imagePrompt || null,
+          updated_at: new Date().toISOString()
+        };
+          
         const { error } = await supabase
           .from("dream_entries")
-          .update({
-            title: dreamData.title,
-            content: dreamData.content,
-            tags: dreamData.tags,
-            mood: dreamData.mood,
-            lucid: dreamData.lucid,
-            audio_url: dreamData.audioUrl || null,
-            analysis: dreamData.analysis || null,
-            generatedImage: dreamData.generatedImage || null, // Use camelCase  
-            imagePrompt: dreamData.imagePrompt || null, // Use camelCase
-            image_url: dreamData.generatedImage || null, // Also use snake_case for DB compatibility
-            image_prompt: dreamData.imagePrompt || null, // Also use snake_case for DB compatibility
-            updated_at: new Date().toISOString()
-          })
+          .update(dbUpdateData)
           .eq("id", selectedDream.id)
           .eq("user_id", user.id);
           
@@ -222,8 +221,7 @@ export const useDreamJournal = () => {
         }
         
         if ('audioUrl' in dbUpdates) {
-          dbUpdates.audio_url = dbUpdates.audioUrl;
-          delete dbUpdates.audioUrl;
+          delete dbUpdates.audioUrl;  // Remove this field as it doesn't exist in DB
         }
         
         if ('generatedImage' in dbUpdates) {
