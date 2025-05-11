@@ -1,20 +1,19 @@
-
 import html2canvas from "html2canvas";
 
 /**
- * Converts an HTML element to a PNG blob with ultra-optimized settings for reliability
+ * Converts an HTML element to a PNG blob with optimized settings for reliability
  */
 export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | null> => {
   try {
-    console.log("Starting HTML to Canvas conversion - optimized version");
+    console.log("Starting HTML to Canvas conversion");
     
     // Wait for all images to load completely before attempting conversion
     const images = Array.from(element.querySelectorAll('img'));
     
     if (images.length > 0) {
-      console.log(`Waiting for ${images.length} images to load`);
+      console.log(`Processing ${images.length} images in share card`);
       
-      // Force all images to load or fail before continuing, but with shorter timeouts
+      // Process images but with shorter timeouts
       await Promise.all(
         images.map(img => {
           // If image is already loaded, resolve immediately
@@ -36,22 +35,21 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
               resolve();
             };
             
-            // Handle image errors immediately by replacing with a gradient
+            // Handle image errors by using fallback
             img.onerror = () => {
               console.error("Image failed to load:", img.src.slice(0, 30));
               img.style.display = 'none';
-              // Show the parent's gradient background
               resolve();
             };
             
-            // Use a very short timeout
+            // Short timeout
             setTimeout(() => {
               if (!img.complete) {
                 console.warn("Image load timeout:", img.src.slice(0, 30));
                 img.dispatchEvent(new Event('error'));
                 resolve();
               }
-            }, 1500); // Further reduced to 1.5 seconds
+            }, 2000);
           });
         })
       );
@@ -59,9 +57,9 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
     
     console.log("All images processed, generating canvas");
     
-    // Use lowest scale and quality settings for maximum reliability
+    // Generate canvas with optimized settings
     const canvas = await html2canvas(element, { 
-      scale: 1, // Minimum scale
+      scale: 2,
       useCORS: true,
       allowTaint: true,
       logging: false,
@@ -74,13 +72,13 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       const blobTimeout = setTimeout(() => {
         console.warn("Blob creation timed out");
         resolve(null);
-      }, 2000); // Even shorter timeout
+      }, 3000);
       
       canvas.toBlob((blob) => {
         clearTimeout(blobTimeout);
         console.log("Blob created:", blob ? "success" : "failed");
         resolve(blob);
-      }, "image/png", 0.7); // Lower quality for guaranteed performance
+      }, "image/png", 0.8);
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
@@ -89,7 +87,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
- * Downloads a blob as a file with improved reliability
+ * Downloads a blob as a file
  */
 export const downloadImage = (blob: Blob, fileName: string): void => {
   try {
@@ -100,7 +98,7 @@ export const downloadImage = (blob: Blob, fileName: string): void => {
     document.body.appendChild(link);
     link.click();
     
-    // Clean up faster
+    // Clean up
     setTimeout(() => {
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);

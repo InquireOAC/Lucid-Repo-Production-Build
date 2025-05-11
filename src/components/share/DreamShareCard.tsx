@@ -15,7 +15,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   
-  // Handle share with ultra-simplified approach focused on reliability
+  // Handle share with simplified approach
   const handleShare = async () => {
     if (!shareCardRef.current) {
       toast.error("Unable to generate share image");
@@ -34,13 +34,13 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
       setIsSharing(true);
       toast.loading("Creating shareable image...", {
         id: toastId,
-        duration: 6000 // Shorter duration for better UX
+        duration: 6000
       });
       
       // Generate the image blob with no race condition
       const blob = await elementToPngBlob(shareCardRef.current);
       
-      // Make sure the loading toast is dismissed even if we return early
+      // Make sure the loading toast is dismissed
       toast.dismiss(toastId);
       
       // Check if blob was created
@@ -81,7 +81,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
         <span>{isSharing ? "Processing..." : "Share"}</span>
       </Button>
       
-      {/* Extremely Simplified Share Card (positioned off-screen) */}
+      {/* Share Card (positioned off-screen) */}
       <div 
         className="fixed left-[-9999px] top-[-9999px] overflow-hidden"
         aria-hidden="true"
@@ -107,7 +107,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             <p className="text-lg text-dream-lavender">{formattedDate}</p>
           </div>
           
-          {/* Dream Content - extremely simplified */}
+          {/* Dream Content */}
           <div className="mb-4 bg-black/20 p-3 rounded-lg">
             <p className="text-base">
               {dream.content && dream.content.length > 100 
@@ -116,7 +116,7 @@ const DreamShareCard: React.FC<DreamShareCardProps> = ({ dream }) => {
             </p>
           </div>
           
-          {/* Dream Image with static fallback */}
+          {/* Dream Image */}
           <div className="mb-4 rounded-lg overflow-hidden h-[200px]">
             {dream.generatedImage ? (
               <img 

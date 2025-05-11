@@ -30,7 +30,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     date: dream.date || new Date().toISOString()
   };
 
-  // Log the normalized dream for debugging - include more details
+  // Log the normalized dream for debugging
   console.log("Normalized dream for sharing:", {
     id: normalizedDream.id,
     title: normalizedDream.title,
@@ -39,6 +39,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     imageUrl: normalizedDream.generatedImage ? normalizedDream.generatedImage.substring(0, 50) + '...' : 'none'
   });
 
+  // Validate required fields
   if (!normalizedDream.title || !normalizedDream.content) {
     toast.error("Cannot share dream - missing required information");
     return null;
