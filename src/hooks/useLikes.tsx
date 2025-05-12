@@ -13,24 +13,42 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
 
   const handleLike = async (dreamId: string) => {
     if (!user) {
+      toast.error("Please sign in to like dreams");
       return false;
     }
 
     try {
-      // Check if the user has already liked this dream
+      // Optimistically update UI first for immediate feedback
+      const dreamIndex = dreams.findIndex(d => d.id === dreamId);
+      if (dreamIndex === -1) return false;
+
+      const dreamToUpdate = dreams[dreamIndex];
+      const wasLiked = !!dreamToUpdate.liked;
+      const newLikeCount = wasLiked 
+        ? Math.max(0, (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) - 1)
+        : (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) + 1;
+
+      // Update local state optimistically
+      setDreams(prevDreams => 
+        prevDreams.map(dream => 
+          dream.id === dreamId
+            ? { 
+                ...dream, 
+                like_count: newLikeCount, 
+                likeCount: newLikeCount,
+                liked: !wasLiked
+              }
+            : dream
+        )
+      );
+
+      // Now perform the actual database operation
       const { data: existingLike } = await supabase
         .from("dream_likes")
         .select("*")
         .eq("user_id", user.id)
         .eq("dream_id", dreamId)
         .single();
-
-      const dreamToUpdate = dreams.find(d => d.id === dreamId);
-      if (!dreamToUpdate) return false;
-
-      const currentLikeCount = dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0;
-      let newLikeCount: number;
-      let liked: boolean;
 
       if (existingLike) {
         // User already liked this dream, so remove the like
@@ -41,9 +59,6 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
           .eq("dream_id", dreamId);
 
         // Update dream like count using SQL update
-        newLikeCount = Math.max(0, currentLikeCount - 1);
-        liked = false;
-
         await supabase
           .from("dream_entries")
           .update({ like_count: newLikeCount })
@@ -55,33 +70,19 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
           .insert({ user_id: user.id, dream_id: dreamId });
 
         // Update dream like count using SQL update
-        newLikeCount = currentLikeCount + 1;
-        liked = true;
-
         await supabase
           .from("dream_entries")
           .update({ like_count: newLikeCount })
           .eq("id", dreamId);
       }
 
-      // Update the local state
-      setDreams(prevDreams => 
-        prevDreams.map(dream => 
-          dream.id === dreamId
-            ? { 
-                ...dream, 
-                like_count: newLikeCount, 
-                likeCount: newLikeCount,
-                liked: liked
-              }
-            : dream
-        )
-      );
-
       return true;
     } catch (error) {
       console.error("Error handling like:", error);
       toast.error("Failed to update like");
+      
+      // Revert the optimistic update on error
+      checkLikedDreams();
       return false;
     }
   };

@@ -11,6 +11,7 @@ interface DreamDetailWrapperProps {
   onClose: () => void;
   onUpdate: (id: string, updates: Partial<DreamEntry>) => void;
   isAuthenticated: boolean;
+  onLike?: (dreamId: string) => void;
 }
 
 const DreamDetailWrapper = ({
@@ -18,7 +19,8 @@ const DreamDetailWrapper = ({
   tags,
   onClose,
   onUpdate,
-  isAuthenticated
+  isAuthenticated,
+  onLike
 }: DreamDetailWrapperProps) => {
   if (!selectedDream) return null;
   
@@ -28,6 +30,8 @@ const DreamDetailWrapper = ({
     generatedImage: selectedDream.generatedImage || selectedDream.image_url || null,
     imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt || "",
     isPublic: selectedDream.is_public || selectedDream.isPublic || false,
+    likeCount: selectedDream.like_count || selectedDream.likeCount || 0,
+    commentCount: selectedDream.comment_count || selectedDream.commentCount || 0
   };
   
   console.log("Normalized dream in wrapper:", normalizedDream);
@@ -59,6 +63,12 @@ const DreamDetailWrapper = ({
       toast.error("Failed to update dream");
     }
   };
+
+  const handleLike = () => {
+    if (onLike && selectedDream) {
+      onLike(selectedDream.id);
+    }
+  };
   
   return (
     <DreamDetail
@@ -67,6 +77,7 @@ const DreamDetailWrapper = ({
       onClose={onClose}
       onUpdate={handleUpdate}
       isAuthenticated={isAuthenticated}
+      onLike={handleLike}
     />
   );
 };

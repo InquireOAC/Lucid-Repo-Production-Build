@@ -156,7 +156,6 @@ export const useDreamJournal = () => {
         generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
         image_url: dreamData.generatedImage || selectedDream.generatedImage || null,
         imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null,
-        image_prompt: dreamData.imagePrompt || selectedDream.imagePrompt || null
       };
       
       // Update local store
@@ -182,13 +181,20 @@ export const useDreamJournal = () => {
           generatedImage: updateData.generatedImage,
           image_url: updateData.image_url,
           imagePrompt: updateData.imagePrompt,
-          image_prompt: updateData.image_prompt,
           updated_at: new Date().toISOString()
         };
+
+        // Remove fields that aren't in the database schema
+        const cleanedDbData = Object.keys(dbUpdateData).reduce((acc, key) => {
+          if (!['imagePrompt', 'image_prompt'].includes(key)) {
+            acc[key] = dbUpdateData[key];
+          }
+          return acc;
+        }, {} as Record<string, any>);
           
         const { error } = await supabase
           .from("dream_entries")
-          .update(dbUpdateData)
+          .update(cleanedDbData)
           .eq("id", selectedDream.id)
           .eq("user_id", user.id);
           

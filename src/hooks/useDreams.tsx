@@ -99,9 +99,9 @@ export function useDreams() {
         dbUpdates.is_public = updates.is_public;
       }
 
-      // Prepare other updates (omitting client-only fields)
+      // Filter out fields that don't exist in the DB schema
       Object.entries(updates).forEach(([key, value]) => {
-        if (key !== 'isPublic') {
+        if (!['commentCount', 'likeCount'].includes(key)) {
           dbUpdates[key] = value;
         }
       });
