@@ -255,7 +255,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   return (
     <div className="space-y-6 max-w-full">
       {configError && (
-        <Alert variant="warning" className="mb-4 bg-amber-50">
+        <Alert variant="destructive" className="mb-4 bg-amber-50">
           <ShieldAlert className="h-4 w-4" />
           <AlertTitle>Configuration Issue</AlertTitle>
           <AlertDescription>
@@ -476,3 +476,4 @@ const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) =>
 );
 
 export default StripeSubscriptionManager;
+
