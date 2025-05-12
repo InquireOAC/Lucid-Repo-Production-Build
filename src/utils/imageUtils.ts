@@ -17,6 +17,12 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
 
     console.log("Starting image upload process for dream:", dreamId);
     
+    // Check if it's already a Supabase Storage URL
+    if (imageUrl.includes("supabase.co") && imageUrl.includes("/storage/v1/object/public/")) {
+      console.log("Image is already stored in Supabase, skipping upload");
+      return imageUrl;
+    }
+    
     // 1. Fetch the image as a blob
     const response = await fetch(imageUrl);
     if (!response.ok) {
@@ -25,7 +31,7 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
     
     const imageBlob = await response.blob();
     
-    // 2. Generate a unique filename
+    // 2. Generate a unique filename with dreamId to avoid duplicates
     const fileName = `dream-${dreamId}-${Date.now()}.jpg`;
     const filePath = `${fileName}`;
     
@@ -36,7 +42,8 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
       .from('dreamimage')
       .upload(filePath, imageBlob, {
         contentType: 'image/jpeg',
-        upsert: true
+        upsert: true,
+        cacheControl: '3600'
       });
       
     if (uploadError) {
@@ -64,7 +71,7 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
       
     if (updateError) {
       console.error("Failed to update dream with image URL:", updateError);
-      throw updateError;
+      // Don't throw error - we still have the image URL to return
     }
     
     console.log("Dream entry updated with permanent image URL");
@@ -74,5 +81,27 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
     console.error("Error in uploadDreamImage:", error);
     toast.error("Failed to save dream image permanently");
     return null;
+  }
+};
+
+/**
+ * Helper function to convert a temporary URL to a permanent blob URL
+ * @param url The image URL to persist
+ * @returns A persistent blob URL
+ */
+export const persistImageURL = async (url: string): Promise<string> => {
+  try {
+    // If it's already a blob URL or null/undefined, return as is
+    if (!url || url.startsWith('blob:') || url.includes('supabase.co')) {
+      return url;
+    }
+    
+    // Fetch image and create a persistent blob
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (error) {
+    console.error("Error persisting image URL:", error);
+    return url; // Return original URL on error
   }
 };

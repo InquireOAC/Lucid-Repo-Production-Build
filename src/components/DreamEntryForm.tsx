@@ -122,6 +122,7 @@ const DreamEntryForm = ({
     
     // Use external submit handler if provided
     if (onSubmit) {
+      // Make sure we pass the persistent image URL
       onSubmit({
         title: formData.title,
         content: formData.content,

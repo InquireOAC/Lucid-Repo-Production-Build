@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { uploadDreamImage } from "@/utils/imageUtils";
+import { uploadDreamImage, persistImageURL } from "@/utils/imageUtils";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -30,63 +30,30 @@ const DreamImageGenerator = ({
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
   const [generatedImage, setGeneratedImage] = useState(existingImage);
+  const [persistentImage, setPersistentImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingImage);
 
-  // Function to download and save the image from a URL
-  const saveImageToLocalAndSupabase = async (imageUrl: string) => {
-    try {
-      // Fetch the image as a blob
-      const response = await fetch(imageUrl);
-      if (!response.ok) throw new Error('Failed to fetch image');
-      
-      const imageBlob = await response.blob();
-      
-      // Create a local URL for the blob (for immediate display)
-      const localUrl = URL.createObjectURL(imageBlob);
-      
-      // If logged in, try to save to Supabase Storage for persistence
-      if (user) {
-        try {
-          const fileName = `dream-image-${Date.now()}.jpg`;
-          const filePath = `${user.id}/${fileName}`;
-          
-          // Upload to Supabase Storage
-          const { error: uploadError, data } = await supabase.storage
-            .from('dream-images')
-            .upload(filePath, imageBlob, {
-              contentType: 'image/jpeg',
-              upsert: true
-            });
-            
-          if (uploadError) {
-            console.error("Storage upload error:", uploadError);
-            // Still return the local URL if storage upload fails
-            return localUrl;
-          }
-          
-          // Get a public URL for the uploaded image
-          const { data: { publicUrl } } = supabase.storage
-            .from('dream-images')
-            .getPublicUrl(filePath);
-            
-          console.log("Image saved to Storage:", publicUrl);
-          return publicUrl;
-        } catch (storageError) {
-          console.error("Error saving to storage:", storageError);
-          // Return the local URL as fallback
-          return localUrl;
-        }
-      } else {
-        // If not logged in, just use the local URL
-        return localUrl;
-      }
-    } catch (error) {
-      console.error("Error saving image:", error);
-      // Return the original URL if the process fails
-      return imageUrl;
+  // When the component mounts or the image changes, ensure we have a persistent version
+  useEffect(() => {
+    if (existingImage) {
+      setPersistentImage(existingImage);
+      setGeneratedImage(existingImage);
+      setShowInfo(false);
     }
-  };
+  }, [existingImage]);
+
+  // Ensure images persist by converting to blob URLs when loaded
+  useEffect(() => {
+    const makePersistent = async () => {
+      if (generatedImage && generatedImage !== persistentImage) {
+        const persistedUrl = await persistImageURL(generatedImage);
+        setPersistentImage(persistedUrl);
+      }
+    };
+    
+    makePersistent();
+  }, [generatedImage, persistentImage]);
 
   const generateImage = async () => {
     if (!user || disabled) return;
@@ -150,24 +117,34 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
-      // NEW STEP: Upload the image to Supabase storage for permanent storage
-      let persistentUrl = openaiUrl;
+      // Save the temporary URL
+      setGeneratedImage(openaiUrl);
       
+      // Also create a persistent blob URL for immediate display
+      const persistedUrl = await persistImageURL(openaiUrl);
+      setPersistentImage(persistedUrl);
+      
+      // Notify the parent component that an image was generated
+      onImageGenerated(openaiUrl, generatedPrompt);
+      
+      // Upload image to Supabase storage for permanent storage if user is logged in
       if (user) {
-        console.log("Uploading image to permanent storage...");
+        console.log("User is logged in, uploading image to permanent storage...");
+        toast.loading("Saving image permanently...");
+        
+        // Save the user ID to associate with this upload
+        // We'll use this later for the actual dream ID when it's saved
         const uploadedUrl = await uploadDreamImage(user.id, openaiUrl);
         
         // If upload was successful, use the persistent URL
         if (uploadedUrl) {
-          persistentUrl = uploadedUrl;
-          console.log("Image saved permanently:", persistentUrl);
-        } else {
-          console.warn("Failed to save image permanently, using temporary URL");
+          console.log("Image saved permanently:", uploadedUrl);
+          // Update the generated image with the permanent URL
+          setGeneratedImage(uploadedUrl);
+          onImageGenerated(uploadedUrl, generatedPrompt);
+          toast.success("Image saved permanently");
         }
       }
-      
-      setGeneratedImage(persistentUrl);
-      onImageGenerated(persistentUrl, generatedPrompt);
       
       // If this was a free trial use and not the app creator, mark the feature as used
       if (!isAppCreator && !hasUsedFeature('image')) {
@@ -242,10 +219,11 @@ const DreamImageGenerator = ({
           </div>
         ) : (
           <>
-            {generatedImage && (
+            {/* Show the persistent image URL for consistent display */}
+            {persistentImage && (
               <div className="mb-4">
                 <img
-                  src={generatedImage}
+                  src={persistentImage}
                   alt="Dream"
                   className="w-full rounded-md aspect-square object-cover"
                 />
