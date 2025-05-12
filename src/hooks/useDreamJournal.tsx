@@ -113,6 +113,7 @@ export const useDreamJournal = () => {
           generatedImage: dreamData.generatedImage || null,
           image_url: dreamData.generatedImage || null, // Also save to image_url
           imagePrompt: dreamData.imagePrompt || null,
+          image_prompt: dreamData.imagePrompt || null, // Also save to image_prompt
         };
         
         const { error } = await supabase
@@ -148,19 +149,24 @@ export const useDreamJournal = () => {
     if (!selectedDream) return;
     setIsSubmitting(true);
     try {
-      // Update local store
-      updateEntry(selectedDream.id, {
+      // Prepare the update with both field names for database compatibility
+      const updateData = {
         ...dreamData,
-        analysis: dreamData.analysis || null,
-        generatedImage: dreamData.generatedImage || null,
-        image_url: dreamData.generatedImage || null, // Also update image_url
-        imagePrompt: dreamData.imagePrompt || null
-      });
+        analysis: dreamData.analysis || selectedDream.analysis || null,
+        generatedImage: dreamData.generatedImage || selectedDream.generatedImage || null,
+        image_url: dreamData.generatedImage || selectedDream.generatedImage || null,
+        imagePrompt: dreamData.imagePrompt || selectedDream.imagePrompt || null,
+        image_prompt: dreamData.imagePrompt || selectedDream.imagePrompt || null
+      };
+      
+      // Update local store
+      updateEntry(selectedDream.id, updateData);
 
       console.log("Updating dream with:", {
-        analysis: Boolean(dreamData.analysis),
-        generatedImage: Boolean(dreamData.generatedImage),
-        imagePrompt: Boolean(dreamData.imagePrompt)
+        id: selectedDream.id,
+        analysis: Boolean(updateData.analysis),
+        generatedImage: Boolean(updateData.generatedImage),
+        imagePrompt: Boolean(updateData.imagePrompt)
       });
 
       // If user is logged in, also update in database
@@ -172,10 +178,11 @@ export const useDreamJournal = () => {
           tags: dreamData.tags,
           mood: dreamData.mood,
           lucid: dreamData.lucid,
-          analysis: dreamData.analysis || null,
-          generatedImage: dreamData.generatedImage || null,
-          image_url: dreamData.generatedImage || null, // Also update image_url
-          imagePrompt: dreamData.imagePrompt || null,
+          analysis: updateData.analysis,
+          generatedImage: updateData.generatedImage,
+          image_url: updateData.image_url,
+          imagePrompt: updateData.imagePrompt,
+          image_prompt: updateData.image_prompt,
           updated_at: new Date().toISOString()
         };
           

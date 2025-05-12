@@ -25,6 +25,13 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
         .eq("dream_id", dreamId)
         .single();
 
+      const dreamToUpdate = dreams.find(d => d.id === dreamId);
+      if (!dreamToUpdate) return false;
+
+      const currentLikeCount = dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0;
+      let newLikeCount: number;
+      let liked: boolean;
+
       if (existingLike) {
         // User already liked this dream, so remove the like
         await supabase
@@ -34,17 +41,13 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
           .eq("dream_id", dreamId);
 
         // Update dream like count using SQL update
+        newLikeCount = Math.max(0, currentLikeCount - 1);
+        liked = false;
+
         await supabase
           .from("dream_entries")
-          .update({ like_count: Math.max(0, (dreams.find(d => d.id === dreamId)?.likeCount as number) - 1) })
+          .update({ like_count: newLikeCount })
           .eq("id", dreamId);
-
-        dreams.forEach(dream => {
-          if (dream.id === dreamId) {
-            dream.likeCount = Math.max(0, dream.likeCount as number - 1);
-            dream.liked = false;
-          }
-        });
       } else {
         // User hasn't liked this dream yet, so add a like
         await supabase
@@ -52,18 +55,29 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
           .insert({ user_id: user.id, dream_id: dreamId });
 
         // Update dream like count using SQL update
+        newLikeCount = currentLikeCount + 1;
+        liked = true;
+
         await supabase
           .from("dream_entries")
-          .update({ like_count: (dreams.find(d => d.id === dreamId)?.likeCount as number) + 1 })
+          .update({ like_count: newLikeCount })
           .eq("id", dreamId);
-
-        dreams.forEach(dream => {
-          if (dream.id === dreamId) {
-            dream.likeCount = (dream.likeCount as number) + 1;
-            dream.liked = true;
-          }
-        });
       }
+
+      // Update the local state
+      setDreams(prevDreams => 
+        prevDreams.map(dream => 
+          dream.id === dreamId
+            ? { 
+                ...dream, 
+                like_count: newLikeCount, 
+                likeCount: newLikeCount,
+                liked: liked
+              }
+            : dream
+        )
+      );
+
       return true;
     } catch (error) {
       console.error("Error handling like:", error);
@@ -89,12 +103,23 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
 
       const likedDreamIds = new Set(data.map((like) => like.dream_id));
 
-      dreams.forEach(dream => {
-        dream.liked = likedDreamIds.has(dream.id);
-      });
+      setDreams(prevDreams => 
+        prevDreams.map(dream => ({
+          ...dream,
+          liked: likedDreamIds.has(dream.id)
+        }))
+      );
     } catch (error) {
       console.error("Error checking liked dreams:", error);
     }
+  };
+
+  // Add a function to update the dreams state
+  const setDreams = (updater: (dreams: DreamEntry[]) => DreamEntry[]) => {
+    const updatedDreams = updater([...dreams]);
+    
+    // Replace the dreams in the array with the updated versions
+    dreams.splice(0, dreams.length, ...updatedDreams);
   };
 
   return { handleLike };

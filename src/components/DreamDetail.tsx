@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
+import DreamComments from "@/components/DreamComments";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DreamDetailProps {
   dream: DreamEntry;
@@ -19,7 +21,9 @@ interface DreamDetailProps {
 }
 
 const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
+  const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
   
   // Ensure we normalize the dream data for consistency
   const normalizedDream = {
@@ -29,6 +33,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
+  
+  // Check if the user is the dream owner
+  const isOwner = user && user.id === dream.user_id;
 
   const handleTogglePublic = async () => {
     if (!onUpdate) return;
@@ -66,6 +73,18 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
       console.error("Error deleting dream:", error);
       toast.error("Failed to delete dream");
       setIsDeleteDialogOpen(false);
+    }
+  };
+  
+  // Handle comment count updates
+  const handleCommentCountChange = (count: number) => {
+    setCommentCount(count);
+    // Update the parent component if needed
+    if (onUpdate) {
+      onUpdate(dream.id, { 
+        comment_count: count,
+        commentCount: count 
+      });
     }
   };
   
@@ -111,9 +130,19 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             <DreamDetailActions
               isAuthenticated={isAuthenticated}
               isPublic={isPublic}
-              onTogglePublic={onUpdate ? handleTogglePublic : undefined}
+              onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
             />
           </div>
+          
+          {/* Add comments section - only for public dreams */}
+          {isPublic && (
+            <div className="mt-6">
+              <DreamComments 
+                dreamId={dream.id} 
+                onCommentCountChange={handleCommentCountChange}
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
       

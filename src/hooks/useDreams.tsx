@@ -65,7 +65,10 @@ export function useDreams() {
         likeCount: dream.like_count || 0,
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
-        profiles: dream.profiles
+        profiles: dream.profiles,
+        // Ensure image URLs are properly normalized
+        generatedImage: dream.generatedImage || dream.image_url || null,
+        image_url: dream.image_url || dream.generatedImage || null,
       }));
       
       setDreams(transformedDreams);
