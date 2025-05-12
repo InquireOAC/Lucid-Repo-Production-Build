@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,9 +17,10 @@ interface DreamDetailProps {
   onUpdate?: (id: string, updates: Partial<DreamEntry>) => void;
   onDelete?: (id: string) => void;
   isAuthenticated?: boolean;
+  onLike?: () => void; // Add this line to fix the TypeScript error
 }
 
-const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated }: DreamDetailProps) => {
+const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated, onLike }: DreamDetailProps) => {
   const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
@@ -131,6 +131,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
               isAuthenticated={isAuthenticated}
               isPublic={isPublic}
               onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
+              onLike={onLike} // Pass the onLike prop here
+              liked={dream.liked}
+              likeCount={dream.likeCount || dream.like_count || 0}
             />
           </div>
           

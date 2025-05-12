@@ -1,47 +1,72 @@
 
-import React from 'react';
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Globe, Lock } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { Heart, Lock, Unlock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface DreamDetailActionsProps {
   isAuthenticated?: boolean;
   isPublic?: boolean;
   onTogglePublic?: () => void;
+  onLike?: () => void; // Add this line
+  liked?: boolean; // Add this line
+  likeCount?: number; // Add this line
 }
 
-const DreamDetailActions = ({
-  isAuthenticated,
+const DreamDetailActions = ({ 
+  isAuthenticated, 
   isPublic,
-  onTogglePublic
+  onTogglePublic,
+  onLike,
+  liked,
+  likeCount = 0
 }: DreamDetailActionsProps) => {
-  if (!isAuthenticated) return null;
-
   return (
-    <div className="flex justify-end items-center mt-6">
-      <div className="flex items-center gap-3">
-        {onTogglePublic && (
-          <>
-            <span className="text-sm text-muted-foreground flex items-center">
-              {isPublic ? (
-                <>
-                  <Globe size={14} className="mr-1" /> Public
-                </>
-              ) : (
-                <>
-                  <Lock size={14} className="mr-1" /> Private
-                </>
-              )}
-            </span>
-            <Switch
-              checked={isPublic}
-              onCheckedChange={onTogglePublic}
-              aria-label="Toggle public/private"
-              className="data-[state=checked]:bg-dream-lavender"
-            />
-          </>
-        )}
-      </div>
+    <div className="flex items-center gap-2">
+      {/* Like button */}
+      {isPublic && isAuthenticated && onLike && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={(e) => {
+            e.stopPropagation();
+            onLike();
+          }}
+          className={cn(
+            "flex items-center gap-1", 
+            liked ? "text-red-500" : ""
+          )}
+        >
+          <Heart 
+            size={16} 
+            className={cn(
+              liked ? "fill-red-500" : ""
+            )} 
+          />
+          <span>{likeCount}</span>
+        </Button>
+      )}
+
+      {/* Toggle Public/Private button (only for dream owner) */}
+      {onTogglePublic && (
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={onTogglePublic}
+        >
+          {isPublic ? (
+            <>
+              <Unlock size={16} className="mr-1" />
+              Public
+            </>
+          ) : (
+            <>
+              <Lock size={16} className="mr-1" />
+              Private
+            </>
+          )}
+        </Button>
+      )}
     </div>
   );
 };
