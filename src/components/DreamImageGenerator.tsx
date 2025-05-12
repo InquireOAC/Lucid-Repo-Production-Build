@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
+import { uploadDreamImage } from "@/utils/imageUtils";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -149,8 +150,21 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
-      // Save the image to local storage and potentially Supabase
-      const persistentUrl = await saveImageToLocalAndSupabase(openaiUrl);
+      // NEW STEP: Upload the image to Supabase storage for permanent storage
+      let persistentUrl = openaiUrl;
+      
+      if (user) {
+        console.log("Uploading image to permanent storage...");
+        const uploadedUrl = await uploadDreamImage(user.id, openaiUrl);
+        
+        // If upload was successful, use the persistent URL
+        if (uploadedUrl) {
+          persistentUrl = uploadedUrl;
+          console.log("Image saved permanently:", persistentUrl);
+        } else {
+          console.warn("Failed to save image permanently, using temporary URL");
+        }
+      }
       
       setGeneratedImage(persistentUrl);
       onImageGenerated(persistentUrl, generatedPrompt);

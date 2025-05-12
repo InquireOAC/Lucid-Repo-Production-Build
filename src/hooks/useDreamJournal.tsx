@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,8 +44,9 @@ export const useDreamJournal = () => {
           tags: dream.tags || [],
           mood: dream.mood,
           lucid: dream.lucid || false,
-          imagePrompt: dream.imagePrompt,
-          generatedImage: dream.generatedImage,
+          imagePrompt: dream.imagePrompt || dream.image_prompt,
+          generatedImage: dream.generatedImage || dream.image_url, // Support both field names
+          image_url: dream.image_url || dream.generatedImage, // Add image_url for database compatibility
           analysis: dream.analysis,
           is_public: dream.is_public || false,
           isPublic: dream.is_public || false,
@@ -55,11 +57,10 @@ export const useDreamJournal = () => {
           user_id: dream.user_id
         }));
         
-        console.log("Synced dreams with analysis and images:", formattedDreams.map(d => ({
+        console.log("Synced dreams with images:", formattedDreams.map(d => ({
           id: d.id,
           title: d.title,
-          analysis: Boolean(d.analysis),
-          generatedImage: Boolean(d.generatedImage)
+          hasImage: Boolean(d.generatedImage || d.image_url)
         })));
         
         // Update the local store with dreams from the database
@@ -110,6 +111,7 @@ export const useDreamJournal = () => {
           is_public: false,
           analysis: dreamData.analysis || null,
           generatedImage: dreamData.generatedImage || null,
+          image_url: dreamData.generatedImage || null, // Also save to image_url
           imagePrompt: dreamData.imagePrompt || null,
         };
         
@@ -151,6 +153,7 @@ export const useDreamJournal = () => {
         ...dreamData,
         analysis: dreamData.analysis || null,
         generatedImage: dreamData.generatedImage || null,
+        image_url: dreamData.generatedImage || null, // Also update image_url
         imagePrompt: dreamData.imagePrompt || null
       });
 
@@ -171,6 +174,7 @@ export const useDreamJournal = () => {
           lucid: dreamData.lucid,
           analysis: dreamData.analysis || null,
           generatedImage: dreamData.generatedImage || null,
+          image_url: dreamData.generatedImage || null, // Also update image_url
           imagePrompt: dreamData.imagePrompt || null,
           updated_at: new Date().toISOString()
         };
@@ -213,6 +217,10 @@ export const useDreamJournal = () => {
           delete dbUpdates.isPublic;
         }
         
+        if ('generatedImage' in dbUpdates) {
+          dbUpdates.image_url = dbUpdates.generatedImage;
+        }
+        
         if ('audioUrl' in dbUpdates) {
           delete dbUpdates.audioUrl;  // Remove this field as it doesn't exist in DB
         }
@@ -221,7 +229,9 @@ export const useDreamJournal = () => {
           delete dbUpdates.audio_url;  // Remove this field as it doesn't exist in DB
         }
         
-        console.log("Updating dream in database:", id, dbUpdates);
+        console.log("Updating dream in database:", id, {
+          has_image: Boolean(dbUpdates.generatedImage || dbUpdates.image_url)
+        });
         
         const { error } = await supabase
           .from("dream_entries")
