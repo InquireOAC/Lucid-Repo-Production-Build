@@ -19,10 +19,15 @@ serve(async (req) => {
   try {
     console.log('Starting create-checkout-session function');
     
-    // Validate Stripe key
-    if (!STRIPE_SECRET_KEY || !STRIPE_SECRET_KEY.startsWith('sk_')) {
-      console.error('Invalid Stripe secret key format or missing key');
-      throw new Error('Stripe API key not correctly configured. Please check your environment variables.');
+    // Validate Stripe key with better diagnostics
+    if (!STRIPE_SECRET_KEY) {
+      console.error('Missing Stripe secret key');
+      throw new Error('Missing Stripe API key. Please set STRIPE_SECRET_KEY in your edge function secrets.');
+    }
+    
+    if (!STRIPE_SECRET_KEY.startsWith('sk_')) {
+      console.error(`Invalid Stripe secret key format: ${STRIPE_SECRET_KEY.substring(0, 5)}...`);
+      throw new Error('Invalid Stripe API key format. The key should start with "sk_".');
     }
     
     const stripe = new Stripe(STRIPE_SECRET_KEY, {
@@ -44,6 +49,10 @@ serve(async (req) => {
     if (action === 'getProducts') {
       console.log('Fetching all products from Stripe');
       try {
+        // First, verify the Stripe connection with a simple API call
+        await stripe.balance.retrieve();
+        console.log('Stripe connection verified successfully');
+        
         // Get all active products and prices from Stripe
         const products = await stripe.products.list({
           active: true,
@@ -127,9 +136,13 @@ serve(async (req) => {
           }
         ];
         
-        console.log('Returning fallback products');
+        console.log('Returning fallback products due to Stripe error');
         return new Response(
-          JSON.stringify({ products: fallbackProducts }),
+          JSON.stringify({ 
+            products: fallbackProducts,
+            error: 'Could not fetch products from Stripe, using default data',
+            errorDetails: stripeError.message
+          }),
           { 
             headers: { 
               ...corsHeaders,
@@ -179,59 +192,69 @@ serve(async (req) => {
         console.log(`Found existing customer: ${customerId}`);
       } else {
         // Create a new Stripe customer
-        const stripeCustomer = await stripe.customers.create({
-          email: user.email,
-          metadata: {
-            supabase_user_id: user.id
-          }
-        });
-        
-        // Store customer in database
-        await supabase
-          .from('stripe_customers')
-          .insert({
-            user_id: user.id,
-            customer_id: stripeCustomer.id,
+        try {
+          const stripeCustomer = await stripe.customers.create({
             email: user.email,
-            created_at: new Date().toISOString()
+            metadata: {
+              supabase_user_id: user.id
+            }
           });
-        
-        customerId = stripeCustomer.id;
-        console.log(`Created new customer: ${customerId}`);
+          
+          // Store customer in database
+          await supabase
+            .from('stripe_customers')
+            .insert({
+              user_id: user.id,
+              customer_id: stripeCustomer.id,
+              email: user.email,
+              created_at: new Date().toISOString()
+            });
+          
+          customerId = stripeCustomer.id;
+          console.log(`Created new customer: ${customerId}`);
+        } catch (stripeError) {
+          console.error('Error creating Stripe customer:', stripeError);
+          throw new Error(`Failed to create Stripe customer: ${stripeError.message}`);
+        }
       }
 
       // Create checkout session
-      const origin = req.headers.get('origin') || 'http://localhost:3000';
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
+      try {
+        const origin = req.headers.get('origin') || 'http://localhost:3000';
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price: priceId,
+              quantity: 1,
+            },
+          ],
+          mode: 'subscription',
+          success_url: `${origin}/profile?tab=subscription&session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${origin}/profile?tab=subscription&canceled=true`,
+          subscription_data: {
+            metadata: {
+              supabase_user_id: user.id,
+            },
           },
-        ],
-        mode: 'subscription',
-        success_url: `${origin}/profile?tab=subscription&session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${origin}/profile?tab=subscription&canceled=true`,
-        subscription_data: {
-          metadata: {
-            supabase_user_id: user.id,
-          },
-        },
-      });
-      
-      console.log(`Created checkout session: ${session.id}`);
+        });
+        
+        console.log(`Created checkout session: ${session.id}`);
 
-      return new Response(
-        JSON.stringify({ url: session.url }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
+        return new Response(
+          JSON.stringify({ url: session.url }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      );
+        );
+      } catch (stripeError) {
+        console.error('Error creating checkout session:', stripeError);
+        throw new Error(`Failed to create checkout session: ${stripeError.message}`);
+      }
     }
 
     throw new Error('Invalid action');
@@ -240,11 +263,13 @@ serve(async (req) => {
     
     // Determine if this is a Stripe-specific error
     const isStripeError = error.type && error.type.startsWith('Stripe');
+    const errorMessage = error.message || 'Unknown error occurred';
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        isStripeError: isStripeError || false
+        error: errorMessage,
+        isStripeError: isStripeError || false,
+        code: error.code || 'unknown_error'
       }),
       { 
         headers: { 

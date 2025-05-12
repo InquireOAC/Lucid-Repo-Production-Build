@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, XCircle, RefreshCw, ShieldAlert } from "lucide-react";
+import { Loader2, CreditCard, XCircle, RefreshCw, ShieldAlert, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -43,6 +43,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [configError, setConfigError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   
@@ -75,6 +76,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     try {
       setProductsLoading(true);
       setConfigError(null);
+      setApiError(null);
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { action: 'getProducts' }
@@ -83,7 +85,15 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       if (error) {
         console.error("Error fetching products:", error);
         setConfigError("Unable to fetch subscription plans. Using default plans.");
+        setApiError(error.message || "API call failed");
         throw error;
+      }
+      
+      if (data?.error) {
+        console.warn("API returned an error:", data.error);
+        setConfigError("Stripe API error. Using default plans.");
+        setApiError(data.errorDetails || data.error);
+        throw new Error(data.error);
       }
       
       if (data?.products && Array.isArray(data.products)) {
@@ -193,6 +203,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const handleSubscribe = async (priceId: string) => {
     try {
       setLoading(true);
+      setApiError(null);
       
       console.log("Creating checkout session for price:", priceId);
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
@@ -201,6 +212,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       
       if (error) {
         console.error("Error creating checkout session:", error);
+        setApiError(error.message);
         throw error;
       }
       
@@ -210,9 +222,11 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       } else {
         throw new Error("No checkout URL returned");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating checkout session:", error);
-      toast.error("Failed to start subscription process");
+      toast.error("Failed to start subscription process", {
+        description: error.message || "Please try again later."
+      });
     } finally {
       setLoading(false);
     }
@@ -263,12 +277,25 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           </AlertDescription>
         </Alert>
       )}
+      
+      {apiError && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>API Error</AlertTitle>
+          <AlertDescription>
+            {apiError}
+          </AlertDescription>
+        </Alert>
+      )}
     
       <div className="flex justify-end">
         <Button
           variant="ghost"
           size="sm"
-          onClick={checkSubscriptionStatus}
+          onClick={() => {
+            fetchProducts();
+            checkSubscriptionStatus();
+          }}
           disabled={loading}
           className="text-xs"
         >
@@ -476,4 +503,3 @@ const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) =>
 );
 
 export default StripeSubscriptionManager;
-

@@ -7,6 +7,7 @@ export function useSubscription(user: any) {
   const [subscription, setSubscription] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     try {
@@ -14,6 +15,7 @@ export function useSubscription(user: any) {
       
       setIsLoading(true);
       setIsError(false);
+      setErrorMessage(null);
       console.log("Fetching subscription data...");
       
       // First get the customer record
@@ -26,6 +28,7 @@ export function useSubscription(user: any) {
       if (customerError) {
         console.error('Error fetching customer:', customerError);
         setIsError(true);
+        setErrorMessage('Failed to retrieve customer information');
         return;
       }
 
@@ -48,6 +51,7 @@ export function useSubscription(user: any) {
       if (subscriptionError) {
         console.error('Error fetching subscription:', subscriptionError);
         setIsError(true);
+        setErrorMessage('Failed to retrieve subscription details');
         return;
       }
 
@@ -74,6 +78,7 @@ export function useSubscription(user: any) {
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
       setIsError(true);
+      setErrorMessage(error.message || 'Failed to load subscription information');
       toast.error('Failed to load subscription information');
     } finally {
       setIsLoading(false);
@@ -90,6 +95,7 @@ export function useSubscription(user: any) {
     subscription,
     isLoading,
     isError,
+    errorMessage,
     fetchSubscription
   };
 }
