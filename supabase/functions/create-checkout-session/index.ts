@@ -19,90 +19,125 @@ serve(async (req) => {
   try {
     console.log('Starting create-checkout-session function');
     
-    // Initialize Stripe
-    if (!STRIPE_SECRET_KEY.startsWith('sk_')) {
-      throw new Error('Invalid Stripe secret key format. Please check your environment variables.');
+    // Validate Stripe key
+    if (!STRIPE_SECRET_KEY || !STRIPE_SECRET_KEY.startsWith('sk_')) {
+      console.error('Invalid Stripe secret key format or missing key');
+      throw new Error('Stripe API key not correctly configured. Please check your environment variables.');
     }
     
     const stripe = new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: '2023-10-16',
     });
-    console.log('Stripe initialized');
+    console.log('Stripe initialized successfully');
 
     const { action, priceId } = await req.json();
     console.log(`Action: ${action}, PriceId: ${priceId || 'not provided'}`);
 
-    const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1];
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    // Verify authentication except for the getProducts action which can be public
+    if (action !== 'getProducts') {
+      const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1];
+      if (!authHeader) {
+        throw new Error('No authorization header provided');
+      }
     }
 
     if (action === 'getProducts') {
       console.log('Fetching all products from Stripe');
-      // Get all active products and prices from Stripe
-      const products = await stripe.products.list({
-        active: true,
-        expand: ['data.default_price'],
-      });
-
-      console.log(`Found ${products.data.length} products`);
-      
-      // Format products for frontend display
-      const formattedProducts = products.data
-        .filter(product => product.default_price)
-        .map(product => {
-          const price = product.default_price as Stripe.Price;
-          const unitAmount = price.unit_amount || 0;
-          const currency = price.currency || 'usd';
-          const interval = price.recurring?.interval || 'month';
-          
-          // Parse features from metadata or use defaults
-          let features = [];
-          try {
-            if (product.metadata.features) {
-              features = JSON.parse(product.metadata.features);
-            }
-          } catch (e) {
-            console.error('Error parsing product features:', e);
-            features = [];
-          }
-
-          // Add default features if none exist
-          if (features.length === 0) {
-            if (product.name.toLowerCase().includes('premium')) {
-              features = [
-                'Unlimited dream analyses',
-                '20 Image generations per month',
-                'Advanced dream patterns detection',
-                'Priority support'
-              ];
-            } else {
-              features = [
-                '10 Dream analyses per month',
-                '5 Image generations per month',
-                'Dream journal backup'
-              ];
-            }
-          }
-
-          return {
-            id: price.id,
-            name: product.name,
-            description: product.description,
-            price: `$${(unitAmount / 100).toFixed(2)}/${interval}`,
-            features: features
-          };
+      try {
+        // Get all active products and prices from Stripe
+        const products = await stripe.products.list({
+          active: true,
+          expand: ['data.default_price'],
         });
 
-      return new Response(
-        JSON.stringify({ products: formattedProducts }),
-        { 
-          headers: { 
-            ...corsHeaders,
-            'Content-Type': 'application/json'
+        console.log(`Found ${products.data.length} products`);
+        
+        // Format products for frontend display
+        const formattedProducts = products.data
+          .filter(product => product.default_price)
+          .map(product => {
+            const price = product.default_price as Stripe.Price;
+            const unitAmount = price.unit_amount || 0;
+            const currency = price.currency || 'usd';
+            const interval = price.recurring?.interval || 'month';
+            
+            // Parse features from metadata or use defaults
+            let features = [];
+            try {
+              if (product.metadata.features) {
+                features = JSON.parse(product.metadata.features);
+              }
+            } catch (e) {
+              console.error('Error parsing product features:', e);
+              features = [];
+            }
+
+            // Add default features if none exist
+            if (features.length === 0) {
+              if (product.name.toLowerCase().includes('premium')) {
+                features = [
+                  'Unlimited dream analyses',
+                  '20 Image generations per month',
+                  'Advanced dream patterns detection',
+                  'Priority support'
+                ];
+              } else {
+                features = [
+                  '10 Dream analyses per month',
+                  '5 Image generations per month',
+                  'Dream journal backup'
+                ];
+              }
+            }
+
+            return {
+              id: price.id,
+              name: product.name,
+              description: product.description,
+              price: `$${(unitAmount / 100).toFixed(2)}/${interval}`,
+              features: features
+            };
+          });
+
+        return new Response(
+          JSON.stringify({ products: formattedProducts }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
           }
-        }
-      );
+        );
+      } catch (stripeError) {
+        console.error('Stripe error fetching products:', stripeError);
+        
+        // Return fallback products with a 200 status
+        const fallbackProducts = [
+          {
+            id: 'price_basic',
+            name: 'Basic',
+            price: '$4.99/month',
+            features: ['10 Dream analyses per month', '5 Image generations per month', 'Dream journal backup']
+          },
+          {
+            id: 'price_premium',
+            name: 'Premium',
+            price: '$9.99/month',
+            features: ['Unlimited dream analyses', '20 Image generations per month', 'Advanced dream patterns detection', 'Priority support']
+          }
+        ];
+        
+        console.log('Returning fallback products');
+        return new Response(
+          JSON.stringify({ products: fallbackProducts }),
+          { 
+            headers: { 
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+      }
     }
 
     if (action === 'createSession') {
@@ -110,9 +145,18 @@ serve(async (req) => {
         throw new Error('Price ID is required');
       }
 
+      const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1];
+      if (!authHeader) {
+        throw new Error('No authorization header provided');
+      }
+
       // Initialize Supabase client
       const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
       const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Supabase credentials not configured');
+      }
+      
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
       // Fetch user information
@@ -193,8 +237,15 @@ serve(async (req) => {
     throw new Error('Invalid action');
   } catch (error) {
     console.error('Error in create-checkout-session:', error);
+    
+    // Determine if this is a Stripe-specific error
+    const isStripeError = error.type && error.type.startsWith('Stripe');
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        isStripeError: isStripeError || false
+      }),
       { 
         headers: { 
           ...corsHeaders,

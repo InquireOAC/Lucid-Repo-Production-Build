@@ -3,9 +3,10 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, XCircle, RefreshCw } from "lucide-react";
+import { Loader2, CreditCard, XCircle, RefreshCw, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 // Type definitions
 interface Product {
@@ -41,6 +42,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [configError, setConfigError] = useState<string | null>(null);
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   
@@ -72,6 +74,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
+      setConfigError(null);
       
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { action: 'getProducts' }
@@ -79,6 +82,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       
       if (error) {
         console.error("Error fetching products:", error);
+        setConfigError("Unable to fetch subscription plans. Using default plans.");
         throw error;
       }
       
@@ -250,6 +254,16 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
 
   return (
     <div className="space-y-6 max-w-full">
+      {configError && (
+        <Alert variant="warning" className="mb-4 bg-amber-50">
+          <ShieldAlert className="h-4 w-4" />
+          <AlertTitle>Configuration Issue</AlertTitle>
+          <AlertDescription>
+            {configError}
+          </AlertDescription>
+        </Alert>
+      )}
+    
       <div className="flex justify-end">
         <Button
           variant="ghost"

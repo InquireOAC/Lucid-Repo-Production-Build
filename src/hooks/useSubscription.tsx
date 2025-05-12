@@ -1,17 +1,19 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export function useSubscription(user: any) {
   const [subscription, setSubscription] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async () => {
     try {
       if (!user?.id) return;
       
       setIsLoading(true);
+      setIsError(false);
       console.log("Fetching subscription data...");
       
       // First get the customer record
@@ -23,6 +25,7 @@ export function useSubscription(user: any) {
 
       if (customerError) {
         console.error('Error fetching customer:', customerError);
+        setIsError(true);
         return;
       }
 
@@ -44,6 +47,7 @@ export function useSubscription(user: any) {
 
       if (subscriptionError) {
         console.error('Error fetching subscription:', subscriptionError);
+        setIsError(true);
         return;
       }
 
@@ -69,21 +73,23 @@ export function useSubscription(user: any) {
       }
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
+      setIsError(true);
       toast.error('Failed to load subscription information');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
       fetchSubscription();
     }
-  }, [user]);
+  }, [user, fetchSubscription]);
 
   return {
     subscription,
     isLoading,
+    isError,
     fetchSubscription
   };
 }
