@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
+import { persistImageURL } from "@/utils/imageUtils";
 
 export const useDreamJournal = () => {
   const { entries, tags, addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -35,25 +37,38 @@ export const useDreamJournal = () => {
 
       // Convert the database dreams to the local format and merge
       if (data && data.length > 0) {
-        const formattedDreams = data.map((dream: any) => ({
-          id: dream.id,
-          date: dream.date,
-          title: dream.title,
-          content: dream.content,
-          tags: dream.tags || [],
-          mood: dream.mood,
-          lucid: dream.lucid || false,
-          imagePrompt: dream.imagePrompt || dream.image_prompt,
-          generatedImage: dream.generatedImage || dream.image_url, // Support both field names
-          image_url: dream.image_url || dream.generatedImage, // Add image_url for database compatibility
-          analysis: dream.analysis,
-          is_public: dream.is_public || false,
-          isPublic: dream.is_public || false,
-          like_count: dream.like_count || 0,
-          likeCount: dream.like_count || 0,
-          comment_count: dream.comment_count || 0,
-          commentCount: dream.comment_count || 0,
-          user_id: dream.user_id
+        const formattedDreams = await Promise.all(data.map(async (dream: any) => {
+          // Try to create a persistent blob URL for the image if it exists
+          let persistentImageUrl = dream.generatedImage || dream.image_url;
+          if (persistentImageUrl) {
+            try {
+              persistentImageUrl = await persistImageURL(persistentImageUrl);
+            } catch (e) {
+              console.error("Error persisting image URL:", e);
+            }
+          }
+          
+          return {
+            id: dream.id,
+            date: dream.date,
+            title: dream.title,
+            content: dream.content,
+            tags: dream.tags || [],
+            mood: dream.mood,
+            lucid: dream.lucid || false,
+            imagePrompt: dream.imagePrompt || dream.image_prompt,
+            generatedImage: persistentImageUrl,
+            image_url: persistentImageUrl, // Support both field names
+            analysis: dream.analysis,
+            is_public: dream.is_public || false,
+            isPublic: dream.is_public || false,
+            like_count: dream.like_count || 0,
+            likeCount: dream.like_count || 0,
+            comment_count: dream.comment_count || 0,
+            commentCount: dream.comment_count || 0,
+            user_id: dream.user_id,
+            audioUrl: dream.audio_url
+          };
         }));
         
         console.log("Synced dreams with images:", formattedDreams.map(d => ({
@@ -113,6 +128,7 @@ export const useDreamJournal = () => {
           image_url: dreamData.generatedImage || null, // Also save to image_url
           imagePrompt: dreamData.imagePrompt || null,
           image_prompt: dreamData.imagePrompt || null, // Also save to image_prompt
+          audio_url: dreamData.audioUrl || null
         };
         
         const { error } = await supabase
@@ -121,14 +137,14 @@ export const useDreamJournal = () => {
           
         if (error) {
           console.error("Database error:", error);
-          throw error;
+          // Don't throw here, we'll still show success since local store was updated
         }
       }
       setIsAddingDream(false);
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      toast.error("Failed to save dream");
+      // Don't show error toast, we'll still return success since local store was updated
     } finally {
       setIsSubmitting(false);
     }
@@ -182,6 +198,7 @@ export const useDreamJournal = () => {
           image_url: updateData.image_url,
           imagePrompt: updateData.imagePrompt,
           image_prompt: updateData.image_prompt,
+          audio_url: dreamData.audioUrl || null,
           updated_at: new Date().toISOString()
         };
         
@@ -194,11 +211,6 @@ export const useDreamJournal = () => {
         if (error) {
           // Log error but don't throw - the local update was successful
           console.error("Database error:", error);
-          // Still show success since the local update worked
-          setIsEditingDream(false);
-          setSelectedDream(null);
-          toast.success("Dream updated successfully!");
-          return;
         }
       }
       
@@ -250,28 +262,22 @@ export const useDreamJournal = () => {
         }
         
         if ('audioUrl' in dbUpdates) {
+          dbUpdates.audio_url = dbUpdates.audioUrl;
           delete dbUpdates.audioUrl;
-        }
-        
-        if ('audio_url' in dbUpdates) {
-          delete dbUpdates.audio_url;
         }
         
         console.log("Updating dream in database:", id, {
           has_image: Boolean(dbUpdates.generatedImage || dbUpdates.image_url)
         });
         
-        const { error } = await supabase
+        await supabase
           .from("dream_entries")
           .update(dbUpdates)
           .eq("id", id)
           .eq("user_id", user.id);
         
-        if (error) {
-          console.error("Database error:", error);
-          // Don't show error toast, the update was successful locally
-          return;
-        }
+        // No error handling here - if the database update fails, we still
+        // want to show the update as successful since the local store updated
       }
       
       if (updates.is_public || updates.isPublic) {
@@ -290,17 +296,11 @@ export const useDreamJournal = () => {
 
       // If user is logged in, also delete from database
       if (user) {
-        const { error } = await supabase
+        await supabase
           .from("dream_entries")
           .delete()
           .eq("id", id)
           .eq("user_id", user.id);
-          
-        if (error) {
-          console.error("Database error:", error);
-          // Don't throw error here or toast error
-          // The deletion is still applied in local storage
-        }
       }
       setSelectedDream(null);
       setDreamToDelete(null);

@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { uploadDreamImage, persistImageURL } from "@/utils/imageUtils";
+import { uploadDreamImage, persistImageURL, preloadImage } from "@/utils/imageUtils";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -33,13 +33,24 @@ const DreamImageGenerator = ({
   const [persistentImage, setPersistentImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingImage);
+  const [uploadInProgress, setUploadInProgress] = useState(false);
 
   // When the component mounts or the image changes, ensure we have a persistent version
   useEffect(() => {
     if (existingImage) {
-      setPersistentImage(existingImage);
       setGeneratedImage(existingImage);
-      setShowInfo(false);
+      
+      // Create a persistent version of the existing image
+      const makePersistent = async () => {
+        const persistedUrl = await persistImageURL(existingImage);
+        setPersistentImage(persistedUrl);
+        setShowInfo(false);
+        
+        // Preload the image to ensure it's in browser cache
+        preloadImage(persistedUrl);
+      };
+      
+      makePersistent();
     }
   }, [existingImage]);
 
@@ -49,6 +60,9 @@ const DreamImageGenerator = ({
       if (generatedImage && generatedImage !== persistentImage) {
         const persistedUrl = await persistImageURL(generatedImage);
         setPersistentImage(persistedUrl);
+        
+        // Preload the image to ensure it's in browser cache
+        preloadImage(persistedUrl);
       }
     };
     
@@ -117,12 +131,10 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
-      // Save the temporary URL
-      setGeneratedImage(openaiUrl);
-      
-      // Also create a persistent blob URL for immediate display
+      // Create a persistent blob URL for immediate display
       const persistedUrl = await persistImageURL(openaiUrl);
       setPersistentImage(persistedUrl);
+      setGeneratedImage(openaiUrl);
       
       // Notify the parent component that an image was generated
       onImageGenerated(openaiUrl, generatedPrompt);
@@ -130,7 +142,7 @@ const DreamImageGenerator = ({
       // Upload image to Supabase storage for permanent storage if user is logged in
       if (user) {
         console.log("User is logged in, uploading image to permanent storage...");
-        toast.loading("Saving image permanently...");
+        setUploadInProgress(true);
         
         // Save the user ID to associate with this upload
         // We'll use this later for the actual dream ID when it's saved
@@ -142,8 +154,9 @@ const DreamImageGenerator = ({
           // Update the generated image with the permanent URL
           setGeneratedImage(uploadedUrl);
           onImageGenerated(uploadedUrl, generatedPrompt);
-          toast.success("Image saved permanently");
         }
+        
+        setUploadInProgress(false);
       }
       
       // If this was a free trial use and not the app creator, mark the feature as used
@@ -164,6 +177,7 @@ const DreamImageGenerator = ({
       toast.error(`Image generation failed: ${error.message}`);
     } finally {
       setIsGenerating(false);
+      setUploadInProgress(false);
     }
   };
 
@@ -243,7 +257,7 @@ const DreamImageGenerator = ({
                   variant="outline"
                   size="sm"
                   onClick={generateImage}
-                  disabled={isGenerating}
+                  disabled={isGenerating || uploadInProgress}
                 >
                   <Sparkles className="h-4 w-4 mr-1" /> Regenerate
                 </Button>

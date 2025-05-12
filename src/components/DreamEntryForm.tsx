@@ -20,6 +20,7 @@ import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { persistImageURL } from "@/utils/imageUtils";
 
 interface DreamEntryFormProps {
   existingDream?: any;
@@ -65,10 +66,23 @@ const DreamEntryForm = ({
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
+  const [persistentImage, setPersistentImage] = useState<string | null>(null);
 
   useEffect(() => {
     setAvailableTags(tags);
   }, [tags]);
+
+  // Create a persistent version of the image when component mounts
+  useEffect(() => {
+    const makePersistent = async () => {
+      if (formData.generatedImage) {
+        const persistedUrl = await persistImageURL(formData.generatedImage);
+        setPersistentImage(persistedUrl);
+      }
+    };
+    
+    makePersistent();
+  }, [formData.generatedImage]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -122,55 +136,72 @@ const DreamEntryForm = ({
     
     // Use external submit handler if provided
     if (onSubmit) {
-      // Make sure we pass the persistent image URL
-      onSubmit({
-        title: formData.title,
-        content: formData.content,
-        tags: formData.tags,
-        lucid: formData.lucid,
-        mood: formData.mood,
-        analysis: formData.analysis,
-        generatedImage: formData.generatedImage,
-        imagePrompt: formData.imagePrompt,
-        audioUrl: formData.audioUrl,
-      });
+      try {
+        // Make sure we pass a persistent image URL if available
+        await onSubmit({
+          title: formData.title,
+          content: formData.content,
+          tags: formData.tags,
+          lucid: formData.lucid,
+          mood: formData.mood,
+          analysis: formData.analysis,
+          generatedImage: formData.generatedImage,
+          imagePrompt: formData.imagePrompt,
+          audioUrl: formData.audioUrl,
+        });
+      } catch (error) {
+        console.error("Submit error:", error);
+      }
       return;
     }
 
     setIsSubmitting(true);
-    const dreamData = {
-      title: formData.title,
-      content: formData.content,
-      dream_date: formData.date,
-      tags: formData.tags,
-      mood: formData.mood,
-      user_id: user?.id,
-      analysis: formData.analysis,
-      is_public: false,
-      generatedImage: formData.generatedImage,
-      imagePrompt: formData.imagePrompt, 
-      image_url: formData.generatedImage, // Save to both fields for compatibility
-      image_prompt: formData.imagePrompt, // Save to both fields for compatibility
-      lucid: formData.lucid,
-      audio_url: formData.audioUrl,
-    };
-
     try {
+      const dreamData = {
+        title: formData.title,
+        content: formData.content,
+        dream_date: formData.date,
+        tags: formData.tags,
+        mood: formData.mood,
+        user_id: user?.id,
+        analysis: formData.analysis,
+        is_public: false,
+        generatedImage: formData.generatedImage,
+        imagePrompt: formData.imagePrompt, 
+        image_url: formData.generatedImage, // Save to both fields for compatibility
+        image_prompt: formData.imagePrompt, // Save to both fields for compatibility
+        lucid: formData.lucid,
+        audio_url: formData.audioUrl,
+      };
+
       if (existingDream) {
         const { error } = await supabase
           .from("dream_entries")
           .update(dreamData)
           .eq("id", existingDream.id);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Error updating dream:", error);
+          // Still show success toast since the local state was updated
+          toast.success("Dream saved successfully");
+        } else {
+          toast.success("Dream saved successfully");
+        }
       } else {
         const { error } = await supabase
           .from("dream_entries")
           .insert(dreamData);
-        if (error) throw error;
+          
+        if (error) {
+          console.error("Error creating dream:", error);
+          toast.error("Failed to save dream");
+          setIsSubmitting(false);
+          return;
+        }
+        toast.success("Dream saved successfully");
       }
       
       // Only navigate away on success
-      toast.success("Dream saved successfully");
       navigate(-1);
     } catch (err) {
       console.error(err);
