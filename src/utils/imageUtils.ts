@@ -44,19 +44,19 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
     // Use the EdgeRuntime.waitUntil approach but simplified for client-side
     const uploadPromise = (async () => {
       try {
-        // Check if bucket exists first (will create it if needed)
+        // Check if bucket exists first (will use the new generated_dream_images bucket)
         const { data: buckets } = await supabase.storage.listBuckets();
-        if (!buckets?.find(bucket => bucket.name === 'dreamimage')) {
-          console.log("Creating dreamimage bucket");
-          await supabase.storage.createBucket('dreamimage', {
+        if (!buckets?.find(bucket => bucket.name === 'generated_dream_images')) {
+          console.log("Creating generated_dream_images bucket");
+          await supabase.storage.createBucket('generated_dream_images', {
             public: true,
             fileSizeLimit: 5242880 // 5MB
           });
         }
         
-        // Upload to the bucket
+        // Upload to the new bucket
         const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('dreamimage')
+          .from('generated_dream_images')
           .upload(filePath, imageBlob, {
             contentType: 'image/jpeg',
             upsert: true,
@@ -72,7 +72,7 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
         
         // 4. Get the public URL for the uploaded image
         const { data: { publicUrl } } = supabase.storage
-          .from('dreamimage')
+          .from('generated_dream_images')
           .getPublicUrl(filePath);
           
         console.log("Public URL generated:", publicUrl);
