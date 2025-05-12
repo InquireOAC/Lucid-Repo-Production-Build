@@ -3,8 +3,9 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, XCircle } from "lucide-react";
+import { Loader2, CreditCard, XCircle, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 
 // Type definitions
 interface Product {
@@ -19,6 +20,7 @@ interface SubscriptionStatus {
   subscribed: boolean;
   subscription_tier?: string;
   subscription_end?: string;
+  cancelAtPeriodEnd?: boolean;
   analysisCredits?: {
     used: number;
     total: number;
@@ -40,6 +42,24 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  
+  // Check if we just returned from a checkout session
+  useEffect(() => {
+    const sessionId = searchParams.get('session_id');
+    const canceled = searchParams.get('canceled');
+    
+    if (sessionId) {
+      toast.success("Subscription activated!", {
+        description: "Your subscription has been successfully activated.",
+      });
+      checkSubscriptionStatus();
+    } else if (canceled) {
+      toast.info("Subscription process canceled", {
+        description: "You canceled the subscription process.",
+      });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -57,11 +77,17 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         body: { action: 'getProducts' }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching products:", error);
+        throw error;
+      }
       
-      if (data?.products) {
+      if (data?.products && Array.isArray(data.products)) {
+        console.log("Received Stripe products:", data.products);
         setProducts(data.products);
-        console.log("Stripe products:", data.products);
+      } else {
+        console.warn("Invalid products data received:", data);
+        throw new Error("Invalid products data");
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -80,6 +106,9 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           features: ['Unlimited dream analyses', '20 Image generations per month', 'Advanced dream patterns detection', 'Priority support']
         }
       ]);
+      toast.error("Failed to load subscription plans", {
+        description: "Using default plans. Please try again later.",
+      });
     } finally {
       setProductsLoading(false);
     }
@@ -97,12 +126,18 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         .eq("user_id", user?.id)
         .maybeSingle();
       
-      if (customerError) throw customerError;
+      if (customerError) {
+        console.error("Error fetching customer:", customerError);
+        throw customerError;
+      }
       
       if (!customerData?.customer_id) {
+        console.log("No customer record found");
         setSubscriptionStatus({ subscribed: false });
         return;
       }
+      
+      console.log("Found customer ID:", customerData.customer_id);
       
       // Get the subscription details
       const { data: subscriptionData, error: subscriptionError } = await supabase
@@ -112,9 +147,13 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         .eq("status", "active")
         .maybeSingle();
       
-      if (subscriptionError) throw subscriptionError;
+      if (subscriptionError) {
+        console.error("Error fetching subscription:", subscriptionError);
+        throw subscriptionError;
+      }
       
       if (subscriptionData) {
+        console.log("Active subscription found:", subscriptionData);
         // Get plans info to determine credit limits
         const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10;
         const imageLimit = subscriptionData.price_id === "price_premium" ? 20 : 5;
@@ -123,6 +162,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           subscribed: true,
           subscription_tier: subscriptionData.price_id === "price_premium" ? "Premium" : "Basic",
           subscription_end: new Date(subscriptionData.current_period_end * 1000).toLocaleDateString(),
+          cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
           analysisCredits: {
             used: subscriptionData.dream_analyses_used || 0,
             total: analysisLimit
@@ -133,6 +173,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           }
         });
       } else {
+        console.log("No active subscription found");
         setSubscriptionStatus({ subscribed: false });
       }
     } catch (error) {
@@ -149,13 +190,18 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     try {
       setLoading(true);
       
+      console.log("Creating checkout session for price:", priceId);
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { action: 'createSession', priceId }
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error creating checkout session:", error);
+        throw error;
+      }
       
       if (data?.url) {
+        console.log("Redirecting to checkout:", data.url);
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");
@@ -173,13 +219,18 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     try {
       setLoading(true);
       
+      console.log("Creating portal session");
       const { data, error } = await supabase.functions.invoke('create-portal-session', {
         body: {}
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error opening customer portal:", error);
+        throw error;
+      }
       
       if (data?.url) {
+        console.log("Redirecting to portal:", data.url);
         window.location.href = data.url;
       } else {
         throw new Error("No portal URL returned");
@@ -199,6 +250,19 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
 
   return (
     <div className="space-y-6 max-w-full">
+      <div className="flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={checkSubscriptionStatus}
+          disabled={loading}
+          className="text-xs"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
+      
       {subscriptionStatus?.subscribed ? (
         <ActiveSubscription 
           subscriptionStatus={subscriptionStatus}
@@ -246,6 +310,13 @@ const ActiveSubscription = ({
         Renews: {subscriptionStatus.subscription_end}
       </span>
     </div>
+    
+    {subscriptionStatus.cancelAtPeriodEnd && (
+      <div className="bg-amber-500/10 text-amber-600 rounded-md p-3 text-sm">
+        Your subscription will end on {subscriptionStatus.subscription_end}. 
+        You can renew your subscription in the subscription management portal.
+      </div>
+    )}
     
     {subscriptionStatus.analysisCredits && (
       <CreditBar
@@ -359,10 +430,10 @@ interface ProductCardProps {
 const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) => (
   <div 
     className={`border rounded-lg p-4 space-y-4 ${
-      product.name === "Premium" ? "border-dream-purple relative overflow-hidden" : ""
+      product.name.toLowerCase().includes("premium") ? "border-dream-purple relative overflow-hidden" : ""
     }`}
   >
-    {product.name === "Premium" && (
+    {product.name.toLowerCase().includes("premium") && (
       <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
         Popular
       </div>
@@ -379,7 +450,7 @@ const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) =>
     </ul>
     <Button 
       className={`w-full ${
-        product.name === "Premium" ? "bg-dream-purple hover:bg-dream-purple/90" : ""
+        product.name.toLowerCase().includes("premium") ? "bg-dream-purple hover:bg-dream-purple/90" : ""
       }`}
       onClick={() => handleSubscribe(product.id)}
       disabled={loading}

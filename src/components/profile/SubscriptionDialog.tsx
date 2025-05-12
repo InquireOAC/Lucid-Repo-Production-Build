@@ -2,11 +2,9 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Sparkles, ImageIcon, Crown } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
 interface SubscriptionDialogProps {
@@ -16,6 +14,7 @@ interface SubscriptionDialogProps {
     plan: string;
     status: string;
     currentPeriodEnd: string;
+    cancelAtPeriodEnd?: boolean;
     analysisCredits: {
       used: number;
       total: number;
@@ -70,6 +69,12 @@ const SubscriptionDialog = ({
                     <span className="text-sm">Current period ends:</span>
                     <span className="text-sm font-medium">{subscription.currentPeriodEnd}</span>
                   </div>
+                  
+                  {subscription.cancelAtPeriodEnd && (
+                    <div className="bg-amber-500/10 text-amber-600 rounded-md p-3 text-sm mt-2">
+                      Your subscription will not renew after {subscription.currentPeriodEnd}.
+                    </div>
+                  )}
                 </div>
                 
                 {/* Credits */}

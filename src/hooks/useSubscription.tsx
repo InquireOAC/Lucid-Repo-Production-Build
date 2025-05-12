@@ -1,18 +1,24 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export function useSubscription(user: any) {
   const [subscription, setSubscription] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchSubscription = async () => {
     try {
+      if (!user?.id) return;
+      
+      setIsLoading(true);
       console.log("Fetching subscription data...");
+      
       // First get the customer record
       const { data: customerData, error: customerError } = await supabase
         .from('stripe_customers')
         .select('customer_id')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .maybeSingle();
 
       if (customerError) {
@@ -22,6 +28,7 @@ export function useSubscription(user: any) {
 
       if (!customerData?.customer_id) {
         console.log("No customer ID found for user");
+        setSubscription(null);
         return;
       }
 
@@ -32,6 +39,7 @@ export function useSubscription(user: any) {
         .from('stripe_subscriptions')
         .select('*')
         .eq('customer_id', customerData.customer_id)
+        .eq('status', 'active')
         .maybeSingle();
 
       if (subscriptionError) {
@@ -52,18 +60,30 @@ export function useSubscription(user: any) {
           imageCredits: {
             used: subscriptionData.image_generations_used || 0,
             total: subscriptionData.price_id === 'price_premium' ? 20 : 5
-          }
+          },
+          cancelAtPeriodEnd: subscriptionData.cancel_at_period_end
         });
       } else {
-        console.log("No subscription data found");
+        console.log("No active subscription found");
+        setSubscription(null);
       }
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
+      toast.error('Failed to load subscription information');
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    if (user) {
+      fetchSubscription();
+    }
+  }, [user]);
+
   return {
     subscription,
+    isLoading,
     fetchSubscription
   };
 }

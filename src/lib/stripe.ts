@@ -14,6 +14,12 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
       return false;
     }
     
+    // Special case for admin users for testing
+    if (user.email === "inquireoac@gmail.com") {
+      console.log('Admin user, granting access');
+      return true;
+    }
+    
     // Get the customer ID associated with this user
     const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
@@ -60,6 +66,12 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     
+    // Special case for admin users
+    if (user.email === "inquireoac@gmail.com") {
+      console.log('Admin user, not incrementing usage');
+      return true;
+    }
+    
     // Get the customer ID associated with this user
     const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
@@ -68,6 +80,8 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       .maybeSingle();
     
     if (customerError || !customerData?.customer_id) return false;
+    
+    console.log(`Incrementing ${featureType} usage for customer: ${customerData.customer_id}`);
     
     // Increment usage for this feature
     const { error: usageError } = await supabase.rpc(
@@ -102,4 +116,48 @@ export const showSubscriptionPrompt = (featureType: 'analysis' | 'image') => {
     },
     duration: 5000
   });
+};
+
+// Helper function for checking if a user has a valid subscription
+export const hasActiveSubscription = async (): Promise<boolean> => {
+  try {
+    // First, check if the user is logged in
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return false;
+    }
+    
+    // Special case for admin users
+    if (user.email === "inquireoac@gmail.com") {
+      return true;
+    }
+    
+    // Get the customer ID associated with this user
+    const { data: customerData, error: customerError } = await supabase
+      .from('stripe_customers')
+      .select('customer_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (customerError || !customerData?.customer_id) {
+      return false;
+    }
+    
+    // Check if the user has an active subscription
+    const { data: subscriptionData, error: subscriptionError } = await supabase
+      .from('stripe_subscriptions')
+      .select('status')
+      .eq('customer_id', customerData.customer_id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (subscriptionError) {
+      return false;
+    }
+    
+    return !!subscriptionData;
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    return false;
+  }
 };

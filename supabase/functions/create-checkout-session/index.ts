@@ -8,67 +8,119 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const STRIPE_SECRET_KEY = Deno.env.get('STRIPE_SECRET_KEY') || '';
+
 serve(async (req) => {
+  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+    console.log('Starting create-checkout-session function');
+    
+    // Initialize Stripe
+    if (!STRIPE_SECRET_KEY.startsWith('sk_')) {
+      throw new Error('Invalid Stripe secret key format. Please check your environment variables.');
+    }
+    
+    const stripe = new Stripe(STRIPE_SECRET_KEY, {
       apiVersion: '2023-10-16',
-    })
+    });
+    console.log('Stripe initialized');
 
-    const { action, priceId } = await req.json()
+    const { action, priceId } = await req.json();
+    console.log(`Action: ${action}, PriceId: ${priceId || 'not provided'}`);
 
-    const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1]
+    const authHeader = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!authHeader) {
-      throw new Error('No authorization header')
+      throw new Error('No authorization header');
     }
 
     if (action === 'getProducts') {
-      // Get all active products from Stripe
+      console.log('Fetching all products from Stripe');
+      // Get all active products and prices from Stripe
       const products = await stripe.products.list({
         active: true,
         expand: ['data.default_price'],
-      })
+      });
 
-      return new Response(
-        JSON.stringify({ 
-          products: products.data.map(product => ({
-            id: product.default_price ? (product.default_price as Stripe.Price).id : '',
+      console.log(`Found ${products.data.length} products`);
+      
+      // Format products for frontend display
+      const formattedProducts = products.data
+        .filter(product => product.default_price)
+        .map(product => {
+          const price = product.default_price as Stripe.Price;
+          const unitAmount = price.unit_amount || 0;
+          const currency = price.currency || 'usd';
+          const interval = price.recurring?.interval || 'month';
+          
+          // Parse features from metadata or use defaults
+          let features = [];
+          try {
+            if (product.metadata.features) {
+              features = JSON.parse(product.metadata.features);
+            }
+          } catch (e) {
+            console.error('Error parsing product features:', e);
+            features = [];
+          }
+
+          // Add default features if none exist
+          if (features.length === 0) {
+            if (product.name.toLowerCase().includes('premium')) {
+              features = [
+                'Unlimited dream analyses',
+                '20 Image generations per month',
+                'Advanced dream patterns detection',
+                'Priority support'
+              ];
+            } else {
+              features = [
+                '10 Dream analyses per month',
+                '5 Image generations per month',
+                'Dream journal backup'
+              ];
+            }
+          }
+
+          return {
+            id: price.id,
             name: product.name,
             description: product.description,
-            price: product.default_price 
-              ? `${((product.default_price as Stripe.Price).unit_amount || 0) / 100} ${(product.default_price as Stripe.Price).currency}/${(product.default_price as Stripe.Price).recurring?.interval}`
-              : 'N/A',
-            features: product.metadata.features ? 
-              JSON.parse(product.metadata.features) : []
-          }))
-        }),
+            price: `$${(unitAmount / 100).toFixed(2)}/${interval}`,
+            features: features
+          };
+        });
+
+      return new Response(
+        JSON.stringify({ products: formattedProducts }),
         { 
           headers: { 
             ...corsHeaders,
             'Content-Type': 'application/json'
           }
         }
-      )
+      );
     }
 
     if (action === 'createSession') {
       if (!priceId) {
-        throw new Error('Price ID is required')
+        throw new Error('Price ID is required');
       }
 
       // Initialize Supabase client
-      const supabaseUrl = Deno.env.get('SUPABASE_URL') || ''
-      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
-      const supabase = createClient(supabaseUrl, supabaseServiceKey)
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+      const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
       // Fetch user information
-      const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader)
+      const { data: { user }, error: userError } = await supabase.auth.getUser(authHeader);
       if (userError || !user) {
-        throw new Error('User not authenticated')
+        throw new Error('User not authenticated');
       }
+      console.log(`User authenticated: ${user.id}`);
 
       // Check if customer already exists
       let customerId;
@@ -76,10 +128,11 @@ serve(async (req) => {
         .from('stripe_customers')
         .select('customer_id')
         .eq('user_id', user.id)
-        .maybeSingle()
+        .maybeSingle();
 
       if (customerData?.customer_id) {
         customerId = customerData.customer_id;
+        console.log(`Found existing customer: ${customerId}`);
       } else {
         // Create a new Stripe customer
         const stripeCustomer = await stripe.customers.create({
@@ -87,7 +140,7 @@ serve(async (req) => {
           metadata: {
             supabase_user_id: user.id
           }
-        })
+        });
         
         // Store customer in database
         await supabase
@@ -97,12 +150,14 @@ serve(async (req) => {
             customer_id: stripeCustomer.id,
             email: user.email,
             created_at: new Date().toISOString()
-          })
+          });
         
         customerId = stripeCustomer.id;
+        console.log(`Created new customer: ${customerId}`);
       }
 
       // Create checkout session
+      const origin = req.headers.get('origin') || 'http://localhost:3000';
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         payment_method_types: ['card'],
@@ -113,14 +168,16 @@ serve(async (req) => {
           },
         ],
         mode: 'subscription',
-        success_url: `${req.headers.get('origin')}/profile?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${req.headers.get('origin')}/profile`,
+        success_url: `${origin}/profile?tab=subscription&session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/profile?tab=subscription&canceled=true`,
         subscription_data: {
           metadata: {
             supabase_user_id: user.id,
           },
         },
-      })
+      });
+      
+      console.log(`Created checkout session: ${session.id}`);
 
       return new Response(
         JSON.stringify({ url: session.url }),
@@ -130,12 +187,12 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           }
         }
-      )
+      );
     }
 
-    throw new Error('Invalid action')
+    throw new Error('Invalid action');
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in create-checkout-session:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
@@ -145,6 +202,6 @@ serve(async (req) => {
         },
         status: 400
       }
-    )
+    );
   }
 })
