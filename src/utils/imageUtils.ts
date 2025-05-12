@@ -36,92 +36,84 @@ export const uploadDreamImage = async (dreamId: string, imageUrl: string): Promi
     const filePath = `${fileName}`;
     
     console.log("Uploading image to storage:", filePath);
-
-    // Create a local URL for immediate display and caching
-    const localBlobUrl = URL.createObjectURL(imageBlob);
     
-    // 3. Upload the blob to Supabase Storage in the background
-    // Use the EdgeRuntime.waitUntil approach but simplified for client-side
-    const uploadPromise = (async () => {
-      try {
-        // Check if bucket exists first (will use the new generated_dream_images bucket)
-        const { data: buckets } = await supabase.storage.listBuckets();
-        if (!buckets?.find(bucket => bucket.name === 'generated_dream_images')) {
-          console.log("Creating generated_dream_images bucket");
-          await supabase.storage.createBucket('generated_dream_images', {
-            public: true,
-            fileSizeLimit: 5242880 // 5MB
-          });
-        }
+    // 3. Upload the blob to Supabase Storage
+    // Check if bucket exists first
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.find(bucket => bucket.name === 'generated_dream_images')) {
+      console.log("Creating generated_dream_images bucket");
+      await supabase.storage.createBucket('generated_dream_images', {
+        public: true,
+        fileSizeLimit: 5242880 // 5MB
+      });
+    }
+    
+    // Upload to the bucket
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('generated_dream_images')
+      .upload(filePath, imageBlob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+        cacheControl: '3600'
+      });
+      
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError);
+      throw new Error(`Failed to upload image: ${uploadError.message}`);
+    }
+    
+    console.log("Upload successful:", uploadData);
+    
+    // 4. Get the public URL for the uploaded image
+    const { data: { publicUrl } } = supabase.storage
+      .from('generated_dream_images')
+      .getPublicUrl(filePath);
+      
+    console.log("Public URL generated:", publicUrl);
+    
+    // 5. Update the dream entry with the image URL
+    if (dreamId !== 'preview') {  // Skip DB update for preview images
+      const { error: updateError } = await supabase
+        .from("dream_entries")
+        .update({ 
+          image_url: publicUrl,
+          generatedImage: publicUrl // Update both fields for compatibility
+        })
+        .eq("id", dreamId);
         
-        // Upload to the new bucket
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('generated_dream_images')
-          .upload(filePath, imageBlob, {
-            contentType: 'image/jpeg',
-            upsert: true,
-            cacheControl: '3600'
-          });
-          
-        if (uploadError) {
-          console.error("Storage upload error:", uploadError);
-          return null;
-        }
-        
-        console.log("Upload successful:", uploadData);
-        
-        // 4. Get the public URL for the uploaded image
-        const { data: { publicUrl } } = supabase.storage
-          .from('generated_dream_images')
-          .getPublicUrl(filePath);
-          
-        console.log("Public URL generated:", publicUrl);
-        
-        // 5. Update the dream entry with the image URL
-        const { error: updateError } = await supabase
-          .from("dream_entries")
-          .update({ 
-            image_url: publicUrl,
-            generatedImage: publicUrl // Update both fields for compatibility
-          })
-          .eq("id", dreamId);
-          
-        if (updateError) {
-          console.error("Failed to update dream with image URL:", updateError);
-        }
-        
-        console.log("Dream entry updated with permanent image URL");
-        return publicUrl;
-      } catch (error) {
-        console.error("Background upload error:", error);
-        return null;
+      if (updateError) {
+        console.error("Failed to update dream with image URL:", updateError);
       }
-    })();
+      
+      console.log("Dream entry updated with permanent image URL");
+    }
     
-    // Return local blob URL immediately for display
-    // This ensures the image is visible right away and persists locally
-    return localBlobUrl;
+    return publicUrl;
     
   } catch (error) {
     console.error("Error in uploadDreamImage:", error);
+    toast.error("Failed to save image, please try again");
     return null;
   }
 };
 
 /**
- * Helper function to convert a temporary URL to a permanent blob URL
+ * Helper function to convert a temporary URL to a persistent blob URL
  * @param url The image URL to persist
  * @returns A persistent blob URL
  */
 export const persistImageURL = async (url: string): Promise<string> => {
   try {
     // If it's already a blob URL or null/undefined, return as is
-    if (!url || url.startsWith('blob:') || url.includes('supabase.co')) {
+    if (!url || url.includes('supabase.co')) {
       return url;
     }
     
-    // Fetch image and create a persistent blob
+    // Fetch image and create a blob URL
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status}`);
+    }
     const blob = await response.blob();
     return URL.createObjectURL(blob);
   } catch (error) {

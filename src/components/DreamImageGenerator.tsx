@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,44 +29,21 @@ const DreamImageGenerator = ({
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
   const [generatedImage, setGeneratedImage] = useState(existingImage);
-  const [persistentImage, setPersistentImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingImage);
-  const [uploadInProgress, setUploadInProgress] = useState(false);
+  const [persistentUrl, setPersistentUrl] = useState<string | null>(existingImage);
 
   // When the component mounts or the image changes, ensure we have a persistent version
   useEffect(() => {
     if (existingImage) {
       setGeneratedImage(existingImage);
+      setPersistentUrl(existingImage);
+      setShowInfo(false);
       
-      // Create a persistent version of the existing image
-      const makePersistent = async () => {
-        const persistedUrl = await persistImageURL(existingImage);
-        setPersistentImage(persistedUrl);
-        setShowInfo(false);
-        
-        // Preload the image to ensure it's in browser cache
-        preloadImage(persistedUrl);
-      };
-      
-      makePersistent();
+      // Preload the image to ensure it's in browser cache
+      preloadImage(existingImage);
     }
   }, [existingImage]);
-
-  // Ensure images persist by converting to blob URLs when loaded
-  useEffect(() => {
-    const makePersistent = async () => {
-      if (generatedImage && generatedImage !== persistentImage) {
-        const persistedUrl = await persistImageURL(generatedImage);
-        setPersistentImage(persistedUrl);
-        
-        // Preload the image to ensure it's in browser cache
-        preloadImage(persistedUrl);
-      }
-    };
-    
-    makePersistent();
-  }, [generatedImage, persistentImage]);
 
   const generateImage = async () => {
     if (!user || disabled) return;
@@ -131,32 +107,25 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
-      // Create a persistent blob URL for immediate display
-      const persistedUrl = await persistImageURL(openaiUrl);
-      setPersistentImage(persistedUrl);
-      setGeneratedImage(openaiUrl);
+      // Save the temporary URL for display
+      setPersistentUrl(openaiUrl);
       
-      // Notify the parent component that an image was generated
-      onImageGenerated(openaiUrl, generatedPrompt);
+      // Upload image to Supabase storage for permanent storage
+      console.log("Starting upload to Supabase storage");
       
-      // Upload image to Supabase storage for permanent storage if user is logged in
-      if (user) {
-        console.log("User is logged in, uploading image to permanent storage...");
-        setUploadInProgress(true);
+      // Use a placeholder ID for preview if we don't have a dream ID yet
+      const uploadedUrl = await uploadDreamImage(user.id, openaiUrl);
+      
+      if (uploadedUrl) {
+        console.log("Image saved permanently:", uploadedUrl);
+        setGeneratedImage(uploadedUrl);
         
-        // Save the user ID to associate with this upload
-        // We'll use this later for the actual dream ID when it's saved
-        const uploadedUrl = await uploadDreamImage(user.id, openaiUrl);
-        
-        // If upload was successful, use the persistent URL
-        if (uploadedUrl) {
-          console.log("Image saved permanently:", uploadedUrl);
-          // Update the generated image with the permanent URL
-          setGeneratedImage(uploadedUrl);
-          onImageGenerated(uploadedUrl, generatedPrompt);
-        }
-        
-        setUploadInProgress(false);
+        // Notify the parent component that an image was generated
+        onImageGenerated(uploadedUrl, generatedPrompt);
+      } else {
+        // If upload failed, still use the temporary URL
+        setGeneratedImage(openaiUrl);
+        onImageGenerated(openaiUrl, generatedPrompt);
       }
       
       // If this was a free trial use and not the app creator, mark the feature as used
@@ -177,7 +146,6 @@ const DreamImageGenerator = ({
       toast.error(`Image generation failed: ${error.message}`);
     } finally {
       setIsGenerating(false);
-      setUploadInProgress(false);
     }
   };
 
@@ -233,13 +201,21 @@ const DreamImageGenerator = ({
           </div>
         ) : (
           <>
-            {/* Show the persistent image URL for consistent display */}
-            {persistentImage && (
+            {/* Show the stored image URL */}
+            {persistentUrl && (
               <div className="mb-4">
                 <img
-                  src={persistentImage}
+                  src={persistentUrl}
                   alt="Dream"
                   className="w-full rounded-md aspect-square object-cover"
+                  onError={(e) => {
+                    console.error("Image load error", e);
+                    const img = e.currentTarget;
+                    if (img.src !== generatedImage && generatedImage) {
+                      console.log("Trying fallback to original URL");
+                      img.src = generatedImage;
+                    }
+                  }}
                 />
               </div>
             )}
@@ -257,7 +233,7 @@ const DreamImageGenerator = ({
                   variant="outline"
                   size="sm"
                   onClick={generateImage}
-                  disabled={isGenerating || uploadInProgress}
+                  disabled={isGenerating}
                 >
                   <Sparkles className="h-4 w-4 mr-1" /> Regenerate
                 </Button>
