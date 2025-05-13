@@ -36,14 +36,18 @@ const DreamImageGenerator = ({
   
   // When the component mounts or the image changes, ensure we preload it
   useEffect(() => {
-    if (existingImage) {
-      setGeneratedImage(existingImage);
-      setShowInfo(false);
-      setImageError(false);
-      
-      // Preload the image to ensure it's in browser cache
-      preloadImage(existingImage);
-    }
+    const setupExistingImage = async () => {
+      if (existingImage) {
+        setGeneratedImage(existingImage);
+        setShowInfo(false);
+        setImageError(false);
+        
+        // Preload the image to ensure it's in browser cache
+        preloadImage(existingImage);
+      }
+    };
+    
+    setupExistingImage();
   }, [existingImage]);
 
   const generateImage = async () => {
@@ -112,26 +116,39 @@ const DreamImageGenerator = ({
       // Immediately display the image from OpenAI
       setGeneratedImage(openaiUrl);
       
+      // If this is a free trial use and not the app creator, mark the feature as used
+      if (!isAppCreator && !hasUsedFeature('image')) {
+        markFeatureAsUsed('image');
+      }
+      
       // Use a dreamId based on the user ID if we don't have one yet
       const dreamIdForStorage = user.id;
       
       // Upload directly to Supabase storage for permanent storage
       console.log("Starting upload to Supabase storage for permanent keeping");
-      const uploadedUrl = await uploadDreamImage(dreamIdForStorage, openaiUrl);
       
-      if (!uploadedUrl) {
-        throw new Error("Failed to save image permanently");
+      try {
+        const uploadedUrl = await uploadDreamImage(dreamIdForStorage, openaiUrl);
+        
+        if (!uploadedUrl) {
+          console.error("Image upload failed");
+          // We still continue with the OpenAI URL as fallback
+        } else {
+          console.log("Image saved permanently:", uploadedUrl);
+          setGeneratedImage(uploadedUrl);
+          
+          // Notify the parent component that an image was generated
+          onImageGenerated(uploadedUrl, generatedPrompt);
+        }
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        // Still notify with the OpenAI URL as fallback
+        onImageGenerated(openaiUrl, generatedPrompt);
       }
       
-      console.log("Image saved permanently:", uploadedUrl);
-      setGeneratedImage(uploadedUrl);
+      toast.success("Dream image generated!");
       
-      // Notify the parent component that an image was generated
-      onImageGenerated(uploadedUrl, generatedPrompt);
-      
-      // If this was a free trial use and not the app creator, mark the feature as used
       if (!isAppCreator && !hasUsedFeature('image')) {
-        markFeatureAsUsed('image');
         toast.success("Free trial used! Subscribe to continue generating dream images.", {
           duration: 5000,
           action: {
@@ -139,8 +156,6 @@ const DreamImageGenerator = ({
             onClick: () => window.location.href = '/profile?tab=subscription'
           }
         });
-      } else {
-        toast.success("Dream image generated!");
       }
     } catch (error: any) {
       console.error('Image generation error:', error);
