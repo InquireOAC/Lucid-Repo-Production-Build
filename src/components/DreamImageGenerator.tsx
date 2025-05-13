@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,12 +32,14 @@ const DreamImageGenerator = ({
   const [generatedImage, setGeneratedImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingImage);
+  const [imageError, setImageError] = useState(false);
   
   // When the component mounts or the image changes, ensure we preload it
   useEffect(() => {
     if (existingImage) {
       setGeneratedImage(existingImage);
       setShowInfo(false);
+      setImageError(false);
       
       // Preload the image to ensure it's in browser cache
       preloadImage(existingImage);
@@ -66,6 +69,7 @@ const DreamImageGenerator = ({
       
       setIsGenerating(true);
       setShowInfo(false);
+      setImageError(false);
       
       // First, generate a prompt for the image using OpenAI
       const promptResult = await supabase.functions.invoke('analyze-dream', {
@@ -105,6 +109,9 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
+      // Immediately display the image from OpenAI
+      setGeneratedImage(openaiUrl);
+      
       // Use a dreamId based on the user ID if we don't have one yet
       const dreamIdForStorage = user.id;
       
@@ -137,6 +144,7 @@ const DreamImageGenerator = ({
       }
     } catch (error: any) {
       console.error('Image generation error:', error);
+      setImageError(true);
       toast.error(`Image generation failed: ${error.message}`);
     } finally {
       setIsGenerating(false);
@@ -204,10 +212,16 @@ const DreamImageGenerator = ({
                   className="w-full rounded-md aspect-square object-cover"
                   onError={(e) => {
                     console.error("Image load error", e);
+                    setImageError(true);
                     const img = e.currentTarget;
                     img.src = "https://via.placeholder.com/400?text=Image+Error";
                   }}
                 />
+                {imageError && (
+                  <p className="text-xs text-red-500 mt-1">
+                    There was an issue displaying the image. Try regenerating.
+                  </p>
+                )}
               </div>
             )}
             

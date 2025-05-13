@@ -30,19 +30,41 @@ export const uploadDreamImage = async (
       return imageUrl;
     }
 
-    // 2. Fetch the remote image directly (without blob URL conversion)
-    const response = await fetch(imageUrl);
+    // 2. Create the storage bucket if it doesn't exist
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.find(bucket => bucket.name === "generated_dream_images")) {
+      console.log("Creating generated_dream_images bucket");
+      const { error: createError } = await supabase.storage.createBucket("generated_dream_images", {
+        public: true
+      });
+      if (createError) {
+        console.error("Error creating bucket:", createError);
+      }
+    }
+
+    // 3. Fetch the remote image directly
+    console.log("Fetching image from URL:", imageUrl);
+    const response = await fetch(imageUrl, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache"
+      }
+    });
+    
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
+    
     const blob = await response.blob();
+    console.log("Image blob created, size:", blob.size);
 
-    // 3. Define a storage path in 'generated_dream_images' bucket
+    // 4. Define a storage path in 'generated_dream_images' bucket
     const timestamp = Date.now();
     const filePath = `dreams/${dreamId}-${timestamp}.png`;
 
-    // 4. Upload the blob directly to Supabase storage
-    const { error: uploadError } = await supabase.storage
+    // 5. Upload the blob directly to Supabase storage
+    console.log("Uploading to Supabase storage path:", filePath);
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from("generated_dream_images")
       .upload(filePath, blob, {
         contentType: "image/png",
@@ -54,22 +76,18 @@ export const uploadDreamImage = async (
       console.error("Storage upload error:", uploadError);
       throw uploadError;
     }
-    console.log("Upload successful:", filePath);
+    
+    console.log("Upload successful:", uploadData);
 
-    // 5. Get the permanent public URL
+    // 6. Get the permanent public URL
     const { data } = supabase.storage
       .from("generated_dream_images")
       .getPublicUrl(filePath);
     
-    if (!data || !data.publicUrl) {
-      console.error("Error getting public URL: No URL returned");
-      throw new Error("Failed to get public URL");
-    }
-    
     const publicUrl = data.publicUrl;
     console.log("Public URL:", publicUrl);
 
-    // 6. Persist the URL in your DB immediately
+    // 7. Persist the URL in your DB immediately
     if (dreamId !== "preview") {
       const { error: dbError } = await supabase
         .from("dream_entries")
@@ -78,6 +96,7 @@ export const uploadDreamImage = async (
           image_url: publicUrl 
         })
         .eq("id", dreamId);
+      
       if (dbError) {
         console.error("Error updating dream entry:", dbError);
       } else {
