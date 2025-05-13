@@ -1,3 +1,4 @@
+
 // src/utils/imageUtils.ts
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -53,23 +54,26 @@ export const uploadDreamImage = async (
     console.log("Upload successful:", filePath);
 
     // 5. Get the permanent public URL
-    const {
-      data: { publicUrl },
-      error: urlError,
-    } = supabase.storage
+    const { data } = supabase.storage
       .from("generated_dream_images")
       .getPublicUrl(filePath);
-    if (urlError || !publicUrl) {
-      console.error("Error getting public URL:", urlError);
-      throw urlError;
+    
+    if (!data || !data.publicUrl) {
+      console.error("Error getting public URL: No URL returned");
+      throw new Error("Failed to get public URL");
     }
+    
+    const publicUrl = data.publicUrl;
     console.log("Public URL:", publicUrl);
 
     // 6. Persist the URL in your DB
     if (dreamId !== "preview") {
       const { error: dbError } = await supabase
         .from("dream_entries")
-        .update({ image_url: publicUrl })
+        .update({ 
+          generatedImage: publicUrl,
+          image_url: publicUrl 
+        })
         .eq("id", dreamId);
       if (dbError) {
         console.error("Error updating dream entry:", dbError);
