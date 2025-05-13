@@ -30,7 +30,7 @@ export const uploadDreamImage = async (
       return imageUrl;
     }
 
-    // 2. Fetch the remote image as a Blob
+    // 2. Fetch the remote image directly (without blob URL conversion)
     const response = await fetch(imageUrl);
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
@@ -38,15 +38,18 @@ export const uploadDreamImage = async (
     const blob = await response.blob();
 
     // 3. Define a storage path in 'generated_dream_images' bucket
-    const filePath = `dreams/${dreamId}.png`;
+    const timestamp = Date.now();
+    const filePath = `dreams/${dreamId}-${timestamp}.png`;
 
-    // 4. Upload the blob
+    // 4. Upload the blob directly to Supabase storage
     const { error: uploadError } = await supabase.storage
       .from("generated_dream_images")
       .upload(filePath, blob, {
-        contentType: blob.type,
+        contentType: "image/png",
         upsert: true,
+        cacheControl: "3600",
       });
+      
     if (uploadError) {
       console.error("Storage upload error:", uploadError);
       throw uploadError;
@@ -66,7 +69,7 @@ export const uploadDreamImage = async (
     const publicUrl = data.publicUrl;
     console.log("Public URL:", publicUrl);
 
-    // 6. Persist the URL in your DB
+    // 6. Persist the URL in your DB immediately
     if (dreamId !== "preview") {
       const { error: dbError } = await supabase
         .from("dream_entries")
@@ -91,19 +94,41 @@ export const uploadDreamImage = async (
 };
 
 /**
- * Helper function to convert a temporary URL to a persistent blob URL
- * @param url The image URL to persist
- * @returns A persistent blob URL (or original URL on error)
+ * Helper function to convert a URL to a data URL for better persistence
+ * @param url The image URL to convert
+ * @returns A promise that resolves to a data URL
+ */
+export const urlToDataURL = async (url: string): Promise<string> => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error("Error converting URL to data URL:", error);
+    return url;
+  }
+};
+
+/**
+ * Helper function to convert a temporary URL to a persistent URL
+ * This is different from persistImageURL as it doesn't create blob URLs
+ * which can become invalid
+ * @param url The image URL to check
+ * @returns The original URL or a cached version if needed
  */
 export const persistImageURL = async (url: string): Promise<string> => {
   try {
     if (!url || url.includes("supabase.co")) {
-      return url;
+      return url; // Already a persistent URL
     }
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
+    
+    // For OpenAI temporary URLs, we'll use a cache buster to ensure we get the latest version
+    return `${url}${url.includes('?') ? '&' : '?'}cache=${Date.now()}`;
   } catch (error) {
     console.error("Error persisting image URL:", error);
     return url;

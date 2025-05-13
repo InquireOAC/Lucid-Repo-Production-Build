@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { uploadDreamImage, persistImageURL, preloadImage } from "@/utils/imageUtils";
+import { uploadDreamImage, preloadImage } from "@/utils/imageUtils";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -31,13 +31,11 @@ const DreamImageGenerator = ({
   const [generatedImage, setGeneratedImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingImage);
-  const [persistentUrl, setPersistentUrl] = useState<string | null>(existingImage);
-
-  // When the component mounts or the image changes, ensure we have a persistent version
+  
+  // When the component mounts or the image changes, ensure we preload it
   useEffect(() => {
     if (existingImage) {
       setGeneratedImage(existingImage);
-      setPersistentUrl(existingImage);
       setShowInfo(false);
       
       // Preload the image to ensure it's in browser cache
@@ -107,26 +105,22 @@ const DreamImageGenerator = ({
         throw new Error('No image URL was returned');
       }
       
-      // Save the temporary URL for display
-      setPersistentUrl(openaiUrl);
+      // Use a dreamId based on the user ID if we don't have one yet
+      const dreamIdForStorage = user.id;
       
-      // Upload image to Supabase storage for permanent storage
-      console.log("Starting upload to Supabase storage");
+      // Upload directly to Supabase storage for permanent storage
+      console.log("Starting upload to Supabase storage for permanent keeping");
+      const uploadedUrl = await uploadDreamImage(dreamIdForStorage, openaiUrl);
       
-      // Use a placeholder ID for preview if we don't have a dream ID yet
-      const uploadedUrl = await uploadDreamImage(user.id, openaiUrl);
-      
-      if (uploadedUrl) {
-        console.log("Image saved permanently:", uploadedUrl);
-        setGeneratedImage(uploadedUrl);
-        
-        // Notify the parent component that an image was generated
-        onImageGenerated(uploadedUrl, generatedPrompt);
-      } else {
-        // If upload failed, still use the temporary URL
-        setGeneratedImage(openaiUrl);
-        onImageGenerated(openaiUrl, generatedPrompt);
+      if (!uploadedUrl) {
+        throw new Error("Failed to save image permanently");
       }
+      
+      console.log("Image saved permanently:", uploadedUrl);
+      setGeneratedImage(uploadedUrl);
+      
+      // Notify the parent component that an image was generated
+      onImageGenerated(uploadedUrl, generatedPrompt);
       
       // If this was a free trial use and not the app creator, mark the feature as used
       if (!isAppCreator && !hasUsedFeature('image')) {
@@ -201,24 +195,22 @@ const DreamImageGenerator = ({
           </div>
         ) : (
           <>
-            {/* Show the stored image URL */}
-            {persistentUrl && (
+            {/* Show the generated image */}
+            {generatedImage && (
               <div className="mb-4">
                 <img
-                  src={persistentUrl}
+                  src={generatedImage}
                   alt="Dream"
                   className="w-full rounded-md aspect-square object-cover"
                   onError={(e) => {
                     console.error("Image load error", e);
                     const img = e.currentTarget;
-                    if (img.src !== generatedImage && generatedImage) {
-                      console.log("Trying fallback to original URL");
-                      img.src = generatedImage;
-                    }
+                    img.src = "https://via.placeholder.com/400?text=Image+Error";
                   }}
                 />
               </div>
             )}
+            
             <Input
               type="text"
               placeholder="Generated Prompt"
@@ -227,6 +219,7 @@ const DreamImageGenerator = ({
               className="dream-input mb-3"
               disabled={disabled}
             />
+            
             {!disabled && (
               <div className="flex justify-end">
                 <Button
