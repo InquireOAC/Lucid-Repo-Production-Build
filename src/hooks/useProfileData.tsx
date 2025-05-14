@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,18 +56,20 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
   
   const fetchUserProfile = async (id: string) => {
     try {
+      // Always fetch by ID (username not guaranteed unique)
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", id)
-        .single();
-      
-      if (error) throw error;
-      
+        .eq("id", id) // Use .eq("id", id), not .single()
+        .maybeSingle();
+
+      if (error || !data) throw error || new Error("Not found");
+
       setViewedProfile(data);
     } catch (error) {
       console.error("Error fetching user profile:", error);
       toast.error("Could not load user profile");
+      setViewedProfile(null); // Mark as not found
     }
   };
   

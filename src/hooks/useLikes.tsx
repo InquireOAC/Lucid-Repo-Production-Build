@@ -1,10 +1,10 @@
-
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function useLikes(user: any, dreams: DreamEntry[]) {
+// Added setDreams to parameter list for reactivity
+export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: (dreams: DreamEntry[]) => DreamEntry[]) => void) {
   useEffect(() => {
     if (user && dreams.length > 0) {
       checkLikedDreams();
@@ -18,7 +18,6 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
     }
 
     try {
-      // Optimistically update UI first for immediate feedback
       const dreamIndex = dreams.findIndex(d => d.id === dreamId);
       if (dreamIndex === -1) return false;
 
@@ -28,48 +27,46 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
         ? Math.max(0, (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) - 1)
         : (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) + 1;
 
-      // Update local state optimistically
-      setDreams(prevDreams => 
-        prevDreams.map(dream => 
-          dream.id === dreamId
-            ? { 
-                ...dream, 
-                like_count: newLikeCount, 
-                likeCount: newLikeCount,
-                liked: !wasLiked
-              }
-            : dream
-        )
-      );
+      // If setDreams provided, optimistically update
+      if (setDreams) {
+        setDreams(prevDreams => 
+          prevDreams.map(dream => 
+            dream.id === dreamId
+              ? { 
+                  ...dream, 
+                  like_count: newLikeCount, 
+                  likeCount: newLikeCount,
+                  liked: !wasLiked
+                }
+              : dream
+          )
+        );
+      }
 
-      // Now perform the actual database operation
+      // Now perform DB operation
       const { data: existingLike } = await supabase
         .from("dream_likes")
         .select("*")
         .eq("user_id", user.id)
         .eq("dream_id", dreamId)
-        .single();
+        .maybeSingle();
 
       if (existingLike) {
-        // User already liked this dream, so remove the like
         await supabase
           .from("dream_likes")
           .delete()
           .eq("user_id", user.id)
           .eq("dream_id", dreamId);
 
-        // Update dream like count using SQL update
         await supabase
           .from("dream_entries")
           .update({ like_count: newLikeCount })
           .eq("id", dreamId);
       } else {
-        // User hasn't liked this dream yet, so add a like
         await supabase
           .from("dream_likes")
           .insert({ user_id: user.id, dream_id: dreamId });
 
-        // Update dream like count using SQL update
         await supabase
           .from("dream_entries")
           .update({ like_count: newLikeCount })
@@ -80,9 +77,8 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
     } catch (error) {
       console.error("Error handling like:", error);
       toast.error("Failed to update like");
-      
-      // Revert the optimistic update on error
-      checkLikedDreams();
+      // Revert the optimistic update if failed
+      if (setDreams) checkLikedDreams();
       return false;
     }
   };
@@ -104,7 +100,7 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
 
       const likedDreamIds = new Set(data.map((like) => like.dream_id));
 
-      setDreams(prevDreams => 
+      setDreamsFn(prevDreams => 
         prevDreams.map(dream => ({
           ...dream,
           liked: likedDreamIds.has(dream.id)
@@ -115,13 +111,12 @@ export function useLikes(user: any, dreams: DreamEntry[]) {
     }
   };
 
-  // Add a function to update the dreams state
-  const setDreams = (updater: (dreams: DreamEntry[]) => DreamEntry[]) => {
-    const updatedDreams = updater([...dreams]);
-    
-    // Replace the dreams in the array with the updated versions
-    dreams.splice(0, dreams.length, ...updatedDreams);
-  };
+  // Modified: Only use passed in setDreams if provided, else fallback to local hack
+  const setDreamsFn = setDreams ??
+    ((updater: (dreams: DreamEntry[]) => DreamEntry[]) => {
+      const updatedDreams = updater([...dreams]);
+      dreams.splice(0, dreams.length, ...updatedDreams);
+    });
 
   return { handleLike };
 }

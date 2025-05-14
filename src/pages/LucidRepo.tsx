@@ -60,6 +60,7 @@ const LucidRepo = () => {
 
   const handleNavigateToProfile = (userId: string | undefined) => {
     if (userId) {
+      // Navigate to /profile/{userId}
       navigate(`/profile/${userId}`);
     }
   };
@@ -128,6 +129,7 @@ const LucidRepo = () => {
         dreamTags={dreamTags}
         onLike={handleDreamLike}
         onOpenDream={handleOpenDream}
+        // Pass DREAM.user_id, not username!
         onUserClick={handleNavigateToProfile}
         onTagClick={handleTagClick}
         searchQuery={searchQuery}

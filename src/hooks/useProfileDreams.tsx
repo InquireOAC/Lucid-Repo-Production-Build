@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DreamEntry } from "@/types/dream";
@@ -9,36 +8,34 @@ export function useProfileDreams(user: any, userId?: string) {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchPublicDreams = async () => {
-    if (!user) return;
-    
-    const targetUserId = userId || user.id;
+    if (!user && !userId) return;
+
+    const targetUserId = userId || user?.id;
     setIsLoading(true);
-    
+
     try {
       console.log("Fetching public dreams for user:", targetUserId);
-      
+
+      // Include the profile in the select!
       const { data, error } = await supabase
         .from("dream_entries")
-        .select("*")
+        .select("*, profiles:user_id(username, display_name, avatar_url)")
         .eq("user_id", targetUserId)
         .eq("is_public", true)
         .order("created_at", { ascending: false });
-      
+
       if (error) throw error;
-      
-      console.log("Fetched public dreams:", data?.length || 0);
-      
-      // Map Supabase field names to our app's field names for consistency
-      const transformedDreams = data.map((dream: any) => ({
+
+      const transformedDreams = data?.map((dream: any) => ({
         ...dream,
         isPublic: dream.is_public,
         likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0, 
+        commentCount: dream.comment_count || 0,
         userId: dream.user_id,
         audioUrl: dream.audio_url,
         profiles: dream.profiles
       }));
-      
+
       setPublicDreams(transformedDreams || []);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
@@ -46,26 +43,26 @@ export function useProfileDreams(user: any, userId?: string) {
       setIsLoading(false);
     }
   };
-  
+
   const fetchLikedDreams = async () => {
     if (!user) return;
     setIsLoading(true);
-    
+
     try {
       // For viewing own profile or someone else's
       const targetUserId = userId || user.id;
-      
+
       // First get the liked dream IDs
       const { data: likedData, error: likedError } = await supabase
         .from("dream_likes")
         .select("dream_id")
         .eq("user_id", targetUserId);
-      
+
       if (likedError) throw likedError;
-      
+
       if (likedData && likedData.length > 0) {
         const dreamIds = likedData.map(item => item.dream_id);
-        
+
         // Then fetch the actual dreams
         const { data: dreamData, error: dreamError } = await supabase
           .from("dream_entries")
@@ -73,9 +70,9 @@ export function useProfileDreams(user: any, userId?: string) {
           .in("id", dreamIds)
           .eq("is_public", true)
           .order("created_at", { ascending: false });
-        
+
         if (dreamError) throw dreamError;
-        
+
         // Map fields for consistency
         const transformedDreams = dreamData?.map((dream: any) => ({
           ...dream,
@@ -86,7 +83,7 @@ export function useProfileDreams(user: any, userId?: string) {
           audioUrl: dream.audio_url,
           profiles: dream.profiles
         }));
-        
+
         setLikedDreams(transformedDreams || []);
       } else {
         setLikedDreams([]);
@@ -103,7 +100,7 @@ export function useProfileDreams(user: any, userId?: string) {
     fetchPublicDreams();
     fetchLikedDreams();
   };
-  
+
   // Initial fetch when component mounts or user/userId changes
   useEffect(() => {
     if (user) {
@@ -111,7 +108,7 @@ export function useProfileDreams(user: any, userId?: string) {
       fetchLikedDreams();
     }
   }, [user, userId]);
-  
+
   return {
     publicDreams,
     likedDreams,
