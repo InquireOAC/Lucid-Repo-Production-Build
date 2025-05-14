@@ -87,6 +87,7 @@ export const useJournalActions = () => {
           storedImageUrl = await uploadImageToStorage(dreamData.generatedImage, newDream.id);
         }
         
+        // Only include fields that exist in the database schema
         const dbSaveDream = {
           id: newDream.id,
           user_id: user.id,
@@ -99,10 +100,7 @@ export const useJournalActions = () => {
           is_public: false,
           analysis: dreamData.analysis || null,
           generatedImage: storedImageUrl || null,
-          image_url: storedImageUrl || null, // Also save to image_url
-          imagePrompt: dreamData.imagePrompt || null,
-          image_prompt: dreamData.imagePrompt || null, // Also save to image_prompt
-          audio_url: dreamData.audioUrl || null
+          imagePrompt: dreamData.imagePrompt || null
         };
         
         const { error } = await supabase
@@ -153,8 +151,7 @@ export const useJournalActions = () => {
       // Update with the stored image URL
       const updates = {
         ...dreamData,
-        generatedImage: storedImageUrl,
-        image_url: storedImageUrl
+        generatedImage: storedImageUrl
       };
       
       await handleUpdateDream(dreamId, updates);
@@ -179,27 +176,16 @@ export const useJournalActions = () => {
           delete dbUpdates.isPublic;
         }
         
-        if ('generatedImage' in dbUpdates) {
-          dbUpdates.image_url = dbUpdates.generatedImage;
-        }
-        
-        if ('imagePrompt' in dbUpdates) {
-          dbUpdates.image_prompt = dbUpdates.imagePrompt;
-        }
-        
         // Remove fields that don't exist in the database
         if ('commentCount' in dbUpdates) {
-          dbUpdates.comment_count = dbUpdates.commentCount;
           delete dbUpdates.commentCount;
         }
         
         if ('likeCount' in dbUpdates) {
-          dbUpdates.like_count = dbUpdates.likeCount;
           delete dbUpdates.likeCount;
         }
         
         if ('audioUrl' in dbUpdates) {
-          dbUpdates.audio_url = dbUpdates.audioUrl;
           delete dbUpdates.audioUrl;
         }
         

@@ -50,6 +50,7 @@ const Journal = () => {
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
     setIsAddingDream(false); // Close the dialog after saving
+    
     // Ensure dreams are properly synced after adding
     if (user) {
       setTimeout(() => {
@@ -68,12 +69,12 @@ const Journal = () => {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
-    audioUrl?: string;
   }): Promise<void> => {
     if (!selectedDream) return;
     await handleUpdateDream(selectedDream.id, dreamData);
     setIsEditingDream(false);
     setSelectedDream(null);
+    
     // Ensure dreams are properly synced after editing
     if (user) {
       setTimeout(() => {

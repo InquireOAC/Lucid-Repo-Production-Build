@@ -20,7 +20,6 @@ import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
-import { persistImageURL } from "@/utils/imageUtils";
 
 interface DreamEntryFormProps {
   existingDream?: any;
@@ -34,7 +33,6 @@ interface DreamEntryFormProps {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
-    audioUrl?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -56,33 +54,19 @@ const DreamEntryForm = ({
     tags: existingDream?.tags || [],
     mood: existingDream?.mood || "Neutral",
     analysis: existingDream?.analysis || "",
-    generatedImage: existingDream?.image_url || existingDream?.generatedImage || "",
-    imagePrompt: existingDream?.image_prompt || existingDream?.imagePrompt || "",
+    generatedImage: existingDream?.generatedImage || "",
+    imagePrompt: existingDream?.imagePrompt || "",
     lucid: existingDream?.lucid || false,
-    audioUrl: existingDream?.audioUrl || existingDream?.audio_url || null,
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
-  const [persistentImage, setPersistentImage] = useState<string | null>(null);
 
   useEffect(() => {
     setAvailableTags(tags);
   }, [tags]);
-
-  // Create a persistent version of the image when component mounts
-  useEffect(() => {
-    const makePersistent = async () => {
-      if (formData.generatedImage) {
-        const persistedUrl = await persistImageURL(formData.generatedImage);
-        setPersistentImage(persistedUrl);
-      }
-    };
-    
-    makePersistent();
-  }, [formData.generatedImage]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -137,7 +121,6 @@ const DreamEntryForm = ({
     // Use external submit handler if provided
     if (onSubmit) {
       try {
-        // Make sure we pass a persistent image URL if available
         await onSubmit({
           title: formData.title,
           content: formData.content,
@@ -146,8 +129,7 @@ const DreamEntryForm = ({
           mood: formData.mood,
           analysis: formData.analysis,
           generatedImage: formData.generatedImage,
-          imagePrompt: formData.imagePrompt,
-          audioUrl: formData.audioUrl,
+          imagePrompt: formData.imagePrompt
         });
       } catch (error) {
         console.error("Submit error:", error);
@@ -167,11 +149,8 @@ const DreamEntryForm = ({
         analysis: formData.analysis,
         is_public: false,
         generatedImage: formData.generatedImage,
-        imagePrompt: formData.imagePrompt, 
-        image_url: formData.generatedImage, // Save to both fields for compatibility
-        image_prompt: formData.imagePrompt, // Save to both fields for compatibility
-        lucid: formData.lucid,
-        audio_url: formData.audioUrl,
+        imagePrompt: formData.imagePrompt,
+        lucid: formData.lucid
       };
 
       if (existingDream) {
@@ -209,16 +188,6 @@ const DreamEntryForm = ({
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleClose = () => {
-    // If using in a dialog, just reset form state
-    if (onSubmit) {
-      return;
-    }
-    
-    // Otherwise navigate back
-    navigate(-1);
   };
 
   return (
