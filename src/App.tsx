@@ -11,8 +11,8 @@ import MainLayout from "@/layouts/MainLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 
-// Use HashRouter for better compatibility with the current setup
-import { HashRouter as Router, Routes, Route } from "react-router-dom";
+// Use BrowserRouter for standard navigation
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
