@@ -1,4 +1,3 @@
-
 import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,10 +56,10 @@ const DreamCard = ({
   // Similarly handle comment count
   const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
-  // Get user info from profiles if available
-  const username = dream.profiles?.username || "Anonymous User";
-  const displayName = dream.profiles?.display_name || "";
-  const avatarUrl = dream.profiles?.avatar_url || "";
+  // Remove: Get user info from profiles if available
+  // const username = dream.profiles?.username || "Anonymous User";
+  // const displayName = dream.profiles?.display_name || "";
+  // const avatarUrl = dream.profiles?.avatar_url || "";
 
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
@@ -119,9 +118,7 @@ const DreamCard = ({
       <CardContent className="p-4 pt-2">
         {showUser && (
           <DreamCardUser
-            username={username}
-            displayName={displayName}
-            avatarUrl={avatarUrl}
+            profile={dream.profiles}
             onUserClick={handleUserClick}
           />
         )}

@@ -2,30 +2,42 @@
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+// Change: Accept 'profile' prop instead of username/displayName/avatarUrl
 interface DreamCardUserProps {
-  username?: string;
-  displayName?: string;
-  avatarUrl?: string;
+  profile?: {
+    username?: string;
+    display_name?: string;
+    avatar_url?: string;
+  };
   onUserClick: (e: React.MouseEvent) => void;
 }
 
 const DreamCardUser = ({ 
-  username, 
-  displayName, 
-  avatarUrl, 
+  profile, 
   onUserClick 
 }: DreamCardUserProps) => {
-  // Add logs to track what we receive as props
   React.useEffect(() => {
-    console.log("DreamCardUser props:", { username, displayName, avatarUrl });
-  }, [username, displayName, avatarUrl]);
-  // Show username if available, then displayName, fallback to "User"
-  const nameToShow =
-    (username && username !== "Anonymous User" && username !== "")
-      ? username
-      : (displayName && displayName !== "") 
-        ? displayName
-        : "User";
+    console.log("DreamCardUser profile prop:", profile);
+  }, [profile]);
+  
+  // Get fields from profile if defined, else fallback
+  const username = profile?.username || "";
+  const displayName = profile?.display_name || "";
+  const avatarUrl = profile?.avatar_url || "";
+
+  let nameToShow: string;
+  if (username && username !== "Anonymous User" && username.trim() !== "") {
+    nameToShow = username;
+  } else if (displayName && displayName.trim() !== "") {
+    nameToShow = displayName;
+  } else {
+    nameToShow = "User";
+  }
+
+  if (!profile) {
+    console.warn("DreamCardUser: Missing profile prop; falling back to 'User'");
+  }
+
   return (
     <div 
       className="flex items-center mb-3 cursor-pointer hover:underline" 

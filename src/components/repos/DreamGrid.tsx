@@ -28,6 +28,8 @@ const DreamGrid = ({
           ...dream,
           generatedImage: dream.generatedImage || dream.image_url
         };
+        // Add log for profiles info
+        console.log("DreamGrid dream.profiles:", normalizedDream.profiles);
         // Add log for user_id navigation
         const dreamUserId = normalizedDream.userId || normalizedDream.user_id;
         if (dreamUserId == null) {
