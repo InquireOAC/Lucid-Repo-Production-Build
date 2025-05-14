@@ -17,6 +17,7 @@ import SubscriptionDialog from "@/components/profile/SubscriptionDialog";
 import NotificationsDialog from "@/components/profile/NotificationsDialog";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
+import { Button } from "@/components/ui/button";
 
 const Profile = () => {
   const { userId } = useParams<{ userId: string }>();
