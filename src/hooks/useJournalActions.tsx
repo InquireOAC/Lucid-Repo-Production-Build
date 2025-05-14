@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -135,19 +134,15 @@ export const useJournalActions = () => {
         }
         
         // Remove fields that don't exist in the database
-        if ('commentCount' in dbUpdates) {
-          delete dbUpdates.commentCount;
-        }
+        const fieldsToRemove = ['commentCount', 'likeCount', 'audioUrl', 'user_id', 'id', 'created_at'];
         
-        if ('likeCount' in dbUpdates) {
-          delete dbUpdates.likeCount;
-        }
+        fieldsToRemove.forEach(field => {
+          if (field in dbUpdates) {
+            delete dbUpdates[field];
+          }
+        });
         
-        if ('audioUrl' in dbUpdates) {
-          delete dbUpdates.audioUrl;
-        }
-        
-        console.log("Updating dream in database:", id);
+        console.log("Updating dream in database:", id, dbUpdates);
         
         const { error } = await supabase
           .from("dream_entries")

@@ -164,7 +164,7 @@ const DreamImageGenerator = ({
 
   if (showInfo && !generatedImage && !isGenerating) {
     return (
-      <Card>
+      <Card className="mb-4">
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
             <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
@@ -184,7 +184,7 @@ const DreamImageGenerator = ({
   }
 
   return (
-    <Card>
+    <Card className="mb-4">
       <CardHeader>
         <CardTitle className="flex items-center text-lg">
           <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
