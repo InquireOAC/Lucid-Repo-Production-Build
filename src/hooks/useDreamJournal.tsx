@@ -12,7 +12,6 @@ export const useDreamJournal = () => {
   const { 
     isSubmitting, 
     handleAddDream, 
-    handleEditDream, 
     handleUpdateDream,
     handleDeleteDream,
     handleTogglePublic 
@@ -53,7 +52,6 @@ export const useDreamJournal = () => {
     
     // Actions
     handleAddDream,
-    handleEditDream,
     handleUpdateDream,
     handleDeleteDream,
     handleTogglePublic,

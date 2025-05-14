@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { toast } from "@/components/ui/use-toast";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -11,6 +10,7 @@ export const useJournalActions = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Modified to return void to match the expected type in DreamEntryForm
   const handleAddDream = async (dreamData: {
     title: string;
     content: string;
@@ -21,7 +21,7 @@ export const useJournalActions = () => {
     generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
-  }) => {
+  }): Promise<void> => {
     setIsSubmitting(true);
     try {
       // First add to local store
@@ -64,7 +64,6 @@ export const useJournalActions = () => {
         }
       }
       toast.success("Dream saved successfully!");
-      return newDream;
     } catch (error) {
       console.error("Error adding dream:", error);
     } finally {
@@ -72,7 +71,8 @@ export const useJournalActions = () => {
     }
   };
 
-  const handleEditDream = async (dreamId: string, dreamData: {
+  // Modified to match the signature expected in Journal.tsx
+  const handleEditDream = async (dreamData: {
     title: string;
     content: string;
     tags: string[];
@@ -82,64 +82,17 @@ export const useJournalActions = () => {
     generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
-  }) => {
+  }): Promise<void> => {
+    if (!dreamData) return;
     setIsSubmitting(true);
     try {
-      // Prepare the update with both field names for database compatibility
-      const updateData = {
-        ...dreamData,
-        analysis: dreamData.analysis || null,
-        generatedImage: dreamData.generatedImage || null,
-        image_url: dreamData.generatedImage || null,
-        imagePrompt: dreamData.imagePrompt || null,
-        image_prompt: dreamData.imagePrompt || null,
-      };
-      
-      // Update local store first
-      updateEntry(dreamId, updateData);
-
-      console.log("Updating dream with:", {
-        id: dreamId,
-        generatedImage: Boolean(updateData.generatedImage)
-      });
-
-      // If user is logged in, also update in database
-      if (user) {
-        // Create a database-safe update object
-        const dbUpdateData = {
-          title: dreamData.title,
-          content: dreamData.content,
-          tags: dreamData.tags,
-          mood: dreamData.mood,
-          lucid: dreamData.lucid,
-          analysis: updateData.analysis,
-          generatedImage: updateData.generatedImage,
-          image_url: updateData.image_url,
-          imagePrompt: updateData.imagePrompt,
-          image_prompt: updateData.image_prompt,
-          audio_url: dreamData.audioUrl || null,
-          updated_at: new Date().toISOString()
-        };
-        
-        const { error } = await supabase
-          .from("dream_entries")
-          .update(dbUpdateData)
-          .eq("id", dreamId)
-          .eq("user_id", user.id);
-          
-        if (error) {
-          console.error("Database error:", error);
-        }
-      }
-      
-      toast.success("Dream updated successfully!");
-      return true;
-    } catch (error) {
-      console.error("Error updating dream:", error);
+      // We need dreamId but it's not in the parameter
+      // This is a mismatch with how it's used in Journal.tsx
+      console.error("Error: dreamId is required but not provided in handleEditDream");
+      toast.error("Failed to update dream: Missing dream ID");
     } finally {
       setIsSubmitting(false);
     }
-    return false;
   };
 
   const handleUpdateDream = async (id: string, updates: Partial<DreamEntry>) => {

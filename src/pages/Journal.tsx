@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -27,7 +28,6 @@ const Journal = () => {
     dreamToDelete,
     setDreamToDelete,
     handleAddDream,
-    handleEditDream,
     handleUpdateDream,
     handleDeleteDream,
     handleTogglePublic,
@@ -37,6 +37,24 @@ const Journal = () => {
   } = useDreamJournal();
   
   const [activeTab, setActiveTab] = useState("all");
+
+  // Create wrapper function for edit to match the expected signature
+  const handleEditDream = async (dreamData: {
+    title: string;
+    content: string;
+    tags: string[];
+    lucid: boolean;
+    mood: string;
+    analysis?: string;
+    generatedImage?: string;
+    imagePrompt?: string;
+    audioUrl?: string;
+  }): Promise<void> => {
+    if (!selectedDream) return;
+    await handleUpdateDream(selectedDream.id, dreamData);
+    setIsEditingDream(false);
+    setSelectedDream(null);
+  };
 
   return (
     <div className="min-h-screen dream-background p-4 md:p-6">
