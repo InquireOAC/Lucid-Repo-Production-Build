@@ -4,12 +4,12 @@ import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
-import { persistImageURL } from "@/utils/imageUtils";
 
 export const useJournalEntries = () => {
   const { entries, updateEntry, setAllEntries } = useDreamStore();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [lastSynced, setLastSynced] = useState<number>(0);
 
   const syncDreamsFromDb = async () => {
     if (!user) return;
@@ -26,16 +26,9 @@ export const useJournalEntries = () => {
 
       // Convert the database dreams to the local format
       if (data) {
-        const formattedDreams = await Promise.all(data.map(async (dream: any) => {
-          // Try to create a persistent blob URL for the image if it exists
-          let persistentImageUrl = dream.generatedImage || dream.image_url;
-          if (persistentImageUrl) {
-            try {
-              persistentImageUrl = await persistImageURL(persistentImageUrl);
-            } catch (e) {
-              console.error("Error persisting image URL:", e);
-            }
-          }
+        const formattedDreams = data.map((dream: any) => {
+          // Normalize image URL from both possible field names
+          let imageUrl = dream.generatedImage || dream.image_url;
           
           return {
             id: dream.id,
@@ -46,8 +39,8 @@ export const useJournalEntries = () => {
             mood: dream.mood,
             lucid: dream.lucid || false,
             imagePrompt: dream.imagePrompt || dream.image_prompt,
-            generatedImage: persistentImageUrl,
-            image_url: persistentImageUrl, // Support both field names
+            generatedImage: imageUrl,
+            image_url: imageUrl, // Support both field names
             analysis: dream.analysis,
             is_public: dream.is_public || false,
             isPublic: dream.is_public || false,
@@ -58,13 +51,13 @@ export const useJournalEntries = () => {
             user_id: dream.user_id,
             audioUrl: dream.audio_url
           };
-        }));
+        });
         
         console.log("Synced dreams with images:", formattedDreams.length);
         
         // Instead of updating each entry individually, replace the entire collection
-        // This ensures we don't have stale entries in the store
         setAllEntries(formattedDreams);
+        setLastSynced(Date.now());
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);
@@ -83,6 +76,7 @@ export const useJournalEntries = () => {
   return {
     entries,
     isLoading,
-    syncDreamsFromDb
+    syncDreamsFromDb,
+    lastSynced
   };
 };

@@ -46,6 +46,18 @@ const Journal = () => {
     }
   }, [user]);
 
+  // Handle adding a new dream and closing the dialog
+  const handleAddDreamAndClose = async (dreamData: any) => {
+    await handleAddDream(dreamData);
+    setIsAddingDream(false); // Close the dialog after saving
+    // Ensure dreams are properly synced after adding
+    if (user) {
+      setTimeout(() => {
+        syncDreamsFromDb();
+      }, 500);
+    }
+  };
+
   // Create wrapper function for edit to match the expected signature
   const handleEditDream = async (dreamData: {
     title: string;
@@ -62,6 +74,12 @@ const Journal = () => {
     await handleUpdateDream(selectedDream.id, dreamData);
     setIsEditingDream(false);
     setSelectedDream(null);
+    // Ensure dreams are properly synced after editing
+    if (user) {
+      setTimeout(() => {
+        syncDreamsFromDb();
+      }, 500);
+    }
   };
 
   return (
@@ -135,7 +153,11 @@ const Journal = () => {
           <DialogHeader>
             <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
           </DialogHeader>
-          <DreamEntryForm onSubmit={handleAddDream} tags={tags} isSubmitting={isSubmitting} />
+          <DreamEntryForm 
+            onSubmit={handleAddDreamAndClose} 
+            tags={tags} 
+            isSubmitting={isSubmitting} 
+          />
         </DialogContent>
       </Dialog>
       
@@ -143,7 +165,10 @@ const Journal = () => {
       {selectedDream && (
         <Dialog open={isEditingDream} onOpenChange={(open) => {
           setIsEditingDream(open);
-          if (!open) syncDreamsFromDb(); // Refresh when closing dialog
+          if (!open) {
+            setSelectedDream(null);
+            syncDreamsFromDb(); // Refresh when closing dialog
+          }
         }}>
           <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
             <DialogHeader>

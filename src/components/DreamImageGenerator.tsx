@@ -49,6 +49,54 @@ const DreamImageGenerator = ({
     }
   }, [existingImage]);
 
+  // Function to upload image to Supabase storage
+  const uploadToSupabaseStorage = async (imageUrl: string): Promise<string> => {
+    if (!imageUrl) return "";
+    
+    try {
+      // If it's already a Supabase URL, return it
+      if (imageUrl.includes("supabase.co") && imageUrl.includes("/storage/v1/object/public/")) {
+        return imageUrl;
+      }
+      
+      // Fetch the image and get as blob
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      
+      // Create a unique path with timestamp
+      const timestamp = Date.now();
+      const filePath = `dream_${timestamp}.png`;
+      
+      // Upload to the dream_images bucket
+      const { error: uploadError, data } = await supabase.storage
+        .from("dream_images")
+        .upload(filePath, blob, {
+          contentType: "image/png",
+          upsert: true,
+        });
+        
+      if (uploadError) {
+        console.error("Storage upload error:", uploadError);
+        return imageUrl; // Return original as fallback
+      }
+      
+      // Get the public URL
+      const { data: publicData } = supabase.storage
+        .from("dream_images")
+        .getPublicUrl(filePath);
+        
+      console.log("Image stored in Supabase:", publicData.publicUrl);
+      return publicData.publicUrl;
+    } catch (error) {
+      console.error("Error uploading to Supabase:", error);
+      return imageUrl; // Return original as fallback
+    }
+  };
+
   const generateImage = async () => {
     if (!user || disabled) return;
 
@@ -120,20 +168,18 @@ const DreamImageGenerator = ({
         markFeatureAsUsed('image');
       }
       
-      // Use a dreamId based on the user ID if we don't have one yet
-      const dreamIdForStorage = user.id;
-      
       try {
-        const uploadedUrl = await uploadDreamImage(dreamIdForStorage, openaiUrl);
+        // Upload image to Supabase storage
+        const storedImageUrl = await uploadToSupabaseStorage(openaiUrl);
         
-        if (!uploadedUrl) {
-          console.error("Image upload failed");
+        if (!storedImageUrl) {
+          console.error("Image upload to Supabase failed");
           // We still continue with the OpenAI URL as fallback
           onImageGenerated(openaiUrl, generatedPrompt);
         } else {
-          console.log("Image saved permanently:", uploadedUrl);
-          setGeneratedImage(uploadedUrl);
-          onImageGenerated(uploadedUrl, generatedPrompt);
+          console.log("Image saved to Supabase:", storedImageUrl);
+          setGeneratedImage(storedImageUrl);
+          onImageGenerated(storedImageUrl, generatedPrompt);
         }
       } catch (uploadError) {
         console.error("Upload error:", uploadError);
