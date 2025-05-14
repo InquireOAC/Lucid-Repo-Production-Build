@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -63,9 +64,10 @@ export const useJournalActions = () => {
           console.error("Database error:", error);
         }
       }
-      toast.success("Dream saved successfully!");
+      toast("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
+      toast("Failed to save dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,7 +91,7 @@ export const useJournalActions = () => {
       // We need dreamId but it's not in the parameter
       // This is a mismatch with how it's used in Journal.tsx
       console.error("Error: dreamId is required but not provided in handleEditDream");
-      toast.error("Failed to update dream: Missing dream ID");
+      toast("Failed to update dream: Missing dream ID");
     } finally {
       setIsSubmitting(false);
     }
@@ -135,9 +137,7 @@ export const useJournalActions = () => {
           delete dbUpdates.audioUrl;
         }
         
-        console.log("Updating dream in database:", id, {
-          has_image: Boolean(dbUpdates.generatedImage || dbUpdates.image_url)
-        });
+        console.log("Updating dream in database:", id);
         
         await supabase
           .from("dream_entries")
@@ -147,7 +147,7 @@ export const useJournalActions = () => {
       }
       
       if (updates.is_public || updates.isPublic) {
-        toast.success("Dream shared to Lucid Repo!");
+        toast("Dream shared to Lucid Repo!");
       }
       
       return true;
@@ -159,22 +159,42 @@ export const useJournalActions = () => {
 
   const handleDeleteDream = async (id: string) => {
     try {
-      // Delete from local store
-      deleteEntry(id);
-
-      // If user is logged in, also delete from database
+      console.log("Deleting dream:", id);
+      
+      // If user is logged in, delete from database first
       if (user) {
-        await supabase
+        const { error } = await supabase
           .from("dream_entries")
           .delete()
           .eq("id", id)
           .eq("user_id", user.id);
+          
+        if (error) {
+          console.error("Database deletion error:", error);
+          toast("Failed to delete dream from database");
+          return false;
+        }
+        
+        // Also delete any likes on this dream
+        await supabase
+          .from("dream_likes")
+          .delete()
+          .eq("dream_id", id);
+          
+        // Also delete any comments on this dream
+        await supabase
+          .from("dream_comments")
+          .delete()
+          .eq("dream_id", id);
       }
       
-      toast.success("Dream deleted successfully");
+      // Once deleted from database, delete from local store
+      deleteEntry(id);
+      toast("Dream deleted successfully");
       return true;
     } catch (error) {
       console.error("Error deleting dream:", error);
+      toast("Failed to delete dream");
       return false;
     }
   };
@@ -188,9 +208,9 @@ export const useJournalActions = () => {
       });
       
       if (newStatus) {
-        toast.success("Dream published to Lucid Repo");
+        toast("Dream published to Lucid Repo");
       } else {
-        toast.success("Dream set to private");
+        toast("Dream set to private");
       }
       
       return true;

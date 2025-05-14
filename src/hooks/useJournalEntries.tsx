@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { persistImageURL } from "@/utils/imageUtils";
 
 export const useJournalEntries = () => {
-  const { entries, updateEntry } = useDreamStore();
+  const { entries, updateEntry, setAllEntries } = useDreamStore();
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -24,8 +24,8 @@ export const useJournalEntries = () => {
 
       if (error) throw error;
 
-      // Convert the database dreams to the local format and merge
-      if (data && data.length > 0) {
+      // Convert the database dreams to the local format
+      if (data) {
         const formattedDreams = await Promise.all(data.map(async (dream: any) => {
           // Try to create a persistent blob URL for the image if it exists
           let persistentImageUrl = dream.generatedImage || dream.image_url;
@@ -60,16 +60,11 @@ export const useJournalEntries = () => {
           };
         }));
         
-        console.log("Synced dreams with images:", formattedDreams.map(d => ({
-          id: d.id,
-          title: d.title,
-          hasImage: Boolean(d.generatedImage || d.image_url)
-        })));
+        console.log("Synced dreams with images:", formattedDreams.length);
         
-        // Update the local store with dreams from the database
-        formattedDreams.forEach(dream => {
-          updateEntry(dream.id, dream);
-        });
+        // Instead of updating each entry individually, replace the entire collection
+        // This ensures we don't have stale entries in the store
+        setAllEntries(formattedDreams);
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);

@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -33,10 +33,18 @@ const Journal = () => {
     handleTogglePublic,
     handleTagClick,
     setActiveTagIds,
-    user
+    user,
+    syncDreamsFromDb
   } = useDreamJournal();
   
   const [activeTab, setActiveTab] = useState("all");
+
+  // Refresh dreams when component mounts
+  useEffect(() => {
+    if (user) {
+      syncDreamsFromDb();
+    }
+  }, [user]);
 
   // Create wrapper function for edit to match the expected signature
   const handleEditDream = async (dreamData: {
@@ -119,7 +127,10 @@ const Journal = () => {
       </Tabs>
 
       {/* Add Dream Dialog */}
-      <Dialog open={isAddingDream} onOpenChange={setIsAddingDream}>
+      <Dialog open={isAddingDream} onOpenChange={(open) => {
+        setIsAddingDream(open);
+        if (!open) syncDreamsFromDb(); // Refresh when closing dialog
+      }}>
         <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
@@ -130,7 +141,10 @@ const Journal = () => {
       
       {/* Edit Dream Dialog */}
       {selectedDream && (
-        <Dialog open={isEditingDream} onOpenChange={setIsEditingDream}>
+        <Dialog open={isEditingDream} onOpenChange={(open) => {
+          setIsEditingDream(open);
+          if (!open) syncDreamsFromDb(); // Refresh when closing dialog
+        }}>
           <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
             <DialogHeader>
               <DialogTitle className="gradient-text">Edit Dream</DialogTitle>
@@ -150,7 +164,10 @@ const Journal = () => {
         <DreamDetail
           dream={selectedDream}
           tags={tags}
-          onClose={() => setSelectedDream(null)}
+          onClose={() => {
+            setSelectedDream(null);
+            syncDreamsFromDb(); // Refresh when closing detail view
+          }}
           onUpdate={handleUpdateDream}
           onDelete={handleDeleteDream}
           isAuthenticated={!!user}
@@ -160,7 +177,9 @@ const Journal = () => {
       {/* Delete Confirmation Dialog */}
       <AlertDialog 
         open={!!dreamToDelete} 
-        onOpenChange={(open) => !open && setDreamToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open) setDreamToDelete(null);
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -173,7 +192,13 @@ const Journal = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => dreamToDelete && handleDeleteDream(dreamToDelete)}
+              onClick={async () => {
+                if (dreamToDelete) {
+                  await handleDeleteDream(dreamToDelete);
+                  setDreamToDelete(null);
+                  syncDreamsFromDb(); // Refresh after deletion
+                }
+              }}
               className="bg-destructive hover:bg-destructive/90"
             >
               Delete
