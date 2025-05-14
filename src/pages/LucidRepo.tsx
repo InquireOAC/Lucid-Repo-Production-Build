@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +30,16 @@ const LucidRepo = () => {
     fetchPublicDreams
   } = useDreams();
 
+  // Add log when dreams are updated
+  useEffect(() => {
+    if (dreams && dreams.length > 0) {
+      console.log("LucidRepo: Dreams loaded");
+      dreams.forEach((d, i) => {
+        console.log(`Dream[${i}]: user_id=${d.user_id}, userId=${d.userId}, profiles=`, d.profiles);
+      });
+    }
+  }, [dreams]);
+
   // Refresh dreams when component mounts and periodically
   useEffect(() => {
     fetchPublicDreams();
@@ -58,10 +67,13 @@ const LucidRepo = () => {
     fetchPublicDreams();
   };
 
+  // Enhanced: Log navigation, warn if userId is missing
   const handleNavigateToProfile = (userId: string | undefined) => {
+    console.log("Profile navigation requested for userId:", userId);
     if (userId) {
-      // Navigate to /profile/{userId}
       navigate(`/profile/${userId}`);
+    } else {
+      console.warn("No userId provided for navigation.");
     }
   };
 

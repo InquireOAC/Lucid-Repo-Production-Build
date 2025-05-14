@@ -15,8 +15,17 @@ const DreamCardUser = ({
   avatarUrl, 
   onUserClick 
 }: DreamCardUserProps) => {
-  // Show username first (always public), fallback to displayName
-  const nameToShow = username || displayName || "User";
+  // Add logs to track what we receive as props
+  React.useEffect(() => {
+    console.log("DreamCardUser props:", { username, displayName, avatarUrl });
+  }, [username, displayName, avatarUrl]);
+  // Show username if available, then displayName, fallback to "User"
+  const nameToShow =
+    (username && username !== "Anonymous User" && username !== "")
+      ? username
+      : (displayName && displayName !== "") 
+        ? displayName
+        : "User";
   return (
     <div 
       className="flex items-center mb-3 cursor-pointer hover:underline" 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -69,7 +68,9 @@ const Profile = () => {
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   
+  // Add logs about which profile is being fetched
   useEffect(() => {
+    console.log("Profile page loading for userId:", userId, "isOwnProfile:", isOwnProfile);
     if (!user) {
       navigate("/auth");
       return;
@@ -81,6 +82,7 @@ const Profile = () => {
     }
   }, [user, profile, userId]);
 
+  // Add log for fetchSubscription
   useEffect(() => {
     if (user) {
       fetchSubscription();
@@ -104,12 +106,18 @@ const Profile = () => {
     return <LoadingScreen />;
   }
   
-  // User not found state
+  // Add log for profile loading/failure
   if (!isOwnProfile && !viewedProfile) {
+    console.warn("Profile: User not found for userId:", userId);
     return <UserNotFound onGoBack={() => navigate("/")} />;
   }
   
   const profileToShow = isOwnProfile ? profile : viewedProfile;
+  
+  // Add log for loaded profile to show
+  useEffect(() => {
+    console.log("Profile profileToShow = ", profileToShow);
+  }, [profileToShow]);
   
   // Main render
   return (

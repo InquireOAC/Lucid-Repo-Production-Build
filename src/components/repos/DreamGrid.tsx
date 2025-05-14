@@ -28,7 +28,11 @@ const DreamGrid = ({
           ...dream,
           generatedImage: dream.generatedImage || dream.image_url
         };
-        
+        // Add log for user_id navigation
+        const dreamUserId = normalizedDream.userId || normalizedDream.user_id;
+        if (dreamUserId == null) {
+          console.warn("Dream with missing user id for navigation:", normalizedDream);
+        }
         return (
           <DreamCard
             key={normalizedDream.id}
@@ -37,9 +41,12 @@ const DreamGrid = ({
             onLike={() => onLike(normalizedDream.id)}
             showUser={true}
             onClick={() => onOpenDream(normalizedDream)}
-            onUserClick={() => onUserClick(normalizedDream.user_id)}
+            onUserClick={() => {
+              console.log("DreamGrid.onUserClick: user_id/userId", dreamUserId);
+              onUserClick(dreamUserId);
+            }}
             onTagClick={onTagClick}
-            showSharedBadge={false} // Explicitly disable shared badge in Lucid Repo
+            showSharedBadge={false}
           />
         );
       })}
