@@ -1,3 +1,4 @@
+
 import React from 'react';
 import './App.css';
 import Index from "@/pages/Index";
@@ -10,11 +11,9 @@ import MainLayout from "@/layouts/MainLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 
-// Use HashRouter instead of BrowserRouter to fix navigation issues,
-// especially with the profile page refreshing problem.
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+// Use HashRouter for better compatibility with the current setup
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 
-// Update the router component
 function App() {
   return (
     <Router>
