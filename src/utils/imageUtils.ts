@@ -30,7 +30,20 @@ export const uploadDreamImage = async (
       return imageUrl;
     }
 
-    // 2. Fetch the remote image
+    // 2. Check if bucket exists, create if it doesn't
+    const { data: buckets } = await supabase.storage.listBuckets();
+    if (!buckets?.find(bucket => bucket.name === "dream_images")) {
+      console.log("Creating dream_images bucket");
+      const { error: createError } = await supabase.storage.createBucket("dream_images", {
+        public: true
+      });
+      if (createError) {
+        console.error("Error creating bucket:", createError);
+        // Continue anyway, the bucket might exist but not be visible to the user
+      }
+    }
+
+    // 3. Fetch the remote image
     console.log("Fetching image from URL:", imageUrl);
     const response = await fetch(imageUrl, {
       cache: "no-cache",
@@ -51,11 +64,11 @@ export const uploadDreamImage = async (
       throw new Error("Image blob is empty");
     }
 
-    // 3. Create a unique file path with timestamp
+    // 4. Create a unique file path with timestamp
     const timestamp = Date.now();
     const filePath = `dreams/${dreamId}-${timestamp}.png`;
 
-    // 4. Upload to Supabase storage
+    // 5. Upload to Supabase storage
     console.log("Uploading to Supabase storage path:", filePath);
     const { error: uploadError, data: uploadData } = await supabase.storage
       .from("dream_images")
@@ -70,7 +83,7 @@ export const uploadDreamImage = async (
       throw uploadError;
     }
 
-    // 5. Get the public URL
+    // 6. Get the public URL
     const { data } = supabase.storage
       .from("dream_images")
       .getPublicUrl(filePath);
@@ -78,7 +91,7 @@ export const uploadDreamImage = async (
     const publicUrl = data.publicUrl;
     console.log("Public URL:", publicUrl);
 
-    // 6. Update the dream entry with the permanent URL if not a preview
+    // 7. Update the dream entry with the permanent URL if not a preview
     if (dreamId !== "preview") {
       console.log("Updating dream entry with image URL:", publicUrl);
       const { error: dbError } = await supabase
