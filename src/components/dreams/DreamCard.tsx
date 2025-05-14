@@ -1,3 +1,4 @@
+
 import React from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,10 +57,10 @@ const DreamCard = ({
   // Similarly handle comment count
   const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
-  // Get user info from profiles if available -- prefer username for display
-  const username = (dream.profiles?.username ?? dream.username) || "User";
-  const displayName = dream.profiles?.display_name ?? dream.displayName ?? "";
-  const avatarUrl = dream.profiles?.avatar_url ?? dream.avatarUrl ?? "";
+  // Get user info from profiles if available
+  const username = dream.profiles?.username || "Anonymous User";
+  const displayName = dream.profiles?.display_name || "";
+  const avatarUrl = dream.profiles?.avatar_url || "";
 
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
@@ -198,3 +199,5 @@ const DreamCard = ({
 };
 
 export default DreamCard;
+
+// The file is over 200 lines, consider asking Lovable to refactor it into smaller files for maintainability after this fix.
