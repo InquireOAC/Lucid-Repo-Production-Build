@@ -70,7 +70,7 @@ export const uploadDreamImage = async (
 
     // 5. Upload to Supabase storage
     console.log("Uploading to Supabase storage path:", filePath);
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError, data: uploadData } = await supabase.storage
       .from("generated_dream_images")
       .upload(filePath, blob, {
         contentType: "image/png",
@@ -104,7 +104,6 @@ export const uploadDreamImage = async (
       
       if (dbError) {
         console.error("Error updating dream entry:", dbError);
-        // Continue, as we'll still return the URL for local store
       }
     }
 
@@ -124,7 +123,13 @@ export const uploadDreamImage = async (
  */
 export const urlToDataURL = async (url: string): Promise<string> => {
   try {
+    if (!url) return "";
+    
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.statusText}`);
+    }
+    
     const blob = await response.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -152,8 +157,10 @@ export const persistImageURL = async (url: string): Promise<string> => {
       return url;
     }
     
-    // For external URLs, add cache busting
-    return `${url}${url.includes('?') ? '&' : '?'}cache=${Date.now()}`;
+    // For external URLs like OpenAI's temporary URLs, convert to data URL
+    // This makes the image persist in memory even if the original URL expires
+    const dataUrl = await urlToDataURL(url);
+    return dataUrl || url;
   } catch (error) {
     console.error("Error persisting image URL:", error);
     return url || "";

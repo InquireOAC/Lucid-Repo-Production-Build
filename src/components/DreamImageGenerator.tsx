@@ -2,14 +2,19 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Loader2, Sparkles, ImagePlus } from "lucide-react";
+import { Sparkles, ImagePlus } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { uploadDreamImage, preloadImage } from "@/utils/imageUtils";
+
+// Import refactored components
+import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
+import ImageDisplay from "@/components/dreams/ImageDisplay";
+import GeneratingImage from "@/components/dreams/GeneratingImage";
+import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -36,18 +41,12 @@ const DreamImageGenerator = ({
   
   // When the component mounts or the image changes, ensure we preload it
   useEffect(() => {
-    const setupExistingImage = async () => {
-      if (existingImage) {
-        setGeneratedImage(existingImage);
-        setShowInfo(false);
-        setImageError(false);
-        
-        // Preload the image to ensure it's in browser cache
-        preloadImage(existingImage);
-      }
-    };
-    
-    setupExistingImage();
+    if (existingImage) {
+      setGeneratedImage(existingImage);
+      setShowInfo(false);
+      setImageError(false);
+      preloadImage(existingImage);
+    }
   }, [existingImage]);
 
   const generateImage = async () => {
@@ -75,7 +74,7 @@ const DreamImageGenerator = ({
       setShowInfo(false);
       setImageError(false);
       
-      // First, generate a prompt for the image using OpenAI
+      // Generate a prompt for the image using OpenAI
       const promptResult = await supabase.functions.invoke('analyze-dream', {
         body: { 
           dreamContent, 
@@ -95,7 +94,7 @@ const DreamImageGenerator = ({
       setImagePrompt(generatedPrompt);
       console.log("Generated prompt:", generatedPrompt);
       
-      // Then, generate the image using the prompt and Dall-E
+      // Generate the image using the prompt and Dall-E
       const imageResult = await supabase.functions.invoke('generate-dream-image', {
         body: { prompt: generatedPrompt }
       });
@@ -124,20 +123,16 @@ const DreamImageGenerator = ({
       // Use a dreamId based on the user ID if we don't have one yet
       const dreamIdForStorage = user.id;
       
-      // Upload directly to Supabase storage for permanent storage
-      console.log("Starting upload to Supabase storage for permanent keeping");
-      
       try {
         const uploadedUrl = await uploadDreamImage(dreamIdForStorage, openaiUrl);
         
         if (!uploadedUrl) {
           console.error("Image upload failed");
           // We still continue with the OpenAI URL as fallback
+          onImageGenerated(openaiUrl, generatedPrompt);
         } else {
           console.log("Image saved permanently:", uploadedUrl);
           setGeneratedImage(uploadedUrl);
-          
-          // Notify the parent component that an image was generated
           onImageGenerated(uploadedUrl, generatedPrompt);
         }
       } catch (uploadError) {
@@ -166,6 +161,9 @@ const DreamImageGenerator = ({
     }
   };
 
+  // Determine if user is app creator
+  const isAppCreator = user?.email === "inquireoac@gmail.com";
+
   if (showInfo && !generatedImage && !isGenerating) {
     return (
       <Card>
@@ -176,25 +174,12 @@ const DreamImageGenerator = ({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              {disabled
-                ? "Only the dream owner can generate an image for this dream."
-                : hasUsedFeature('image') && user?.email !== "inquireoac@gmail.com"
-                  ? "You've used your free image generation. Subscribe to generate more dream images."
-                  : "Generate a unique image inspired by your dream's content. (Free trial available)"
-              }
-            </p>
-            {!disabled && (
-              <Button
-                onClick={generateImage}
-                className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
-              >
-                <ImagePlus className="h-4 w-4 mr-2" />
-                {hasUsedFeature('image') && user?.email !== "inquireoac@gmail.com" ? "Subscribe to Generate" : "Generate Image"}
-              </Button>
-            )}
-          </div>
+          <InitialImagePrompt 
+            disabled={disabled}
+            hasUsedFeature={hasUsedFeature('image')}
+            isAppCreator={isAppCreator}
+            onGenerate={generateImage}
+          />
         </CardContent>
       </Card>
     );
@@ -210,42 +195,19 @@ const DreamImageGenerator = ({
       </CardHeader>
       <CardContent>
         {isGenerating ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Generating your dream image...
-            </p>
-          </div>
+          <GeneratingImage />
         ) : (
           <>
-            {/* Show the generated image */}
             {generatedImage && (
-              <div className="mb-4">
-                <img
-                  src={generatedImage}
-                  alt="Dream"
-                  className="w-full rounded-md aspect-square object-cover"
-                  onError={(e) => {
-                    console.error("Image load error", e);
-                    setImageError(true);
-                    const img = e.currentTarget;
-                    img.src = "https://via.placeholder.com/400?text=Image+Error";
-                  }}
-                />
-                {imageError && (
-                  <p className="text-xs text-red-500 mt-1">
-                    There was an issue displaying the image. Try regenerating.
-                  </p>
-                )}
-              </div>
+              <ImageDisplay 
+                imageUrl={generatedImage} 
+                onError={() => setImageError(true)} 
+              />
             )}
             
-            <Input
-              type="text"
-              placeholder="Generated Prompt"
-              value={imagePrompt}
-              onChange={(e) => setImagePrompt(e.target.value)}
-              className="dream-input mb-3"
+            <ImagePromptInput
+              imagePrompt={imagePrompt}
+              onChange={setImagePrompt}
               disabled={disabled}
             />
             
