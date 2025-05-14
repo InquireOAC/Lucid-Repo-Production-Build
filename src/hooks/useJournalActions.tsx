@@ -1,58 +1,16 @@
+
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadDreamImage } from "@/utils/imageUtils";
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Helper function to upload image to Supabase storage
-  const uploadImageToStorage = async (imageUrl: string, dreamId: string): Promise<string | null> => {
-    if (!imageUrl || !dreamId) return null;
-
-    try {
-      // If it's already a Supabase URL, return it
-      if (imageUrl.includes("supabase.co") && imageUrl.includes("/storage/v1/object/public/")) {
-        return imageUrl;
-      }
-
-      // Otherwise, fetch the image and upload to Supabase
-      console.log("Uploading image to Supabase storage:", dreamId);
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      
-      // Create a unique path for the image
-      const filePath = `dream_${dreamId}_${new Date().getTime()}.png`;
-      
-      // Upload to Supabase storage
-      const { data, error } = await supabase.storage
-        .from("dream_images")
-        .upload(filePath, blob, {
-          contentType: "image/png",
-          upsert: true
-        });
-
-      if (error) {
-        console.error("Error uploading to Supabase storage:", error);
-        return imageUrl; // Return original URL as fallback
-      }
-
-      // Get the public URL
-      const { data: publicUrlData } = supabase.storage
-        .from("dream_images")
-        .getPublicUrl(filePath);
-
-      console.log("Image uploaded successfully:", publicUrlData.publicUrl);
-      return publicUrlData.publicUrl;
-    } catch (error) {
-      console.error("Error in image upload process:", error);
-      return imageUrl; // Return original URL as fallback
-    }
-  };
 
   // Modified to return void to match the expected type in DreamEntryForm
   const handleAddDream = async (dreamData: {
@@ -84,7 +42,7 @@ export const useJournalActions = () => {
         // Upload image to Supabase storage if provided
         let storedImageUrl = dreamData.generatedImage;
         if (dreamData.generatedImage) {
-          storedImageUrl = await uploadImageToStorage(dreamData.generatedImage, newDream.id);
+          storedImageUrl = await uploadDreamImage(newDream.id, dreamData.generatedImage);
         }
         
         // Only include fields that exist in the database schema
@@ -145,7 +103,7 @@ export const useJournalActions = () => {
       // Upload image to Supabase storage if provided
       let storedImageUrl = dreamData.generatedImage;
       if (dreamData.generatedImage) {
-        storedImageUrl = await uploadImageToStorage(dreamData.generatedImage, dreamId);
+        storedImageUrl = await uploadDreamImage(dreamId, dreamData.generatedImage);
       }
       
       // Update with the stored image URL
@@ -225,19 +183,37 @@ export const useJournalActions = () => {
       // If user is logged in, delete from database first
       if (user) {
         // First, get the dream entry to find associated image
-        const { data: dreamData, error: fetchError } = await supabase
+        const { data, error: fetchError } = await supabase
           .from("dream_entries")
           .select("generatedImage")
           .eq("id", id)
           .eq("user_id", user.id)
           .single();
           
-        if (fetchError) {
-          console.error("Error fetching dream for deletion:", fetchError);
-          // Continue with deletion even if fetch fails
+        if (!fetchError && data) {
+          // If there's an image URL and it's from our Supabase storage
+          if (data.generatedImage && 
+              data.generatedImage.includes("supabase.co") && 
+              data.generatedImage.includes("/storage/v1/object/public/dream_images/")) {
+            try {
+              // Extract the path from the URL
+              const pathMatch = data.generatedImage.match(/\/storage\/v1\/object\/public\/dream_images\/(.+)/);
+              if (pathMatch && pathMatch[1]) {
+                const path = pathMatch[1];
+                await supabase.storage
+                  .from("dream_images")
+                  .remove([path]);
+                  
+                console.log("Deleted associated image:", path);
+              }
+            } catch (imageError) {
+              console.error("Error deleting image:", imageError);
+              // Continue with deletion even if image removal fails
+            }
+          }
         }
         
-        // Delete from database first
+        // Delete from database
         const { error } = await supabase
           .from("dream_entries")
           .delete()
@@ -248,27 +224,6 @@ export const useJournalActions = () => {
           console.error("Database deletion error:", error);
           toast.error("Failed to delete dream from database");
           return false;
-        }
-        
-        // Delete associated image if it exists and is from Supabase storage
-        if (dreamData && dreamData.generatedImage && 
-            dreamData.generatedImage.includes("supabase.co") && 
-            dreamData.generatedImage.includes("/storage/v1/object/public/dream_images/")) {
-          try {
-            // Extract the path from the URL
-            const pathMatch = dreamData.generatedImage.match(/\/storage\/v1\/object\/public\/dream_images\/(.+)/);
-            if (pathMatch && pathMatch[1]) {
-              const path = pathMatch[1];
-              await supabase.storage
-                .from("dream_images")
-                .remove([path]);
-                
-              console.log("Deleted associated image:", path);
-            }
-          } catch (imageError) {
-            console.error("Error deleting image:", imageError);
-            // Continue with deletion even if image removal fails
-          }
         }
         
         // Also delete any likes on this dream

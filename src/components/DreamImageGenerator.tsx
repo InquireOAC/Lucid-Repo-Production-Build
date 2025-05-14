@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,54 +47,6 @@ const DreamImageGenerator = ({
       preloadImage(existingImage);
     }
   }, [existingImage]);
-
-  // Function to upload image to Supabase storage
-  const uploadToSupabaseStorage = async (imageUrl: string): Promise<string> => {
-    if (!imageUrl) return "";
-    
-    try {
-      // If it's already a Supabase URL, return it
-      if (imageUrl.includes("supabase.co") && imageUrl.includes("/storage/v1/object/public/")) {
-        return imageUrl;
-      }
-      
-      // Fetch the image and get as blob
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
-      
-      const blob = await response.blob();
-      
-      // Create a unique path with timestamp
-      const timestamp = Date.now();
-      const filePath = `dream_${timestamp}.png`;
-      
-      // Upload to the dream_images bucket
-      const { error: uploadError, data } = await supabase.storage
-        .from("dream_images")
-        .upload(filePath, blob, {
-          contentType: "image/png",
-          upsert: true,
-        });
-        
-      if (uploadError) {
-        console.error("Storage upload error:", uploadError);
-        return imageUrl; // Return original as fallback
-      }
-      
-      // Get the public URL
-      const { data: publicData } = supabase.storage
-        .from("dream_images")
-        .getPublicUrl(filePath);
-        
-      console.log("Image stored in Supabase:", publicData.publicUrl);
-      return publicData.publicUrl;
-    } catch (error) {
-      console.error("Error uploading to Supabase:", error);
-      return imageUrl; // Return original as fallback
-    }
-  };
 
   const generateImage = async () => {
     if (!user || disabled) return;
@@ -169,8 +120,8 @@ const DreamImageGenerator = ({
       }
       
       try {
-        // Upload image to Supabase storage
-        const storedImageUrl = await uploadToSupabaseStorage(openaiUrl);
+        // Use the new uploadDreamImage utility to save to Supabase storage
+        const storedImageUrl = await uploadDreamImage("preview", openaiUrl);
         
         if (!storedImageUrl) {
           console.error("Image upload to Supabase failed");

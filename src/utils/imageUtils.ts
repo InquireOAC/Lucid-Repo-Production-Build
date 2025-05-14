@@ -32,9 +32,9 @@ export const uploadDreamImage = async (
 
     // 2. Check if bucket exists, create if it doesn't
     const { data: buckets } = await supabase.storage.listBuckets();
-    if (!buckets?.find(bucket => bucket.name === "generated_dream_images")) {
-      console.log("Creating generated_dream_images bucket");
-      const { error: createError } = await supabase.storage.createBucket("generated_dream_images", {
+    if (!buckets?.find(bucket => bucket.name === "dream_images")) {
+      console.log("Creating dream_images bucket");
+      const { error: createError } = await supabase.storage.createBucket("dream_images", {
         public: true
       });
       if (createError) {
@@ -71,7 +71,7 @@ export const uploadDreamImage = async (
     // 5. Upload to Supabase storage
     console.log("Uploading to Supabase storage path:", filePath);
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("generated_dream_images")
+      .from("dream_images")
       .upload(filePath, blob, {
         contentType: "image/png",
         upsert: true,
@@ -85,7 +85,7 @@ export const uploadDreamImage = async (
 
     // 6. Get the public URL
     const { data } = supabase.storage
-      .from("generated_dream_images")
+      .from("dream_images")
       .getPublicUrl(filePath);
     
     const publicUrl = data.publicUrl;
