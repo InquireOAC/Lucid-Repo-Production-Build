@@ -239,13 +239,18 @@ export const useJournalActions = () => {
       // If user is logged in, delete from database first
       if (user) {
         // First, get the dream entry to find associated image
-        const { data: dreamData } = await supabase
+        const { data: dreamData, error: fetchError } = await supabase
           .from("dream_entries")
-          .select("generatedImage, image_url")
+          .select("generatedImage")
           .eq("id", id)
           .eq("user_id", user.id)
           .single();
           
+        if (fetchError) {
+          console.error("Error fetching dream for deletion:", fetchError);
+          // Continue with deletion even if fetch fails
+        }
+        
         // Delete from database first
         const { error } = await supabase
           .from("dream_entries")
@@ -259,12 +264,13 @@ export const useJournalActions = () => {
           return false;
         }
         
-        // Delete associated image if it exists
-        const imageUrl = dreamData?.generatedImage || dreamData?.image_url;
-        if (imageUrl && imageUrl.includes("supabase.co") && imageUrl.includes("/storage/v1/object/public/dream_images/")) {
+        // Delete associated image if it exists and is from Supabase storage
+        if (dreamData && dreamData.generatedImage && 
+            dreamData.generatedImage.includes("supabase.co") && 
+            dreamData.generatedImage.includes("/storage/v1/object/public/dream_images/")) {
           try {
             // Extract the path from the URL
-            const pathMatch = imageUrl.match(/\/storage\/v1\/object\/public\/dream_images\/(.+)/);
+            const pathMatch = dreamData.generatedImage.match(/\/storage\/v1\/object\/public\/dream_images\/(.+)/);
             if (pathMatch && pathMatch[1]) {
               const path = pathMatch[1];
               await supabase.storage
