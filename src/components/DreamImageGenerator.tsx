@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -120,7 +121,7 @@ const DreamImageGenerator = ({
       }
       
       try {
-        // Use the new uploadDreamImage utility to save to Supabase storage
+        // Use the uploadDreamImage utility to save to Supabase storage
         const storedImageUrl = await uploadDreamImage("preview", openaiUrl);
         
         if (!storedImageUrl) {

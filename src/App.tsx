@@ -1,66 +1,39 @@
-
-import { useEffect } from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, HashRouter } from "react-router-dom";
+import React from 'react';
+import './App.css';
+import Index from "@/pages/Index";
+import Journal from "@/pages/Journal";
+import LucidRepo from "@/pages/LucidRepo";
+import Profile from "@/pages/Profile";
+import Auth from "@/pages/Auth";
+import NotFound from "@/pages/NotFound";
+import MainLayout from "@/layouts/MainLayout";
 import { AuthProvider } from "@/contexts/AuthContext";
-import NotFound from "./pages/NotFound";
-import Auth from "./pages/Auth";
-import MainLayout from "./layouts/MainLayout";
-import Journal from "./pages/Journal";
-import LucidRepo from "./pages/LucidRepo";
-import Profile from "./pages/Profile";
-import { StatusBar, Style } from "@capacitor/status-bar";
-import { Capacitor } from "@capacitor/core";
-import { initializeNotifications } from "./utils/notificationUtils";
+import { Toaster } from "sonner";
 
-const queryClient = new QueryClient();
+// Use HashRouter instead of BrowserRouter to fix navigation issues,
+// especially with the profile page refreshing problem.
+import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-const App = () => {
-  useEffect(() => {
-    const setupStatusBar = async () => {
-      if (Capacitor.isPluginAvailable('StatusBar')) {
-        try {
-          // Set status bar to be opaque with dark text
-          await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setStyle({ style: Style.Dark });
-          await StatusBar.setBackgroundColor({ color: '#1E1A2B' });
-        } catch (error) {
-          console.error('Error configuring status bar:', error);
-        }
-      }
-    };
-    
-    setupStatusBar();
-    
-    // Initialize notifications
-    initializeNotifications().catch(console.error);
-  }, []);
-
+// Update the router component
+function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <Router>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <HashRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Journal />} />
-                <Route path="/lucidrepo" element={<LucidRepo />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/profile/:userId" element={<Profile />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </HashRouter>
-        </TooltipProvider>
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<Index />} />
+            <Route path="journal" element={<Journal />} />
+            <Route path="lucid-repo" element={<LucidRepo />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="profile/:userId" element={<Profile />} />
+            <Route path="auth" element={<Auth />} />
+            <Route path="*" element={<NotFound />} />
+          </Route>
+        </Routes>
+        <Toaster richColors />
       </AuthProvider>
-    </QueryClientProvider>
+    </Router>
   );
-};
+}
 
 export default App;
