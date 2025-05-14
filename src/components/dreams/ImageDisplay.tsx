@@ -1,6 +1,5 @@
 
 import React, { useState } from "react";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface ImageDisplayProps {
   imageUrl: string;
@@ -19,15 +18,13 @@ const ImageDisplay = ({ imageUrl, onError }: ImageDisplayProps) => {
   };
 
   return (
-    <div className="mb-4 w-full">
-      <AspectRatio ratio={1 / 1} className="overflow-hidden rounded-md">
-        <img
-          src={imageUrl}
-          alt="Dream"
-          className="w-full h-full object-cover"
-          onError={handleError}
-        />
-      </AspectRatio>
+    <div className="mb-4">
+      <img
+        src={imageUrl}
+        alt="Dream"
+        className="w-full rounded-md aspect-square object-cover"
+        onError={handleError}
+      />
       {imageError && (
         <p className="text-xs text-red-500 mt-1">
           There was an issue displaying the image. Try regenerating.

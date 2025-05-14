@@ -55,10 +55,10 @@ export const uploadDreamImage = async (
     const timestamp = Date.now();
     const filePath = `dreams/${dreamId}-${timestamp}.png`;
 
-    // 4. Upload to Supabase storage using the correct bucket name 'dream-images' (hyphenated)
+    // 4. Upload to Supabase storage
     console.log("Uploading to Supabase storage path:", filePath);
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("dream-images")
+      .from("dream_images")
       .upload(filePath, blob, {
         contentType: "image/png",
         upsert: true,
@@ -72,7 +72,7 @@ export const uploadDreamImage = async (
 
     // 5. Get the public URL
     const { data } = supabase.storage
-      .from("dream-images")
+      .from("dream_images")
       .getPublicUrl(filePath);
     
     const publicUrl = data.publicUrl;

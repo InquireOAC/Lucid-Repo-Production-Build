@@ -11,11 +11,11 @@ const MainLayout = () => {
   const location = useLocation();
   
   React.useEffect(() => {
-    // Only redirect to auth if not logged in and not on the root or journal path
-    if (!loading && !user && location.pathname !== "/" && location.pathname !== "/journal") {
+    // Redirect to auth if not logged in (except for journal which works without auth)
+    if (!loading && !user && location.pathname !== "/") {
       navigate("/auth");
     }
-  }, [user, loading, location.pathname, navigate]);
+  }, [user, loading, location.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
@@ -27,8 +27,8 @@ const MainLayout = () => {
       {/* Fixed tab bar positioned at the bottom with safe area insets */}
       <div className="fixed bottom-0 left-0 right-0 bg-card shadow-lg border-t z-50 pb-safe-bottom">
         <div className="flex justify-around items-center h-16 pb-0">
-          <NavTab to="/journal" icon={<Book />} label="Journal" />
-          <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
+          <NavTab to="/" icon={<Book />} label="Journal" />
+          <NavTab to="/lucidrepo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
       </div>
@@ -44,8 +44,7 @@ interface NavTabProps {
 
 const NavTab = ({ to, icon, label }: NavTabProps) => {
   const location = useLocation();
-  const isActive = location.pathname === to || 
-    (to === "/journal" && location.pathname === "/");
+  const isActive = location.pathname === to;
   
   return (
     <NavLink 
