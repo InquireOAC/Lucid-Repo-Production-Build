@@ -58,6 +58,45 @@ export type Database = {
           },
         ]
       }
+      comments: {
+        Row: {
+          comment_text: string
+          created_at: string | null
+          dream_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string | null
+          dream_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string | null
+          dream_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_dream_id_fkey"
+            columns: ["dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dream_comments: {
         Row: {
           content: string
@@ -108,6 +147,7 @@ export type Database = {
           date: string
           generatedImage: string | null
           id: string
+          image_url: string | null
           imagePrompt: string | null
           is_public: boolean | null
           like_count: number | null
@@ -126,6 +166,7 @@ export type Database = {
           date?: string
           generatedImage?: string | null
           id?: string
+          image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null
           like_count?: number | null
@@ -144,6 +185,7 @@ export type Database = {
           date?: string
           generatedImage?: string | null
           id?: string
+          image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null
           like_count?: number | null
@@ -269,6 +311,78 @@ export type Database = {
           },
         ]
       }
+      follows: {
+        Row: {
+          created_at: string | null
+          followed_id: string
+          follower_id: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          followed_id: string
+          follower_id: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          followed_id?: string
+          follower_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_followed_id_fkey"
+            columns: ["followed_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_follower_id_fkey"
+            columns: ["follower_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string | null
+          dream_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          dream_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          dream_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_dream_id_fkey"
+            columns: ["dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           content: string
@@ -319,6 +433,8 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_subscribed: boolean | null
+          profile_picture: string | null
           social_links: Json | null
           updated_at: string
           username: string | null
@@ -330,6 +446,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id: string
+          is_subscribed?: boolean | null
+          profile_picture?: string | null
           social_links?: Json | null
           updated_at?: string
           username?: string | null
@@ -341,6 +459,8 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_subscribed?: boolean | null
+          profile_picture?: string | null
           social_links?: Json | null
           updated_at?: string
           username?: string | null
