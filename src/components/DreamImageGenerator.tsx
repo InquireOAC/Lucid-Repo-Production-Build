@@ -30,7 +30,7 @@ const DreamImageGenerator = ({
   onImageGenerated,
   disabled = false
 }: DreamImageGeneratorProps) => {
-  const { user } = useAuth();
+  const { user } = useAuth(); // user object contains user.id
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
   const [generatedImage, setGeneratedImage] = useState(existingImage);
@@ -105,37 +105,39 @@ const DreamImageGenerator = ({
       
       // Check both possible response formats
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
-      console.log("Image result data:", imageResult.data);
+      console.log("OpenAI Image URL:", openaiUrl);
       
       if (!openaiUrl) {
-        throw new Error('No image URL was returned');
+        throw new Error('No image URL was returned from AI generation');
       }
       
-      // Immediately display the image from OpenAI
+      // Display OpenAI image immediately for responsiveness
       setGeneratedImage(openaiUrl);
       
-      // If this is a free trial use and not the app creator, mark the feature as used
       if (!isAppCreator && !hasUsedFeature('image')) {
         markFeatureAsUsed('image');
       }
       
       try {
-        // Use the new uploadDreamImage utility to save to Supabase storage
-        const storedImageUrl = await uploadDreamImage("preview", openaiUrl);
+        // Upload the OpenAI image to Supabase storage, passing user.id
+        // The "preview" identifier indicates this is a temporary upload before the dream is saved.
+        console.log("Uploading OpenAI image to Supabase storage (preview)...");
+        const storedImageUrl = await uploadDreamImage("preview", openaiUrl, user.id);
         
-        if (!storedImageUrl) {
-          console.error("Image upload to Supabase failed");
-          // We still continue with the OpenAI URL as fallback
-          onImageGenerated(openaiUrl, generatedPrompt);
+        if (!storedImageUrl || storedImageUrl === openaiUrl) { // Check if upload failed or returned fallback
+          console.warn("Image upload to Supabase (preview) failed or returned original URL. Using OpenAI URL for now:", openaiUrl);
+          onImageGenerated(openaiUrl, generatedPrompt); // Pass the OpenAI URL if upload failed
+          toast.warning("Image generated, but permanent saving failed. It might be temporary.");
         } else {
-          console.log("Image saved to Supabase:", storedImageUrl);
-          setGeneratedImage(storedImageUrl);
-          onImageGenerated(storedImageUrl, generatedPrompt);
+          console.log("Image saved to Supabase (preview):", storedImageUrl);
+          setGeneratedImage(storedImageUrl); // Update display with Supabase URL
+          onImageGenerated(storedImageUrl, generatedPrompt); // Pass the permanent Supabase URL
+          toast.success("Dream image generated and saved!");
         }
-      } catch (uploadError) {
-        console.error("Upload error:", uploadError);
-        // Still notify with the OpenAI URL as fallback
-        onImageGenerated(openaiUrl, generatedPrompt);
+      } catch (uploadError: any) {
+        console.error("Upload error during preview generation:", uploadError);
+        toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
+        onImageGenerated(openaiUrl, generatedPrompt); // Fallback to OpenAI URL
       }
       
       toast.success("Dream image generated!");

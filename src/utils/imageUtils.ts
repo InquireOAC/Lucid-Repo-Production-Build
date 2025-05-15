@@ -1,46 +1,54 @@
-
 // src/utils/imageUtils.ts
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 /**
  * Uploads a dream image to Supabase storage and updates the dream entry
- * @param dreamId The ID of the dream to update
- * @param imageUrl URL of the image to upload
+ * @param dreamId The ID of the dream to update, or "preview" for temporary uploads
+ * @param imageUrl URL of the image to upload (can be OpenAI URL or existing Supabase URL)
+ * @param userId The ID of the user uploading the image
  * @returns The permanent public URL of the uploaded image, or null on failure
  */
 export const uploadDreamImage = async (
   dreamId: string,
-  imageUrl: string
+  imageUrl: string,
+  userId: string | undefined // Added userId parameter
 ): Promise<string | null> => {
   try {
-    if (!dreamId || !imageUrl) {
-      console.error("Missing required parameters for image upload");
+    if (!imageUrl) {
+      console.error("Missing image URL for upload");
       return null;
     }
 
-    console.log("Starting image upload for dream:", dreamId);
+    if (!userId) {
+      console.error("Missing userId for image upload. User might not be logged in.");
+      // Potentially return original URL or handle as an error, for now, toast and return original
+      toast.error("User not identified. Cannot save image to your account.");
+      return imageUrl; 
+    }
 
-    // 1. If it's already a Supabase public URL, return it directly
+    console.log(`Starting image upload for dream: ${dreamId}, user: ${userId}`);
+
+    // 1. If it's already a Supabase public URL from our dream-images bucket, return it directly
     if (
-      imageUrl.includes("supabase.co") &&
-      imageUrl.includes("/storage/v1/object/public/")
+      imageUrl.includes(supabase.storage.url) && // Use Supabase storage URL for comparison
+      imageUrl.includes("/storage/v1/object/public/dream-images/")
     ) {
-      console.log("Image is already in Supabase, returning existing URL");
+      console.log("Image is already in Supabase dream-images bucket, returning existing URL");
       return imageUrl;
     }
 
-    // 2. Fetch the remote image
+    // 2. Fetch the remote image (e.g., from OpenAI)
     console.log("Fetching image from URL:", imageUrl);
     const response = await fetch(imageUrl, {
-      cache: "no-cache",
+      cache: "no-cache", // Avoid caching issues with temporary URLs
       headers: {
-        "Cache-Control": "no-cache"
-      }
+        "Cache-Control": "no-cache",
+      },
     });
     
     if (!response.ok) {
-      console.error(`Failed to fetch image: ${response.statusText}`);
+      console.error(`Failed to fetch image: ${response.status} ${response.statusText}`);
       throw new Error(`Failed to fetch image: ${response.statusText}`);
     }
     
@@ -48,21 +56,27 @@ export const uploadDreamImage = async (
     console.log("Image blob created, size:", blob.size);
     
     if (blob.size === 0) {
-      throw new Error("Image blob is empty");
+      throw new Error("Image blob is empty, cannot upload.");
     }
 
-    // 3. Create a unique file path with timestamp
+    // 3. Create a unique file path with timestamp, incorporating userId
     const timestamp = Date.now();
-    const filePath = `dreams/${dreamId}-${timestamp}.png`;
+    let filePath: string;
 
-    // 4. Upload to Supabase storage with correct bucket name
-    console.log("Uploading to Supabase storage path:", filePath);
+    if (dreamId === "preview") {
+      filePath = `${userId}/previews/${timestamp}.png`;
+    } else {
+      filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
+    }
+
+    // 4. Upload to Supabase storage with correct bucket name "dream-images"
+    console.log("Uploading to Supabase storage path:", filePath, "in bucket dream-images");
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("dream-images")
+      .from("dream-images") // Correct bucket name
       .upload(filePath, blob, {
         contentType: "image/png",
-        upsert: true,
-        cacheControl: "3600",
+        upsert: true, // Overwrite if a file with the same path exists (useful for previews or retries)
+        cacheControl: "3600", // Cache for 1 hour
       });
       
     if (uploadError) {
@@ -72,34 +86,37 @@ export const uploadDreamImage = async (
 
     // 5. Get the public URL
     const { data } = supabase.storage
-      .from("dream-images")
+      .from("dream-images") // Correct bucket name
       .getPublicUrl(filePath);
     
     const publicUrl = data.publicUrl;
-    console.log("Public URL:", publicUrl);
+    console.log("Public URL from Supabase:", publicUrl);
 
     // 6. Update the dream entry with the permanent URL if not a preview
-    if (dreamId !== "preview") {
-      console.log("Updating dream entry with image URL:", publicUrl);
+    // and dreamId is a valid UUID (not "preview")
+    if (dreamId !== "preview" && dreamId) { // ensure dreamId is not empty string either
+      console.log("Updating dream entry in database with image URL:", publicUrl);
       const { error: dbError } = await supabase
         .from("dream_entries")
         .update({ 
           generatedImage: publicUrl,
-          image_url: publicUrl 
+          image_url: publicUrl // Ensure both fields are updated for compatibility
         })
-        .eq("id", dreamId);
+        .eq("id", dreamId)
+        .eq("user_id", userId); // Ensure user owns the dream
       
       if (dbError) {
-        console.error("Error updating dream entry:", dbError);
+        console.error("Error updating dream entry in database:", dbError);
+        // Don't throw, but log. The image is uploaded, DB update can be retried or handled.
       }
     }
 
     return publicUrl;
   } catch (error: any) {
-    console.error("Error in uploadDreamImage:", error);
-    toast.error("Failed to save image permanently");
-    // Return the original URL as fallback
-    return imageUrl;
+    console.error("Error in uploadDreamImage:", error.message, error.stack);
+    toast.error(`Failed to save image: ${error.message}. Using temporary image for now.`);
+    // Return the original (possibly temporary) URL as fallback if upload fails
+    return imageUrl; 
   }
 };
 
@@ -140,7 +157,7 @@ export const persistImageURL = async (url: string): Promise<string> => {
     if (!url) return "";
     
     // If already a Supabase URL, it should be persistent
-    if (url.includes("supabase.co") && url.includes("/storage/v1/object/public/")) {
+    if (url.includes(supabase.storage.url) && url.includes("/storage/v1/object/public/")) {
       return url;
     }
     

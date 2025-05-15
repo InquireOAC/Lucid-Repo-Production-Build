@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,6 @@ export const useJournalActions = () => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Modified to return void to match the expected type in DreamEntryForm
   const handleAddDream = async (dreamData: {
     title: string;
     content: string;
@@ -20,67 +18,87 @@ export const useJournalActions = () => {
     lucid: boolean;
     mood: string;
     analysis?: string;
-    generatedImage?: string;
+    generatedImage?: string; // This could be an OpenAI URL or a Supabase preview URL
     imagePrompt?: string;
     audioUrl?: string;
   }): Promise<void> => {
     setIsSubmitting(true);
+    if (!user) {
+      toast.error("You must be logged in to save a dream.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // First add to local store
+      // First add to local store to get an ID
       const newDream = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
+        user_id: user.id, // Ensure user_id is part of the local store entry
       });
 
-      console.log("Adding dream with:", {
-        analysis: Boolean(dreamData.analysis),
-        generatedImage: Boolean(dreamData.generatedImage)
-      });
+      console.log("Adding dream locally with ID:", newDream.id);
 
-      // If user is logged in, also save to database
-      if (user) {
-        // Upload image to Supabase storage if provided
-        let storedImageUrl = dreamData.generatedImage;
-        if (dreamData.generatedImage) {
-          storedImageUrl = await uploadDreamImage(newDream.id, dreamData.generatedImage);
-        }
-        
-        // Only include fields that exist in the database schema
-        const dbSaveDream = {
-          id: newDream.id,
-          user_id: user.id,
-          title: newDream.title,
-          content: newDream.content,
-          tags: dreamData.tags,
-          mood: dreamData.mood,
-          lucid: dreamData.lucid,
-          date: newDream.date,
-          is_public: false,
-          analysis: dreamData.analysis || null,
-          generatedImage: storedImageUrl || null,
-          imagePrompt: dreamData.imagePrompt || null
-        };
-        
-        const { error } = await supabase
-          .from("dream_entries")
-          .insert(dbSaveDream);
-          
-        if (error) {
-          console.error("Database error:", error);
-          toast.error("Error saving dream to database");
+      let finalImageUrl = dreamData.generatedImage;
+
+      // If there's a generated image, ensure it's uploaded to its permanent Supabase location
+      if (dreamData.generatedImage) {
+        console.log("Processing generated image for new dream:", dreamData.generatedImage);
+        // uploadDreamImage will handle if it's already a Supabase URL or needs uploading from OpenAI/preview
+        const uploadedUrl = await uploadDreamImage(newDream.id, dreamData.generatedImage, user.id);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+          console.log("Final image URL for new dream:", finalImageUrl);
+        } else {
+          // Handle case where final upload failed, maybe keep preview or OpenAI URL but warn user
+          toast.warning("Image was generated but failed to save permanently. It might be temporary.");
         }
       }
+      
+      const dbSaveDream = {
+        id: newDream.id,
+        user_id: user.id,
+        title: newDream.title,
+        content: newDream.content,
+        tags: dreamData.tags,
+        mood: dreamData.mood,
+        lucid: dreamData.lucid,
+        date: newDream.date,
+        is_public: false,
+        analysis: dreamData.analysis || null,
+        generatedImage: finalImageUrl || null, // Use the potentially updated finalImageUrl
+        image_url: finalImageUrl || null, // Sync both fields
+        imagePrompt: dreamData.imagePrompt || null
+      };
+      
+      console.log("Saving dream to database:", dbSaveDream);
+      const { error } = await supabase
+        .from("dream_entries")
+        .insert(dbSaveDream);
+          
+      if (error) {
+        console.error("Database error on insert:", error);
+        // If DB save fails, consider rolling back local store add or notifying user more strongly
+        toast.error("Error saving dream to database: " + error.message);
+        // Potentially: deleteEntry(newDream.id); // Rollback local change
+        throw error; // Re-throw to be caught by outer catch
+      }
+      
+      // Update local store entry with the final image URL if it changed
+      if (finalImageUrl !== dreamData.generatedImage) {
+        updateEntry(newDream.id, { generatedImage: finalImageUrl, image_url: finalImageUrl });
+      }
+
       toast.success("Dream saved successfully!");
-      return; // Return void to close the form
+      return; 
     } catch (error) {
       console.error("Error adding dream:", error);
-      toast.error("Failed to save dream");
+      toast.error("Failed to save dream."); // Generic message if specific one wasn't shown
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Modified to match the signature expected in Journal.tsx
   const handleEditDream = async (dreamData: {
     title: string;
     content: string;
@@ -88,31 +106,50 @@ export const useJournalActions = () => {
     lucid: boolean;
     mood: string;
     analysis?: string;
-    generatedImage?: string;
+    generatedImage?: string; // This could be an OpenAI URL, a Supabase preview URL, or existing Supabase URL
     imagePrompt?: string;
     audioUrl?: string;
   }, dreamId: string): Promise<void> => {
     if (!dreamId) {
-      console.error("Error: dreamId is required but not provided in handleEditDream");
+      console.error("Error: dreamId is required for editing.");
       toast.error("Failed to update dream: Missing dream ID");
+      return;
+    }
+    if (!user) {
+      toast.error("You must be logged in to edit a dream.");
       return;
     }
     
     setIsSubmitting(true);
     try {
-      // Upload image to Supabase storage if provided
-      let storedImageUrl = dreamData.generatedImage;
+      let finalImageUrl = dreamData.generatedImage;
+
+      // If a new image was generated or an existing non-Supabase URL is present
       if (dreamData.generatedImage) {
-        storedImageUrl = await uploadDreamImage(dreamId, dreamData.generatedImage);
+        console.log("Processing generated/updated image for existing dream:", dreamData.generatedImage);
+        const uploadedUrl = await uploadDreamImage(dreamId, dreamData.generatedImage, user.id);
+        if (uploadedUrl) {
+          finalImageUrl = uploadedUrl;
+          console.log("Final image URL for edited dream:", finalImageUrl);
+        } else {
+          toast.warning("Image update failed. Previous image (if any) will be kept or image may be temporary.");
+          // If upload failed, finalImageUrl will retain its original value (dreamData.generatedImage)
+          // which might be the old Supabase URL or the temporary OpenAI URL.
+          // Consider fetching existing dream's image if this is critical.
+        }
       }
       
-      // Update with the stored image URL
       const updates = {
         ...dreamData,
-        generatedImage: storedImageUrl
+        generatedImage: finalImageUrl, // Use the potentially updated finalImageUrl
+        image_url: finalImageUrl, // Sync both fields
       };
       
-      await handleUpdateDream(dreamId, updates);
+      // Call the common update handler
+      await handleUpdateDream(dreamId, updates); // handleUpdateDream will show success/error toasts
+    } catch (error) {
+        console.error("Error editing dream:", error);
+        toast.error("Failed to update dream."); // Generic message if specific one wasn't shown
     } finally {
       setIsSubmitting(false);
     }
@@ -120,59 +157,59 @@ export const useJournalActions = () => {
 
   const handleUpdateDream = async (id: string, updates: Partial<DreamEntry>) => {
     try {
-      // Update local store
-      updateEntry(id, updates);
-
-      // If user is logged in, also update in database
+      // If user is logged in, prepare DB updates first
       if (user) {
-        // Convert the updates to database format
         const dbUpdates: any = { ...updates };
 
-        // Handle compatibility between camelCase and snake_case fields
         if ('isPublic' in dbUpdates) {
           dbUpdates.is_public = dbUpdates.isPublic;
-          delete dbUpdates.isPublic;
+          // delete dbUpdates.isPublic; // Keep isPublic for local store
         }
         
-        // Remove fields that don't exist in the database
-        if ('commentCount' in dbUpdates) {
-          delete dbUpdates.commentCount;
+        // Sync generatedImage and image_url
+        if ('generatedImage' in dbUpdates) {
+          dbUpdates.image_url = dbUpdates.generatedImage;
+        } else if ('image_url' in dbUpdates) { // Ensure generatedImage is also synced if only image_url is passed
+          dbUpdates.generatedImage = dbUpdates.image_url;
         }
+
+        // Remove fields that don't exist in the database or shouldn't be client-updated directly
+        const disallowedFields = ['commentCount', 'likeCount', 'audioUrl', 'isPublic', 'userId']; // userId is for local, user_id for db
+        disallowedFields.forEach(field => {
+          if (field in dbUpdates) delete dbUpdates[field];
+        });
         
-        if ('likeCount' in dbUpdates) {
-          delete dbUpdates.likeCount;
-        }
-        
-        if ('audioUrl' in dbUpdates) {
-          delete dbUpdates.audioUrl;
-        }
-        
-        console.log("Updating dream in database:", id);
+        console.log("Updating dream in database:", id, "with updates:", dbUpdates);
         
         const { error } = await supabase
           .from("dream_entries")
           .update(dbUpdates)
           .eq("id", id)
-          .eq("user_id", user.id);
+          .eq("user_id", user.id); // Ensure user owns the dream
           
         if (error) {
           console.error("Database update error:", error);
-          toast.error("Failed to update dream in database");
-          return false;
+          toast.error("Failed to update dream in database: " + error.message);
+          return false; // Indicate failure
         }
       }
       
-      if (updates.is_public || updates.isPublic) {
+      // Update local store after successful DB update or if no user (local only mode)
+      updateEntry(id, updates); // updates contains the client-side field names like isPublic
+
+      if (updates.is_public === true || updates.isPublic === true) { // Check boolean true explicitly
         toast.success("Dream shared to Lucid Repo!");
+      } else if (updates.is_public === false || updates.isPublic === false) { // Check boolean false explicitly
+        toast.success("Dream set to private.");
       } else {
         toast.success("Dream updated successfully");
       }
       
-      return true;
-    } catch (error) {
+      return true; // Indicate success
+    } catch (error: any) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
-      return false;
+      toast.error("Failed to update dream: " + error.message);
+      return false; // Indicate failure
     }
   };
 
@@ -180,93 +217,76 @@ export const useJournalActions = () => {
     try {
       console.log("Deleting dream:", id);
       
-      // If user is logged in, delete from database first
       if (user) {
-        // First, get the dream entry to find associated image
-        const { data, error: fetchError } = await supabase
+        const { data: dreamToDeleteData, error: fetchError } = await supabase
           .from("dream_entries")
           .select("generatedImage")
           .eq("id", id)
           .eq("user_id", user.id)
           .single();
           
-        if (!fetchError && data) {
-          // If there's an image URL and it's from our Supabase storage
-          if (data.generatedImage && 
-              data.generatedImage.includes("supabase.co") && 
-              data.generatedImage.includes("/storage/v1/object/public/dream_images/")) {
-            try {
-              // Extract the path from the URL
-              const pathMatch = data.generatedImage.match(/\/storage\/v1\/object\/public\/dream_images\/(.+)/);
-              if (pathMatch && pathMatch[1]) {
-                const path = pathMatch[1];
+        if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116: 0 rows
+             console.error("Error fetching dream before delete:", fetchError);
+             // Potentially stop deletion if we can't confirm ownership or image path
+        }
+
+        if (dreamToDeleteData?.generatedImage && dreamToDeleteData.generatedImage.includes(supabase.storage.url) && dreamToDeleteData.generatedImage.includes("/dream-images/")) {
+          try {
+            const urlParts = dreamToDeleteData.generatedImage.split('/dream-images/');
+            if (urlParts.length > 1) {
+                const imagePath = urlParts[1];
+                console.log("Deleting associated image from Supabase storage:", imagePath);
                 await supabase.storage
-                  .from("dream_images")
-                  .remove([path]);
-                  
-                console.log("Deleted associated image:", path);
-              }
-            } catch (imageError) {
-              console.error("Error deleting image:", imageError);
-              // Continue with deletion even if image removal fails
+                    .from("dream-images")
+                    .remove([imagePath]);
+                console.log("Deleted associated image:", imagePath);
             }
+          } catch (imageError: any) {
+            console.error("Error deleting image from storage:", imageError.message);
+            // Continue with dream entry deletion even if image removal fails, but log it
           }
         }
         
-        // Delete from database
-        const { error } = await supabase
+        const { error: deleteError } = await supabase
           .from("dream_entries")
           .delete()
           .eq("id", id)
           .eq("user_id", user.id);
           
-        if (error) {
-          console.error("Database deletion error:", error);
-          toast.error("Failed to delete dream from database");
+        if (deleteError) {
+          console.error("Database deletion error:", deleteError);
+          toast.error("Failed to delete dream from database: " + deleteError.message);
           return false;
         }
         
-        // Also delete any likes on this dream
-        await supabase
-          .from("dream_likes")
-          .delete()
-          .eq("dream_id", id);
-          
-        // Also delete any comments on this dream
-        await supabase
-          .from("dream_comments")
-          .delete()
-          .eq("dream_id", id);
+        await supabase.from("dream_likes").delete().eq("dream_id", id);
+        await supabase.from("dream_comments").delete().eq("dream_id", id);
       }
       
-      // Once deleted from database, delete from local store
       deleteEntry(id);
       toast.success("Dream deleted successfully");
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting dream:", error);
-      toast.error("Failed to delete dream");
+      toast.error("Failed to delete dream: " + error.message);
       return false;
     }
   };
 
   const handleTogglePublic = async (dream: DreamEntry) => {
-    const newStatus = !(dream.is_public || dream.isPublic);
+    const newStatus = !(dream.is_public ?? dream.isPublic ?? false); // Default to false if undefined
     try {
-      await handleUpdateDream(dream.id, {
-        is_public: newStatus,
-        isPublic: newStatus
-      });
+      // Pass both is_public (for DB) and isPublic (for local store consistency if needed)
+      const success = await handleUpdateDream(dream.id, { 
+        is_public: newStatus, 
+        isPublic: newStatus 
+      }); 
       
-      if (newStatus) {
-        toast.success("Dream published to Lucid Repo");
-      } else {
-        toast.success("Dream set to private");
-      }
-      
-      return true;
-    } catch (error) {
+      // Toasts are handled by handleUpdateDream based on these flags
+      return success;
+    } catch (error: any) {
       console.error("Error toggling dream visibility:", error);
+      toast.error("Failed to update dream visibility: " + error.message);
       return false;
     }
   };
