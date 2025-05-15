@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -28,7 +27,7 @@ const Journal = () => {
     dreamToDelete,
     setDreamToDelete,
     handleAddDream,
-    handleUpdateDream,
+    handleEditDream,
     handleDeleteDream,
     handleTogglePublic,
     handleTagClick,
@@ -60,7 +59,7 @@ const Journal = () => {
   };
 
   // Create wrapper function for edit to match the expected signature
-  const handleEditDream = async (dreamData: {
+  const handleEditDreamWrapper = async (dreamData: {
     title: string;
     content: string;
     tags: string[];
@@ -71,7 +70,7 @@ const Journal = () => {
     imagePrompt?: string;
   }): Promise<void> => {
     if (!selectedDream) return;
-    await handleUpdateDream(selectedDream.id, dreamData);
+    await handleEditDream(dreamData, selectedDream.id);
     setIsEditingDream(false);
     setSelectedDream(null);
     
@@ -177,7 +176,7 @@ const Journal = () => {
             </DialogHeader>
             <DreamEntryForm
               existingDream={selectedDream}
-              onSubmit={handleEditDream}
+              onSubmit={handleEditDreamWrapper}
               tags={tags}
               isSubmitting={isSubmitting}
             />
@@ -194,7 +193,7 @@ const Journal = () => {
             setSelectedDream(null);
             syncDreamsFromDb(); // Refresh when closing detail view
           }}
-          onUpdate={handleUpdateDream}
+          onUpdate={(id, updates) => handleEditDream({ ...selectedDream, ...updates }, id)}
           onDelete={handleDeleteDream}
           isAuthenticated={!!user}
         />
