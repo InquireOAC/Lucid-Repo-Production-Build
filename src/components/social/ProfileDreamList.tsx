@@ -18,6 +18,7 @@ export default function ProfileDreamList({ dreams, user }) {
             onLike={handleLikeToggle}
             commentCount={dream.comment_count || 0}
             onComment={() => {}}
+            onCardClick={() => {}} {/* <-- Fix: Provide onCardClick */}
           />
         );
       })}

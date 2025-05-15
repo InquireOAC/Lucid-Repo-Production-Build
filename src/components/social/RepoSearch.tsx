@@ -35,6 +35,7 @@ export default function RepoSearch() {
             onLike={handleLikeToggle}
             commentCount={dream.comment_count || 0}
             onComment={() => {}}
+            onCardClick={() => {}} {/* <-- Fix: Provide onCardClick */}
           />
         );
       })}
