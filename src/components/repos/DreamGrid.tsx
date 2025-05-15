@@ -34,8 +34,8 @@ const DreamGrid = ({
         if (dreamUserId == null) {
           console.warn("Dream with missing user id for navigation:", normalizedDream);
         }
-        // Always prefer id from dream.profiles, fallback to dream.user_id
-        const profileId = normalizedDream.profiles?.id || normalizedDream.userId || normalizedDream.user_id;
+        // Use only dream.userId or dream.user_id for navigation
+        const profileId = normalizedDream.userId || normalizedDream.user_id;
         if (!profileId) {
           console.warn("Dream with missing profile id for navigation:", normalizedDream);
         }
