@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Edit, MessageSquare, Settings, UserPlus } from "lucide-react";
 import { Twitter, Instagram, Facebook, Globe } from "lucide-react";
+import { useDirectConversation } from "@/hooks/useDirectConversation";
 
 interface ProfileHeaderProps {
   profileToShow: any;
@@ -37,6 +38,27 @@ const ProfileHeader = ({
   onFollowersClick,
   onFollowingClick
 }: ProfileHeaderProps) => {
+  const myId = profileToShow?.viewer_id; // This may need to be fetched differently if not present
+  const theirId = profileToShow?.id;
+
+  // New direct conversation logic for messaging someone else
+  const { openChatWithUser, loading } = useDirectConversation(
+    myId ?? null,
+    theirId ?? null
+  );
+
+  const onMessageOtherUser = () => {
+    // If viewing your own profile, open general messages
+    if (isOwnProfile) {
+      setIsMessagesOpen(true);
+      return;
+    }
+    // Otherwise, open or start a direct chat thread
+    openChatWithUser(() => {
+      setIsMessagesOpen(true);
+    });
+  };
+
   return (
     <div className="flex flex-col items-center mb-6 pt-4">
       <div className="relative">
@@ -183,7 +205,8 @@ const ProfileHeader = ({
             <Button 
               variant="outline" 
               size="sm"
-              onClick={handleStartConversation}
+              onClick={onMessageOtherUser}
+              disabled={loading}
               className="flex items-center gap-1 text-sm"
             >
               <MessageSquare size={14} /> Message

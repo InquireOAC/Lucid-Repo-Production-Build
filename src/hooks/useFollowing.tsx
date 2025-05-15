@@ -9,52 +9,46 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
 
   const checkIfFollowing = async (targetUserId: string) => {
     if (!user) return;
-    
+
     try {
+      // Use correct table/columns for following
       const { data, error } = await supabase
-        .from("followers")
-        .select("*")
+        .from("follows")
+        .select("id")
         .eq("follower_id", user.id)
-        .eq("following_id", targetUserId)
-        .single();
-      
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "No rows returned" error
-        throw error;
-      }
-      
+        .eq("followed_id", targetUserId)
+        .maybeSingle();
       setIsFollowing(!!data);
     } catch (error) {
       console.error("Error checking follow status:", error);
     }
   };
-  
+
   const handleFollow = async () => {
-    if (!user || isOwnProfile) return;
-    
+    if (!user || isOwnProfile || !userId) return;
+
     try {
       if (isFollowing) {
-        // Unfollow
-        await supabase
-          .from("followers")
+        // Unfollow: remove row from follows
+        const { error } = await supabase
+          .from("follows")
           .delete()
           .eq("follower_id", user.id)
-          .eq("following_id", userId);
-        
+          .eq("followed_id", userId);
+
+        if (error) throw error;
         setIsFollowing(false);
-        if (setFollowersCount) {
-          setFollowersCount(prev => Math.max(0, prev - 1));
-        }
+        if (setFollowersCount) setFollowersCount(prev => Math.max(0, prev - 1));
         toast.success("Unfollowed user");
       } else {
-        // Follow
-        await supabase
-          .from("followers")
-          .insert({ follower_id: user.id, following_id: userId });
-        
+        // Follow: add row to follows
+        const { error } = await supabase
+          .from("follows")
+          .insert({ follower_id: user.id, followed_id: userId });
+
+        if (error) throw error;
         setIsFollowing(true);
-        if (setFollowersCount) {
-          setFollowersCount(prev => prev + 1);
-        }
+        if (setFollowersCount) setFollowersCount(prev => prev + 1);
         toast.success("Now following user");
       }
     } catch (error) {
@@ -62,13 +56,13 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
       toast.error("Failed to update follow");
     }
   };
-  
+
   return {
     isFollowing,
     setIsFollowing,
     isOwnProfile,
     setIsOwnProfile,
     checkIfFollowing,
-    handleFollow
+    handleFollow,
   };
 }
