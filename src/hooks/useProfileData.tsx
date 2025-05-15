@@ -20,9 +20,15 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
   const { conversations, fetchConversations, handleStartConversation } = useConversations(user);
   
   useEffect(() => {
-    // Determine if viewing own profile or someone else's
+    // Logic now always checks if the provided userId is 
+    // - present 
+    // - and NOT the logged-in user's id
+    // Show visiting profile only in that case
     if (userId && userId !== user?.id) {
       setIsOwnProfile(false);
+      fetchUserProfile(userId); // Fetch the other user's profile by id
+      checkIfFollowing(userId);
+      return;
     } else {
       setIsOwnProfile(true);
       if (profile) {
@@ -30,8 +36,7 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
         setUsername(profile.username || "");
         setBio(profile.bio || "");
         setAvatarUrl(profile.avatar_url || "");
-        
-        // Parse social links from profile
+
         if (profile.social_links) {
           setSocialLinks({
             twitter: profile.social_links?.twitter || "",
@@ -42,12 +47,12 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
         }
       }
     }
-    
+
     if (user) {
       fetchUserStats();
       fetchPublicDreams();
       fetchLikedDreams();
-      
+
       if (isOwnProfile) {
         fetchConversations();
       }
@@ -56,11 +61,11 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
   
   const fetchUserProfile = async (id: string) => {
     try {
-      // Always fetch by ID (username not guaranteed unique)
+      // Fetch exactly by id
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", id) // Use .eq("id", id), not .single()
+        .eq("id", id)
         .maybeSingle();
 
       if (error || !data) throw error || new Error("Not found");
@@ -69,10 +74,10 @@ export const useProfileData = (user: any, profile: any, userId?: string) => {
     } catch (error) {
       console.error("Error fetching user profile:", error);
       toast.error("Could not load user profile");
-      setViewedProfile(null); // Mark as not found
+      setViewedProfile(null);
     }
   };
-  
+
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();

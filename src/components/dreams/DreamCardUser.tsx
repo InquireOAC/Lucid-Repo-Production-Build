@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -8,6 +7,7 @@ interface DreamCardUserProps {
     username?: string;
     display_name?: string;
     avatar_url?: string;
+    id?: string;
   };
   onUserClick: (e: React.MouseEvent) => void;
 }
@@ -42,6 +42,7 @@ const DreamCardUser = ({
     <div 
       className="flex items-center mb-3 cursor-pointer hover:underline" 
       onClick={onUserClick}
+      data-user-id={profile?.id} // helpful for debugging
     >
       <Avatar className="h-6 w-6 mr-2">
         <AvatarImage src={avatarUrl} alt={nameToShow} />

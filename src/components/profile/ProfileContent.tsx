@@ -64,7 +64,8 @@ const ProfileContent = () => {
       navigate("/auth");
       return;
     }
-    if (!isOwnProfile && userId) {
+    if (userId && userId !== user.id) {
+      // If a user ID param is present, load THAT profile for view
       fetchUserProfile(userId);
       checkIfFollowing(userId);
     }
@@ -85,12 +86,22 @@ const ProfileContent = () => {
     }
   }, [isOwnProfile, userId, user]);
 
+  // Loading state: wait for all fetch calls to complete before showing missing profile
   if (!user) {
     return <LoadingScreen />;
   }
 
-  if (!isOwnProfile && !viewedProfile) {
-    return <UserNotFound onGoBack={() => navigate("/")} />;
+  // Only show "not found" if we're visiting another user's profile and the data is null
+  if (userId && userId !== user.id && !viewedProfile) {
+    return (
+      <div className="min-h-screen dream-background flex items-center justify-center">
+        <div className="text-center">
+          <h3 className="text-xl font-medium mb-2">This user doesn’t exist or has a private profile.</h3>
+          <p className="text-muted-foreground mb-2">They may have deleted or restricted their account.</p>
+          <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
+        </div>
+      </div>
+    );
   }
 
   const profileToShow = isOwnProfile ? profile : viewedProfile;
@@ -107,7 +118,7 @@ const ProfileContent = () => {
     return (
       <div className="min-h-screen dream-background flex items-center justify-center">
         <div className="text-center">
-          <h3 className="text-xl font-medium mb-2">This user hasn't set up their profile yet.</h3>
+          <h3 className="text-xl font-medium mb-2">This user hasn&apos;t set up their profile yet.</h3>
           <p className="text-muted-foreground mb-2">No public profile information available.</p>
           <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
         </div>

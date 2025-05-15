@@ -1,4 +1,3 @@
-
 import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCard from "@/components/dreams/DreamCard";
@@ -35,6 +34,11 @@ const DreamGrid = ({
         if (dreamUserId == null) {
           console.warn("Dream with missing user id for navigation:", normalizedDream);
         }
+        // Always prefer id from dream.profiles, fallback to dream.user_id
+        const profileId = normalizedDream.profiles?.id || normalizedDream.userId || normalizedDream.user_id;
+        if (!profileId) {
+          console.warn("Dream with missing profile id for navigation:", normalizedDream);
+        }
         return (
           <DreamCard
             key={normalizedDream.id}
@@ -44,8 +48,8 @@ const DreamGrid = ({
             showUser={true}
             onClick={() => onOpenDream(normalizedDream)}
             onUserClick={() => {
-              console.log("DreamGrid.onUserClick: user_id/userId", dreamUserId);
-              onUserClick(dreamUserId);
+              // Pass the profileId (uuid) for navigation
+              onUserClick(profileId);
             }}
             onTagClick={onTagClick}
             showSharedBadge={false}

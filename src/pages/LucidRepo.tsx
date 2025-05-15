@@ -71,6 +71,7 @@ const LucidRepo = () => {
   const handleNavigateToProfile = (userId: string | undefined) => {
     console.log("Profile navigation requested for userId:", userId);
     if (userId) {
+      // Navigate with /profile/:userId (uuid)
       navigate(`/profile/${userId}`);
     } else {
       console.warn("No userId provided for navigation.");
