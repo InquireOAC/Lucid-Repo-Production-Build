@@ -9,9 +9,7 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
 
   const checkIfFollowing = async (targetUserId: string) => {
     if (!user) return;
-
     try {
-      // Use correct table/columns for following
       const { data, error } = await supabase
         .from("follows")
         .select("id")
@@ -24,12 +22,11 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
     }
   };
 
+  // Main fix: use upsert to follow, delete to unfollow, then check state again
   const handleFollow = async () => {
     if (!user || isOwnProfile || !userId) return;
-
     try {
       if (isFollowing) {
-        // Unfollow: remove row from follows
         const { error } = await supabase
           .from("follows")
           .delete()
@@ -41,11 +38,10 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
         if (setFollowersCount) setFollowersCount(prev => Math.max(0, prev - 1));
         toast.success("Unfollowed user");
       } else {
-        // Follow: add row to follows
+        // Use upsert to avoid duplicate error
         const { error } = await supabase
           .from("follows")
-          .insert({ follower_id: user.id, followed_id: userId });
-
+          .upsert({ follower_id: user.id, followed_id: userId });
         if (error) throw error;
         setIsFollowing(true);
         if (setFollowersCount) setFollowersCount(prev => prev + 1);
@@ -55,6 +51,8 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
       console.error("Error updating follow status:", error);
       toast.error("Failed to update follow");
     }
+    // Always recheck status
+    checkIfFollowing(userId ?? "");
   };
 
   return {

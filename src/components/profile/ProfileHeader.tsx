@@ -38,25 +38,20 @@ const ProfileHeader = ({
   onFollowersClick,
   onFollowingClick
 }: ProfileHeaderProps) => {
-  const myId = profileToShow?.viewer_id; // This may need to be fetched differently if not present
-  const theirId = profileToShow?.id;
+  // These should be UUIDs
+  const myId = profileToShow?.viewer_id || null;
+  const theirId = profileToShow?.id || null;
 
-  // New direct conversation logic for messaging someone else
-  const { openChatWithUser, loading } = useDirectConversation(
-    myId ?? null,
-    theirId ?? null
-  );
+  // Make sure direct conversation logic executes
+  const { openChatWithUser, loading } = useDirectConversation(myId, theirId);
 
   const onMessageOtherUser = () => {
-    // If viewing your own profile, open general messages
     if (isOwnProfile) {
       setIsMessagesOpen(true);
       return;
     }
-    // Otherwise, open or start a direct chat thread
-    openChatWithUser(() => {
-      setIsMessagesOpen(true);
-    });
+    // Start a DM thread with the other user and open the modal when ready
+    openChatWithUser(() => setIsMessagesOpen(true));
   };
 
   return (
