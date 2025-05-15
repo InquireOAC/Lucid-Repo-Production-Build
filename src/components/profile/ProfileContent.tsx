@@ -5,87 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 import { useProfileFollowers } from "@/hooks/useProfileFollowers";
-import ProfileLoadingScreen from "./ProfileLoadingScreen";
-import ProfileNotFound from "./ProfileNotFound";
-import ProfileEmpty from "./ProfileEmpty";
 import ProfileMainContent from "./ProfileMainContent";
-
-/**
- * Compute which profile to show (own or other), and the ID for further profile-related hooks.
- */
-function computeProfileTargets({
-  user,
-  profile,
-  viewedProfile,
-  isOwnProfile,
-  effectiveIdentifier,
-}: {
-  user: any;
-  profile: any;
-  viewedProfile: any;
-  isOwnProfile: boolean;
-  effectiveIdentifier: string | undefined;
-}) {
-  let profileToShow = null;
-  let profileIdForHooks: string | null = null;
-  // Own profile logic
-  if (isOwnProfile) {
-    profileToShow = profile;
-    profileIdForHooks = profile?.id ?? null;
-  } else {
-    profileToShow = viewedProfile;
-    profileIdForHooks = viewedProfile?.id ?? null;
-  }
-  return { profileToShow, profileIdForHooks };
-}
-
-/**
- * Handles all the "guard rails" around which state to show for loaded profile.
- */
-function ProfileStateGuard({
-  loading,
-  effectiveIdentifier,
-  user,
-  profile,
-  isOwnProfile,
-  viewedProfile,
-  children,
-}: {
-  loading: boolean;
-  effectiveIdentifier: string | undefined;
-  user: any;
-  profile: any;
-  isOwnProfile: boolean;
-  viewedProfile: any;
-  children: React.ReactNode;
-}) {
-  // Loading
-  if (loading) return <ProfileLoadingScreen />;
-  // Not logged in (rare, but can happen in hot reloads)
-  if (!user) return <ProfileLoadingScreen />;
-  // 404 (other user)
-  if (
-    !isOwnProfile &&
-    effectiveIdentifier &&
-    effectiveIdentifier !== user?.id &&
-    effectiveIdentifier !== profile?.username &&
-    !viewedProfile
-  ) {
-    return <ProfileNotFound />;
-  }
-  // If profileToShow is empty
-  if (
-    viewedProfile &&
-    !viewedProfile.display_name &&
-    !viewedProfile.username &&
-    !viewedProfile.bio &&
-    !viewedProfile.avatar_url
-  ) {
-    return <ProfileEmpty />;
-  }
-  // If all good
-  return <>{children}</>;
-}
+import ProfileStateGuard from "./ProfileStateGuard";
+import { computeProfileTargets } from "./computeProfileTargets";
+import { useProfileDialogStates } from "./ProfileDialogStates";
 
 const ProfileContent = () => {
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
@@ -93,7 +16,22 @@ const ProfileContent = () => {
   const navigate = useNavigate();
   const effectiveIdentifier = username || userId;
 
-  // Custom hook to load/refresh all major profile states
+  // State for loading profile
+  const [loadingProfile, setLoadingProfile] = useState(false);
+
+  // Modal/dialog state hooks
+  const {
+    isEditProfileOpen, setIsEditProfileOpen,
+    isSettingsOpen, setIsSettingsOpen,
+    isMessagesOpen, setIsMessagesOpen,
+    isSocialLinksOpen, setIsSocialLinksOpen,
+    isSubscriptionOpen, setIsSubscriptionOpen,
+    isNotificationsOpen, setIsNotificationsOpen,
+    showFollowers, setShowFollowers,
+    showFollowing, setShowFollowing
+  } = useProfileDialogStates();
+
+  // Custom profile data
   const {
     isOwnProfile,
     viewedProfile,
@@ -124,15 +62,12 @@ const ProfileContent = () => {
     handleSignOut,
   } = useProfileData(user, profile, effectiveIdentifier);
 
-  const [loadingProfile, setLoadingProfile] = useState(false);
-
   // Ensure switching profiles in the UI triggers correct fetch
   useEffect(() => {
     if (!user) {
       navigate("/auth");
       return;
     }
-    // If viewing another user...
     if (
       effectiveIdentifier &&
       effectiveIdentifier !== user.id &&
@@ -144,13 +79,9 @@ const ProfileContent = () => {
     }
   }, [user, profile, effectiveIdentifier]);
 
-  useEffect(() => {
-    if (user) {
-      fetchSubscription();
-    }
-  }, [user]);
+  useEffect(() => { if (user) fetchSubscription(); }, [user]);
 
-  // --- Use memo to guard against hook execution with an invalid ID ---
+  // Use memo to guard against hook execution with an invalid ID
   const { profileToShow, profileIdForHooks } = useMemo(
     () => computeProfileTargets({ user, profile, viewedProfile, isOwnProfile, effectiveIdentifier }),
     [user, profile, viewedProfile, isOwnProfile, effectiveIdentifier]
@@ -160,22 +91,10 @@ const ProfileContent = () => {
   const { publicDreams, likedDreams, refreshDreams } = useProfileDreams(user, profileIdForHooks);
   const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(profileIdForHooks);
 
-  // All dialog/modal states
-  const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isMessagesOpen, setIsMessagesOpen] = useState(false);
-  const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
-  const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [showFollowers, setShowFollowers] = useState(false);
-  const [showFollowing, setShowFollowing] = useState(false);
-
   // Refresh dreams when switching to valid hooks
   useEffect(() => {
     if (profileIdForHooks) {
-      const timer = setTimeout(() => {
-        refreshDreams?.();
-      }, 300);
+      const timer = setTimeout(() => { refreshDreams?.(); }, 300);
       return () => clearTimeout(timer);
     }
   }, [profileIdForHooks, isOwnProfile, effectiveIdentifier, user]);
@@ -215,17 +134,11 @@ const ProfileContent = () => {
         likedDreams={likedDreams}
         refreshDreams={refreshDreams}
         isEditProfileOpen={isEditProfileOpen}
-        setIsEditProfileOpen={setIsEditProfileOpen}
         isSocialLinksOpen={isSocialLinksOpen}
-        setIsSocialLinksOpen={setIsSocialLinksOpen}
         isSettingsOpen={isSettingsOpen}
-        setIsSettingsOpen={setIsSettingsOpen}
         isMessagesOpen={isMessagesOpen}
-        setIsMessagesOpen={setIsMessagesOpen}
         isSubscriptionOpen={isSubscriptionOpen}
-        setIsSubscriptionOpen={setIsSubscriptionOpen}
         isNotificationsOpen={isNotificationsOpen}
-        setIsNotificationsOpen={setIsNotificationsOpen}
         displayName={displayName}
         setDisplayName={setDisplayName}
         username={currentUsername}
