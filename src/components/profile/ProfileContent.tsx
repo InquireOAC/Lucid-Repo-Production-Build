@@ -64,9 +64,9 @@ const ProfileContent = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(
-    profile?.id || ""
-  );
+  const {
+    followers, following, fetchFollowers, fetchFollowing, setFollowersCount, setFollowingCount,
+  } = useProfileFollowers(profile?.id || "");
 
   useEffect(() => {
     if (!user) {
@@ -133,6 +133,14 @@ const ProfileContent = () => {
       </div>
     );
   }
+
+  // Update followers/following counts after follow/unfollow
+  useEffect(() => {
+    if (effectiveIdentifier) {
+      fetchFollowers();
+      fetchFollowing();
+    }
+  }, [isFollowing]); // refresh on follow state change
 
   return (
     <>

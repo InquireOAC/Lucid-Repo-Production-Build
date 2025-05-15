@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,8 +41,8 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("dream_comments")
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .from("comments")
+        .select("*, profiles:user_id(username, profile_picture, display_name)")
         .eq("dream_id", dreamId)
         .order("created_at", { ascending: true });
 
@@ -71,7 +70,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
     try {
       const { data, error } = await supabase
-        .from("dream_comments")
+        .from("comments")
         .insert([
           {
             dream_id: dreamId,
@@ -79,7 +78,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             content: newComment.trim(),
           },
         ])
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .select("*, profiles:user_id(username, profile_picture, display_name)")
         .single();
 
       if (error) throw error;
