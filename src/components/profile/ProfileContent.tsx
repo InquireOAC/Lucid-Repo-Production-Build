@@ -9,6 +9,8 @@ import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfileDialogs from "./ProfileDialogs";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
+import FollowersModal from "@/components/profile/FollowersModal";
+import { useProfileFollowers } from "@/hooks/useProfileFollowers";
 
 const ProfileContent = () => {
   // Accept either userId or username from params for flexibility
@@ -60,6 +62,11 @@ const ProfileContent = () => {
   const [isSocialLinksOpen, setIsSocialLinksOpen] = useState(false);
   const [isSubscriptionOpen, setIsSubscriptionOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [showFollowers, setShowFollowers] = useState(false);
+  const [showFollowing, setShowFollowing] = useState(false);
+  const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(
+    profile?.id || ""
+  );
 
   useEffect(() => {
     if (!user) {
@@ -142,12 +149,27 @@ const ProfileContent = () => {
         setIsSocialLinksOpen={setIsSocialLinksOpen}
         handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
+        // New: handlers for opening modals
+        onFollowersClick={() => { setShowFollowers(true); fetchFollowers(); }}
+        onFollowingClick={() => { setShowFollowing(true); fetchFollowing(); }}
       />
       <ProfileTabs
         publicDreams={publicDreams}
         likedDreams={likedDreams}
         isOwnProfile={isOwnProfile}
         refreshDreams={refreshDreams}
+      />
+      <FollowersModal
+        title="Followers"
+        open={showFollowers}
+        onOpenChange={setShowFollowers}
+        users={followers}
+      />
+      <FollowersModal
+        title="Following"
+        open={showFollowing}
+        onOpenChange={setShowFollowing}
+        users={following}
       />
       <ProfileDialogs
         isEditProfileOpen={isEditProfileOpen}

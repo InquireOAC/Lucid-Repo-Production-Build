@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DreamEntry } from "@/types/dream";
@@ -8,15 +9,11 @@ export function useProfileDreams(user: any, userId?: string) {
   const [isLoading, setIsLoading] = useState(false);
 
   const fetchPublicDreams = async () => {
-    if (!user && !userId) return;
-
     const targetUserId = userId || user?.id;
+    if (!targetUserId) return;
     setIsLoading(true);
 
     try {
-      console.log("Fetching public dreams for user:", targetUserId);
-
-      // Include the profile in the select!
       const { data, error } = await supabase
         .from("dream_entries")
         .select("*, profiles:user_id(username, display_name, avatar_url)")
@@ -49,10 +46,9 @@ export function useProfileDreams(user: any, userId?: string) {
     setIsLoading(true);
 
     try {
-      // For viewing own profile or someone else's
       const targetUserId = userId || user.id;
 
-      // First get the liked dream IDs
+      // Get liked dream IDs
       const { data: likedData, error: likedError } = await supabase
         .from("dream_likes")
         .select("dream_id")
@@ -63,7 +59,6 @@ export function useProfileDreams(user: any, userId?: string) {
       if (likedData && likedData.length > 0) {
         const dreamIds = likedData.map(item => item.dream_id);
 
-        // Then fetch the actual dreams
         const { data: dreamData, error: dreamError } = await supabase
           .from("dream_entries")
           .select("*, profiles:user_id(username, display_name, avatar_url)")
@@ -73,7 +68,6 @@ export function useProfileDreams(user: any, userId?: string) {
 
         if (dreamError) throw dreamError;
 
-        // Map fields for consistency
         const transformedDreams = dreamData?.map((dream: any) => ({
           ...dream,
           isPublic: dream.is_public,
@@ -95,18 +89,14 @@ export function useProfileDreams(user: any, userId?: string) {
     }
   };
 
-  // Function to refresh all dream data
   const refreshDreams = () => {
     fetchPublicDreams();
     fetchLikedDreams();
   };
 
-  // Initial fetch when component mounts or user/userId changes
   useEffect(() => {
-    if (user) {
-      fetchPublicDreams();
-      fetchLikedDreams();
-    }
+    fetchPublicDreams();
+    fetchLikedDreams();
   }, [user, userId]);
 
   return {

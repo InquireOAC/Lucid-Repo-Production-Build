@@ -9,26 +9,28 @@ export function useProfileFollowers(userId?: string) {
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
 
+  // Fetch all users who follow this user
   const fetchFollowers = async () => {
     if (!userId) return;
     const { data, error } = await supabase
       .from("follows")
-      .select("follower_id, profiles: follower_id(username, profile_picture)")
+      .select("follower_id, follower:profiles!follower_id(id,username,profile_picture,display_name,avatar_url)")
       .eq("followed_id", userId);
-    if (!error) {
-      setFollowers(data.map(f => f.profiles));
+    if (!error && data) {
+      setFollowers(data.map(f => f.follower));
       setFollowersCount(data.length);
     }
   };
 
+  // Fetch all users this user follows
   const fetchFollowing = async () => {
     if (!userId) return;
     const { data, error } = await supabase
       .from("follows")
-      .select("followed_id, profiles: followed_id(username, profile_picture)")
+      .select("followed_id, followed:profiles!followed_id(id,username,profile_picture,display_name,avatar_url)")
       .eq("follower_id", userId);
-    if (!error) {
-      setFollowing(data.map(f => f.profiles));
+    if (!error && data) {
+      setFollowing(data.map(f => f.followed));
       setFollowingCount(data.length);
     }
   };

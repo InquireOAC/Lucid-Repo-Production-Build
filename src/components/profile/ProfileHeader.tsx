@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,6 +17,8 @@ interface ProfileHeaderProps {
   setIsSocialLinksOpen: (value: boolean) => void;
   handleFollow: () => void;
   handleStartConversation: () => void;
+  onFollowersClick?: () => void;
+  onFollowingClick?: () => void;
 }
 
 const ProfileHeader = ({
@@ -32,7 +33,9 @@ const ProfileHeader = ({
   setIsSettingsOpen,
   setIsSocialLinksOpen,
   handleFollow,
-  handleStartConversation
+  handleStartConversation,
+  onFollowersClick,
+  onFollowingClick
 }: ProfileHeaderProps) => {
   return (
     <div className="flex flex-col items-center mb-6 pt-4">
@@ -129,14 +132,22 @@ const ProfileHeader = ({
           <p className="font-bold">{dreamCount}</p>
           <p className="text-xs text-muted-foreground">Dreams</p>
         </div>
-        <div className="text-center">
+        <button
+          className="text-center cursor-pointer"
+          onClick={onFollowersClick}
+          type="button"
+        >
           <p className="font-bold">{followersCount}</p>
-          <p className="text-xs text-muted-foreground">Followers</p>
-        </div>
-        <div className="text-center">
+          <p className="text-xs text-muted-foreground underline">Followers</p>
+        </button>
+        <button
+          className="text-center cursor-pointer"
+          onClick={onFollowingClick}
+          type="button"
+        >
           <p className="font-bold">{followingCount}</p>
-          <p className="text-xs text-muted-foreground">Following</p>
-        </div>
+          <p className="text-xs text-muted-foreground underline">Following</p>
+        </button>
       </div>
       
       <div className="flex gap-2 mt-4">
