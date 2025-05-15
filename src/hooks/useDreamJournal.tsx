@@ -12,7 +12,7 @@ export const useDreamJournal = () => {
   const { 
     isSubmitting, 
     handleAddDream, 
-    handleUpdateDream,
+    handleEditDream, // Changed from handleUpdateDream
     handleDeleteDream,
     handleTogglePublic 
   } = useJournalActions();
@@ -52,7 +52,7 @@ export const useDreamJournal = () => {
     
     // Actions
     handleAddDream,
-    handleUpdateDream,
+    handleEditDream, // Use handleEditDream for edits
     handleDeleteDream,
     handleTogglePublic,
     handleTagClick,

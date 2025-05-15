@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ImagePlus } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useFeatureUsage } from "@/hooks/useFeatureUsage";
-import { showSubscriptionPrompt } from "@/lib/stripe";
-import { uploadDreamImage, preloadImage } from "@/utils/imageUtils";
 
-// Import refactored components
+// Import refactored hook and components
+import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
 import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
 import ImageDisplay from "@/components/dreams/ImageDisplay";
 import GeneratingImage from "@/components/dreams/GeneratingImage";
@@ -21,149 +17,38 @@ interface DreamImageGeneratorProps {
   existingImage?: string;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
   disabled?: boolean;
+  dreamId?: string; // Pass dreamId for context
 }
 
 const DreamImageGenerator = ({
   dreamContent,
-  existingPrompt = "",
-  existingImage = "",
+  existingPrompt,
+  existingImage,
   onImageGenerated,
-  disabled = false
+  disabled = false,
+  dreamId
 }: DreamImageGeneratorProps) => {
-  const { user } = useAuth(); // user object contains user.id
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  const [imagePrompt, setImagePrompt] = useState(existingPrompt);
-  const [generatedImage, setGeneratedImage] = useState(existingImage);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [showInfo, setShowInfo] = useState(!existingImage);
-  const [imageError, setImageError] = useState(false);
-  
-  // When the component mounts or the image changes, ensure we preload it
-  useEffect(() => {
-    if (existingImage) {
-      setGeneratedImage(existingImage);
-      setShowInfo(false);
-      setImageError(false);
-      preloadImage(existingImage);
-    }
-  }, [existingImage]);
+  const {
+    imagePrompt,
+    setImagePrompt,
+    generatedImage,
+    isGenerating,
+    showInfo,
+    imageError,
+    setImageError,
+    generateImage,
+    isAppCreator,
+    hasUsedFeature
+  } = useDreamImageGeneration({
+    dreamContent,
+    existingPrompt,
+    existingImage,
+    onImageGenerated,
+    disabled,
+    dreamId 
+  });
 
-  const generateImage = async () => {
-    if (!user || disabled) return;
-
-    if (dreamContent.trim().length < 20) {
-      toast.error("Dream description is too short for image generation.");
-      return;
-    }
-    
-    try {
-      // Special case for app creator - bypass the feature usage check
-      const isAppCreator = user.email === "inquireoac@gmail.com";
-      
-      // Check if user can use the feature (free trial, subscription, or is app creator)
-      const canUse = isAppCreator || await canUseFeature('image');
-      
-      if (!canUse) {
-        // User has used their free trial and doesn't have a subscription
-        showSubscriptionPrompt('image');
-        return;
-      }
-      
-      setIsGenerating(true);
-      setShowInfo(false);
-      setImageError(false);
-      
-      // Generate a prompt for the image using OpenAI
-      const promptResult = await supabase.functions.invoke('analyze-dream', {
-        body: { 
-          dreamContent, 
-          task: 'create_image_prompt' 
-        }
-      });
-      
-      if (promptResult.error) {
-        throw new Error(promptResult.error.message || 'Failed to generate image prompt');
-      }
-      
-      const generatedPrompt = promptResult.data?.analysis || '';
-      if (!generatedPrompt) {
-        throw new Error('No image prompt was generated');
-      }
-      
-      setImagePrompt(generatedPrompt);
-      console.log("Generated prompt:", generatedPrompt);
-      
-      // Generate the image using the prompt and Dall-E
-      const imageResult = await supabase.functions.invoke('generate-dream-image', {
-        body: { prompt: generatedPrompt }
-      });
-      
-      if (imageResult.error) {
-        console.error("Image generation API error:", imageResult.error);
-        throw new Error(imageResult.error.message || 'Failed to generate image');
-      }
-      
-      // Check both possible response formats
-      const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
-      console.log("OpenAI Image URL:", openaiUrl);
-      
-      if (!openaiUrl) {
-        throw new Error('No image URL was returned from AI generation');
-      }
-      
-      // Display OpenAI image immediately for responsiveness
-      setGeneratedImage(openaiUrl);
-      
-      if (!isAppCreator && !hasUsedFeature('image')) {
-        markFeatureAsUsed('image');
-      }
-      
-      try {
-        // Upload the OpenAI image to Supabase storage, passing user.id
-        // The "preview" identifier indicates this is a temporary upload before the dream is saved.
-        console.log("Uploading OpenAI image to Supabase storage (preview)...");
-        const storedImageUrl = await uploadDreamImage("preview", openaiUrl, user.id);
-        
-        if (!storedImageUrl || storedImageUrl === openaiUrl) { // Check if upload failed or returned fallback
-          console.warn("Image upload to Supabase (preview) failed or returned original URL. Using OpenAI URL for now:", openaiUrl);
-          onImageGenerated(openaiUrl, generatedPrompt); // Pass the OpenAI URL if upload failed
-          toast.warning("Image generated, but permanent saving failed. It might be temporary.");
-        } else {
-          console.log("Image saved to Supabase (preview):", storedImageUrl);
-          setGeneratedImage(storedImageUrl); // Update display with Supabase URL
-          onImageGenerated(storedImageUrl, generatedPrompt); // Pass the permanent Supabase URL
-          toast.success("Dream image generated and saved!");
-        }
-      } catch (uploadError: any) {
-        console.error("Upload error during preview generation:", uploadError);
-        toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
-        onImageGenerated(openaiUrl, generatedPrompt); // Fallback to OpenAI URL
-      }
-      
-      toast.success("Dream image generated!");
-      
-      if (!isAppCreator && !hasUsedFeature('image')) {
-        toast.success("Free trial used! Subscribe to continue generating dream images.", {
-          duration: 5000,
-          action: {
-            label: "Subscribe",
-            onClick: () => window.location.href = '/profile?tab=subscription'
-          }
-        });
-      }
-    } catch (error: any) {
-      console.error('Image generation error:', error);
-      setImageError(true);
-      toast.error(`Image generation failed: ${error.message}`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Determine if user is app creator
-  const isAppCreator = user?.email === "inquireoac@gmail.com";
-
-  if (showInfo && !generatedImage && !isGenerating) {
+  if (showInfo && !isGenerating) { // Check !isGenerating to avoid flicker
     return (
       <Card>
         <CardHeader>
@@ -200,27 +85,37 @@ const DreamImageGenerator = ({
             {generatedImage && (
               <ImageDisplay 
                 imageUrl={generatedImage} 
+                // If ImageDisplay itself has an error (e.g. broken link after generation),
+                // it can call setImageError to update the hook's state.
                 onError={() => setImageError(true)} 
               />
             )}
             
-            <ImagePromptInput
-              imagePrompt={imagePrompt}
-              onChange={setImagePrompt}
-              disabled={disabled}
-            />
+            {/* Display prompt input only if an image has been generated or is being generated, or if there's an existing prompt */}
+            {(generatedImage || isGenerating || imagePrompt) && (
+              <ImagePromptInput
+                imagePrompt={imagePrompt}
+                onChange={setImagePrompt}
+                disabled={disabled || isGenerating} // Also disable if generating
+              />
+            )}
             
-            {!disabled && (
+            {!disabled && (generatedImage || imagePrompt) && !isGenerating && ( // Show regenerate only if there's an image/prompt and not generating
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={generateImage}
-                  disabled={isGenerating}
+                  disabled={isGenerating} // Redundant due to outer check, but good practice
                 >
                   <Sparkles className="h-4 w-4 mr-1" /> Regenerate
                 </Button>
               </div>
+            )}
+            {imageError && !isGenerating && ( // Show general error message if imageError is true and not generating
+                <p className="text-xs text-red-500 mt-1 text-center">
+                    There was an issue with the image. Please try regenerating.
+                </p>
             )}
           </>
         )}
