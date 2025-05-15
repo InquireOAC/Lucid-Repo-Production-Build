@@ -1,14 +1,14 @@
+
 import React, { useState, useEffect } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
-import DreamEntryForm from "@/components/DreamEntryForm";
 import DreamDetail from "@/components/DreamDetail";
 import JournalHeader from "@/components/journal/JournalHeader";
 import TagFilter from "@/components/journal/TagFilter";
-import EmptyJournal from "@/components/journal/EmptyJournal";
-import DreamsList from "@/components/journal/DreamsList";
+import AddDreamDialog from "@/components/journal/AddDreamDialog";
+import EditDreamDialog from "@/components/journal/EditDreamDialog";
+import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
+import JournalTabs from "@/components/journal/JournalTabs";
+import { DreamEntry } from "@/types/dream"; // Ensure DreamEntry is imported
 
 const Journal = () => {
   const {
@@ -33,33 +33,26 @@ const Journal = () => {
     handleTagClick,
     setActiveTagIds,
     user,
-    syncDreamsFromDb
+    syncDreamsFromDb,
   } = useDreamJournal();
-  
+
   const [activeTab, setActiveTab] = useState("all");
 
-  // Refresh dreams when component mounts
   useEffect(() => {
     if (user) {
       syncDreamsFromDb();
     }
-  }, [user]);
+  }, [user, syncDreamsFromDb]); // Added syncDreamsFromDb to dependency array
 
-  // Handle adding a new dream and closing the dialog
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
-    setIsAddingDream(false); // Close the dialog after saving
-    
-    // Ensure dreams are properly synced after adding
+    setIsAddingDream(false);
     if (user) {
-      setTimeout(() => {
-        syncDreamsFromDb();
-      }, 500);
+      setTimeout(() => syncDreamsFromDb(), 500); // Sync after a short delay
     }
   };
 
-  // Create wrapper function for edit to match the expected signature
-  const handleEditDreamWrapper = async (dreamData: {
+  const handleEditDreamSubmit = async (dreamData: {
     title: string;
     content: string;
     tags: string[];
@@ -73,164 +66,120 @@ const Journal = () => {
     await handleEditDream(dreamData, selectedDream.id);
     setIsEditingDream(false);
     setSelectedDream(null);
-    
-    // Ensure dreams are properly synced after editing
     if (user) {
-      setTimeout(() => {
-        syncDreamsFromDb();
-      }, 500);
+      setTimeout(() => syncDreamsFromDb(), 500); // Sync after a short delay
     }
   };
+
+  const confirmDeleteDream = async () => {
+    if (dreamToDelete) {
+      await handleDeleteDream(dreamToDelete);
+      setDreamToDelete(null);
+      if (user) {
+        syncDreamsFromDb(); // Refresh after deletion
+      }
+    }
+  };
+
+  const handleOpenEditDialog = (dream: DreamEntry) => {
+    setSelectedDream(dream);
+    setIsEditingDream(true);
+  };
+  
+  const handleDreamDetailUpdate = (id: string, updates: Partial<DreamEntry>) => {
+    if (selectedDream) {
+      const dreamPayload = {
+        title: updates.title ?? selectedDream.title,
+        content: updates.content ?? selectedDream.content,
+        tags: updates.tags ?? selectedDream.tags ?? [],
+        lucid: typeof updates.lucid === 'boolean' ? updates.lucid : selectedDream.lucid,
+        mood: updates.mood ?? selectedDream.mood ?? "Neutral", // Default mood if undefined
+        analysis: updates.analysis ?? selectedDream.analysis,
+        generatedImage: updates.generatedImage ?? selectedDream.generatedImage,
+        imagePrompt: updates.imagePrompt ?? selectedDream.imagePrompt,
+      };
+      handleEditDream(dreamPayload, id);
+    }
+  };
+
 
   return (
     <div className="min-h-screen dream-background p-4 md:p-6">
       <JournalHeader onAddDream={() => setIsAddingDream(true)} />
-      
-      {/* Tag filter bar */}
-      <TagFilter 
-        tags={uniqueTagsInDreams} 
-        activeTags={activeTagIds} 
+
+      <TagFilter
+        tags={uniqueTagsInDreams}
+        activeTags={activeTagIds}
         onTagClick={handleTagClick}
         onClearTags={() => setActiveTagIds([])}
       />
 
-      <Tabs 
-        defaultValue="all" 
-        className="mb-6"
-        value={activeTab}
-        onValueChange={setActiveTab}
-      >
-        <TabsList className="grid w-full md:w-[400px] grid-cols-2">
-          <TabsTrigger value="all" className="text-sm">
-            All Dreams
-          </TabsTrigger>
-          <TabsTrigger value="recent" className="text-sm">
-            Recent Dreams
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          {entries.length === 0 ? (
-            <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
-          ) : (
-            <DreamsList
-              dreams={filteredDreams}
-              tags={tags}
-              onSelect={setSelectedDream}
-              onEdit={(dream) => {
-                setSelectedDream(dream);
-                setIsEditingDream(true);
-              }}
-              onTogglePublic={handleTogglePublic}
-              onDelete={(dreamId) => setDreamToDelete(dreamId)}
-              onTagClick={handleTagClick}
-            />
-          )}
-        </TabsContent>
-        
-        <TabsContent value="recent">
-          <DreamsList
-            dreams={filteredDreams.slice(0, 6)}
-            tags={tags}
-            onSelect={setSelectedDream}
-            onEdit={(dream) => {
-              setSelectedDream(dream);
-              setIsEditingDream(true);
-            }}
-            onTogglePublic={handleTogglePublic}
-            onDelete={(dreamId) => setDreamToDelete(dreamId)}
-            onTagClick={handleTagClick}
-          />
-        </TabsContent>
-      </Tabs>
+      <JournalTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        allEntries={entries}
+        filteredDreams={filteredDreams}
+        tags={tags}
+        onSelectDream={setSelectedDream}
+        onEditDream={handleOpenEditDialog}
+        onTogglePublic={handleTogglePublic}
+        onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
+        onTagClickInList={handleTagClick}
+        onAddDream={() => setIsAddingDream(true)}
+      />
 
-      {/* Add Dream Dialog */}
-      <Dialog open={isAddingDream} onOpenChange={(open) => {
-        setIsAddingDream(open);
-        if (!open) syncDreamsFromDb(); // Refresh when closing dialog
-      }}>
-        <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
-          <DialogHeader>
-            <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
-          </DialogHeader>
-          <DreamEntryForm 
-            onSubmit={handleAddDreamAndClose} 
-            tags={tags} 
-            isSubmitting={isSubmitting} 
-          />
-        </DialogContent>
-      </Dialog>
-      
-      {/* Edit Dream Dialog */}
+      <AddDreamDialog
+        isOpen={isAddingDream}
+        onOpenChange={(open) => {
+          setIsAddingDream(open);
+          if (!open && user) syncDreamsFromDb();
+        }}
+        onSubmit={handleAddDreamAndClose}
+        tags={tags}
+        isSubmitting={isSubmitting}
+      />
+
       {selectedDream && (
-        <Dialog open={isEditingDream} onOpenChange={(open) => {
-          setIsEditingDream(open);
-          if (!open) {
-            setSelectedDream(null);
-            syncDreamsFromDb(); // Refresh when closing dialog
-          }
-        }}>
-          <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh]">
-            <DialogHeader>
-              <DialogTitle className="gradient-text">Edit Dream</DialogTitle>
-            </DialogHeader>
-            <DreamEntryForm
-              existingDream={selectedDream}
-              onSubmit={handleEditDreamWrapper}
-              tags={tags}
-              isSubmitting={isSubmitting}
-            />
-          </DialogContent>
-        </Dialog>
+        <EditDreamDialog
+          isOpen={isEditingDream}
+          onOpenChange={(open) => {
+            setIsEditingDream(open);
+            if (!open) {
+              setSelectedDream(null);
+              if (user) syncDreamsFromDb();
+            }
+          }}
+          onSubmit={handleEditDreamSubmit}
+          existingDream={selectedDream}
+          tags={tags}
+          isSubmitting={isSubmitting}
+        />
       )}
 
-      {/* Dream Detail Dialog */}
       {selectedDream && !isEditingDream && (
         <DreamDetail
           dream={selectedDream}
           tags={tags}
           onClose={() => {
             setSelectedDream(null);
-            syncDreamsFromDb(); // Refresh when closing detail view
+            if (user) syncDreamsFromDb();
           }}
-          onUpdate={(id, updates) => handleEditDream({ ...selectedDream, ...updates }, id)}
-          onDelete={handleDeleteDream}
+          onUpdate={handleDreamDetailUpdate}
+          onDelete={(id) => { // onDelete in DreamDetail usually triggers a confirmation
+             setDreamToDelete(id); // Set dream to delete to open confirmation dialog
+             setSelectedDream(null); // Close detail view
+          }}
           isAuthenticated={!!user}
         />
       )}
-      
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog 
-        open={!!dreamToDelete} 
+
+      <DeleteDreamConfirmationDialog
+        isOpen={!!dreamToDelete}
         onOpenChange={(open) => {
           if (!open) setDreamToDelete(null);
         }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete this dream from your journal.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={async () => {
-                if (dreamToDelete) {
-                  await handleDeleteDream(dreamToDelete);
-                  setDreamToDelete(null);
-                  syncDreamsFromDb(); // Refresh after deletion
-                }
-              }}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirmDelete={confirmDeleteDream}
+      />
     </div>
   );
 };
