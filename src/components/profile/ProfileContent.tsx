@@ -8,10 +8,10 @@ import ProfileDialogs from "./ProfileDialogs";
 import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 import FollowersModal from "@/components/profile/FollowersModal";
-import { useProfileFollowers } from "@/hooks/useProfileFollowers";
 import ProfileLoadingScreen from "./ProfileLoadingScreen";
 import ProfileNotFound from "./ProfileNotFound";
 import ProfileEmpty from "./ProfileEmpty";
+import { useProfileFollowers } from "@/hooks/useProfileFollowers";
 
 const ProfileContent = () => {
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
@@ -49,11 +49,16 @@ const ProfileContent = () => {
     handleSignOut,
   } = useProfileData(user, profile, effectiveIdentifier);
 
+  // Decide whose dreams/followers/following to fetch
+  const profileToShow = isOwnProfile ? profile : viewedProfile;
+  const profileIdForHooks = profileToShow?.id || "";
+
+  // Only run these hooks if we have the right profile id (UUID)
   const {
     publicDreams,
     likedDreams,
     refreshDreams,
-  } = useProfileDreams(user, effectiveIdentifier);
+  } = useProfileDreams(user, profileIdForHooks);
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -63,9 +68,12 @@ const ProfileContent = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(
-    profile?.id || ""
-  );
+  const {
+    followers,
+    following,
+    fetchFollowers,
+    fetchFollowing
+  } = useProfileFollowers(profileIdForHooks);
 
   useEffect(() => {
     if (!user) {
@@ -73,7 +81,11 @@ const ProfileContent = () => {
       return;
     }
     // Fetch by identifier (username preferred)
-    if (effectiveIdentifier && effectiveIdentifier !== user.id && effectiveIdentifier !== profile?.username) {
+    if (
+      effectiveIdentifier &&
+      effectiveIdentifier !== user.id &&
+      effectiveIdentifier !== profile?.username
+    ) {
       fetchUserProfile(effectiveIdentifier);
       checkIfFollowing(effectiveIdentifier);
     }
@@ -86,32 +98,32 @@ const ProfileContent = () => {
   }, [user]);
 
   useEffect(() => {
-    if (isOwnProfile || (effectiveIdentifier && user)) {
+    if (
+      profileIdForHooks &&
+      (isOwnProfile || effectiveIdentifier || user)
+    ) {
       const timer = setTimeout(() => {
         refreshDreams();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isOwnProfile, effectiveIdentifier, user]);
+  }, [profileIdForHooks, isOwnProfile, effectiveIdentifier, user]);
 
   if (!user) {
     return <ProfileLoadingScreen />;
   }
 
-  if (effectiveIdentifier && effectiveIdentifier !== user.id && !viewedProfile) {
+  // If trying to view another user's profile, ensure viewedProfile is loaded
+  if (
+    effectiveIdentifier &&
+    effectiveIdentifier !== user.id &&
+    effectiveIdentifier !== profile?.username &&
+    !viewedProfile
+  ) {
     return <ProfileNotFound />;
   }
 
-  const profileToShow = isOwnProfile ? profile : viewedProfile;
-
-  const isProfileIncomplete =
-    profileToShow &&
-    !profileToShow.display_name &&
-    !profileToShow.username &&
-    !profileToShow.bio &&
-    !profileToShow.avatar_url;
-
-  if (profileToShow && isProfileIncomplete) {
+  if (profileToShow && !profileToShow.display_name && !profileToShow.username && !profileToShow.bio && !profileToShow.avatar_url) {
     return <ProfileEmpty />;
   }
 
@@ -130,8 +142,14 @@ const ProfileContent = () => {
         setIsSocialLinksOpen={setIsSocialLinksOpen}
         handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
-        onFollowersClick={() => { setShowFollowers(true); fetchFollowers(); }}
-        onFollowingClick={() => { setShowFollowing(true); fetchFollowing(); }}
+        onFollowersClick={() => {
+          setShowFollowers(true);
+          fetchFollowers();
+        }}
+        onFollowingClick={() => {
+          setShowFollowing(true);
+          fetchFollowing();
+        }}
       />
       <ProfileTabs
         publicDreams={publicDreams}
