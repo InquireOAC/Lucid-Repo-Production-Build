@@ -1,7 +1,7 @@
+
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Change: Accept 'profile' prop instead of username/displayName/avatarUrl
 interface DreamCardUserProps {
   profile?: {
     username?: string;
@@ -20,7 +20,6 @@ const DreamCardUser = ({
     console.log("DreamCardUser profile prop:", profile);
   }, [profile]);
   
-  // Get fields from profile if defined, else fallback
   const username = profile?.username || "";
   const displayName = profile?.display_name || "";
   const avatarUrl = profile?.avatar_url || "";
@@ -42,7 +41,7 @@ const DreamCardUser = ({
     <div 
       className="flex items-center mb-3 cursor-pointer hover:underline" 
       onClick={onUserClick}
-      data-user-id={profile?.id} // helpful for debugging
+      data-username={username} // helpful for debugging
     >
       <Avatar className="h-6 w-6 mr-2">
         <AvatarImage src={avatarUrl} alt={nameToShow} />

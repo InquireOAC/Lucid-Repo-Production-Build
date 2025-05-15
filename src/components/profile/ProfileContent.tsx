@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,9 +11,12 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 
 const ProfileContent = () => {
-  const { userId } = useParams<{ userId: string }>();
+  // Accept either userId or username from params for flexibility
+  const { userId, username } = useParams<{ userId?: string; username?: string }>();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+
+  const effectiveIdentifier = username || userId;
 
   const {
     isOwnProfile,
@@ -22,7 +24,7 @@ const ProfileContent = () => {
     isFollowing,
     displayName,
     setDisplayName,
-    username,
+    username: currentUsername,
     setUsername,
     bio,
     setBio,
@@ -44,13 +46,13 @@ const ProfileContent = () => {
     handleAvatarChange,
     handleStartConversation,
     handleSignOut,
-  } = useProfileData(user, profile, userId);
+  } = useProfileData(user, profile, effectiveIdentifier);
 
   const {
     publicDreams,
     likedDreams,
     refreshDreams,
-  } = useProfileDreams(user, userId);
+  } = useProfileDreams(user, effectiveIdentifier);
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -64,12 +66,12 @@ const ProfileContent = () => {
       navigate("/auth");
       return;
     }
-    if (userId && userId !== user.id) {
-      // If a user ID param is present, load THAT profile for view
-      fetchUserProfile(userId);
-      checkIfFollowing(userId);
+    // Fetch by identifier (username preferred)
+    if (effectiveIdentifier && effectiveIdentifier !== user.id && effectiveIdentifier !== profile?.username) {
+      fetchUserProfile(effectiveIdentifier);
+      checkIfFollowing(effectiveIdentifier);
     }
-  }, [user, profile, userId]);
+  }, [user, profile, effectiveIdentifier]);
 
   useEffect(() => {
     if (user) {
@@ -78,21 +80,20 @@ const ProfileContent = () => {
   }, [user]);
 
   useEffect(() => {
-    if (isOwnProfile || (userId && user)) {
+    if (isOwnProfile || (effectiveIdentifier && user)) {
       const timer = setTimeout(() => {
         refreshDreams();
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [isOwnProfile, userId, user]);
+  }, [isOwnProfile, effectiveIdentifier, user]);
 
   // Loading state: wait for all fetch calls to complete before showing missing profile
   if (!user) {
     return <LoadingScreen />;
   }
 
-  // Only show "not found" if we're visiting another user's profile and the data is null
-  if (userId && userId !== user.id && !viewedProfile) {
+  if (effectiveIdentifier && effectiveIdentifier !== user.id && !viewedProfile) {
     return (
       <div className="min-h-screen dream-background flex items-center justify-center">
         <div className="text-center">
@@ -163,7 +164,7 @@ const ProfileContent = () => {
         setIsNotificationsOpen={setIsNotificationsOpen}
         displayName={displayName}
         setDisplayName={setDisplayName}
-        username={username}
+        username={currentUsername}
         setUsername={setUsername}
         bio={bio}
         setBio={setBio}

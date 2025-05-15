@@ -67,14 +67,14 @@ const LucidRepo = () => {
     fetchPublicDreams();
   };
 
-  // Enhanced: Log navigation, warn if userId is missing
-  const handleNavigateToProfile = (userId: string | undefined) => {
-    console.log("Profile navigation requested for userId:", userId);
-    if (userId) {
-      // Navigate with /profile/:userId (uuid)
-      navigate(`/profile/${userId}`);
+  // Enhanced: Log navigation, warn if username is missing
+  const handleNavigateToProfile = (username: string | undefined) => {
+    console.log("Profile navigation requested for username:", username);
+    if (username) {
+      // Navigate with /profile/:username
+      navigate(`/profile/${username}`);
     } else {
-      console.warn("No userId provided for navigation.");
+      console.warn("No username provided for navigation.");
     }
   };
 
@@ -142,7 +142,7 @@ const LucidRepo = () => {
         dreamTags={dreamTags}
         onLike={handleDreamLike}
         onOpenDream={handleOpenDream}
-        // Pass DREAM.user_id, not username!
+        // Pass username instead of user_id!
         onUserClick={handleNavigateToProfile}
         onTagClick={handleTagClick}
         searchQuery={searchQuery}
