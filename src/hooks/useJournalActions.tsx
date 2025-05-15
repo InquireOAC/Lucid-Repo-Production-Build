@@ -1,6 +1,7 @@
+
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
@@ -212,7 +213,7 @@ export const useJournalActions = () => {
              console.error("Error fetching dream before delete:", fetchError);
         }
         
-        const baseSupabaseStorageUrl = `${supabase.supabaseUrl}/storage/v1/object/public/dream-images/`;
+        const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
         if (dreamToDeleteData?.generatedImage && dreamToDeleteData.generatedImage.startsWith(baseSupabaseStorageUrl)) {
           try {
             // Extract path after /dream-images/
@@ -280,3 +281,4 @@ export const useJournalActions = () => {
     handleTogglePublic
   };
 };
+
