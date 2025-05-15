@@ -1,9 +1,7 @@
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import LoadingScreen from "@/components/profile/LoadingScreen";
-import UserNotFound from "@/components/profile/UserNotFound";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ProfileTabs from "@/components/profile/ProfileTabs";
 import ProfileDialogs from "./ProfileDialogs";
@@ -11,13 +9,14 @@ import { useProfileData } from "@/hooks/useProfileData";
 import { useProfileDreams } from "@/hooks/useProfileDreams";
 import FollowersModal from "@/components/profile/FollowersModal";
 import { useProfileFollowers } from "@/hooks/useProfileFollowers";
+import ProfileLoadingScreen from "./ProfileLoadingScreen";
+import ProfileNotFound from "./ProfileNotFound";
+import ProfileEmpty from "./ProfileEmpty";
 
 const ProfileContent = () => {
-  // Accept either userId or username from params for flexibility
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-
   const effectiveIdentifier = username || userId;
 
   const {
@@ -95,26 +94,16 @@ const ProfileContent = () => {
     }
   }, [isOwnProfile, effectiveIdentifier, user]);
 
-  // Loading state: wait for all fetch calls to complete before showing missing profile
   if (!user) {
-    return <LoadingScreen />;
+    return <ProfileLoadingScreen />;
   }
 
   if (effectiveIdentifier && effectiveIdentifier !== user.id && !viewedProfile) {
-    return (
-      <div className="min-h-screen dream-background flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-medium mb-2">This user doesn’t exist or has a private profile.</h3>
-          <p className="text-muted-foreground mb-2">They may have deleted or restricted their account.</p>
-          <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
-        </div>
-      </div>
-    );
+    return <ProfileNotFound />;
   }
 
   const profileToShow = isOwnProfile ? profile : viewedProfile;
 
-  // Defensive: If profileToShow exists but lacks core info, display placeholder UI
   const isProfileIncomplete =
     profileToShow &&
     !profileToShow.display_name &&
@@ -123,15 +112,7 @@ const ProfileContent = () => {
     !profileToShow.avatar_url;
 
   if (profileToShow && isProfileIncomplete) {
-    return (
-      <div className="min-h-screen dream-background flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-medium mb-2">This user hasn&apos;t set up their profile yet.</h3>
-          <p className="text-muted-foreground mb-2">No public profile information available.</p>
-          <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
-        </div>
-      </div>
-    );
+    return <ProfileEmpty />;
   }
 
   return (
@@ -149,7 +130,6 @@ const ProfileContent = () => {
         setIsSocialLinksOpen={setIsSocialLinksOpen}
         handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
-        // New: handlers for opening modals
         onFollowersClick={() => { setShowFollowers(true); fetchFollowers(); }}
         onFollowingClick={() => { setShowFollowing(true); fetchFollowing(); }}
       />
