@@ -12,13 +12,13 @@ import { toast } from "sonner";
 
 interface Comment {
   id: string;
-  comment_text: string;
+  content: string;
   created_at: string;
   user_id: string;
   profiles?: {
     username: string;
     display_name: string;
-    profile_picture: string;
+    avatar_url: string;
   };
 }
 
@@ -42,14 +42,15 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     setIsLoading(true);
     try {
       const { data, error } = await supabase
-        .from("comments")
-        .select("*, profiles:user_id(username, profile_picture, display_name)")
+        .from("dream_comments")
+        .select("*, profiles:user_id(username, display_name, avatar_url)")
         .eq("dream_id", dreamId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
       setComments(data || []);
+      // Update comment count
       onCommentCountChange(data?.length || 0);
     } catch (error) {
       console.error("Error fetching comments:", error);
@@ -70,15 +71,15 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
     try {
       const { data, error } = await supabase
-        .from("comments")
+        .from("dream_comments")
         .insert([
           {
             dream_id: dreamId,
             user_id: user.id,
-            comment_text: newComment.trim(),
+            content: newComment.trim(),
           },
         ])
-        .select("*, profiles:user_id(username, profile_picture, display_name)")
+        .select("*, profiles:user_id(username, display_name, avatar_url)")
         .single();
 
       if (error) throw error;
@@ -96,6 +97,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Comments</h3>
+
       {isLoading ? (
         <div className="flex justify-center py-4">
           <Loader2 className="h-6 w-6 animate-spin text-dream-purple" />
@@ -106,7 +108,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             <div key={comment.id} className="flex gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={comment.profiles?.profile_picture}
+                  src={comment.profiles?.avatar_url}
                   alt={comment.profiles?.username || "User"}
                 />
                 <AvatarFallback>
@@ -124,7 +126,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
                     {format(new Date(comment.created_at), "MMM d, h:mm a")}
                   </span>
                 </div>
-                <p className="mt-1 text-sm">{comment.comment_text}</p>
+                <p className="mt-1 text-sm">{comment.content}</p>
               </div>
             </div>
           ))}
@@ -134,6 +136,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
           No comments yet. Be the first to comment!
         </p>
       )}
+
       {user ? (
         <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
           <Avatar className="h-8 w-8 flex-shrink-0">

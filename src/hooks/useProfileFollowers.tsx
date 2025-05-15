@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Fetch following/followers lists and counts for a given user/profile id
@@ -35,16 +35,15 @@ export function useProfileFollowers(userId?: string) {
     }
   };
 
+  useEffect(() => {
+    fetchFollowers();
+    fetchFollowing();
+    // eslint-disable-next-line
+  }, [userId]);
+
   return {
-    followers,
-    following,
-    followersCount,
-    followingCount,
-    fetchFollowers,
-    fetchFollowing,
-    setFollowers,
-    setFollowing,
-    setFollowersCount,
-    setFollowingCount,
+    followers, following,
+    followersCount, followingCount,
+    fetchFollowers, fetchFollowing,
   };
 }

@@ -3,11 +3,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Use this for follow/unfollow action on a given userId/profile
-export function useProfileFollowAction(
-  user: any,
-  theirUserId: string | undefined,
-  onChange?: () => void
-) {
+export function useProfileFollowAction(user: any, theirUserId: string|undefined, onChange?: () => void) {
   const [isFollowing, setIsFollowing] = useState<boolean>(false);
 
   // Check if the current user follows the profile being viewed
@@ -16,7 +12,7 @@ export function useProfileFollowAction(
       setIsFollowing(false);
       return;
     }
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("follows")
       .select("id")
       .eq("follower_id", user.id)
@@ -28,28 +24,24 @@ export function useProfileFollowAction(
   // Toggle follow/unfollow in the DB and update state accordingly
   const handleFollow = async () => {
     if (!user || !theirUserId) return;
-    let success = false;
-
     if (isFollowing) {
-      const { error } = await supabase
+      await supabase
         .from("follows")
         .delete()
         .eq("follower_id", user.id)
         .eq("followed_id", theirUserId);
-      success = !error;
-      if (success) setIsFollowing(false);
+      setIsFollowing(false);
     } else {
-      const { error } = await supabase
+      await supabase
         .from("follows")
-        .upsert([{ follower_id: user.id, followed_id: theirUserId }]);
-      success = !error;
-      if (success) setIsFollowing(true);
+        .upsert([
+          { follower_id: user.id, followed_id: theirUserId }
+        ]);
+      setIsFollowing(true);
     }
-
-    if (success) {
-      onChange?.();
-      checkFollowing();
-    }
+    onChange?.();
+    // Re-check following state
+    checkFollowing();
   };
 
   return { isFollowing, checkFollowing, handleFollow, setIsFollowing };

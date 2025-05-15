@@ -64,9 +64,9 @@ const ProfileContent = () => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [showFollowers, setShowFollowers] = useState(false);
   const [showFollowing, setShowFollowing] = useState(false);
-  const {
-    followers, following, fetchFollowers, fetchFollowing, setFollowersCount, setFollowingCount,
-  } = useProfileFollowers(profile?.id || "");
+  const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(
+    profile?.id || ""
+  );
 
   useEffect(() => {
     if (!user) {
@@ -114,30 +114,15 @@ const ProfileContent = () => {
 
   const profileToShow = isOwnProfile ? profile : viewedProfile;
 
-  // Defensive: If profileToShow exists but lacks even the username, display UserNotFound
-  const userMissing = !!profileToShow && !(profileToShow.username || profileToShow.id);
-
-  if (userMissing) {
-    return (
-      <div className="min-h-screen dream-background flex items-center justify-center">
-        <div className="text-center">
-          <h3 className="text-xl font-medium mb-2">This user doesn&apos;t exist.</h3>
-          <p className="text-muted-foreground mb-2">Check the profile link and try again.</p>
-          <Button variant="outline" onClick={() => navigate("/")}>Go Home</Button>
-        </div>
-      </div>
-    );
-  }
-
-  // If we have at least a username, allow incomplete profiles instead of blanking out
+  // Defensive: If profileToShow exists but lacks core info, display placeholder UI
   const isProfileIncomplete =
     profileToShow &&
     !profileToShow.display_name &&
+    !profileToShow.username &&
     !profileToShow.bio &&
     !profileToShow.avatar_url;
 
-  // Only show the "hasn't set up profile" message if they're missing not just bio/avatar, but not username either
-  if (profileToShow && isProfileIncomplete && profileToShow.username) {
+  if (profileToShow && isProfileIncomplete) {
     return (
       <div className="min-h-screen dream-background flex items-center justify-center">
         <div className="text-center">
@@ -148,14 +133,6 @@ const ProfileContent = () => {
       </div>
     );
   }
-
-  // Update followers/following counts after follow/unfollow
-  useEffect(() => {
-    if (effectiveIdentifier) {
-      fetchFollowers();
-      fetchFollowing();
-    }
-  }, [isFollowing]); // refresh on follow state change
 
   return (
     <>
