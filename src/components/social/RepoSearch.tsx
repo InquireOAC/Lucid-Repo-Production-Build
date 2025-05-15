@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useRepoSearch } from "@/hooks/useRepoSearch";
 import DreamCard from "./DreamCard";
@@ -35,7 +34,7 @@ export default function RepoSearch() {
             onLike={handleLikeToggle}
             commentCount={dream.comment_count || 0}
             onComment={() => {}}
-            onCardClick={() => {}} {/* <-- Fix: Provide onCardClick */}
+            onCardClick={() => {}}
           />
         );
       })}
