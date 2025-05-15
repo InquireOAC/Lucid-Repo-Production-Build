@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -6,26 +5,29 @@ import { supabase } from "@/integrations/supabase/client";
 export function useStartConversation(user: any, targetUser: any, onOpen: (conversation: any) => void) {
   return useCallback(async () => {
     if (!user || !targetUser) return;
-    // Find an existing thread between these two users
-    let { data: existingConvos } = await supabase
-      .from("conversations")
+    
+    // Since there's no conversations table, we'll use the messages table to determine if there's
+    // an existing conversation between these users
+    const { data: existingMessages } = await supabase
+      .from("messages")
       .select("*")
-      .contains("participants", [user.id, targetUser.id]);
+      .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+      .or(`sender_id.eq.${targetUser.id},receiver_id.eq.${targetUser.id}`)
+      .limit(1);
 
-    let convo =
-      existingConvos?.find((c: any) =>
-        c.participants.includes(user.id) && c.participants.includes(targetUser.id)
-      ) || null;
+    // If there are existing messages, we consider this an existing conversation
+    const hasExistingConversation = existingMessages && existingMessages.length > 0;
 
-    if (!convo) {
-      // Create it
-      const { data, error } = await supabase
-        .from("conversations")
-        .insert([{ participants: [user.id, targetUser.id] }])
-        .select("*")
-        .maybeSingle();
-      convo = data;
-    }
-    if (convo) onOpen(convo);
+    // Instead of returning a conversation object, we'll return the target user
+    // with a flag indicating if there's an existing conversation
+    const conversationData = {
+      id: targetUser.id,
+      username: targetUser.username,
+      display_name: targetUser.display_name,
+      avatar_url: targetUser.avatar_url || targetUser.profile_picture,
+      hasExistingMessages: hasExistingConversation
+    };
+    
+    onOpen(conversationData);
   }, [user, targetUser, onOpen]);
 }
