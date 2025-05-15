@@ -30,7 +30,10 @@ const SettingsDialog = ({
           <Button
             variant="outline"
             className="w-full flex items-center gap-2 justify-start"
-            onClick={onNotificationsClick}
+            onClick={() => {
+              onNotificationsClick();
+              onOpenChange(false);
+            }}
           >
             <Bell size={16} />
             <span>Notifications</span>
@@ -39,7 +42,10 @@ const SettingsDialog = ({
           <Button
             variant="outline"
             className="w-full flex items-center gap-2 justify-start"
-            onClick={onSubscriptionClick}
+            onClick={() => {
+              onSubscriptionClick();
+              onOpenChange(false);
+            }}
           >
             <CreditCard size={16} />
             <span>Subscription</span>

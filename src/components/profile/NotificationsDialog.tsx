@@ -30,10 +30,14 @@ const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps)
   
   const loadSettings = async () => {
     try {
+      setLoading(true);
       const savedSettings = await getNotificationSettings();
       setSettings(savedSettings);
     } catch (error) {
       console.error("Error loading notification settings:", error);
+      toast.error("Failed to load notification settings");
+    } finally {
+      setLoading(false);
     }
   };
   
@@ -107,7 +111,7 @@ const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps)
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={loading}>
-            Save Changes
+            {loading ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </DialogContent>
