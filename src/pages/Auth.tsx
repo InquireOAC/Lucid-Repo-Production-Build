@@ -55,7 +55,7 @@ const Auth = () => {
       <Card className="w-full max-w-md bg-dream-purple/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Moon size={48} className="text-dream-purple animate-float" />
+            <Moon size={48} className="text-dream-white animate-float" />
           </div>
           <CardTitle className="text-3xl font-bold gradient-text">
             Lucid Repo
