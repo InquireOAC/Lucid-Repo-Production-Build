@@ -104,10 +104,6 @@ const ProfileDialogs = ({
         setIsSettingsOpen(false);
         setIsNotificationsOpen(true);
       }}
-      onSubscriptionClick={() => {
-        setIsSettingsOpen(false);
-        setIsSubscriptionOpen(true);
-      }}
     />
     <MessagesDialog
       isOpen={isMessagesOpen}
