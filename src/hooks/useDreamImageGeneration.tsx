@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
@@ -96,12 +96,11 @@ export const useDreamImageGeneration = ({
         const storedImageUrl = await uploadDreamImage(dreamId, openaiUrl, user.id);
 
         // Patch: Warn and fallback if not a public Supabase URL
+        const basePublicUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
         if (
           !storedImageUrl ||
           storedImageUrl === openaiUrl ||
-          !storedImageUrl.startsWith(
-            `${supabase.storageUrl?.replace(/\/$/, '') ?? "https://oelghoaiuvjhywlzldkt.supabase.co"}/storage/v1/object/public/dream-images/`
-          )
+          !storedImageUrl.startsWith(basePublicUrl)
         ) {
           setGeneratedImage(openaiUrl);
           onImageGenerated(openaiUrl, generatedPromptText);
@@ -124,7 +123,7 @@ export const useDreamImageGeneration = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [user, disabled, dreamContent, isAppCreator, canUseFeature, markFeatureAsUsed, hasUsedFeature, onImageGenerated, dreamId, supabase]);
+  }, [user, disabled, dreamContent, isAppCreator, canUseFeature, markFeatureAsUsed, hasUsedFeature, onImageGenerated, dreamId]);
 
   // Derived state for showing initial info
   const showInfo = !existingImage && !generatedImage;
