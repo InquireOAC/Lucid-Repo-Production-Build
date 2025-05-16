@@ -1,28 +1,26 @@
 
 import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import SymbolAvatar from "../profile/SymbolAvatar";
 
 interface DreamCardUserProps {
   profile?: {
     username?: string;
     display_name?: string;
-    avatar_url?: string;
+    avatar_symbol?: string;
+    avatar_color?: string;
     id?: string;
   };
   onUserClick: (e: React.MouseEvent) => void;
 }
 
-const DreamCardUser = ({ 
-  profile, 
-  onUserClick 
+const DreamCardUser = ({
+  profile,
+  onUserClick,
 }: DreamCardUserProps) => {
-  React.useEffect(() => {
-    console.log("DreamCardUser profile prop:", profile);
-  }, [profile]);
-  
   const username = profile?.username || "";
   const displayName = profile?.display_name || "";
-  const avatarUrl = profile?.avatar_url || "";
+  const avatarSymbol = profile?.avatar_symbol;
+  const avatarColor = profile?.avatar_color;
 
   let nameToShow: string;
   if (username && username !== "Anonymous User" && username.trim() !== "") {
@@ -33,22 +31,19 @@ const DreamCardUser = ({
     nameToShow = "User";
   }
 
-  if (!profile) {
-    console.warn("DreamCardUser: Missing profile prop; falling back to 'User'");
-  }
-
   return (
-    <div 
-      className="flex items-center mb-3 cursor-pointer hover:underline" 
+    <div
+      className="flex items-center mb-3 cursor-pointer hover:underline"
       onClick={onUserClick}
-      data-username={username} // helpful for debugging
+      data-username={username}
     >
-      <Avatar className="h-6 w-6 mr-2">
-        <AvatarImage src={avatarUrl} alt={nameToShow} />
-        <AvatarFallback>
-          {nameToShow.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
+      <SymbolAvatar
+        symbol={avatarSymbol}
+        color={avatarColor}
+        fallbackLetter={nameToShow.charAt(0).toUpperCase()}
+        size={28}
+        className="mr-2"
+      />
       <span className="text-sm font-medium">{nameToShow}</span>
     </div>
   );

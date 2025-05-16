@@ -18,7 +18,7 @@ const DreamGrid = ({
   onLike,
   onOpenDream,
   onUserClick,
-  onTagClick
+  onTagClick,
 }: DreamGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -26,13 +26,15 @@ const DreamGrid = ({
         const normalizedDream = {
           ...dream,
           generatedImage: dream.generatedImage || dream.image_url,
-          tags: Array.isArray(dream.tags) ? dream.tags : []
+          tags: Array.isArray(dream.tags) ? dream.tags : [],
+          profiles: {
+            ...dream.profiles,
+            avatar_symbol: dream.profiles?.avatar_symbol,
+            avatar_color: dream.profiles?.avatar_color,
+          },
         };
         // Use username from dream.profiles for navigation
         const username = normalizedDream.profiles?.username;
-        if (!username) {
-          console.warn("Dream with missing profile username for navigation:", normalizedDream);
-        }
         return (
           <DreamCard
             key={normalizedDream.id}
@@ -42,10 +44,7 @@ const DreamGrid = ({
             onLike={() => onLike(normalizedDream.id)}
             showUser={true}
             onClick={() => onOpenDream(normalizedDream)}
-            onUserClick={() => {
-              // Pass the username for navigation
-              onUserClick(username);
-            }}
+            onUserClick={() => onUserClick(username)}
             onTagClick={onTagClick}
             showSharedBadge={false}
           />

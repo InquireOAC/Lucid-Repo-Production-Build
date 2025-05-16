@@ -2,25 +2,26 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Star, Moon, Sun, Cloud, Eye } from "lucide-react";
+import {
+  Star,
+  Moon,
+  Sun,
+  Cloud,
+  ArrowDown,
+  ArrowUp,
+  ArrowRight,
+  Eye
+} from "lucide-react";
 
 const SYMBOLS = [
   { name: "star", label: "Star", icon: Star },
   { name: "moon", label: "Moon", icon: Moon },
   { name: "sun", label: "Sun", icon: Sun },
   { name: "cloud", label: "Cloud", icon: Cloud },
+  { name: "arrowdown", label: "Arrow Down", icon: ArrowDown },
+  { name: "arrowup", label: "Arrow Up", icon: ArrowUp },
+  { name: "arrowright", label: "Arrow Right", icon: ArrowRight },
   { name: "eye", label: "Eye", icon: Eye },
-];
-
-const COLOR_CHOICES = [
-  "#9b87f5", // Primary Purple
-  "#F2FCE2", // Soft Green
-  "#D3E4FD", // Soft Blue
-  "#FFDEE2", // Soft Pink
-  "#FDE1D3", // Peach
-  "#8B5CF6", // Vivid Purple
-  "#0EA5E9", // Ocean Blue
-  "#F97316", // Bright Orange
 ];
 
 type SymbolAvatarPickerDialogProps = {
@@ -35,7 +36,7 @@ export default function SymbolAvatarPickerDialog({
   isOpen, onOpenChange, avatarSymbol, avatarColor, onSave
 }: SymbolAvatarPickerDialogProps) {
   const [selectedSymbol, setSelectedSymbol] = useState<string>(avatarSymbol || SYMBOLS[0].name);
-  const [selectedColor, setSelectedColor] = useState<string>(avatarColor || COLOR_CHOICES[0]);
+  const [selectedColor, setSelectedColor] = useState<string>(avatarColor || "#9b87f5");
 
   const handleSave = () => {
     onSave(selectedSymbol, selectedColor);
@@ -66,17 +67,15 @@ export default function SymbolAvatarPickerDialog({
             })}
           </div>
         </div>
-        <div className="mb-4 flex flex-wrap gap-2 justify-center">
-          {COLOR_CHOICES.map(color => (
-            <button
-              key={color}
-              onClick={() => setSelectedColor(color)}
-              className={`w-8 h-8 rounded-full border-2 ${selectedColor === color ? "border-dream-purple" : "border-gray-200"}`}
-              style={{ backgroundColor: color }}
-              aria-label={`Color ${color}`}
-              type="button"
-            />
-          ))}
+        <div className="mb-4 flex flex-col items-center justify-center">
+          <label className="mb-1 text-sm font-medium text-gray-700">Pick any color</label>
+          <input
+            type="color"
+            value={selectedColor}
+            onChange={(e) => setSelectedColor(e.target.value)}
+            aria-label="Select avatar color"
+            className="w-16 h-10 rounded-full border-2 border-dream-purple"
+          />
         </div>
         <div className="flex justify-center">
           <Button onClick={handleSave}>Save</Button>
