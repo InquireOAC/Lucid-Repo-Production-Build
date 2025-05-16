@@ -1,15 +1,12 @@
 
 import React, { useState } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera, Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from "uuid";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import ProfileAvatar from "./ProfileAvatar";
+import SymbolAvatarPickerDialog from "./SymbolAvatarPickerDialog";
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -20,11 +17,11 @@ interface EditProfileDialogProps {
   setUsername: (value: string) => void;
   bio: string;
   setBio: (value: string) => void;
-  avatarUrl: string;
-  isUploading: boolean;
-  handleAvatarChange: (url: string) => void;
+  avatarSymbol: string | null;
+  avatarColor: string | null;
+  setAvatarSymbol: (symbol: string) => void;
+  setAvatarColor: (color: string) => void;
   handleUpdateProfile: () => void;
-  userId: string;
 }
 
 const EditProfileDialog = ({
@@ -36,69 +33,17 @@ const EditProfileDialog = ({
   setUsername,
   bio,
   setBio,
-  avatarUrl,
-  isUploading,
-  handleAvatarChange,
+  avatarSymbol,
+  avatarColor,
+  setAvatarSymbol,
+  setAvatarColor,
   handleUpdateProfile,
-  userId
 }: EditProfileDialogProps) => {
-  const [localIsUploading, setLocalIsUploading] = useState(false);
+  const [symbolPickerOpen, setSymbolPickerOpen] = useState(false);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !userId) return;
-    
-    setLocalIsUploading(true);
-    
-    try {
-      // Generate a unique file name
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${uuidv4()}.${fileExt}`;
-      const filePath = `${userId}/${fileName}`;
-      
-      // First, check if avatars bucket exists
-      const { data: buckets } = await supabase
-        .storage
-        .listBuckets();
-      
-      const avatarBucketExists = buckets?.some(bucket => bucket.name === 'avatars');
-      
-      if (!avatarBucketExists) {
-        // Create bucket if it doesn't exist
-        const { error: bucketError } = await supabase
-          .storage
-          .createBucket('avatars', {
-            public: true
-          });
-          
-        if (bucketError) throw bucketError;
-      }
-      
-      // Upload file
-      const { error: uploadError } = await supabase
-        .storage
-        .from('avatars')
-        .upload(filePath, file);
-        
-      if (uploadError) throw uploadError;
-      
-      // Get public URL
-      const { data: publicUrl } = supabase
-        .storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-      
-      if (publicUrl) {
-        handleAvatarChange(publicUrl.publicUrl);
-        toast.success("Avatar uploaded successfully!");
-      }
-      
-    } catch (error: any) {
-      console.error("Error uploading avatar:", error);
-      toast.error(`Failed to upload avatar: ${error.message}`);
-    } finally {
-      setLocalIsUploading(false);
-    }
+  const handleSymbolSave = (symbol: string, color: string) => {
+    setAvatarSymbol(symbol);
+    setAvatarColor(color);
   };
 
   return (
@@ -108,37 +53,24 @@ const EditProfileDialog = ({
           <DialogTitle className="gradient-text">Edit Profile</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          <div className="flex flex-col items-center">
-            <Avatar className="w-20 h-20 mb-4">
-              <AvatarImage src={avatarUrl} />
-              <AvatarFallback className="bg-dream-purple/20">
-                {username ? username[0].toUpperCase() : "U"}
-              </AvatarFallback>
-            </Avatar>
-            
-            <Label htmlFor="avatar" className="cursor-pointer">
-              <div className="flex items-center gap-2 text-sm text-dream-purple">
-                {isUploading || localIsUploading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <Camera size={16} />
-                    <span>Change Photo</span>
-                  </>
-                )}
-              </div>
-              <Input 
-                id="avatar" 
-                type="file" 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleFileChange}
-                disabled={isUploading || localIsUploading}
-              />
-            </Label>
+          <div className="flex flex-col items-center gap-2">
+            <ProfileAvatar
+              avatarSymbol={avatarSymbol}
+              avatarColor={avatarColor}
+              username={username}
+              isOwnProfile={true}
+              onEdit={() => setSymbolPickerOpen(true)}
+            />
+            <Button variant="secondary" size="sm" onClick={() => setSymbolPickerOpen(true)}>
+              Change Symbol & Color
+            </Button>
+            <SymbolAvatarPickerDialog
+              isOpen={symbolPickerOpen}
+              onOpenChange={setSymbolPickerOpen}
+              avatarSymbol={avatarSymbol}
+              avatarColor={avatarColor}
+              onSave={handleSymbolSave}
+            />
           </div>
           
           <div className="space-y-2">
@@ -180,7 +112,6 @@ const EditProfileDialog = ({
           <Button 
             onClick={handleUpdateProfile}
             className="bg-gradient-to-r from-dream-lavender to-dream-purple"
-            disabled={isUploading || localIsUploading}
           >
             Save Changes
           </Button>

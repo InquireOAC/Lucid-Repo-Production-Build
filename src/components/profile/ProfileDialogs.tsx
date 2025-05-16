@@ -25,8 +25,10 @@ interface ProfileDialogsProps {
   setUsername: (v: string) => void;
   bio: string;
   setBio: (v: string) => void;
-  avatarUrl: string;
-  handleAvatarChange: (url: string) => void;
+  avatarSymbol: string | null;
+  setAvatarSymbol: (v: string) => void;
+  avatarColor: string | null;
+  setAvatarColor: (v: string) => void;
   handleUpdateProfile: () => void;
   userId: string;
   socialLinks: any;
@@ -59,8 +61,10 @@ const ProfileDialogs = ({
   setUsername,
   bio,
   setBio,
-  avatarUrl,
-  handleAvatarChange,
+  avatarSymbol,
+  setAvatarSymbol,
+  avatarColor,
+  setAvatarColor,
   handleUpdateProfile,
   userId,
   socialLinks,
@@ -83,11 +87,11 @@ const ProfileDialogs = ({
       setUsername={setUsername}
       bio={bio}
       setBio={setBio}
-      avatarUrl={avatarUrl}
-      isUploading={false}
-      handleAvatarChange={handleAvatarChange}
+      avatarSymbol={avatarSymbol}
+      avatarColor={avatarColor}
+      setAvatarSymbol={setAvatarSymbol}
+      setAvatarColor={setAvatarColor}
       handleUpdateProfile={handleUpdateProfile}
-      userId={userId}
     />
     <SocialLinksDialog
       isOpen={isSocialLinksOpen}

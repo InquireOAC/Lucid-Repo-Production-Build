@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -49,8 +48,10 @@ const ProfileContent = () => {
     setUsername,
     bio,
     setBio,
-    avatarUrl,
-    setAvatarUrl,
+    avatarSymbol,
+    setAvatarSymbol,
+    avatarColor,
+    setAvatarColor,
     socialLinks,
     setSocialLinks,
     dreamCount,
@@ -64,7 +65,6 @@ const ProfileContent = () => {
     fetchSubscription,
     handleUpdateProfile,
     handleUpdateSocialLinks,
-    handleAvatarChange,
     handleStartConversation,
     handleSignOut,
   } = useProfileData(user, profile, effectiveIdentifier);
@@ -155,8 +155,10 @@ const ProfileContent = () => {
         setUsername={setUsername}
         bio={bio}
         setBio={setBio}
-        avatarUrl={avatarUrl}
-        handleAvatarChange={handleAvatarChange}
+        avatarSymbol={avatarSymbol}
+        setAvatarSymbol={setAvatarSymbol}
+        avatarColor={avatarColor}
+        setAvatarColor={setAvatarColor}
         handleUpdateProfile={handleUpdateProfile}
         userId={user?.id}
         socialLinks={socialLinks}
@@ -177,4 +179,3 @@ const ProfileContent = () => {
 };
 
 export default ProfileContent;
-

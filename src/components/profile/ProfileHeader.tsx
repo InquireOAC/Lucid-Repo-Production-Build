@@ -83,7 +83,8 @@ const ProfileHeader = ({
   return (
     <div className="flex flex-col items-center mb-6 pt-4">
       <ProfileAvatar
-        avatarUrl={profileToShow?.avatar_url}
+        avatarSymbol={profileToShow?.avatar_symbol}
+        avatarColor={profileToShow?.avatar_color}
         username={profileToShow?.username}
         isOwnProfile={isOwnProfile}
         onEdit={() => setIsEditProfileOpen(true)}
