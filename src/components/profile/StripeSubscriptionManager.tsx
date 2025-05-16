@@ -110,13 +110,13 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           id: 'price_basic',
           name: 'Basic',
           price: '$4.99/month',
-          features: ['10 Dream analyses per month', '5 Image generations per month', 'Dream journal backup']
+          features: ['10 Dream analyses per month', '10 Image generations per month', 'Priority support']
         },
         {
           id: 'price_premium',
           name: 'Premium',
-          price: '$9.99/month',
-          features: ['Unlimited dream analyses', '20 Image generations per month', 'Advanced dream patterns detection', 'Priority support']
+          price: '$15.99/month',
+          features: ['Unlimited dream analyses', 'Unlimited Image generations per month', 'Priority support']
         }
       ]);
       toast.error("Failed to load subscription plans", {
