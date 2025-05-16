@@ -123,8 +123,8 @@ const ProfileContent = () => {
         profileToShow={profileToShow}
         isOwnProfile={isOwnProfile}
         dreamCount={dreamCount}
-        followersCount={followersCountHook} {/* <-- Updated */}
-        followingCount={followingCountHook} {/* <-- Updated */}
+        followersCount={followersCountHook}
+        followingCount={followingCountHook}
         isFollowing={isFollowing}
         setIsEditProfileOpen={setIsEditProfileOpen}
         setIsMessagesOpen={setIsMessagesOpen}
@@ -177,3 +177,4 @@ const ProfileContent = () => {
 };
 
 export default ProfileContent;
+
