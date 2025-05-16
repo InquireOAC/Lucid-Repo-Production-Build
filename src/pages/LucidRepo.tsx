@@ -159,13 +159,7 @@ const LucidRepo = () => {
         onTagClick={handleTagClick}
         onClearTags={handleClearTags}
       />
-      {/* Tag filter UI for genre/tag selection */}
-      <TagFilter
-        tags={dreamTags}
-        activeTags={activeTags}
-        onTagClick={handleTagClick}
-        onClearTags={handleClearTags}
-      />
+      {/* Removed duplicate TagFilter UI for tag selection */}
       <LucidDreamsContent
         isLoading={isLoading}
         filteredDreams={filteredDreams}
