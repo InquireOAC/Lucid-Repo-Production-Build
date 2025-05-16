@@ -94,16 +94,30 @@ const LucidRepo = () => {
   };
   
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
+    // Locate the dream and check ownership first
+    const dreamToUpdate = dreams.find(d => d.id === id);
+    if (!dreamToUpdate) {
+      toast.error("Dream not found");
+      return;
+    }
+    if (user && dreamToUpdate.user_id !== user.id) {
+      // User is not owner, block update and show clear message
+      toast.error("You can only update your own dreams.");
+      return;
+    }
+
     handleUpdateDream(id, updates)
       .then(success => {
         if (success) {
           // After successfully updating dream, refresh all public dreams
           fetchPublicDreams();
-          
           // Show appropriate toast message
           if (updates.is_public === false || updates.isPublic === false) {
             toast.success("Dream is now private");
           }
+        } else {
+          // Only show error toast if update failed and not a permissions thing
+          toast.error("Failed to update dream");
         }
       });
   };

@@ -35,6 +35,8 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
   useEffect(() => {
     fetchComments();
+    // This ensures the counter refreshes on mount
+    // eslint-disable-next-line
   }, [dreamId]);
 
   const fetchComments = async () => {
@@ -49,10 +51,11 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       if (error) throw error;
 
       setComments(data || []);
-      // Update comment count
-      onCommentCountChange(data?.length || 0);
+      // Update comment count *after fetching*
+      onCommentCountChange((data?.length || 0));
     } catch (error) {
       console.error("Error fetching comments:", error);
+      onCommentCountChange(0); // Defensive: set to 0 on error/fetch fail
     } finally {
       setIsLoading(false);
     }
