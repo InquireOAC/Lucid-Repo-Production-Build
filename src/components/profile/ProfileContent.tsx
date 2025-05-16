@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -95,7 +96,7 @@ const ProfileContent = () => {
 
   // Profile hooks for dreams and followers -- only runs when profileId is valid
   const { publicDreams, likedDreams, refreshDreams } = useProfileDreams(user, profileIdForHooks);
-  const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(profileIdForHooks);
+  const { followers, following, fetchFollowers, fetchFollowing, followersCount: followersCountHook, followingCount: followingCountHook } = useProfileFollowers(profileIdForHooks);
 
   // Correct: Get "uuid" for the profile currently displayed, for follow logic
   const viewedProfileUuid = extractProfileUuid(viewedProfile);
@@ -122,14 +123,13 @@ const ProfileContent = () => {
         profileToShow={profileToShow}
         isOwnProfile={isOwnProfile}
         dreamCount={dreamCount}
-        followersCount={followersCount}
-        followingCount={followingCount}
+        followersCount={followersCountHook} {/* <-- Updated */}
+        followingCount={followingCountHook} {/* <-- Updated */}
         isFollowing={isFollowing}
         setIsEditProfileOpen={setIsEditProfileOpen}
         setIsMessagesOpen={setIsMessagesOpen}
         setIsSettingsOpen={setIsSettingsOpen}
         setIsSocialLinksOpen={setIsSocialLinksOpen}
-        // Use only handleFollow which is now always tied to the UUID
         handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
         onFollowersClick={() => {

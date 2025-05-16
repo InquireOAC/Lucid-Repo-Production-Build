@@ -16,9 +16,14 @@ export function useProfileFollowers(userId?: string) {
       .from("follows")
       .select("follower_id, follower:profiles!follower_id(id,username,profile_picture,display_name,avatar_url)")
       .eq("followed_id", userId);
+
     if (!error && data) {
-      setFollowers(data.map(f => f.follower));
-      setFollowersCount(data.length);
+      const followerUsers = data.map(f => f.follower);
+      setFollowers(followerUsers);
+      setFollowersCount(followerUsers.length); // Always set count from array length
+    } else {
+      setFollowers([]);
+      setFollowersCount(0);
     }
   };
 
@@ -29,9 +34,14 @@ export function useProfileFollowers(userId?: string) {
       .from("follows")
       .select("followed_id, followed:profiles!followed_id(id,username,profile_picture,display_name,avatar_url)")
       .eq("follower_id", userId);
+
     if (!error && data) {
-      setFollowing(data.map(f => f.followed));
-      setFollowingCount(data.length);
+      const followedUsers = data.map(f => f.followed);
+      setFollowing(followedUsers);
+      setFollowingCount(followedUsers.length); // Same here
+    } else {
+      setFollowing([]);
+      setFollowingCount(0);
     }
   };
 
