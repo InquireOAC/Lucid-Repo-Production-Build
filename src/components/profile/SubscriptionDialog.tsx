@@ -2,7 +2,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CreditCard, Sparkles, ImageIcon, Loader2, XCircle, RefreshCw } from "lucide-react";
+import { Crown, CreditCard, Sparkles, ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
@@ -50,7 +50,6 @@ const SubscriptionDialog = ({
         <div className="overflow-y-auto max-h-[70vh] pr-1">
           <div className="space-y-5 py-2">
             {!subscription ? (
-              // If not subscribed, show StripeSubscriptionManager component
               <div>
                 <p className="text-sm text-center text-muted-foreground mb-3">
                   Subscribe for unlimited dream analysis, more image generations, and early access features!
@@ -59,7 +58,6 @@ const SubscriptionDialog = ({
               </div>
             ) : (
               <>
-                {/* Status & period */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Status</span>
@@ -77,7 +75,6 @@ const SubscriptionDialog = ({
                     </div>
                   )}
                 </div>
-                {/* Credits */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-semibold">Monthly Credits Left</h4>
                   <CreditDisplay
@@ -93,7 +90,6 @@ const SubscriptionDialog = ({
                     total={subscription.imageCredits.total}
                   />
                 </div>
-                {/* Manage */}
                 <div className="pt-2">
                   <StripeSubscriptionManager currentPlan={subscription.plan} />
                 </div>
@@ -106,7 +102,6 @@ const SubscriptionDialog = ({
   );
 };
 
-// A minimal reusable credit bar
 const CreditDisplay = ({ icon, label, used, total }: { icon: React.ReactNode; label: string; used: number; total: number }) => (
   <div className="space-y-1">
     <div className="flex justify-between items-center text-sm">

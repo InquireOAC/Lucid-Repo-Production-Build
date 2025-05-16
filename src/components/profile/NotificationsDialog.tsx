@@ -27,6 +27,7 @@ const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps)
   const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [loading, setLoading] = useState(false);
 
+  // Load settings every time dialog is opened
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
@@ -43,19 +44,17 @@ const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps)
     }
   }, [isOpen]);
 
-  // Handle switch toggle
+  // Handlers
   const onToggle = (enabled: boolean) => setSettings((prev) => ({ ...prev, enabled }));
-
-  // Handle time input
   const onTimeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
     setSettings((prev) => ({ ...prev, time: e.target.value }));
 
-  // Save notification settings (with schedule)
+  // Save settings and schedule notification if enabled
   const onSave = async () => {
     setLoading(true);
     try {
       await saveNotificationSettings(settings);
-      toast({ title: "Notification settings saved!", variant: "success" });
+      toast({ title: "Notification settings saved!", variant: "default" });
       onOpenChange(false);
     } catch (e: any) {
       toast({
