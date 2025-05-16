@@ -1,20 +1,14 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Edit } from "lucide-react";
-import { 
-  Star, Moon, Sun, Cloud, Eye, 
-  Crystal, Comet, Galaxy 
-} from "lucide-react";
+import { Edit, Star, Moon, Sun, Cloud, Eye } from "lucide-react";
 
+// Only include allowed icons
 const SymbolComponents: Record<string, React.ElementType> = {
   star: Star,
   moon: Moon,
   sun: Sun,
   cloud: Cloud,
-  crystal: Crystal,
-  comet: Comet,
-  galaxy: Galaxy,
   eye: Eye
 };
 

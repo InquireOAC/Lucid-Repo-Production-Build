@@ -64,8 +64,10 @@ export default function ProfileMainContent(props: any) {
         setUsername={props.setUsername}
         bio={props.bio}
         setBio={props.setBio}
-        avatarUrl={props.avatarUrl}
-        handleAvatarChange={props.handleAvatarChange}
+        avatarSymbol={props.avatarSymbol}
+        setAvatarSymbol={props.setAvatarSymbol}
+        avatarColor={props.avatarColor}
+        setAvatarColor={props.setAvatarColor}
         handleUpdateProfile={props.handleUpdateProfile}
         userId={props.userId}
         socialLinks={props.socialLinks}

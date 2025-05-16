@@ -2,19 +2,13 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { 
-  Star, Moon, Sun, Cloud, Eye, 
-  Crystal, Comet, Galaxy 
-} from "lucide-react";
+import { Star, Moon, Sun, Cloud, Eye } from "lucide-react";
 
 const SYMBOLS = [
   { name: "star", label: "Star", icon: Star },
   { name: "moon", label: "Moon", icon: Moon },
   { name: "sun", label: "Sun", icon: Sun },
   { name: "cloud", label: "Cloud", icon: Cloud },
-  { name: "crystal", label: "Crystal", icon: Crystal },
-  { name: "comet", label: "Comet", icon: Comet },
-  { name: "galaxy", label: "Galaxy", icon: Galaxy },
   { name: "eye", label: "Eye", icon: Eye },
 ];
 

@@ -88,8 +88,8 @@ const ProfileDialogs = ({
       bio={bio}
       setBio={setBio}
       avatarSymbol={avatarSymbol}
-      avatarColor={avatarColor}
       setAvatarSymbol={setAvatarSymbol}
+      avatarColor={avatarColor}
       setAvatarColor={setAvatarColor}
       handleUpdateProfile={handleUpdateProfile}
     />

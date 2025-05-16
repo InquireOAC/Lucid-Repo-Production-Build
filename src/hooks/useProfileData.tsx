@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -36,8 +35,11 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     fetchUserStats
   );
 
-  const { displayName, setDisplayName, username, setUsername, bio, setBio, avatarUrl, setAvatarUrl, socialLinks, setSocialLinks, 
-    handleUpdateProfile, handleUpdateSocialLinks, handleAvatarChange } = useProfileEditing(user);
+  const {
+    displayName, setDisplayName, username, setUsername, bio, setBio,
+    avatarSymbol, setAvatarSymbol, avatarColor, setAvatarColor, socialLinks, setSocialLinks,
+    handleUpdateProfile, handleUpdateSocialLinks
+  } = useProfileEditing(user);
   const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdentifier);
   const { subscription, fetchSubscription } = useSubscription(user);
   const { conversations, fetchConversations, handleStartConversation } = useConversations(user);
@@ -55,7 +57,8 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
         setDisplayName(profile.display_name || "");
         setUsername(profile.username || "");
         setBio(profile.bio || "");
-        setAvatarUrl(profile.avatar_url || "");
+        setAvatarSymbol(profile.avatar_symbol || "");
+        setAvatarColor(profile.avatar_color || "");
 
         if (profile.social_links) {
           setSocialLinks({
@@ -137,8 +140,10 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     setUsername,
     bio,
     setBio,
-    avatarUrl,
-    setAvatarUrl,
+    avatarSymbol,
+    setAvatarSymbol,
+    avatarColor,
+    setAvatarColor,
     socialLinks,
     setSocialLinks,
     dreamCount,
@@ -154,7 +159,6 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     fetchSubscription,
     handleUpdateProfile,
     handleUpdateSocialLinks,
-    handleAvatarChange,
     handleStartConversation,
     handleSignOut
   };
