@@ -142,16 +142,8 @@ const DreamCard = ({
             />
           </div>
         )}
-        
-        <DreamCardSocial
-          isPublic={isPublic}
-          likeCount={likeCount}
-          commentCount={commentCount}
-          liked={dream.liked}
-          onLike={onLike}
-        />
-        
-        {/* Action buttons - shown only when showActions is true */}
+        {/* Remove DreamCardSocial (which included likeCount and commentCount) */}
+        {/* Action buttons (Edit/Delete/Public) remain unchanged */}
         {showActions && (
           <div className="flex justify-end gap-1 mt-2">
             <Button
@@ -162,7 +154,6 @@ const DreamCard = ({
             >
               <Pencil size={14} className="mr-1" /> Edit
             </Button>
-
             <Button
               size="sm"
               variant={isPublic ? "outline" : "default"}
@@ -179,7 +170,6 @@ const DreamCard = ({
                 </>
               )}
             </Button>
-
             <Button
               size="sm"
               variant="destructive"
@@ -196,5 +186,3 @@ const DreamCard = ({
 };
 
 export default DreamCard;
-
-// The file is over 200 lines, consider asking Lovable to refactor it into smaller files for maintainability after this fix.

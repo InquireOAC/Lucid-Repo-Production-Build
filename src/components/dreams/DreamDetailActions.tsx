@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Heart, Lock, Unlock } from "lucide-react";
@@ -8,9 +7,8 @@ interface DreamDetailActionsProps {
   isAuthenticated?: boolean;
   isPublic?: boolean;
   onTogglePublic?: () => void;
-  onLike?: () => void; // Add this line
-  liked?: boolean; // Add this line
-  likeCount?: number; // Add this line
+  onLike?: () => void;
+  liked?: boolean;
 }
 
 const DreamDetailActions = ({ 
@@ -19,7 +17,6 @@ const DreamDetailActions = ({
   onTogglePublic,
   onLike,
   liked,
-  likeCount = 0
 }: DreamDetailActionsProps) => {
   return (
     <div className="flex items-center gap-2">
@@ -43,11 +40,10 @@ const DreamDetailActions = ({
               liked ? "fill-red-500" : ""
             )} 
           />
-          <span>{likeCount}</span>
         </Button>
       )}
 
-      {/* Toggle Public/Private button (only for dream owner) */}
+      {/* Toggle Public/Private button */}
       {onTogglePublic && (
         <Button 
           variant="ghost" 
@@ -70,5 +66,4 @@ const DreamDetailActions = ({
     </div>
   );
 };
-
 export default DreamDetailActions;

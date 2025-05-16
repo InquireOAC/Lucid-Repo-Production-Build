@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -137,32 +136,10 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
               onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
               onLike={onLike}
               liked={dream.liked}
-              likeCount={dream.likeCount || dream.like_count || 0}
             />
           </div>
 
-          {/* Add like button above comments section */}
-          {isPublic && (
-            <div className="flex items-center gap-3 mt-6 mb-2">
-              <Button 
-                variant={localLiked ? "ghost" : "outline"}
-                size="sm"
-                onClick={handleLikeClick}
-                disabled={!isAuthenticated}
-                className={localLiked ? "text-red-500" : ""}
-              >
-                <Heart 
-                  size={16} 
-                  className={localLiked ? "fill-red-500" : ""}
-                />
-                <span className="ml-1">{localLikeCount}</span>
-              </Button>
-              <span className="text-xs text-muted-foreground">
-                Like this dream
-              </span>
-            </div>
-          )}
-
+          {/* REMOVED extra like button above comments section */}
           {/* Comments */}
           {isPublic && (
             <div className="mt-0">

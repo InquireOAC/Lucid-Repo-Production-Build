@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Heart, Globe } from "lucide-react";
@@ -163,14 +162,6 @@ const DreamGrid = ({
                       {new Date(dream.created_at).toLocaleDateString()}
                     </Badge>
                   )}
-                  
-                  {!isLiked && (
-                    <div className="flex items-center text-muted-foreground">
-                      <Heart size={12} className="mr-1" />
-                      <span className="text-xs">{dream.like_count || 0}</span>
-                    </div>
-                  )}
-                  
                   {isLiked && (
                     <Badge variant="outline" className="text-xs">
                       {new Date(dream.created_at).toLocaleDateString()}
@@ -182,7 +173,6 @@ const DreamGrid = ({
           </Card>
         ))}
       </div>
-
       {selectedDream && (
         <DreamDetail
           dream={selectedDream}
@@ -196,5 +186,4 @@ const DreamGrid = ({
     </>
   );
 };
-
 export default DreamGrid;

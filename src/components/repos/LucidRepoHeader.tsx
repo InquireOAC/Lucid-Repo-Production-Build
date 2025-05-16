@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DreamTag } from "@/types/dream";
 
 interface LucidRepoHeaderProps {
   searchQuery: string;
@@ -14,8 +15,12 @@ interface LucidRepoHeaderProps {
   sortBy: string;
   setSortBy: (sortBy: string) => void;
   handleSearch: (e: React.FormEvent) => void;
+  tags: DreamTag[];
+  activeTags: string[];
+  onTagClick: (tagId: string) => void;
+  onClearTags: () => void;
 }
-
+// Add genre/tag search directly in header UI
 const LucidRepoHeader = ({
   searchQuery,
   setSearchQuery,
@@ -23,7 +28,11 @@ const LucidRepoHeader = ({
   setActiveTab,
   sortBy,
   setSortBy,
-  handleSearch
+  handleSearch,
+  tags,
+  activeTags,
+  onTagClick,
+  onClearTags
 }: LucidRepoHeaderProps) => {
   return (
     <div className="mb-6 space-y-4">
@@ -39,7 +48,36 @@ const LucidRepoHeader = ({
           Search
         </Button>
       </form>
-
+      {/* Add tag/genre filter */}
+      {tags && tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="text-sm text-muted-foreground">Tag Filter:</span>
+          {tags.map((tag) => (
+            <Button
+              size="sm"
+              key={tag.id}
+              variant={activeTags.includes(tag.id) ? "default" : "ghost"}
+              style={{
+                backgroundColor: activeTags.includes(tag.id) ? tag.color : undefined,
+                color: activeTags.includes(tag.id) ? "#fff" : tag.color
+              }}
+              onClick={() => onTagClick(tag.id)}
+            >
+              {tag.name}
+            </Button>
+          ))}
+          {activeTags.length > 0 && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onClearTags}
+              variant="outline"
+            >
+              Clear tags
+            </Button>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <Tabs
           defaultValue="all"
@@ -53,7 +91,6 @@ const LucidRepoHeader = ({
           </TabsList>
         </Tabs>
       </div>
-
       <div className="flex justify-end">
         <Select value={sortBy} onValueChange={setSortBy}>
           <SelectTrigger className="w-[180px]">
@@ -72,5 +109,4 @@ const LucidRepoHeader = ({
     </div>
   );
 };
-
 export default LucidRepoHeader;

@@ -8,6 +8,7 @@ import LucidDreamsContent from "@/components/repos/LucidDreamsContent";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
 import { toast } from "sonner";
+import TagFilter from "@/components/journal/TagFilter";
 
 const LucidRepo = () => {
   const { user } = useAuth();
@@ -15,6 +16,7 @@ const LucidRepo = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
+  const [activeTags, setActiveTags] = useState<string[]>([]);
 
   // Using the refactored hook
   const {
@@ -79,9 +81,15 @@ const LucidRepo = () => {
   };
 
   const handleTagClick = (tagId: string) => {
-    // Future implementation: filter by tag
-    console.log("Tag clicked:", tagId);
+    // Toggle tag in activeTags array
+    setActiveTags(prev =>
+      prev.includes(tagId)
+        ? prev.filter(t => t !== tagId)
+        : [...prev, tagId]
+    );
   };
+
+  const handleClearTags = () => setActiveTags([]);
 
   const handleDreamLike = (dreamId: string) => {
     // If user is not authenticated, show auth dialog
@@ -100,46 +108,44 @@ const LucidRepo = () => {
       toast.error("Dream not found");
       return;
     }
+    // Remove: toast for forbidden update on non-owned dreams
     if (user && dreamToUpdate.user_id !== user.id) {
-      // User is not owner, block update and show clear message
-      toast.error("You can only update your own dreams.");
-      return;
+      return; // silently block
     }
-
     handleUpdateDream(id, updates)
       .then(success => {
         if (success) {
-          // After successfully updating dream, refresh all public dreams
           fetchPublicDreams();
-          // Show appropriate toast message
           if (updates.is_public === false || updates.isPublic === false) {
             toast.success("Dream is now private");
           }
         } else {
-          // Only show error toast if update failed and not a permissions thing
           toast.error("Failed to update dream");
         }
       });
   };
 
-  // Filter dreams based on search query
+  // Filter dreams based on search query and tags
   const filteredDreams = dreams.filter((dream) => {
+    let matchesSearch = true;
+    let matchesTags = true;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      return (
+      matchesSearch =
         dream.title?.toLowerCase().includes(query) ||
         dream.content?.toLowerCase().includes(query) ||
         dream.profiles?.username?.toLowerCase()?.includes(query) ||
-        dream.profiles?.display_name?.toLowerCase()?.includes(query)
-      );
+        dream.profiles?.display_name?.toLowerCase()?.includes(query);
     }
-    return true;
+    if (activeTags.length > 0) {
+      matchesTags = dream.tags && dream.tags.some((t: string) => activeTags.includes(t));
+    }
+    return matchesSearch && matchesTags;
   });
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
-
       <LucidRepoHeader
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -148,20 +154,28 @@ const LucidRepo = () => {
         sortBy={sortBy}
         setSortBy={setSortBy}
         handleSearch={handleSearch}
+        tags={dreamTags}
+        activeTags={activeTags}
+        onTagClick={handleTagClick}
+        onClearTags={handleClearTags}
       />
-
+      {/* Tag filter UI for genre/tag selection */}
+      <TagFilter
+        tags={dreamTags}
+        activeTags={activeTags}
+        onTagClick={handleTagClick}
+        onClearTags={handleClearTags}
+      />
       <LucidDreamsContent
         isLoading={isLoading}
         filteredDreams={filteredDreams}
         dreamTags={dreamTags}
         onLike={handleDreamLike}
         onOpenDream={handleOpenDream}
-        // Pass username instead of user_id!
         onUserClick={handleNavigateToProfile}
         onTagClick={handleTagClick}
         searchQuery={searchQuery}
       />
-
       <DreamDetailWrapper
         selectedDream={selectedDream}
         tags={dreamTags}
@@ -169,7 +183,6 @@ const LucidRepo = () => {
         onUpdate={handleDreamUpdate}
         isAuthenticated={!!user}
       />
-
       <AuthDialog 
         open={authDialogOpen} 
         onOpenChange={setAuthDialogOpen}

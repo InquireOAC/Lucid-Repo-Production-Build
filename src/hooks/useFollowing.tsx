@@ -46,6 +46,8 @@ export function useFollowing(
         if (error) throw error;
         setIsFollowing(false);
         if (setFollowersCount) setFollowersCount(prev => Math.max(0, prev - 1));
+        // Ensure following count updates on own profile
+        if (setFollowingCount && !isOwnProfile) setFollowingCount(prev => Math.max(0, prev - 1));
         toast.success("Unfollowed user");
       } else {
         const { error } = await supabase
@@ -54,6 +56,8 @@ export function useFollowing(
         if (error) throw error;
         setIsFollowing(true);
         if (setFollowersCount) setFollowersCount(prev => prev + 1);
+        // Ensure following count updates on own profile
+        if (setFollowingCount && !isOwnProfile) setFollowingCount(prev => prev + 1);
         toast.success("Now following user");
       }
       // Immediately refetch stats/counts after follow/unfollow

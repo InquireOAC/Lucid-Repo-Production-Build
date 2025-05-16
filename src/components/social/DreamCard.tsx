@@ -1,16 +1,14 @@
 
 import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { SocialDream } from "@/types/social";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-
 export default function DreamCard({
   dream,
   onLike,
   onComment,
   liked,
-  likeCount,
-  commentCount,
+  // likeCount,   // REMOVED this
+  // commentCount, // REMOVED this
   onCardClick,
 }) {
   return (
@@ -32,10 +30,10 @@ export default function DreamCard({
         )}
         <div className="flex gap-3 text-sm my-1">
           <button onClick={e => { e.stopPropagation(); onLike?.(); }}>
-            ❤️ {likeCount}
+            ❤️
           </button>
           <button onClick={e => { e.stopPropagation(); onComment?.(); }}>
-            💬 {commentCount}
+            💬
           </button>
         </div>
       </CardContent>
