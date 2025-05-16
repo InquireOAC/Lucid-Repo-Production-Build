@@ -26,7 +26,10 @@ const ProfileHeaderActions = ({
         <Button 
           variant="outline" 
           size="sm"
-          onClick={onMessages}
+          onClick={() => {
+            console.log("[Button] Messages (self) clicked");
+            onMessages();
+          }}
           className="flex items-center gap-1 text-sm"
         >
           <MessageSquare size={14} /> Messages
@@ -47,7 +50,10 @@ const ProfileHeaderActions = ({
       <Button 
         variant={isFollowing ? "outline" : "default"}
         size="sm"
-        onClick={onFollow}
+        onClick={() => {
+          console.log("[Button] Follow/Unfollow clicked");
+          onFollow();
+        }}
         className="flex items-center gap-1 text-sm"
       >
         <UserPlus size={14} /> {isFollowing ? "Unfollow" : "Follow"}
@@ -55,7 +61,10 @@ const ProfileHeaderActions = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={onMessages}
+        onClick={() => {
+          console.log("[Button] Message (other) clicked");
+          onMessages();
+        }}
         disabled={loading}
         className="flex items-center gap-1 text-sm"
       >
@@ -66,3 +75,4 @@ const ProfileHeaderActions = ({
 };
 
 export default ProfileHeaderActions;
+

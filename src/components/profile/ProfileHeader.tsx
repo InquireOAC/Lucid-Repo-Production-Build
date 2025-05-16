@@ -43,13 +43,18 @@ const ProfileHeader = ({
   const theirId = profileToShow?.id || null;
   const { openChatWithUser, loading } = useDirectConversation(myId, theirId);
 
+  // Always open or start a chat on message button click
   const onMessageOtherUser = () => {
+    console.log("[ProfileHeader] Message btn clicked. isOwnProfile:", isOwnProfile, { myId, theirId });
     if (isOwnProfile) {
       setIsMessagesOpen(true);
       return;
     }
-    // Always open or start a chat on message, then open dialog
-    openChatWithUser(() => setIsMessagesOpen(true));
+    // Always open/prepare a DM and open dialog
+    openChatWithUser(() => {
+      console.log("[ProfileHeader] openChatWithUser callback executed: opening messages dialog");
+      setIsMessagesOpen(true);
+    });
   };
 
   return (
@@ -86,7 +91,10 @@ const ProfileHeader = ({
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
           onFollow={handleFollow}
-          onMessages={onMessageOtherUser}
+          onMessages={() => {
+            console.log("[ProfileHeaderActions] onMessages prop called");
+            onMessageOtherUser();
+          }}
           onSettings={() => setIsSettingsOpen(true)}
           loading={loading}
         />
@@ -96,3 +104,4 @@ const ProfileHeader = ({
 };
 
 export default ProfileHeader;
+
