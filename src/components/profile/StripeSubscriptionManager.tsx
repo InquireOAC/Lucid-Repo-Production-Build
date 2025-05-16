@@ -95,10 +95,11 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         throw new Error(data.error);
       }
 
-      // Always use hardcoded features for Basic and Premium plans
+      // FORCE: Always use hardcoded features for Basic and Premium, IGNORE what stripe returns
       if (data?.products && Array.isArray(data.products)) {
         const normalizedProducts = data.products.map((product: any) => {
           let features: string[] = [];
+          // Decide based on plan name, ignoring any features Stripe sends back
           if (product.name && product.name.toLowerCase().includes('premium')) {
             features = [
               'Unlimited Dream Analysis',
@@ -114,10 +115,9 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           }
           return {
             ...product,
-            features,
+            features, // OVERRIDE!
           };
         });
-
         setProducts(normalizedProducts);
       } else {
         throw new Error("Invalid products data");
