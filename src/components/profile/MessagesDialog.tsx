@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,22 +26,49 @@ const MessagesDialog = ({
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  React.useEffect(() => {
+  // Automatically scroll to bottom when messages change
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.id);
     }
   }, [selectedConversation]);
 
+  // When dialog is opened, reset selection
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedConversation(null);
+      setMessages([]);
+      setNewMessage("");
+    }
+  }, [isOpen]);
+
+  // Support: externally passed conversation user triggers dialog
+  useEffect(() => {
+    // If only one conversation and dialog opens, auto-select it
+    if (isOpen && conversations?.length === 1) {
+      setSelectedConversation(conversations[0]);
+    }
+  }, [isOpen, conversations]);
+
   const fetchMessages = async (partnerId: string) => {
     if (!user) return;
-    
+
     try {
       const { data, error } = await supabase
         .from("messages")
         .select("*")
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`)
+        .or(
+          `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
+        )
         .order("created_at", { ascending: true });
-      
+
       if (error) throw error;
       setMessages(data || []);
     } catch (error) {
@@ -51,7 +79,7 @@ const MessagesDialog = ({
 
   const handleSendMessage = async () => {
     if (!user || !selectedConversation || !newMessage.trim()) return;
-    
+
     setLoading(true);
     try {
       const { error } = await supabase
@@ -61,9 +89,9 @@ const MessagesDialog = ({
           receiver_id: selectedConversation.id,
           content: newMessage.trim()
         });
-      
+
       if (error) throw error;
-      
+
       setNewMessage("");
       fetchMessages(selectedConversation.id);
       toast.success("Message sent");
@@ -83,21 +111,23 @@ const MessagesDialog = ({
             {selectedConversation ? "Chat" : "Messages"}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="py-4">
           {!selectedConversation ? (
             conversations.length > 0 ? (
               <div className="space-y-2">
                 {conversations.map((conversation: any) => (
-                  <div 
-                    key={conversation.id} 
+                  <div
+                    key={conversation.id}
                     className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer"
                     onClick={() => setSelectedConversation(conversation)}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conversation.avatar_url} />
                       <AvatarFallback className="bg-dream-purple/20">
-                        {conversation.username ? conversation.username[0].toUpperCase() : "U"}
+                        {conversation.username
+                          ? conversation.username[0].toUpperCase()
+                          : "U"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -123,8 +153,8 @@ const MessagesDialog = ({
           ) : (
             <div className="flex flex-col h-[400px]">
               <div className="flex items-center gap-2 mb-4">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="sm"
                   onClick={() => setSelectedConversation(null)}
                 >
@@ -133,25 +163,32 @@ const MessagesDialog = ({
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={selectedConversation.avatar_url} />
                   <AvatarFallback className="bg-dream-purple/20">
-                    {selectedConversation.username ? selectedConversation.username[0].toUpperCase() : "U"}
+                    {selectedConversation.username
+                      ? selectedConversation.username[0].toUpperCase()
+                      : "U"}
                   </AvatarFallback>
                 </Avatar>
                 <span className="font-medium">
-                  {selectedConversation.display_name || selectedConversation.username}
+                  {selectedConversation.display_name ||
+                    selectedConversation.username}
                 </span>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto space-y-4 mb-4">
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex ${message.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${
+                      message.sender_id === user?.id
+                        ? "justify-end"
+                        : "justify-start"
+                    }`}
                   >
                     <div
                       className={`max-w-[80%] rounded-lg px-4 py-2 ${
                         message.sender_id === user?.id
-                          ? 'bg-dream-purple text-white'
-                          : 'bg-gray-200 dark:bg-gray-700'
+                          ? "bg-dream-purple text-white"
+                          : "bg-gray-200 dark:bg-gray-700"
                       }`}
                     >
                       <p className="text-sm">{message.content}</p>
@@ -161,14 +198,17 @@ const MessagesDialog = ({
                     </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
               </div>
-              
+
               <div className="flex gap-2">
                 <Input
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  onKeyPress={(e) =>
+                    e.key === "Enter" && handleSendMessage()
+                  }
                 />
                 <Button
                   size="icon"

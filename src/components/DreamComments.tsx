@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,10 +89,11 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
       // Optimistically update local comment state/counter
       setComments([...comments, data]);
-      onCommentCountChange(comments.length + 1); // Update the counter immediately
       setNewComment("");
+      // Trigger a refetch (so triggers update count too)
+      fetchComments();
     } catch (error: any) {
-      toast.error("Failed to post comment: " + error.message);
+      toast.error("Failed to post comment: " + (error?.message || "Unknown error"));
     } finally {
       setIsSubmitting(false);
     }

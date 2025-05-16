@@ -1,3 +1,4 @@
+
 import React from "react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
@@ -47,6 +48,7 @@ const ProfileHeader = ({
       setIsMessagesOpen(true);
       return;
     }
+    // Always open or start a chat on message, then open dialog
     openChatWithUser(() => setIsMessagesOpen(true));
   };
 
