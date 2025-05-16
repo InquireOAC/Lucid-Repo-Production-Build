@@ -1,3 +1,4 @@
+
 import React from "react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
@@ -17,6 +18,7 @@ interface ProfileHeaderProps {
   setIsMessagesOpen: (value: boolean) => void;
   setIsSettingsOpen: (value: boolean) => void;
   setIsSocialLinksOpen: (value: boolean) => void;
+  setIsSubscriptionOpen: (value: boolean) => void;
   handleFollow: () => void;
   handleStartConversation: () => void;
   onFollowersClick?: () => void;
@@ -35,6 +37,7 @@ const ProfileHeader = ({
   setIsMessagesOpen,
   setIsSettingsOpen,
   setIsSocialLinksOpen,
+  setIsSubscriptionOpen,
   handleFollow,
   handleStartConversation,
   onFollowersClick,
@@ -106,6 +109,7 @@ const ProfileHeader = ({
             onMessageOtherUser();
           }}
           onSettings={() => setIsSettingsOpen(true)}
+          onSubscription={() => setIsSubscriptionOpen(true)}
           loading={loading}
         />
       </div>

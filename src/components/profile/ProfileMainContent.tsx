@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
@@ -20,6 +19,7 @@ export default function ProfileMainContent(props: any) {
         setIsEditProfileOpen={props.setIsEditProfileOpen}
         setIsMessagesOpen={props.setIsMessagesOpen}
         setIsSettingsOpen={props.setIsSettingsOpen}
+        setIsSubscriptionOpen={props.setIsSubscriptionOpen}
         setIsSocialLinksOpen={props.setIsSocialLinksOpen}
         handleFollow={props.handleFollow}
         handleStartConversation={props.handleStartConversation}
@@ -45,7 +45,6 @@ export default function ProfileMainContent(props: any) {
         onOpenChange={props.setShowFollowing}
         users={props.following}
       />
-      {/* Pass in all dialog states explicitly here */}
       <ProfileDialogs
         isEditProfileOpen={props.isEditProfileOpen}
         setIsEditProfileOpen={props.setIsEditProfileOpen}
@@ -82,4 +81,3 @@ export default function ProfileMainContent(props: any) {
     </>
   );
 }
-

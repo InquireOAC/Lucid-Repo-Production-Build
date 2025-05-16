@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, MessageSquare, Settings, UserPlus } from "lucide-react";
+import { Edit, MessageSquare, Settings, UserPlus, BadgeDollarSign } from "lucide-react";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
@@ -9,6 +9,7 @@ interface ProfileHeaderActionsProps {
   onFollow: () => void;
   onMessages: () => void;
   onSettings: () => void;
+  onSubscription: () => void;
   loading: boolean;
 }
 
@@ -18,6 +19,7 @@ const ProfileHeaderActions = ({
   onFollow,
   onMessages,
   onSettings,
+  onSubscription,
   loading,
 }: ProfileHeaderActionsProps) => {
   if (isOwnProfile) {
@@ -33,6 +35,14 @@ const ProfileHeaderActions = ({
           className="flex items-center gap-1 text-sm"
         >
           <MessageSquare size={14} /> Messages
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onSubscription}
+          className="flex items-center gap-1 text-sm"
+        >
+          <BadgeDollarSign size={14} /> Subscription
         </Button>
         <Button 
           variant="outline" 
@@ -75,4 +85,3 @@ const ProfileHeaderActions = ({
 };
 
 export default ProfileHeaderActions;
-

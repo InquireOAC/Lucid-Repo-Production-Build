@@ -8,7 +8,6 @@ interface SettingsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   handleSignOut: () => void;
-  onSubscriptionClick: () => void;
   onNotificationsClick: () => void;
 }
 
@@ -16,7 +15,6 @@ const SettingsDialog = ({
   isOpen,
   onOpenChange,
   handleSignOut,
-  onSubscriptionClick,
   onNotificationsClick
 }: SettingsDialogProps) => {
   return (
@@ -35,16 +33,6 @@ const SettingsDialog = ({
             <Bell size={16} />
             <span>Notifications</span>
           </Button>
-          
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-2 justify-start"
-            onClick={onSubscriptionClick}
-          >
-            <CreditCard size={16} />
-            <span>Subscription</span>
-          </Button>
-          
           <Button 
             variant="outline"
             className="w-full flex items-center gap-2 justify-start text-destructive hover:text-destructive"
