@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,7 +9,19 @@ import LucidDreamsContent from "@/components/repos/LucidDreamsContent";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
 import { toast } from "sonner";
-import TagFilter from "@/components/journal/TagFilter";
+// import TagFilter from "@/components/journal/TagFilter"; // No longer needed
+
+const ALLOWED_TAGS = [
+  "Nightmare",
+  "Lucid",
+  "Recurring",
+  "Adventure",
+  "Spiritual",
+  "Flying",
+  "Falling",
+  "Water",
+  "love"
+];
 
 const LucidRepo = () => {
   const { user } = useAuth();
@@ -32,6 +45,11 @@ const LucidRepo = () => {
     fetchPublicDreams
   } = useDreams();
 
+  // Filter the dreamTags for only allowed tags
+  const filteredDreamTags = dreamTags.filter(tag =>
+    ALLOWED_TAGS.includes(tag.name)
+  );
+
   // Add log when dreams are updated
   useEffect(() => {
     if (dreams && dreams.length > 0) {
@@ -45,12 +63,9 @@ const LucidRepo = () => {
   // Refresh dreams when component mounts and periodically
   useEffect(() => {
     fetchPublicDreams();
-    
-    // Refresh dreams every 30 seconds to catch newly shared dreams
     const refreshInterval = setInterval(() => {
       fetchPublicDreams();
     }, 30000);
-    
     return () => clearInterval(refreshInterval);
   }, []);
 
@@ -69,11 +84,9 @@ const LucidRepo = () => {
     fetchPublicDreams();
   };
 
-  // Enhanced: Log navigation, warn if username is missing
   const handleNavigateToProfile = (username: string | undefined) => {
     console.log("Profile navigation requested for username:", username);
     if (username) {
-      // Navigate with /profile/:username
       navigate(`/profile/${username}`);
     } else {
       console.warn("No username provided for navigation.");
@@ -81,7 +94,6 @@ const LucidRepo = () => {
   };
 
   const handleTagClick = (tagId: string) => {
-    // Toggle tag in activeTags array
     setActiveTags(prev =>
       prev.includes(tagId)
         ? prev.filter(t => t !== tagId)
@@ -92,23 +104,19 @@ const LucidRepo = () => {
   const handleClearTags = () => setActiveTags([]);
 
   const handleDreamLike = (dreamId: string) => {
-    // If user is not authenticated, show auth dialog
     if (!user) {
       setAuthDialogOpen(true);
       return;
     }
-    
     handleLike(dreamId);
   };
   
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    // Locate the dream and check ownership first
     const dreamToUpdate = dreams.find(d => d.id === id);
     if (!dreamToUpdate) {
       toast.error("Dream not found");
       return;
     }
-    // Remove: toast for forbidden update on non-owned dreams
     if (user && dreamToUpdate.user_id !== user.id) {
       return; // silently block
     }
@@ -154,7 +162,7 @@ const LucidRepo = () => {
         sortBy={sortBy}
         setSortBy={setSortBy}
         handleSearch={handleSearch}
-        tags={dreamTags}
+        tags={filteredDreamTags}
         activeTags={activeTags}
         onTagClick={handleTagClick}
         onClearTags={handleClearTags}
@@ -163,7 +171,7 @@ const LucidRepo = () => {
       <LucidDreamsContent
         isLoading={isLoading}
         filteredDreams={filteredDreams}
-        dreamTags={dreamTags}
+        dreamTags={filteredDreamTags}
         onLike={handleDreamLike}
         onOpenDream={handleOpenDream}
         onUserClick={handleNavigateToProfile}
@@ -172,7 +180,7 @@ const LucidRepo = () => {
       />
       <DreamDetailWrapper
         selectedDream={selectedDream}
-        tags={dreamTags}
+        tags={filteredDreamTags}
         onClose={handleCloseDream}
         onUpdate={handleDreamUpdate}
         isAuthenticated={!!user}
@@ -186,3 +194,4 @@ const LucidRepo = () => {
 };
 
 export default LucidRepo;
+
