@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +43,12 @@ const LucidRepo = () => {
     handleUpdateDream,
     fetchPublicDreams
   } = useDreams();
+  
+  // Ensure ALL dreams have .tags property (default to []) so filtering and tags show
+  const normalizedDreams = dreams.map(dream => ({
+    ...dream,
+    tags: Array.isArray(dream.tags) ? dream.tags : []
+  }));
 
   // Filter the dreamTags for only allowed tags
   const filteredDreamTags = dreamTags.filter(tag =>
@@ -133,8 +138,8 @@ const LucidRepo = () => {
       });
   };
 
-  // Filter dreams based on search query and tags
-  const filteredDreams = dreams.filter((dream) => {
+  // Filter dreams based on search query and tags using normalizedDreams now
+  const filteredDreams = normalizedDreams.filter((dream) => {
     let matchesSearch = true;
     let matchesTags = true;
     if (searchQuery) {
@@ -171,6 +176,7 @@ const LucidRepo = () => {
       <LucidDreamsContent
         isLoading={isLoading}
         filteredDreams={filteredDreams}
+        // Ensure the DreamCardTags component always gets both the full tag objects and array of tag ids
         dreamTags={filteredDreamTags}
         onLike={handleDreamLike}
         onOpenDream={handleOpenDream}
@@ -194,4 +200,3 @@ const LucidRepo = () => {
 };
 
 export default LucidRepo;
-
