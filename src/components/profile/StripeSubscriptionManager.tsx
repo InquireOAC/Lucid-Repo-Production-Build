@@ -95,26 +95,21 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         throw new Error(data.error);
       }
 
-      // -- KEY CHANGE: Correct feature mapping --
-      // If features array exists in the product, always use it.
-      // Otherwise use a true default as fallback.
+      // Always use hardcoded features for Basic and Premium plans
       if (data?.products && Array.isArray(data.products)) {
         const normalizedProducts = data.products.map((product: any) => {
           let features: string[] = [];
-          if (Array.isArray(product.features) && product.features.length > 0) {
-            features = product.features;
-          } else if (product.name && product.name.toLowerCase().includes('premium')) {
+          if (product.name && product.name.toLowerCase().includes('premium')) {
             features = [
-              'Unlimited dream analyses',
-              '20 Image generations per month',
-              'Advanced dream patterns detection',
-              'Priority support'
+              'Unlimited Dream Analysis',
+              'Unlimited Dream Art Generation',
+              'Priority Support'
             ];
           } else {
             features = [
-              '10 Dream analyses per month',
-              '5 Image generations per month',
-              'Dream journal backup'
+              '10 Dream Analysis',
+              '10 Dream Art Generations',
+              'Priority Support'
             ];
           }
           return {
@@ -123,27 +118,23 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           };
         });
 
-        console.log("Normalized Stripe products:", normalizedProducts);
         setProducts(normalizedProducts);
       } else {
-        console.warn("Invalid products data received:", data);
         throw new Error("Invalid products data");
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
-      // Fallback products if API call fails
       setProducts([
         {
           id: 'price_basic',
           name: 'Basic',
           price: '$4.99/month',
-          features: ['10 Dream analyses per month', '5 Image generations per month', 'Dream journal backup']
+          features: ['10 Dream Analysis', '10 Dream Art Generations', 'Priority Support'],
         },
         {
           id: 'price_premium',
           name: 'Premium',
           price: '$15.99/month',
-          features: ['Unlimited dream analyses', '20 Image generations per month', 'Priority support']
+          features: ['Unlimited Dream Analysis', 'Unlimited Dream Art Generation', 'Priority Support'],
         }
       ]);
       toast.error("Failed to load subscription plans", {
