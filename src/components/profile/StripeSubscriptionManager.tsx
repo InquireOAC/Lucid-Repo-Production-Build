@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -35,6 +36,29 @@ interface StripeSubscriptionManagerProps {
   currentPlan?: string;
 }
 
+// Helper: Normalize products & hardcode features by plan name
+function normalizeProduct(product: any): Product {
+  const lowerName = product.name ? product.name.toLowerCase() : "";
+  let features: string[] = [];
+  if (lowerName.includes("premium")) {
+    features = [
+      "Unlimited Dream Analysis",
+      "Unlimited Dream Art Generation",
+      "Priority Support"
+    ];
+  } else {
+    features = [
+      "10 Dream Analysis",
+      "10 Dream Art Generations",
+      "Priority Support"
+    ];
+  }
+  return {
+    ...product,
+    features,
+  };
+}
+
 const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerProps) => {
   const [loading, setLoading] = useState(false);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -70,7 +94,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     }
   }, [user]);
 
-  // Fetch products from Stripe
+  // Fetch products from Stripe, always using hardcoded features per plan
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
@@ -95,29 +119,9 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         throw new Error(data.error);
       }
 
-      // FORCE: Always use hardcoded features for Basic and Premium, IGNORE what stripe returns
+      // Use the helper to hardcode features, ignoring Stripe's features field
       if (data?.products && Array.isArray(data.products)) {
-        const normalizedProducts = data.products.map((product: any) => {
-          let features: string[] = [];
-          // Decide based on plan name, ignoring any features Stripe sends back
-          if (product.name && product.name.toLowerCase().includes('premium')) {
-            features = [
-              'Unlimited Dream Analysis',
-              'Unlimited Dream Art Generation',
-              'Priority Support'
-            ];
-          } else {
-            features = [
-              '10 Dream Analysis',
-              '10 Dream Art Generations',
-              'Priority Support'
-            ];
-          }
-          return {
-            ...product,
-            features, // OVERRIDE!
-          };
-        });
+        const normalizedProducts = data.products.map(normalizeProduct);
         setProducts(normalizedProducts);
       } else {
         throw new Error("Invalid products data");
