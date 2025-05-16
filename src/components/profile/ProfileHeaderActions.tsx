@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, MessageSquare, Settings, UserPlus, BadgeDollarSign } from "lucide-react";
@@ -28,10 +27,7 @@ const ProfileHeaderActions = ({
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => {
-            console.log("[Button] Messages (self) clicked");
-            onMessages();
-          }}
+          onClick={onMessages}
           className="flex items-center gap-1 text-sm"
         >
           <MessageSquare size={14} /> Messages
@@ -39,7 +35,10 @@ const ProfileHeaderActions = ({
         <Button 
           variant="outline" 
           size="sm"
-          onClick={onSubscription}
+          onClick={() => {
+            // The onSubscription handler should open the Subscription dialog
+            onSubscription();
+          }}
           className="flex items-center gap-1 text-sm"
         >
           <BadgeDollarSign size={14} /> Subscription
@@ -60,10 +59,7 @@ const ProfileHeaderActions = ({
       <Button 
         variant={isFollowing ? "outline" : "default"}
         size="sm"
-        onClick={() => {
-          console.log("[Button] Follow/Unfollow clicked");
-          onFollow();
-        }}
+        onClick={onFollow}
         className="flex items-center gap-1 text-sm"
       >
         <UserPlus size={14} /> {isFollowing ? "Unfollow" : "Follow"}
@@ -71,10 +67,7 @@ const ProfileHeaderActions = ({
       <Button 
         variant="outline" 
         size="sm"
-        onClick={() => {
-          console.log("[Button] Message (other) clicked");
-          onMessages();
-        }}
+        onClick={onMessages}
         disabled={loading}
         className="flex items-center gap-1 text-sm"
       >

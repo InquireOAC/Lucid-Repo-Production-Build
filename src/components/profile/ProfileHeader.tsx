@@ -1,4 +1,3 @@
-
 import React from "react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
