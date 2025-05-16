@@ -76,28 +76,55 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       setProductsLoading(true);
       setConfigError(null);
       setApiError(null);
-      
+
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { action: 'getProducts' }
       });
-      
+
       if (error) {
         console.error("Error fetching products:", error);
         setConfigError("Unable to fetch subscription plans. Using default plans.");
         setApiError(error.message || "API call failed");
         throw error;
       }
-      
+
       if (data?.error) {
         console.warn("API returned an error:", data.error);
         setConfigError("Stripe API error. Using default plans.");
         setApiError(data.errorDetails || data.error);
         throw new Error(data.error);
       }
-      
+
+      // -- KEY CHANGE: Correct feature mapping --
+      // If features array exists in the product, always use it.
+      // Otherwise use a true default as fallback.
       if (data?.products && Array.isArray(data.products)) {
-        console.log("Received Stripe products:", data.products);
-        setProducts(data.products);
+        const normalizedProducts = data.products.map((product: any) => {
+          let features: string[] = [];
+          if (Array.isArray(product.features) && product.features.length > 0) {
+            features = product.features;
+          } else if (product.name && product.name.toLowerCase().includes('premium')) {
+            features = [
+              'Unlimited dream analyses',
+              '20 Image generations per month',
+              'Advanced dream patterns detection',
+              'Priority support'
+            ];
+          } else {
+            features = [
+              '10 Dream analyses per month',
+              '5 Image generations per month',
+              'Dream journal backup'
+            ];
+          }
+          return {
+            ...product,
+            features,
+          };
+        });
+
+        console.log("Normalized Stripe products:", normalizedProducts);
+        setProducts(normalizedProducts);
       } else {
         console.warn("Invalid products data received:", data);
         throw new Error("Invalid products data");
@@ -110,13 +137,13 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           id: 'price_basic',
           name: 'Basic',
           price: '$4.99/month',
-          features: ['10 Dream analyses per month', '10 Image generations per month', 'Priority support']
+          features: ['10 Dream analyses per month', '5 Image generations per month', 'Dream journal backup']
         },
         {
           id: 'price_premium',
           name: 'Premium',
           price: '$15.99/month',
-          features: ['Unlimited dream analyses', 'Unlimited Image generations per month', 'Priority support']
+          features: ['Unlimited dream analyses', '20 Image generations per month', 'Priority support']
         }
       ]);
       toast.error("Failed to load subscription plans", {
