@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 interface DreamCardProps {
   dream: DreamEntry;
   tags?: DreamTag[];
+  dreamTags?: string[];
   onLike?: () => void;
   showUser?: boolean;
   onClick?: () => void;
@@ -30,6 +31,7 @@ interface DreamCardProps {
 const DreamCard = ({ 
   dream, 
   tags = [], 
+  dreamTags = [],
   onLike, 
   showUser = false, 
   onClick, 
@@ -56,11 +58,6 @@ const DreamCard = ({
   // Similarly handle comment count
   const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
 
-  // Remove: Get user info from profiles if available
-  // const username = dream.profiles?.username || "Anonymous User";
-  // const displayName = dream.profiles?.display_name || "";
-  // const avatarUrl = dream.profiles?.avatar_url || "";
-
   const handleUserClick = (e: React.MouseEvent) => {
     if (onUserClick) {
       e.stopPropagation();
@@ -68,24 +65,23 @@ const DreamCard = ({
     }
   };
 
-  // Handle action button clicks
   const handleEdit = (e: React.MouseEvent) => {
     if (onEdit) {
-      e.stopPropagation(); // Prevent card click
+      e.stopPropagation();
       onEdit();
     }
   };
   
   const handleDelete = (e: React.MouseEvent) => {
     if (onDelete) {
-      e.stopPropagation(); // Prevent card click
+      e.stopPropagation();
       onDelete();
     }
   };
   
   const handleTogglePublic = (e: React.MouseEvent) => {
     if (onTogglePublic) {
-      e.stopPropagation(); // Prevent card click
+      e.stopPropagation();
       onTogglePublic();
     }
   };
@@ -103,7 +99,6 @@ const DreamCard = ({
           </div>
         </div>
       )}
-      
       <CardHeader className="p-4 pb-2">
         <div className="flex justify-between items-start">
           <CardTitle className="text-lg gradient-text font-bold line-clamp-1">
@@ -122,17 +117,15 @@ const DreamCard = ({
             onUserClick={handleUserClick}
           />
         )}
-        
         <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {dream.content}
         </p>
-        
         <DreamCardTags
           tags={tags}
-          dreamTags={dream.tags}
+          dreamTags={dreamTags}
           lucid={dream.lucid}
+          onTagClick={onTagClick}
         />
-        
         {dream.generatedImage && (
           <div className="mt-2 h-20 w-full overflow-hidden rounded-md">
             <img

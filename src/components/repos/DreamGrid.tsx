@@ -25,7 +25,8 @@ const DreamGrid = ({
       {dreams.map((dream) => {
         const normalizedDream = {
           ...dream,
-          generatedImage: dream.generatedImage || dream.image_url
+          generatedImage: dream.generatedImage || dream.image_url,
+          tags: Array.isArray(dream.tags) ? dream.tags : []
         };
         // Use username from dream.profiles for navigation
         const username = normalizedDream.profiles?.username;
@@ -37,6 +38,7 @@ const DreamGrid = ({
             key={normalizedDream.id}
             dream={normalizedDream}
             tags={tags}
+            dreamTags={normalizedDream.tags}
             onLike={() => onLike(normalizedDream.id)}
             showUser={true}
             onClick={() => onOpenDream(normalizedDream)}
