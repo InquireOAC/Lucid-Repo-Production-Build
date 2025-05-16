@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -15,7 +16,8 @@ export function useProfileEditing(user: any) {
     facebook: "",
     website: ""
   });
-  
+
+  // On successful update, update local state immediately so UI reflects the new value
   const handleUpdateProfile = async () => {
     if (!user) return;
     try {
@@ -31,6 +33,9 @@ export function useProfileEditing(user: any) {
         })
         .eq("id", user.id);
       if (error) throw error;
+      // UI: since these are updated, set them in local state to trigger re-render
+      setAvatarSymbol(avatarSymbol);
+      setAvatarColor(avatarColor);
       toast.success("Profile updated successfully!");
     } catch (error: any) {
       toast.error(error.message || "Error updating profile");
@@ -54,7 +59,7 @@ export function useProfileEditing(user: any) {
     }
   };
 
-  // No avatarUrl/setAvatarUrl/handleAvatarChange logic anymore 
+  // No avatarUrl/setAvatarUrl/handleAvatarChange logic anymore
 
   return {
     displayName,

@@ -22,13 +22,14 @@ const DreamGrid = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {dreams.map((dream) => {
+        // Now avatar_symbol/color are always read from .profiles if present
         const normalizedDream = {
           ...dream,
           generatedImage: dream.generatedImage || dream.image_url,
           tags: Array.isArray(dream.tags) ? dream.tags : [],
           profiles: {
             ...dream.profiles,
-            // Patch start: Suppress TS error by forcibly providing these (if supported in profiles)
+            // Guarantee these are passed, allow undefined but prefer profile field
             avatar_symbol: (dream.profiles as any)?.avatar_symbol ?? undefined,
             avatar_color: (dream.profiles as any)?.avatar_color ?? undefined,
           },
