@@ -37,6 +37,7 @@ const DreamsList = ({
           <DreamCard
             dream={dream}
             tags={tags}
+            dreamTags={dream.tags || []}
             onClick={() => onSelect(dream)}
             onTagClick={onTagClick}
             showSharedBadge={true} // Explicitly enable shared badge in Journal

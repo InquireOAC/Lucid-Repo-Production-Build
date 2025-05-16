@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +16,7 @@ import { Heart } from "lucide-react";
 interface DreamDetailProps {
   dream: DreamEntry;
   tags: DreamTag[];
+  dreamTags?: string[]; // NEW!
   onClose: () => void;
   onUpdate?: (id: string, updates: Partial<DreamEntry>) => void;
   onDelete?: (id: string) => void;
@@ -22,7 +24,7 @@ interface DreamDetailProps {
   onLike?: () => void;
 }
 
-const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated, onLike }: DreamDetailProps) => {
+const DreamDetail = ({ dream, tags, dreamTags, onClose, onUpdate, onDelete, isAuthenticated, onLike }: DreamDetailProps) => {
   const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
@@ -85,12 +87,11 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
 
   const isPublic = dream.is_public || dream.isPublic;
 
-  // Map tag IDs to tag objects
-  const dreamTags = dream.tags
-    ? dream.tags
-        .map((tagId) => tags.find((tag) => tag.id === tagId))
-        .filter(Boolean) as DreamTag[]
-    : [];
+  // Map tag IDs to tag objects using dreamTags if provided, else dream.tags
+  const tagIdList: string[] = dreamTags ?? dream.tags ?? [];
+  const mappedTags = tagIdList
+    .map((tagId) => tags.find((tag) => tag.id === tagId))
+    .filter(Boolean) as DreamTag[];
 
   const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
 
@@ -117,7 +118,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
           <DreamDetailContent
             content={dream.content}
             formattedDate={formattedDate}
-            dreamTags={dreamTags}
+            dreamTags={mappedTags}
             generatedImage={dream.generatedImage || dream.image_url || null}
             analysis={dream.analysis}
           />

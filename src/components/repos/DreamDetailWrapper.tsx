@@ -31,7 +31,8 @@ const DreamDetailWrapper = ({
     imagePrompt: selectedDream.imagePrompt || selectedDream.image_prompt || "",
     isPublic: selectedDream.is_public || selectedDream.isPublic || false,
     likeCount: selectedDream.like_count || selectedDream.likeCount || 0,
-    commentCount: selectedDream.comment_count || selectedDream.commentCount || 0
+    commentCount: selectedDream.comment_count || selectedDream.commentCount || 0,
+    tags: Array.isArray(selectedDream.tags) ? selectedDream.tags : []
   };
   
   console.log("Normalized dream in wrapper:", normalizedDream);
@@ -74,6 +75,7 @@ const DreamDetailWrapper = ({
     <DreamDetail
       dream={normalizedDream}
       tags={tags}
+      dreamTags={normalizedDream.tags}
       onClose={onClose}
       onUpdate={handleUpdate}
       isAuthenticated={isAuthenticated}
