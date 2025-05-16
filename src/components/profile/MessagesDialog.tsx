@@ -38,12 +38,29 @@ const MessagesDialog = ({
     }
   }, [isOpen, fetchConversations]);
 
-  // Automatically select the desired DM on open via prop
+  // If selectedConversationUser set (e.g. via "Message" button), select that user only
   useEffect(() => {
     if (isOpen && selectedConversationUser) {
       setSelectedConversation(selectedConversationUser);
+    } else if (isOpen && !selectedConversationUser) {
+      // If opening generally (e.g. via Messages), show conversation list
+      setSelectedConversation(null);
     }
   }, [isOpen, selectedConversationUser]);
+
+  // --- REMOVE this "auto-select" effect below ---
+
+  // useEffect(() => {
+  //   // If only one conversation and dialog opens, auto-select it
+  //   if (
+  //     isOpen &&
+  //     conversations?.length === 1 &&
+  //     !selectedConversationUser &&
+  //     selectedConversation == null
+  //   ) {
+  //     setSelectedConversation(conversations[0]);
+  //   }
+  // }, [isOpen, conversations, selectedConversationUser, selectedConversation]);
 
   // Automatically scroll to bottom when messages change
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
