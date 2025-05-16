@@ -1,3 +1,4 @@
+
 import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamCard from "@/components/dreams/DreamCard";
@@ -22,32 +23,28 @@ const DreamGrid = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {dreams.map((dream) => {
-        // Now avatar_symbol/color are always read from .profiles if present
+        // Extract avatar_symbol and avatar_color directly and safely
+        const userProfile = dream.profiles || {};
+        const avatarSymbol = (userProfile as any).avatar_symbol ?? undefined;
+        const avatarColor = (userProfile as any).avatar_color ?? undefined;
+
         const normalizedDream = {
           ...dream,
           generatedImage: dream.generatedImage || dream.image_url,
           tags: Array.isArray(dream.tags) ? dream.tags : [],
           profiles: {
-            ...dream.profiles,
-            // Guarantee these are passed, allow undefined but prefer profile field
-            avatar_symbol: (dream.profiles as any)?.avatar_symbol ?? undefined,
-            avatar_color: (dream.profiles as any)?.avatar_color ?? undefined,
+            ...userProfile,
+            // No custom properties injected here
           },
+          avatarSymbol, // for explicit use
+          avatarColor,  // for explicit use
         };
         // Use username from dream.profiles for navigation
         const username = normalizedDream.profiles?.username;
         return (
           <DreamCard
             key={normalizedDream.id}
-            dream={{
-              ...normalizedDream,
-              profiles: {
-                ...normalizedDream.profiles,
-                // Guarantee symbol/color are set for DreamCardUser
-                avatar_symbol: normalizedDream.profiles.avatar_symbol || undefined,
-                avatar_color: normalizedDream.profiles.avatar_color || undefined,
-              }
-            }}
+            dream={normalizedDream}
             tags={tags}
             dreamTags={normalizedDream.tags}
             onLike={() => onLike(normalizedDream.id)}
@@ -56,6 +53,7 @@ const DreamGrid = ({
             onUserClick={() => onUserClick(username)}
             onTagClick={onTagClick}
             showSharedBadge={false}
+            // Pass avatar symbol/color for DreamCardUser (handled internally there)
           />
         );
       })}
@@ -64,5 +62,3 @@ const DreamGrid = ({
 };
 
 export default DreamGrid;
-
-// NOTE: For full support, update your Supabase select queries to return avatar_symbol, avatar_color.

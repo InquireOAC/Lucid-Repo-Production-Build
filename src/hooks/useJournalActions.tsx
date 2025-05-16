@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
@@ -42,14 +41,22 @@ export const useJournalActions = () => {
       console.log("Adding dream locally with ID:", newDreamForStore.id);
 
       let finalImageUrl = dreamData.generatedImage;
+      let finalDataUrl = null;
       if (dreamData.generatedImage) {
         console.log("Processing generated image for new dream:", dreamData.generatedImage);
         const uploadedUrl = await dreamImageManager.uploadAndLinkImage(newDreamForStore.id, dreamData.generatedImage, user.id);
-        if (uploadedUrl) {
+        if (uploadedUrl && uploadedUrl !== dreamData.generatedImage) {
           finalImageUrl = uploadedUrl;
           console.log("Final image URL for new dream:", finalImageUrl);
         } else {
-          toast.warning("Image was generated but failed to save permanently. It might be temporary.");
+          // Failed upload: fallback to dataURL for persistence
+          const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
+          finalDataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
+          if (finalDataUrl && finalDataUrl.startsWith("data:image/")) {
+            toast.warning("Permanent image storage failed, saved as local backup.");
+          } else {
+            toast.warning("Image was generated but failed to save permanently. It might be temporary.");
+          }
         }
       }
       
@@ -66,6 +73,7 @@ export const useJournalActions = () => {
         analysis: dreamData.analysis || null,
         generatedImage: finalImageUrl || null,
         image_url: finalImageUrl || null,
+        image_dataurl: finalDataUrl || null,
         imagePrompt: dreamData.imagePrompt || null,
       };
       
@@ -75,19 +83,19 @@ export const useJournalActions = () => {
       if (error) {
         console.error("Database error on insert:", error);
         toast.error("Error saving dream to database: " + error.message);
-        // Potentially roll back local addEntry or mark as unsynced
         throw error; 
       }
       
       if (finalImageUrl !== dreamData.generatedImage) {
         updateEntry(newDreamForStore.id, { generatedImage: finalImageUrl, image_url: finalImageUrl });
       }
+      if (finalDataUrl) {
+        updateEntry(newDreamForStore.id, { image_dataurl: finalDataUrl });
+      }
 
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      // Ensure local store consistency if DB operation failed after local add
-      // This part needs careful consideration if addEntry is not easily reversible
       toast.error("Failed to save dream."); 
     } finally {
       setIsSubmitting(false);
@@ -157,17 +165,21 @@ export const useJournalActions = () => {
     setIsSubmitting(true);
     try {
       let finalImageUrl = dreamData.generatedImage;
+      let finalDataUrl = null;
 
       if (dreamData.generatedImage) {
         console.log("Processing generated/updated image for existing dream:", dreamData.generatedImage);
-        // Use dreamId for existing dreams, not "preview"
         const uploadedUrl = await dreamImageManager.uploadAndLinkImage(dreamId, dreamData.generatedImage, user.id);
-        if (uploadedUrl) {
+        if (uploadedUrl && uploadedUrl !== dreamData.generatedImage) {
           finalImageUrl = uploadedUrl;
           console.log("Final image URL for edited dream:", finalImageUrl);
         } else {
-          // If upload failed, retain the original dreamData.generatedImage or nullify if it was a new attempt
-          // toast.warning is handled by uploadDreamImage utility if it fails and returns original
+          // Failed upload: fallback to dataURL for persistence
+          const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
+          finalDataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
+          if (finalDataUrl && finalDataUrl.startsWith("data:image/")) {
+            toast.warning("Permanent image storage failed, saved as local backup.");
+          }
         }
       }
       
@@ -175,6 +187,7 @@ export const useJournalActions = () => {
         ...dreamData, // title, content, tags, lucid, mood, analysis, imagePrompt
         generatedImage: finalImageUrl, 
         image_url: finalImageUrl,
+        image_dataurl: finalDataUrl,
       };
       
       await handleUpdateDreamInternal(dreamId, updates); 

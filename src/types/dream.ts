@@ -1,4 +1,3 @@
-
 export interface DreamEntry {
   id: string;
   date: string;
@@ -28,6 +27,7 @@ export interface DreamEntry {
   };
   audioUrl?: string;
   audio_url?: string;
+  image_dataurl?: string; // Newly added for persistent images
 }
 
 export interface DreamTag {

@@ -148,6 +148,7 @@ export type Database = {
           date: string
           generatedImage: string | null
           id: string
+          image_dataurl: string | null
           image_url: string | null
           imagePrompt: string | null
           is_public: boolean | null
@@ -168,6 +169,7 @@ export type Database = {
           date?: string
           generatedImage?: string | null
           id?: string
+          image_dataurl?: string | null
           image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null
@@ -188,6 +190,7 @@ export type Database = {
           date?: string
           generatedImage?: string | null
           id?: string
+          image_dataurl?: string | null
           image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null

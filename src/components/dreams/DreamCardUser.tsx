@@ -1,3 +1,4 @@
+
 import React from "react";
 import SymbolAvatar from "../profile/SymbolAvatar";
 
@@ -9,17 +10,22 @@ interface DreamCardUserProps {
     avatar_color?: string;
     id?: string;
   };
+  avatarSymbol?: string; // NEW: explicit prop
+  avatarColor?: string;  // NEW: explicit prop
   onUserClick: (e: React.MouseEvent) => void;
 }
 
 const DreamCardUser = ({
   profile,
+  avatarSymbol,
+  avatarColor,
   onUserClick,
 }: DreamCardUserProps) => {
   const username = profile?.username || "";
   const displayName = profile?.display_name || "";
-  const avatarSymbol = profile?.avatar_symbol ?? undefined;
-  const avatarColor = profile?.avatar_color ?? undefined;
+  // Prefer explicit avatarSymbol/avatarColor prop, then fallback to profile.
+  const symbol = avatarSymbol ?? profile?.avatar_symbol ?? undefined;
+  const color = avatarColor ?? profile?.avatar_color ?? undefined;
 
   let nameToShow: string;
   if (username && username !== "Anonymous User" && username.trim() !== "") {
@@ -37,8 +43,8 @@ const DreamCardUser = ({
       data-username={username}
     >
       <SymbolAvatar
-        symbol={avatarSymbol}
-        color={avatarColor}
+        symbol={symbol}
+        color={color}
         fallbackLetter={nameToShow.charAt(0).toUpperCase()}
         size={28}
         className="mr-2"
