@@ -53,6 +53,8 @@ export function useProfileStats(user: any, userId?: string) {
     followersCount,
     followingCount,
     setFollowersCount,
+    setFollowingCount, // <-- Added this line
     fetchUserStats
   };
 }
+
