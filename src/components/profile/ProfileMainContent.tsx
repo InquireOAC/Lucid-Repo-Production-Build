@@ -1,11 +1,13 @@
 
-import React from "react";
+import React, { useState } from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
 import FollowersModal from "./FollowersModal";
 import ProfileDialogs from "./ProfileDialogs";
 
 export default function ProfileMainContent(props: any) {
+  const [selectedConversationUser, setSelectedConversationUser] = useState<any>(null);
+
   return (
     <>
       <ProfileHeader
@@ -23,6 +25,7 @@ export default function ProfileMainContent(props: any) {
         handleStartConversation={props.handleStartConversation}
         onFollowersClick={props.onFollowersClick}
         onFollowingClick={props.onFollowingClick}
+        setSelectedConversationUser={setSelectedConversationUser}
       />
       <ProfileTabs
         publicDreams={props.publicDreams}
@@ -46,7 +49,7 @@ export default function ProfileMainContent(props: any) {
         isEditProfileOpen={props.isEditProfileOpen}
         setIsEditProfileOpen={props.setIsEditProfileOpen}
         isSocialLinksOpen={props.isSocialLinksOpen}
-        setIsSocialLinksOpen={props.setIsSocialLinksOpen}
+        setIsSocialLinksOpen={props.setSocialLinksOpen}
         isSettingsOpen={props.isSettingsOpen}
         setIsSettingsOpen={props.setIsSettingsOpen}
         isMessagesOpen={props.isMessagesOpen}
@@ -71,6 +74,8 @@ export default function ProfileMainContent(props: any) {
         handleSignOut={props.handleSignOut}
         conversations={props.conversations}
         subscription={props.subscription}
+        selectedConversationUser={selectedConversationUser}
+        setSelectedConversationUser={setSelectedConversationUser}
       />
     </>
   );
