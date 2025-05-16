@@ -1,4 +1,3 @@
-
 import React from "react";
 import SymbolAvatar from "../profile/SymbolAvatar";
 
@@ -19,8 +18,8 @@ const DreamCardUser = ({
 }: DreamCardUserProps) => {
   const username = profile?.username || "";
   const displayName = profile?.display_name || "";
-  const avatarSymbol = profile?.avatar_symbol;
-  const avatarColor = profile?.avatar_color;
+  const avatarSymbol = profile?.avatar_symbol ?? undefined;
+  const avatarColor = profile?.avatar_color ?? undefined;
 
   let nameToShow: string;
   if (username && username !== "Anonymous User" && username.trim() !== "") {

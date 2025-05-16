@@ -39,7 +39,15 @@ const DreamGrid = ({
         return (
           <DreamCard
             key={normalizedDream.id}
-            dream={normalizedDream}
+            dream={{
+              ...normalizedDream,
+              profiles: {
+                ...normalizedDream.profiles,
+                // Guarantee symbol/color are set for DreamCardUser
+                avatar_symbol: normalizedDream.profiles.avatar_symbol || undefined,
+                avatar_color: normalizedDream.profiles.avatar_color || undefined,
+              }
+            }}
             tags={tags}
             dreamTags={normalizedDream.tags}
             onLike={() => onLike(normalizedDream.id)}
