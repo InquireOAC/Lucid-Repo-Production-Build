@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,8 +20,8 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen dream-background">
-        <div className="text-center">Loading...</div>
+      <div className="flex items-center justify-center min-h-screen" style={{ background: "#1A1F2C" }}>
+        <div className="text-center text-white">Loading...</div>
       </div>
     );
   }
@@ -45,7 +46,12 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen dream-background flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        background: "#1A1F2C",
+      }}
+    >
       <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
