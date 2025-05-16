@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useRepoSearch } from "@/hooks/useRepoSearch";
 import DreamCard from "./DreamCard";
@@ -24,15 +25,13 @@ export default function RepoSearch() {
       </form>
       {isLoading && <div>Searching...</div>}
       {dreams.map((dream) => {
-        const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
+        const { liked, handleLikeToggle } = useDreamLikes(user, dream);
         return (
           <DreamCard
             key={dream.id}
             dream={dream}
-            likeCount={likeCount}
             liked={liked}
             onLike={handleLikeToggle}
-            commentCount={dream.comment_count || 0}
             onComment={() => {}}
             onCardClick={() => {}}
           />

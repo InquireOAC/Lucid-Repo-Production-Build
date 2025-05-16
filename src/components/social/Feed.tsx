@@ -15,15 +15,13 @@ export default function Feed() {
   return (
     <div>
       {dreams.map((dream) => {
-        const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
+        const { liked, handleLikeToggle } = useDreamLikes(user, dream);
         return (
           <DreamCard
             key={dream.id}
             dream={dream}
             onLike={handleLikeToggle}
-            likeCount={likeCount}
             liked={liked}
-            commentCount={dream.comment_count || 0}
             onComment={() => {}}
             onCardClick={() => {
               // Implement dream detail modal/view logic on click
