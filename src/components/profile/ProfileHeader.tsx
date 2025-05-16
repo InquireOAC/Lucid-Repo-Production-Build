@@ -5,6 +5,7 @@ import ProfileSocialLinks from "./ProfileSocialLinks";
 import ProfileStatsBar from "./ProfileStatsBar";
 import ProfileHeaderActions from "./ProfileHeaderActions";
 import { useDirectConversation } from "@/hooks/useDirectConversation";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProfileHeaderProps {
   profileToShow: any;
@@ -39,7 +40,9 @@ const ProfileHeader = ({
   onFollowersClick,
   onFollowingClick
 }: ProfileHeaderProps) => {
-  const myId = profileToShow?.viewer_id || null;
+  // Always get the currently authenticated user (not the viewed profile)
+  const { user } = useAuth();
+  const myId = user?.id || null;
   const theirId = profileToShow?.id || null;
   const { openChatWithUser, loading } = useDirectConversation(myId, theirId);
 
@@ -48,6 +51,11 @@ const ProfileHeader = ({
     console.log("[ProfileHeader] Message btn clicked. isOwnProfile:", isOwnProfile, { myId, theirId });
     if (isOwnProfile) {
       setIsMessagesOpen(true);
+      return;
+    }
+    // Only start DM if logged in
+    if (!myId || !theirId) {
+      console.warn("Cannot start DM: missing myId or theirId", { myId, theirId });
       return;
     }
     // Always open/prepare a DM and open dialog
