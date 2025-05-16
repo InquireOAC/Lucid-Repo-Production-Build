@@ -5,6 +5,8 @@ import ProfileStatsBar from "./ProfileStatsBar";
 import ProfileHeaderActions from "./ProfileHeaderActions";
 import { useDirectConversation } from "@/hooks/useDirectConversation";
 import { useAuth } from "@/contexts/AuthContext";
+import SubscriptionDialog from "./SubscriptionDialog";
+import { useState } from "react";
 
 interface ProfileHeaderProps {
   profileToShow: any;
@@ -43,30 +45,39 @@ const ProfileHeader = ({
   onFollowingClick,
   setSelectedConversationUser
 }: ProfileHeaderProps) => {
-  // Always get the currently authenticated user (not the viewed profile)
   const { user } = useAuth();
   const myId = user?.id || null;
   const theirId = profileToShow?.id || null;
   const { openChatWithUser, loading } = useDirectConversation(myId, theirId);
+  const [isSubscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
-  // Always open or start a chat on message button click
   const onMessageOtherUser = () => {
     console.log("[ProfileHeader] Message btn clicked. isOwnProfile:", isOwnProfile, { myId, theirId });
     if (isOwnProfile) {
       setIsMessagesOpen(true);
       return;
     }
-    // Only start DM if logged in
     if (!myId || !theirId) {
       console.warn("Cannot start DM: missing myId or theirId", { myId, theirId });
       return;
     }
-    // Always open/prepare a DM and open dialog
     openChatWithUser((profile) => {
       console.log("[ProfileHeader] openChatWithUser callback executed: opening messages dialog with", profile);
       setSelectedConversationUser(profile);
       setIsMessagesOpen(true);
     });
+  };
+
+  const handleOpenSubscription = async () => {
+    setSubscriptionLoading(true);
+    try {
+      setTimeout(() => setSubscriptionDialogOpen(true), 150);
+    } catch (error) {
+      console.error("Subscription error", error);
+    } finally {
+      setTimeout(() => setSubscriptionLoading(false), 300);
+    }
   };
 
   return (
@@ -98,7 +109,7 @@ const ProfileHeader = ({
         onFollowersClick={onFollowersClick}
         onFollowingClick={onFollowingClick}
       />
-      <div className="flex gap-2 mt-4">
+      <div className="flex gap-2 mt-4 z-20 relative">
         <ProfileHeaderActions
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
@@ -108,10 +119,18 @@ const ProfileHeader = ({
             onMessageOtherUser();
           }}
           onSettings={() => setIsSettingsOpen(true)}
-          onSubscription={() => setIsSubscriptionOpen(true)}
-          loading={loading}
+          onSubscription={handleOpenSubscription}
+          loading={subscriptionLoading}
         />
       </div>
+      <SubscriptionDialog
+        isOpen={isSubscriptionDialogOpen}
+        onOpenChange={(open: boolean) => {
+          setSubscriptionDialogOpen(open);
+          setSubscriptionLoading(false);
+        }}
+        subscription={null}
+      />
     </div>
   );
 };

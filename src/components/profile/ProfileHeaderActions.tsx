@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, MessageSquare, Settings, UserPlus, BadgeDollarSign } from "lucide-react";
+import { UserPlus, MessageSquare } from "lucide-react";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
@@ -21,35 +21,37 @@ const ProfileHeaderActions = ({
   onSubscription,
   loading,
 }: ProfileHeaderActionsProps) => {
+  // Removes icons from the three core buttons, keeps logic intact with proper feedback.
   if (isOwnProfile) {
     return (
       <>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onClick={onMessages}
           className="flex items-center gap-1 text-sm"
         >
-          <MessageSquare size={14} /> Messages
+          Messages
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
-          onClick={() => {
-            // The onSubscription handler should open the Subscription dialog
-            onSubscription();
-          }}
-          className="flex items-center gap-1 text-sm"
+          onClick={onSubscription}
+          className="flex items-center gap-1 text-sm relative"
+          disabled={loading}
         >
-          <BadgeDollarSign size={14} /> Subscription
+          {loading && (
+            <span className="absolute left-2 animate-spin w-4 h-4 border-2 border-t-transparent border-dream-purple rounded-full" />
+          )}
+          <span className={loading ? "ml-5" : ""}>Subscription</span>
         </Button>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           size="sm"
           onClick={onSettings}
           className="flex items-center gap-1 text-sm"
         >
-          <Settings size={14} /> Settings
+          Settings
         </Button>
       </>
     );

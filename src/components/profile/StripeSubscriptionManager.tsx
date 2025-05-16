@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -468,38 +467,64 @@ interface ProductCardProps {
   loading: boolean;
 }
 
-const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) => (
-  <div 
-    className={`border rounded-lg p-4 space-y-4 ${
-      product.name.toLowerCase().includes("premium") ? "border-dream-purple relative overflow-hidden" : ""
-    }`}
-  >
-    {product.name.toLowerCase().includes("premium") && (
-      <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
-        Popular
-      </div>
-    )}
-    <h4 className="text-lg font-medium">{product.name}</h4>
-    <p className="text-2xl font-bold">{product.price}</p>
-    <ul className="space-y-2 text-sm">
-      {product.features.map((feature, index) => (
-        <li key={index} className="flex items-start">
-          <span className="mr-2">•</span>
-          <span>{feature}</span>
-        </li>
-      ))}
-    </ul>
-    <Button 
-      className={`w-full ${
-        product.name.toLowerCase().includes("premium") ? "bg-dream-purple hover:bg-dream-purple/90" : ""
+const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) => {
+  const [localLoading, setLocalLoading] = React.useState(false);
+  const [localError, setLocalError] = React.useState<string | null>(null);
+
+  const onSubscribeClick = async () => {
+    setLocalError(null);
+    setLocalLoading(true);
+    try {
+      await handleSubscribe(product.id);
+    } catch (err: any) {
+      setLocalError(err?.message || "Unable to start subscription.");
+      console.error("Subscription error", err);
+    } finally {
+      setLocalLoading(false);
+    }
+  };
+
+  return (
+    <div 
+      className={`border rounded-lg p-4 space-y-4 ${
+        product.name.toLowerCase().includes("premium") ? "border-dream-purple relative overflow-hidden" : ""
       }`}
-      onClick={() => handleSubscribe(product.id)}
-      disabled={loading}
     >
-      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-      Subscribe
-    </Button>
-  </div>
-);
+      {product.name.toLowerCase().includes("premium") && (
+        <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
+          Popular
+        </div>
+      )}
+      <h4 className="text-lg font-medium">{product.name}</h4>
+      <p className="text-2xl font-bold">{product.price}</p>
+      <ul className="space-y-2 text-sm">
+        {product.features.map((feature, index) => (
+          <li key={index} className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>{feature}</span>
+          </li>
+        ))}
+      </ul>
+      <Button
+        className={`w-full ${
+          product.name.toLowerCase().includes("premium")
+            ? "bg-dream-purple hover:bg-dream-purple/90"
+            : ""
+        } flex justify-center items-center relative`}
+        onClick={onSubscribeClick}
+        disabled={loading || localLoading}
+        style={{ zIndex: 10 }}
+      >
+        {(loading || localLoading) && (
+          <span className="absolute left-2 animate-spin w-4 h-4 border-2 border-t-transparent border-white rounded-full" />
+        )}
+        <span className={loading || localLoading ? "ml-5" : ""}>Subscribe</span>
+      </Button>
+      {localError && (
+        <div className="text-red-500 text-xs text-center">{localError}</div>
+      )}
+    </div>
+  );
+};
 
 export default StripeSubscriptionManager;
