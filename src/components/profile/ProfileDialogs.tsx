@@ -1,4 +1,3 @@
-
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -73,76 +72,64 @@ const ProfileDialogs = ({
   selectedConversationUser,
   setSelectedConversationUser,
   fetchConversations,
-}: ProfileDialogsProps) => {
-  // Helper to "chain" dialogs cleanly with a small delay
-  const chainDialogs = (closeFn: () => void, openFn: () => void) => {
-    closeFn();
-    setTimeout(openFn, 70);
-  };
-
-  return (
-    <>
-      <EditProfileDialog
-        isOpen={isEditProfileOpen}
-        onOpenChange={setIsEditProfileOpen}
-        displayName={displayName}
-        setDisplayName={setDisplayName}
-        username={username}
-        setUsername={setUsername}
-        bio={bio}
-        setBio={setBio}
-        avatarUrl={avatarUrl}
-        isUploading={false}
-        handleAvatarChange={handleAvatarChange}
-        handleUpdateProfile={handleUpdateProfile}
-        userId={userId}
-      />
-      <SocialLinksDialog
-        isOpen={isSocialLinksOpen}
-        onOpenChange={setIsSocialLinksOpen}
-        socialLinks={socialLinks}
-        setSocialLinks={setSocialLinks}
-        handleUpdateSocialLinks={handleUpdateSocialLinks}
-      />
-      <SettingsDialog
-        isOpen={isSettingsOpen}
-        onOpenChange={setIsSettingsOpen}
-        handleSignOut={handleSignOut}
-        onNotificationsClick={() =>
-          chainDialogs(
-            () => setIsSettingsOpen(false),
-            () => setIsNotificationsOpen(true)
-          )
-        }
-        onSubscriptionClick={() =>
-          chainDialogs(
-            () => setIsSettingsOpen(false),
-            () => setIsSubscriptionOpen(true)
-          )
-        }
-      />
-      <MessagesDialog
-        isOpen={isMessagesOpen}
-        onOpenChange={(open) => {
-          setIsMessagesOpen(open);
-          if (!open) setSelectedConversationUser(null);
-        }}
-        conversations={conversations}
-        selectedConversationUser={selectedConversationUser}
-        setSelectedConversationUser={setSelectedConversationUser}
-        fetchConversations={fetchConversations}
-      />
-      <SubscriptionDialog
-        isOpen={isSubscriptionOpen}
-        onOpenChange={setIsSubscriptionOpen}
-        subscription={subscription}
-      />
-      <NotificationsDialog
-        isOpen={isNotificationsOpen}
-        onOpenChange={setIsNotificationsOpen}
-      />
-    </>
-  );
-};
+}: ProfileDialogsProps) => (
+  <>
+    <EditProfileDialog
+      isOpen={isEditProfileOpen}
+      onOpenChange={setIsEditProfileOpen}
+      displayName={displayName}
+      setDisplayName={setDisplayName}
+      username={username}
+      setUsername={setUsername}
+      bio={bio}
+      setBio={setBio}
+      avatarUrl={avatarUrl}
+      isUploading={false}
+      handleAvatarChange={handleAvatarChange}
+      handleUpdateProfile={handleUpdateProfile}
+      userId={userId}
+    />
+    <SocialLinksDialog
+      isOpen={isSocialLinksOpen}
+      onOpenChange={setIsSocialLinksOpen}
+      socialLinks={socialLinks}
+      setSocialLinks={setSocialLinks}
+      handleUpdateSocialLinks={handleUpdateSocialLinks}
+    />
+    <SettingsDialog
+      isOpen={isSettingsOpen}
+      onOpenChange={setIsSettingsOpen}
+      handleSignOut={handleSignOut}
+      onNotificationsClick={() => {
+        setIsSettingsOpen(false);
+        setIsNotificationsOpen(true);
+      }}
+      onSubscriptionClick={() => {
+        setIsSettingsOpen(false);
+        setIsSubscriptionOpen(true);
+      }}
+    />
+    <MessagesDialog
+      isOpen={isMessagesOpen}
+      onOpenChange={(open) => {
+        setIsMessagesOpen(open);
+        if (!open) setSelectedConversationUser(null);
+      }}
+      conversations={conversations}
+      selectedConversationUser={selectedConversationUser}
+      setSelectedConversationUser={setSelectedConversationUser}
+      fetchConversations={fetchConversations}
+    />
+    <SubscriptionDialog
+      isOpen={isSubscriptionOpen}
+      onOpenChange={setIsSubscriptionOpen}
+      subscription={subscription}
+    />
+    <NotificationsDialog
+      isOpen={isNotificationsOpen}
+      onOpenChange={setIsNotificationsOpen}
+    />
+  </>
+);
 
 export default ProfileDialogs;
