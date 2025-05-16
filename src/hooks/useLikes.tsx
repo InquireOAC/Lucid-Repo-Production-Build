@@ -1,14 +1,16 @@
+
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-// Added setDreams to parameter list for reactivity
-export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: (dreams: DreamEntry[]) => DreamEntry[]) => void) {
+// Update: Fix public dream like/unlike to always allow like_count update
+export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: (dreams: DreamEntry[]) => DreamEntry[]) => void, refreshLikedDreams?: () => void) {
   useEffect(() => {
     if (user && dreams.length > 0) {
       checkLikedDreams();
     }
+    // eslint-disable-next-line
   }, [user, dreams]);
 
   const handleLike = async (dreamId: string) => {
@@ -27,7 +29,7 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
         ? Math.max(0, (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) - 1)
         : (dreamToUpdate.like_count ?? dreamToUpdate.likeCount ?? 0) + 1;
 
-      // If setDreams provided, optimistically update
+      // Optimistically update UI
       if (setDreams) {
         setDreams(prevDreams => 
           prevDreams.map(dream => 
@@ -43,7 +45,7 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
         );
       }
 
-      // Now perform DB operation
+      // Check for existing like
       const { data: existingLike } = await supabase
         .from("dream_likes")
         .select("*")
@@ -52,6 +54,7 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
         .maybeSingle();
 
       if (existingLike) {
+        // Unliking dream
         await supabase
           .from("dream_likes")
           .delete()
@@ -62,7 +65,10 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
           .from("dream_entries")
           .update({ like_count: newLikeCount })
           .eq("id", dreamId);
+
+        toast.success("Removed like");
       } else {
+        // Liking the dream
         await supabase
           .from("dream_likes")
           .insert({ user_id: user.id, dream_id: dreamId });
@@ -71,13 +77,17 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
           .from("dream_entries")
           .update({ like_count: newLikeCount })
           .eq("id", dreamId);
+
+        toast.success("Liked dream!");
       }
+
+      // Refresh liked dreams section
+      if (refreshLikedDreams) refreshLikedDreams();
 
       return true;
     } catch (error) {
       console.error("Error handling like:", error);
       toast.error("Failed to update like");
-      // Revert the optimistic update if failed
       if (setDreams) checkLikedDreams();
       return false;
     }
@@ -111,7 +121,7 @@ export function useLikes(user: any, dreams: DreamEntry[], setDreams?: (updater: 
     }
   };
 
-  // Modified: Only use passed in setDreams if provided, else fallback to local hack
+  // Use passed in setDreams if provided, else fallback to in-place hack (for non-reactive)
   const setDreamsFn = setDreams ??
     ((updater: (dreams: DreamEntry[]) => DreamEntry[]) => {
       const updatedDreams = updater([...dreams]);

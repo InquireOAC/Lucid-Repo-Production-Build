@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,14 +6,15 @@ import { toast } from "sonner";
 import { useSortAndFilter } from "./useSortAndFilter";
 import { useLikes } from "./useLikes";
 
-export function useDreams() {
+export function useDreams(refreshLikedDreams?: () => void) {
   const { user } = useAuth();
   const [dreams, setDreams] = useState<DreamEntry[]>([]);
   const [dreamTags, setDreamTags] = useState<DreamTag[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const { sortBy, setSortBy, activeTab, setActiveTab } = useSortAndFilter();
-  const { handleLike } = useLikes(user, dreams);
+  // Pass refreshLikedDreams into useLikes
+  const { handleLike } = useLikes(user, dreams, setDreams, refreshLikedDreams);
 
   useEffect(() => {
     fetchPublicDreams();
