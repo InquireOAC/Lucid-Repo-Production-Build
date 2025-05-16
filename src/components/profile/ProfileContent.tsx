@@ -129,7 +129,7 @@ const ProfileContent = () => {
         setIsMessagesOpen={setIsMessagesOpen}
         setIsSettingsOpen={setIsSettingsOpen}
         setIsSocialLinksOpen={setIsSocialLinksOpen}
-        // FIX: handleFollow should not receive viewedProfileUuid, but zero arguments
+        // Use only handleFollow which is now always tied to the UUID
         handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
         onFollowersClick={() => {

@@ -7,8 +7,11 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
 
+  // Force UUID only, never username!
   const checkIfFollowing = async (targetUserId: string) => {
     if (!user) return;
+    // Ensure targetUserId is a UUID
+    if (!/^[0-9a-fA-F-]{36}$/.test(targetUserId)) return;
     try {
       const { data, error } = await supabase
         .from("follows")
@@ -22,9 +25,9 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
     }
   };
 
-  // Main fix: use upsert to follow, delete to unfollow, then check state again
   const handleFollow = async () => {
-    if (!user || isOwnProfile || !userId) return;
+    // Only allow if userId is a UUID and not a username
+    if (!user || isOwnProfile || !userId || !/^[0-9a-fA-F-]{36}$/.test(userId)) return;
     try {
       if (isFollowing) {
         const { error } = await supabase
@@ -38,7 +41,6 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
         if (setFollowersCount) setFollowersCount(prev => Math.max(0, prev - 1));
         toast.success("Unfollowed user");
       } else {
-        // Use upsert to avoid duplicate error
         const { error } = await supabase
           .from("follows")
           .upsert({ follower_id: user.id, followed_id: userId });
@@ -51,7 +53,6 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
       console.error("Error updating follow status:", error);
       toast.error("Failed to update follow");
     }
-    // Always recheck status
     checkIfFollowing(userId ?? "");
   };
 

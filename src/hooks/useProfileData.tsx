@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,8 +15,18 @@ function isUUID(str: string) {
 
 export const useProfileData = (user: any, profile: any, profileIdentifier?: string) => {
   const [viewedProfile, setViewedProfile] = useState<any>(null);
-  
-  const { isFollowing, setIsFollowing, isOwnProfile, setIsOwnProfile, checkIfFollowing, handleFollow } = useFollowing(user, profileIdentifier);
+  // Fix: always use the UUID of the fetched profile for follow
+  const [profileIdToUse, setProfileIdToUse] = useState<string | undefined>(undefined);
+
+  const {
+    isFollowing,
+    setIsFollowing,
+    isOwnProfile,
+    setIsOwnProfile,
+    checkIfFollowing,
+    handleFollow,
+  } = useFollowing(user, profileIdToUse);
+
   const { displayName, setDisplayName, username, setUsername, bio, setBio, avatarUrl, setAvatarUrl, socialLinks, setSocialLinks, 
     handleUpdateProfile, handleUpdateSocialLinks, handleAvatarChange } = useProfileEditing(user);
   const { dreamCount, followersCount, followingCount, setFollowersCount, fetchUserStats } = useProfileStats(user, profileIdentifier);
@@ -29,8 +38,8 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     // Now supports profileIdentifier which could be username or id
     if (profileIdentifier && profileIdentifier !== user?.id && profileIdentifier !== profile?.username) {
       setIsOwnProfile(false);
-      fetchUserProfile(profileIdentifier); // Fetch the other user's profile by id or username
-      checkIfFollowing(profileIdentifier);
+      fetchUserProfile(profileIdentifier); // Will set profileIdToUse after fetch
+      // No longer runs checkIfFollowing here, do it after viewedProfile fetch
       return;
     } else {
       setIsOwnProfile(true);
@@ -62,10 +71,18 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     }
   }, [user, profile, profileIdentifier]);
   
+  // When viewedProfile updates, set profileIdToUse
+  useEffect(() => {
+    if (viewedProfile && viewedProfile.id) {
+      setProfileIdToUse(viewedProfile.id);
+      checkIfFollowing(viewedProfile.id);
+    }
+  }, [viewedProfile]);
+
   const fetchUserProfile = async (identifier: string) => {
     try {
       let data, error;
-      if (isUUID(identifier)) {
+      if (/^[0-9a-fA-F-]{36}$/.test(identifier)) {
         // Fetch by id
         ({ data, error } = await supabase
           .from("profiles")
@@ -73,7 +90,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
           .eq("id", identifier)
           .maybeSingle());
       } else {
-        // Fetch by username
+        // Fetch by username, but after fetch always set profileIdToUse to id
         ({ data, error } = await supabase
           .from("profiles")
           .select("*")
@@ -82,12 +99,13 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
       }
 
       if (error || !data) throw error || new Error("Not found");
-
       setViewedProfile(data);
+      setProfileIdToUse(data.id);
     } catch (error) {
       console.error("Error fetching user profile:", error);
       toast.error("Could not load user profile");
       setViewedProfile(null);
+      setProfileIdToUse(undefined);
     }
   };
 

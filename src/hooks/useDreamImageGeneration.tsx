@@ -21,7 +21,7 @@ export const useDreamImageGeneration = ({
   existingImage = "",
   onImageGenerated,
   disabled = false,
-  dreamId = "preview" // Default to "preview" if not provided
+  dreamId = "preview"
 }: UseDreamImageGenerationProps) => {
   const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
@@ -52,71 +52,71 @@ export const useDreamImageGeneration = ({
       toast.error("Dream description is too short for image generation.");
       return;
     }
-    
     try {
       const canUse = isAppCreator || await canUseFeature('image');
       if (!canUse) {
         showSubscriptionPrompt('image');
         return;
       }
-      
+
       setIsGenerating(true);
       setImageError(false);
-      
+
       const promptResult = await supabase.functions.invoke('analyze-dream', {
         body: { dreamContent, task: 'create_image_prompt' }
       });
-      
+
       if (promptResult.error) throw new Error(promptResult.error.message || 'Failed to generate image prompt');
       const generatedPromptText = promptResult.data?.analysis || '';
       if (!generatedPromptText) throw new Error('No image prompt was generated');
-      
+
       setImagePrompt(generatedPromptText);
       console.log("Generated prompt:", generatedPromptText);
-      
+
       const imageResult = await supabase.functions.invoke('generate-dream-image', {
         body: { prompt: generatedPromptText }
       });
-      
+
       if (imageResult.error) {
         console.error("Image generation API error:", imageResult.error);
         throw new Error(imageResult.error.message || 'Failed to generate image');
       }
-      
+
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
       if (!openaiUrl) throw new Error('No image URL was returned from AI generation');
-      
-      setGeneratedImage(openaiUrl); // Display OpenAI image immediately
-      
+
+      setGeneratedImage(openaiUrl);
+
       if (!isAppCreator && !hasUsedFeature('image')) {
         markFeatureAsUsed('image');
       }
-      
+
       try {
-        console.log(`Uploading OpenAI image to Supabase storage (context: ${dreamId})...`);
-        // Use dreamId if available, otherwise "preview"
+        // Upload and always use Supabase public URL; only use the temp URL if upload fails
         const storedImageUrl = await uploadDreamImage(dreamId, openaiUrl, user.id);
-        
-        if (!storedImageUrl || storedImageUrl === openaiUrl) {
-          console.warn(`Image upload to Supabase (context: ${dreamId}) failed or returned original URL. Using OpenAI URL:`, openaiUrl);
-          setGeneratedImage(openaiUrl); // visually, setOpenAi url (fallback)
+
+        // Patch: Warn and fallback if not a public Supabase URL
+        if (
+          !storedImageUrl ||
+          storedImageUrl === openaiUrl ||
+          !storedImageUrl.startsWith(
+            `${supabase.storageUrl?.replace(/\/$/, '') ?? "https://oelghoaiuvjhywlzldkt.supabase.co"}/storage/v1/object/public/dream-images/`
+          )
+        ) {
+          setGeneratedImage(openaiUrl);
           onImageGenerated(openaiUrl, generatedPromptText);
-          toast.warning("Image generated, but permanent saving failed. Image may become unavailable after some time.");
+          toast.warning("Image generated, but not saved to permanent storage. You may not see it later.");
         } else {
-          console.log(`Image saved to Supabase (context: ${dreamId}):`, storedImageUrl);
-          setGeneratedImage(storedImageUrl); // ensure UI shows permanent URL
+          setGeneratedImage(storedImageUrl);
           onImageGenerated(storedImageUrl, generatedPromptText);
           toast.success("Dream image generated and saved!");
         }
       } catch (uploadError: any) {
         console.error(`Upload error during ${dreamId} generation:`, uploadError);
-        setGeneratedImage(openaiUrl); // fallback for UI if error
+        setGeneratedImage(openaiUrl);
         toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
-        onImageGenerated(openaiUrl, generatedPromptText); // Fallback to OpenAI URL
+        onImageGenerated(openaiUrl, generatedPromptText);
       }
-      
-      // toast.success("Dream image generated!"); // Already handled above
-
     } catch (error: any) {
       console.error('Image generation error:', error);
       setImageError(true);
