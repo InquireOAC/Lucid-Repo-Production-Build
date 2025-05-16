@@ -52,7 +52,7 @@ const Auth = () => {
         background: "#1A1F2C",
       }}
     >
-      <Card className="w-full max-w-md bg-dream-purple/80 backdrop-blur-sm shadow-xl">
+      <Card className="w-full max-w-md bg-dream-purple/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Moon size={48} className="text-dream-purple animate-float" />
