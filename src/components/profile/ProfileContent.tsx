@@ -10,6 +10,13 @@ import ProfileStateGuard from "./ProfileStateGuard";
 import { computeProfileTargets } from "./computeProfileTargets";
 import { useProfileDialogStates } from "./ProfileDialogStates";
 
+// helper to extract uuid safely
+function extractProfileUuid(profileObj: any): string | undefined {
+  if (!profileObj) return undefined;
+  // 'id' field is always uuid for profiles table
+  return profileObj.id;
+}
+
 const ProfileContent = () => {
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
   const { user, profile } = useAuth();
@@ -31,7 +38,7 @@ const ProfileContent = () => {
     showFollowing, setShowFollowing
   } = useProfileDialogStates();
 
-  // Custom profile data
+  // Custom profile data (returns .viewedProfile)
   const {
     isOwnProfile,
     viewedProfile,
@@ -91,6 +98,9 @@ const ProfileContent = () => {
   const { publicDreams, likedDreams, refreshDreams } = useProfileDreams(user, profileIdForHooks);
   const { followers, following, fetchFollowers, fetchFollowing } = useProfileFollowers(profileIdForHooks);
 
+  // Correct: Get "uuid" for the profile currently displayed, for follow logic
+  const viewedProfileUuid = extractProfileUuid(viewedProfile);
+
   // Refresh dreams when switching to valid hooks
   useEffect(() => {
     if (profileIdForHooks) {
@@ -120,7 +130,8 @@ const ProfileContent = () => {
         setIsMessagesOpen={setIsMessagesOpen}
         setIsSettingsOpen={setIsSettingsOpen}
         setIsSocialLinksOpen={setIsSocialLinksOpen}
-        handleFollow={handleFollow}
+        // IMPORTANT: pass viewedProfileUuid for the follow action
+        handleFollow={() => handleFollow && viewedProfileUuid ? handleFollow(viewedProfileUuid) : undefined}
         handleStartConversation={handleStartConversation}
         onFollowersClick={() => {
           setShowFollowers(true);

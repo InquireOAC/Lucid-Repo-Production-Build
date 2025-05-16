@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,29 +99,24 @@ export const useDreamImageGeneration = ({
         
         if (!storedImageUrl || storedImageUrl === openaiUrl) {
           console.warn(`Image upload to Supabase (context: ${dreamId}) failed or returned original URL. Using OpenAI URL:`, openaiUrl);
+          setGeneratedImage(openaiUrl); // visually, setOpenAi url (fallback)
           onImageGenerated(openaiUrl, generatedPromptText);
-          toast.warning("Image generated, but permanent saving failed. It might be temporary.");
+          toast.warning("Image generated, but permanent saving failed. Image may become unavailable after some time.");
         } else {
           console.log(`Image saved to Supabase (context: ${dreamId}):`, storedImageUrl);
-          setGeneratedImage(storedImageUrl);
+          setGeneratedImage(storedImageUrl); // ensure UI shows permanent URL
           onImageGenerated(storedImageUrl, generatedPromptText);
-          // Toast success moved to after this block to avoid double toasting
+          toast.success("Dream image generated and saved!");
         }
       } catch (uploadError: any) {
         console.error(`Upload error during ${dreamId} generation:`, uploadError);
+        setGeneratedImage(openaiUrl); // fallback for UI if error
         toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
         onImageGenerated(openaiUrl, generatedPromptText); // Fallback to OpenAI URL
       }
       
-      toast.success("Dream image generated!"); // Single success toast after potential upload
-      
-      if (!isAppCreator && !hasUsedFeature('image')) {
-        // This toast seems to be duplicated, markFeatureAsUsed handles one
-        // toast.success("Free trial used! Subscribe to continue generating dream images.", {
-        //   duration: 5000,
-        //   action: { label: "Subscribe", onClick: () => window.location.href = '/profile?tab=subscription' }
-        // });
-      }
+      // toast.success("Dream image generated!"); // Already handled above
+
     } catch (error: any) {
       console.error('Image generation error:', error);
       setImageError(true);
@@ -134,7 +128,6 @@ export const useDreamImageGeneration = ({
 
   // Derived state for showing initial info
   const showInfo = !existingImage && !generatedImage;
-
 
   return {
     imagePrompt,
