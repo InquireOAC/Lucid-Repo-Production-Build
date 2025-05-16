@@ -1,10 +1,9 @@
 
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Sparkles, ImageIcon, Crown } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import { Crown, CreditCard, Sparkles, ImageIcon, Loader2, XCircle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
 interface SubscriptionDialogProps {
@@ -26,102 +25,75 @@ interface SubscriptionDialogProps {
   };
 }
 
-const SubscriptionDialog = ({ 
-  isOpen, 
+const SubscriptionDialog = ({
+  isOpen,
   onOpenChange,
-  subscription 
+  subscription
 }: SubscriptionDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="gradient-text">Your Subscription</DialogTitle>
+          <div className="flex items-center justify-between gap-2">
+            <DialogTitle className="gradient-text flex items-center gap-2">
+              <CreditCard className="w-5 h-5" />
+              Your Subscription
+            </DialogTitle>
             {subscription?.plan && (
-              <Badge className="bg-gradient-to-r from-dream-purple to-dream-lavender">
-                <Crown className="h-3 w-3 mr-1" />
+              <Badge className="flex items-center gap-1 bg-gradient-to-r from-dream-purple to-dream-lavender">
+                <Crown className="w-4 h-4" />
                 {subscription.plan}
               </Badge>
             )}
           </div>
         </DialogHeader>
-        
         <div className="overflow-y-auto max-h-[70vh] pr-1">
-          <div className="space-y-4 py-4">
+          <div className="space-y-5 py-2">
             {!subscription ? (
+              // If not subscribed, show StripeSubscriptionManager component
               <div>
-                <p className="text-sm text-center text-muted-foreground mb-4">
-                  Upgrade to unlock premium features like unlimited dream analysis and more image generations!
+                <p className="text-sm text-center text-muted-foreground mb-3">
+                  Subscribe for unlimited dream analysis, more image generations, and early access features!
                 </p>
                 <StripeSubscriptionManager />
               </div>
             ) : (
               <>
-                {/* Status Info */}
+                {/* Status & period */}
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Status</span>
                     <Badge variant={subscription.status === 'active' ? 'default' : 'outline'}>
                       {subscription.status}
                     </Badge>
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Current period ends:</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Renews on:</span>
                     <span className="text-sm font-medium">{subscription.currentPeriodEnd}</span>
                   </div>
-                  
                   {subscription.cancelAtPeriodEnd && (
-                    <div className="bg-amber-500/10 text-amber-600 rounded-md p-3 text-sm mt-2">
+                    <div className="bg-amber-500/10 text-amber-600 rounded-md p-2 text-xs mt-2">
                       Your subscription will not renew after {subscription.currentPeriodEnd}.
                     </div>
                   )}
                 </div>
-                
                 {/* Credits */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium">Credits remaining this month</h4>
-                  
-                  {/* Analysis Credits */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1 text-sm">
-                        <Sparkles className="h-3.5 w-3.5 text-dream-purple" />
-                        <span>Dream Analysis</span>
-                      </div>
-                      <span className="text-xs">
-                        {subscription.analysisCredits.total === 999999 
-                          ? 'Unlimited' 
-                          : `${subscription.analysisCredits.used} / ${subscription.analysisCredits.total}`
-                        }
-                      </span>
-                    </div>
-                    {subscription.analysisCredits.total !== 999999 && (
-                      <Progress 
-                        value={(subscription.analysisCredits.used / subscription.analysisCredits.total) * 100} 
-                        className="h-1.5"
-                      />
-                    )}
-                  </div>
-                  
-                  {/* Image Credits */}
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-1 text-sm">
-                        <ImageIcon className="h-3.5 w-3.5 text-dream-lavender" />
-                        <span>Image Generation</span>
-                      </div>
-                      <span className="text-xs">
-                        {`${subscription.imageCredits.used} / ${subscription.imageCredits.total}`}
-                      </span>
-                    </div>
-                    <Progress 
-                      value={(subscription.imageCredits.used / subscription.imageCredits.total) * 100}
-                      className="h-1.5"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-semibold">Monthly Credits Left</h4>
+                  <CreditDisplay
+                    icon={<Sparkles className="w-4 h-4 text-dream-purple" />}
+                    label="Dream Analysis"
+                    used={subscription.analysisCredits.used}
+                    total={subscription.analysisCredits.total}
+                  />
+                  <CreditDisplay
+                    icon={<ImageIcon className="w-4 h-4 text-dream-lavender" />}
+                    label="Image Generation"
+                    used={subscription.imageCredits.used}
+                    total={subscription.imageCredits.total}
+                  />
                 </div>
-                
-                {/* Manage Subscription */}
+                {/* Manage */}
                 <div className="pt-2">
                   <StripeSubscriptionManager currentPlan={subscription.plan} />
                 </div>
@@ -133,5 +105,25 @@ const SubscriptionDialog = ({
     </Dialog>
   );
 };
+
+// A minimal reusable credit bar
+const CreditDisplay = ({ icon, label, used, total }: { icon: React.ReactNode; label: string; used: number; total: number }) => (
+  <div className="space-y-1">
+    <div className="flex justify-between items-center text-sm">
+      <span className="flex gap-1 items-center">{icon}<span>{label}</span></span>
+      <span className="text-xs">
+        {total === 999999 ? "Unlimited" : `${used} / ${total}`}
+      </span>
+    </div>
+    {total !== 999999 && (
+      <div className="w-full bg-secondary rounded-full h-1">
+        <div
+          className="h-1 bg-dream-purple rounded-full"
+          style={{ width: `${Math.min(100, (used / total) * 100)}%` }}
+        />
+      </div>
+    )}
+  </div>
+);
 
 export default SubscriptionDialog;

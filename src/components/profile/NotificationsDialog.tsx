@@ -2,116 +2,121 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Info } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { getNotificationSettings, saveNotificationSettings, NotificationSettings } from "@/utils/notificationUtils";
-import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
+import { Bell, Info, Loader2 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import {
+  getNotificationSettings,
+  saveNotificationSettings,
+  NotificationSettings,
+} from "@/utils/notificationUtils";
 
 interface NotificationsDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: false,
+  time: "08:00",
+};
+
 const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps) => {
-  const [settings, setSettings] = useState<NotificationSettings>({
-    enabled: false,
-    time: "08:00"
-  });
-  
+  const [settings, setSettings] = useState<NotificationSettings>(DEFAULT_NOTIFICATION_SETTINGS);
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     if (isOpen) {
-      loadSettings();
+      setLoading(true);
+      getNotificationSettings()
+        .then((saved) => setSettings(saved))
+        .catch(() => {
+          toast({
+            title: "Failed to load notification settings.",
+            description: "Please try again.",
+            variant: "destructive"
+          });
+        })
+        .finally(() => setLoading(false));
     }
   }, [isOpen]);
-  
-  const loadSettings = async () => {
-    try {
-      setLoading(true);
-      const savedSettings = await getNotificationSettings();
-      setSettings(savedSettings);
-    } catch (error) {
-      console.error("Error loading notification settings:", error);
-      toast.error("Failed to load notification settings");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleToggle = (checked: boolean) => {
-    setSettings(prev => ({ ...prev, enabled: checked }));
-  };
-  
-  const handleTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSettings(prev => ({ ...prev, time: e.target.value }));
-  };
-  
-  const handleSave = async () => {
+
+  // Handle switch toggle
+  const onToggle = (enabled: boolean) => setSettings((prev) => ({ ...prev, enabled }));
+
+  // Handle time input
+  const onTimeChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    setSettings((prev) => ({ ...prev, time: e.target.value }));
+
+  // Save notification settings (with schedule)
+  const onSave = async () => {
     setLoading(true);
     try {
       await saveNotificationSettings(settings);
-      toast.success("Notification settings saved");
+      toast({ title: "Notification settings saved!", variant: "success" });
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error saving notification settings:", error);
-      toast.error("Failed to save notification settings");
+    } catch (e: any) {
+      toast({
+        title: "Failed to save.",
+        description: e?.message || "Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle className="gradient-text">Notification Settings</DialogTitle>
+          <DialogTitle className="gradient-text flex items-center gap-2">
+            <Bell className="w-5 h-5" /> Notification Settings
+          </DialogTitle>
         </DialogHeader>
-        
-        <div className="flex flex-col gap-6 py-4">
+        <div className="space-y-5 py-3">
           <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="notifications-toggle" className="text-base">Morning Reminders</Label>
-              <p className="text-sm text-muted-foreground">
-                Get notified to log your dream each morning
-              </p>
-            </div>
-            <Switch 
+            <span>
+              <Label htmlFor="notifications-toggle" className="text-base font-medium">Morning Reminder</Label>
+              <p className="text-xs text-muted-foreground">Wake up gently with a dream journaling nudge</p>
+            </span>
+            <Switch
               id="notifications-toggle"
-              checked={settings.enabled} 
-              onCheckedChange={handleToggle}
+              checked={settings.enabled}
+              onCheckedChange={onToggle}
+              disabled={loading}
             />
           </div>
-          
           {settings.enabled && (
-            <div className="space-y-2">
-              <Label htmlFor="notification-time">Reminder Time</Label>
-              <Input 
+            <div className="space-y-1">
+              <Label htmlFor="notification-time" className="text-sm font-medium">
+                Reminder Time
+              </Label>
+              <Input
                 id="notification-time"
-                type="time" 
-                value={settings.time} 
-                onChange={handleTimeChange}
+                type="time"
+                value={settings.time}
+                onChange={onTimeChange}
                 className="w-full"
+                disabled={loading}
               />
             </div>
           )}
-          
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-md p-3 flex items-start gap-3">
-            <Info size={18} className="text-blue-600 dark:text-blue-400 mt-0.5" />
-            <p className="text-xs text-blue-800 dark:text-blue-300">
-              You may need to grant notification permissions to the app when prompted.
-            </p>
+          <div className="flex gap-2 bg-blue-50 dark:bg-blue-900/20 rounded-md p-3 items-center">
+            <Info className="text-blue-600 dark:text-blue-400 w-5 h-5 shrink-0" />
+            <span className="text-xs text-blue-800 dark:text-blue-300">
+              You may need to grant notification permissions when prompted by the browser or your device.
+            </span>
           </div>
         </div>
-        
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={loading}>
-            {loading ? "Saving..." : "Save Changes"}
+          <Button onClick={onSave} disabled={loading}>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
           </Button>
         </div>
       </DialogContent>
