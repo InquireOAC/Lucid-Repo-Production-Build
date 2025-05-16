@@ -3,7 +3,14 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-export function useFollowing(user: any, userId?: string, setFollowersCount?: (value: React.SetStateAction<number>) => void) {
+// Import fetchUserStats type for count updates (will use setFollowersCount/setFollowingCount)
+export function useFollowing(
+  user: any,
+  userId?: string,
+  setFollowersCount?: (value: React.SetStateAction<number>) => void,
+  setFollowingCount?: (value: React.SetStateAction<number>) => void,
+  fetchUserStats?: () => Promise<void>
+) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwnProfile, setIsOwnProfile] = useState(true);
 
@@ -49,6 +56,8 @@ export function useFollowing(user: any, userId?: string, setFollowersCount?: (va
         if (setFollowersCount) setFollowersCount(prev => prev + 1);
         toast.success("Now following user");
       }
+      // Immediately refetch stats/counts after follow/unfollow
+      if (fetchUserStats) await fetchUserStats();
     } catch (error) {
       console.error("Error updating follow status:", error);
       toast.error("Failed to update follow");

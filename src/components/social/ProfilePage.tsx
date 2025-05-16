@@ -49,7 +49,15 @@ export default function ProfilePage({ usernameParam }) {
     // eslint-disable-next-line
   }, [profile]);
 
-  const { isFollowing, handleFollow, checkFollowing } = useProfileFollowAction(user, profile?.id, () => fetchFollowers());
+  const { isFollowing, handleFollow, checkFollowing } = useProfileFollowAction(
+    user,
+    profile?.id,
+    // Add callback: after following/unfollowing, update counts/lists
+    () => {
+      fetchFollowers();
+      fetchFollowing();
+    }
+  );
   useEffect(() => { checkFollowing(); }, [profile?.id, user]);
 
   if (!profile) return <div>Loading...</div>;
@@ -61,7 +69,12 @@ export default function ProfilePage({ usernameParam }) {
         followersCount={followersCount}
         followingCount={followingCount}
         isFollowing={isFollowing}
-        onFollowToggle={handleFollow}
+        onFollowToggle={async () => {
+          await handleFollow();
+          // Extra safety: Ensure followers/following list are up to date
+          fetchFollowers();
+          fetchFollowing();
+        }}
         canFollow={profile.id !== user?.id}
       />
       <div className="mt-8">

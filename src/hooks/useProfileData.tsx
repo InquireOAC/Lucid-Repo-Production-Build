@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -18,6 +19,8 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
   // Fix: always use the UUID of the fetched profile for follow
   const [profileIdToUse, setProfileIdToUse] = useState<string | undefined>(undefined);
 
+  const { dreamCount, followersCount, followingCount, setFollowersCount, setFollowingCount, fetchUserStats } = useProfileStats(user, profileIdentifier);
+
   const {
     isFollowing,
     setIsFollowing,
@@ -25,11 +28,16 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     setIsOwnProfile,
     checkIfFollowing,
     handleFollow,
-  } = useFollowing(user, profileIdToUse);
+  } = useFollowing(
+    user,
+    profileIdToUse,
+    setFollowersCount,
+    setFollowingCount,
+    fetchUserStats
+  );
 
   const { displayName, setDisplayName, username, setUsername, bio, setBio, avatarUrl, setAvatarUrl, socialLinks, setSocialLinks, 
     handleUpdateProfile, handleUpdateSocialLinks, handleAvatarChange } = useProfileEditing(user);
-  const { dreamCount, followersCount, followingCount, setFollowersCount, fetchUserStats } = useProfileStats(user, profileIdentifier);
   const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdentifier);
   const { subscription, fetchSubscription } = useSubscription(user);
   const { conversations, fetchConversations, handleStartConversation } = useConversations(user);
