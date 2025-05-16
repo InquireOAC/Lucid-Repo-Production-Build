@@ -31,38 +31,28 @@ const MessagesDialog = ({
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Fetch all conversations every time dialog is (re)opened
+  // Always fetch all conversations every time the dialog is opened
   useEffect(() => {
     if (isOpen && fetchConversations) {
       fetchConversations();
     }
   }, [isOpen, fetchConversations]);
 
-  // If selectedConversationUser set (e.g. via "Message" button), select that user only
+  // Handle navigation between messages list and conversation chat window
   useEffect(() => {
+    // If a user is specifically targeted (e.g. via "Message" button), open that DM
     if (isOpen && selectedConversationUser) {
       setSelectedConversation(selectedConversationUser);
+    // Otherwise, always show the conversation list initially
     } else if (isOpen && !selectedConversationUser) {
-      // If opening generally (e.g. via Messages), show conversation list
       setSelectedConversation(null);
     }
   }, [isOpen, selectedConversationUser]);
 
-  // --- REMOVE this "auto-select" effect below ---
+  // Remove any code that tries to "auto-select" a conversation!
+  // (This block was already commented out as per last diff)
 
-  // useEffect(() => {
-  //   // If only one conversation and dialog opens, auto-select it
-  //   if (
-  //     isOpen &&
-  //     conversations?.length === 1 &&
-  //     !selectedConversationUser &&
-  //     selectedConversation == null
-  //   ) {
-  //     setSelectedConversation(conversations[0]);
-  //   }
-  // }, [isOpen, conversations, selectedConversationUser, selectedConversation]);
-
-  // Automatically scroll to bottom when messages change
+  // Keep scrolling behavior as is
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (messagesEndRef.current) {
@@ -70,13 +60,14 @@ const MessagesDialog = ({
     }
   }, [messages]);
 
+  // Fetch messages when a conversation is clicked/selected
   useEffect(() => {
     if (selectedConversation) {
       fetchMessages(selectedConversation.id);
     }
   }, [selectedConversation]);
 
-  // When dialog is closed, reset selection
+  // Reset state when closed
   useEffect(() => {
     if (!isOpen) {
       setSelectedConversation(null);
@@ -85,19 +76,6 @@ const MessagesDialog = ({
       if (setSelectedConversationUser) setSelectedConversationUser(null);
     }
   }, [isOpen, setSelectedConversationUser]);
-
-  // Support: externally passed conversation user triggers dialog
-  useEffect(() => {
-    // If only one conversation and dialog opens, auto-select it
-    if (
-      isOpen &&
-      conversations?.length === 1 &&
-      !selectedConversationUser &&
-      selectedConversation == null
-    ) {
-      setSelectedConversation(conversations[0]);
-    }
-  }, [isOpen, conversations, selectedConversationUser, selectedConversation]);
 
   const fetchMessages = async (partnerId: string) => {
     if (!user) return;
@@ -144,6 +122,7 @@ const MessagesDialog = ({
     }
   };
 
+  // --- unchanged rendering code, but forcibly NOT auto-entering a thread ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -154,6 +133,7 @@ const MessagesDialog = ({
         </DialogHeader>
 
         <div className="py-4">
+          {/* When on "Messages" tab, always show list first */}
           {!selectedConversation ? (
             conversations.length > 0 ? (
               <div className="space-y-2">
@@ -195,6 +175,7 @@ const MessagesDialog = ({
               </div>
             )
           ) : (
+            // ... keep the chat window UI the same ...
             <div className="flex flex-col h-[400px]">
               <div className="flex items-center gap-2 mb-4">
                 <Button
