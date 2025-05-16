@@ -1,4 +1,3 @@
-
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -36,6 +35,8 @@ interface ProfileDialogsProps {
   handleSignOut: () => void;
   conversations: any[];
   subscription: any;
+  selectedConversationUser: any;
+  setSelectedConversationUser: (v: any) => void;
 }
 
 const ProfileDialogs = ({
@@ -67,6 +68,8 @@ const ProfileDialogs = ({
   handleSignOut,
   conversations,
   subscription,
+  selectedConversationUser,
+  setSelectedConversationUser,
 }: ProfileDialogsProps) => (
   <>
     <EditProfileDialog
@@ -106,8 +109,13 @@ const ProfileDialogs = ({
     />
     <MessagesDialog
       isOpen={isMessagesOpen}
-      onOpenChange={setIsMessagesOpen}
+      onOpenChange={(open) => {
+        setIsMessagesOpen(open);
+        if (!open) setSelectedConversationUser(null);
+      }}
       conversations={conversations}
+      selectedConversationUser={selectedConversationUser}
+      setSelectedConversationUser={setSelectedConversationUser}
     />
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}

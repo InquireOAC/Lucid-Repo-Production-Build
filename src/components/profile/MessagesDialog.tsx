@@ -13,18 +13,29 @@ interface MessagesDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   conversations: any[];
+  selectedConversationUser?: any; // <--- new prop
+  setSelectedConversationUser?: (user: any) => void; // <--- new prop
 }
 
 const MessagesDialog = ({
   isOpen,
   onOpenChange,
-  conversations
+  conversations,
+  selectedConversationUser,
+  setSelectedConversationUser
 }: MessagesDialogProps) => {
   const { user } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Automatically select the desired DM on open via prop
+  useEffect(() => {
+    if (isOpen && selectedConversationUser) {
+      setSelectedConversation(selectedConversationUser);
+    }
+  }, [isOpen, selectedConversationUser]);
 
   // Automatically scroll to bottom when messages change
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -40,26 +51,31 @@ const MessagesDialog = ({
     }
   }, [selectedConversation]);
 
-  // When dialog is opened, reset selection
+  // When dialog is closed, reset selection
   useEffect(() => {
     if (!isOpen) {
       setSelectedConversation(null);
       setMessages([]);
       setNewMessage("");
+      if (setSelectedConversationUser) setSelectedConversationUser(null);
     }
-  }, [isOpen]);
+  }, [isOpen, setSelectedConversationUser]);
 
   // Support: externally passed conversation user triggers dialog
   useEffect(() => {
     // If only one conversation and dialog opens, auto-select it
-    if (isOpen && conversations?.length === 1) {
+    if (
+      isOpen &&
+      conversations?.length === 1 &&
+      !selectedConversationUser &&
+      selectedConversation == null
+    ) {
       setSelectedConversation(conversations[0]);
     }
-  }, [isOpen, conversations]);
+  }, [isOpen, conversations, selectedConversationUser, selectedConversation]);
 
   const fetchMessages = async (partnerId: string) => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from("messages")
@@ -120,7 +136,10 @@ const MessagesDialog = ({
                   <div
                     key={conversation.id}
                     className="flex items-center gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer"
-                    onClick={() => setSelectedConversation(conversation)}
+                    onClick={() => {
+                      setSelectedConversation(conversation);
+                      if (setSelectedConversationUser) setSelectedConversationUser(conversation);
+                    }}
                   >
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conversation.avatar_url} />
@@ -156,7 +175,10 @@ const MessagesDialog = ({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setSelectedConversation(null)}
+                  onClick={() => {
+                    setSelectedConversation(null);
+                    if (setSelectedConversationUser) setSelectedConversationUser(null);
+                  }}
                 >
                   Back
                 </Button>

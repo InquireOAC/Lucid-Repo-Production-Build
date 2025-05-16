@@ -1,4 +1,3 @@
-
 import React from "react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
@@ -22,6 +21,7 @@ interface ProfileHeaderProps {
   handleStartConversation: () => void;
   onFollowersClick?: () => void;
   onFollowingClick?: () => void;
+  setSelectedConversationUser: (user: any) => void;
 }
 
 const ProfileHeader = ({
@@ -38,7 +38,8 @@ const ProfileHeader = ({
   handleFollow,
   handleStartConversation,
   onFollowersClick,
-  onFollowingClick
+  onFollowingClick,
+  setSelectedConversationUser
 }: ProfileHeaderProps) => {
   // Always get the currently authenticated user (not the viewed profile)
   const { user } = useAuth();
@@ -59,8 +60,9 @@ const ProfileHeader = ({
       return;
     }
     // Always open/prepare a DM and open dialog
-    openChatWithUser(() => {
-      console.log("[ProfileHeader] openChatWithUser callback executed: opening messages dialog");
+    openChatWithUser((profile) => {
+      console.log("[ProfileHeader] openChatWithUser callback executed: opening messages dialog with", profile);
+      setSelectedConversationUser(profile);
       setIsMessagesOpen(true);
     });
   };
@@ -112,4 +114,3 @@ const ProfileHeader = ({
 };
 
 export default ProfileHeader;
-
