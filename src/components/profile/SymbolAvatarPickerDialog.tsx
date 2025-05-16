@@ -8,19 +8,19 @@ import {
   Sun,
   Cloud,
   Eye,
-  ArrowDown,
-  ArrowUp,
-  ArrowRight,
 } from "lucide-react";
+import { IoMdPlanet } from "react-icons/io";
+import { GiGalaxy } from "react-icons/gi";
+import { PiShootingStarFill } from "react-icons/pi";
 
 const SYMBOLS = [
   { name: "star", label: "Star", icon: Star },
   { name: "moon", label: "Moon", icon: Moon },
   { name: "sun", label: "Sun", icon: Sun },
   { name: "cloud", label: "Cloud", icon: Cloud },
-  { name: "arrowdown", label: "Arrow Down", icon: ArrowDown },
-  { name: "arrowup", label: "Arrow Up", icon: ArrowUp },
-  { name: "arrowright", label: "Arrow Right", icon: ArrowRight },
+  { name: "planet", label: "Planet", icon: IoMdPlanet },
+  { name: "galaxy", label: "Galaxy", icon: GiGalaxy },
+  { name: "shootingstar", label: "Shooting Star", icon: PiShootingStarFill },
   { name: "eye", label: "Eye", icon: Eye },
 ];
 
@@ -43,7 +43,6 @@ export default function SymbolAvatarPickerDialog({
     onOpenChange(false);
   };
 
-  // Slightly larger icons, better gap & alignment, and a modern color picker row
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[400px] flex flex-col gap-6 pt-6">

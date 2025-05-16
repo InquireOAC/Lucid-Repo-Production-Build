@@ -1,15 +1,18 @@
 
 import React from "react";
-import { Star, Moon, Sun, Cloud, Eye, ArrowDown, ArrowUp, ArrowRight } from "lucide-react";
+import { Star, Moon, Sun, Cloud, Eye } from "lucide-react";
+import { IoMdPlanet } from "react-icons/io";
+import { GiGalaxy } from "react-icons/gi";
+import { PiShootingStarFill } from "react-icons/pi";
 
 const SymbolComponents: Record<string, React.ElementType> = {
   star: Star,
   moon: Moon,
   sun: Sun,
   cloud: Cloud,
-  arrowdown: ArrowDown,
-  arrowup: ArrowUp,
-  arrowright: ArrowRight,
+  planet: IoMdPlanet,
+  galaxy: GiGalaxy,
+  shootingstar: PiShootingStarFill,
   eye: Eye
 };
 
@@ -42,7 +45,7 @@ export default function SymbolAvatar({
       style={{
         width: size,
         height: size,
-        background: "transparent", // Ensures true transparency
+        background: "transparent",
       }}
     >
       {SymbolIcon ? (
