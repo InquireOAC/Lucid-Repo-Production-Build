@@ -50,7 +50,7 @@ export default function ProfileMainContent(props: any) {
         isEditProfileOpen={props.isEditProfileOpen}
         setIsEditProfileOpen={props.setIsEditProfileOpen}
         isSocialLinksOpen={props.isSocialLinksOpen}
-        setSocialLinksOpen={props.setSocialLinksOpen}
+        setIsSocialLinksOpen={props.setIsSocialLinksOpen} {/* <-- Fix here */}
         isSettingsOpen={props.isSettingsOpen}
         setIsSettingsOpen={props.setIsSettingsOpen}
         isMessagesOpen={props.isMessagesOpen}
@@ -82,3 +82,4 @@ export default function ProfileMainContent(props: any) {
     </>
   );
 }
+
