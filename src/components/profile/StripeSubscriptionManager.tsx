@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,16 +6,9 @@ import { Loader2, CreditCard, XCircle, RefreshCw, ShieldAlert, AlertCircle } fro
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
 
 // Type definitions
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: string;
-  features: string[];
-}
-
 interface SubscriptionStatus {
   subscribed: boolean;
   subscription_tier?: string;
@@ -34,29 +26,6 @@ interface SubscriptionStatus {
 
 interface StripeSubscriptionManagerProps {
   currentPlan?: string;
-}
-
-// Helper: Normalize products & hardcode features by plan name
-function normalizeProduct(product: any): Product {
-  const lowerName = product.name ? product.name.toLowerCase() : "";
-  let features: string[] = [];
-  if (lowerName.includes("premium")) {
-    features = [
-      "Unlimited Dream Analysis",
-      "Unlimited Dream Art Generation",
-      "Priority Support"
-    ];
-  } else {
-    features = [
-      "10 Dream Analysis",
-      "10 Dream Art Generations",
-      "Priority Support"
-    ];
-  }
-  return {
-    ...product,
-    features,
-  };
 }
 
 const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerProps) => {
@@ -94,7 +63,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     }
   }, [user]);
 
-  // Fetch products from Stripe, always using hardcoded features per plan
+  // Fetch products from Stripe, always using strict hardcoded features per plan name
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
@@ -106,20 +75,16 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       });
 
       if (error) {
-        console.error("Error fetching products:", error);
         setConfigError("Unable to fetch subscription plans. Using default plans.");
         setApiError(error.message || "API call failed");
         throw error;
       }
-
       if (data?.error) {
-        console.warn("API returned an error:", data.error);
         setConfigError("Stripe API error. Using default plans.");
         setApiError(data.errorDetails || data.error);
         throw new Error(data.error);
       }
 
-      // Use the helper to hardcode features, ignoring Stripe's features field
       if (data?.products && Array.isArray(data.products)) {
         const normalizedProducts = data.products.map(normalizeProduct);
         setProducts(normalizedProducts);
@@ -127,18 +92,27 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         throw new Error("Invalid products data");
       }
     } catch (error) {
+      // Fallback defaults
       setProducts([
         {
           id: 'price_basic',
           name: 'Basic',
           price: '$4.99/month',
-          features: ['10 Dream Analysis', '10 Dream Art Generations', 'Priority Support'],
+          features: [
+            "10 Dream Analysis",
+            "10 Dream Art Generations",
+            "Priority Support"
+          ],
         },
         {
           id: 'price_premium',
           name: 'Premium',
           price: '$15.99/month',
-          features: ['Unlimited Dream Analysis', 'Unlimited Dream Art Generation', 'Priority Support'],
+          features: [
+            "Unlimited Dream Analysis",
+            "Unlimited Dream Art Generation",
+            "Priority Support"
+          ],
         }
       ]);
       toast.error("Failed to load subscription plans", {
