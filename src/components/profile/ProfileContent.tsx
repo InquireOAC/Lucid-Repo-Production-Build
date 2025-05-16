@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -130,8 +129,8 @@ const ProfileContent = () => {
         setIsMessagesOpen={setIsMessagesOpen}
         setIsSettingsOpen={setIsSettingsOpen}
         setIsSocialLinksOpen={setIsSocialLinksOpen}
-        // IMPORTANT: pass viewedProfileUuid for the follow action
-        handleFollow={() => handleFollow && viewedProfileUuid ? handleFollow(viewedProfileUuid) : undefined}
+        // FIX: handleFollow should not receive viewedProfileUuid, but zero arguments
+        handleFollow={handleFollow}
         handleStartConversation={handleStartConversation}
         onFollowersClick={() => {
           setShowFollowers(true);
