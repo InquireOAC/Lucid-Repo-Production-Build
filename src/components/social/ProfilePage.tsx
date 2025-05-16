@@ -7,9 +7,6 @@ import { useProfileFollowers } from "@/hooks/useProfileFollowers";
 import { useProfileFollowAction } from "@/hooks/useProfileFollowAction";
 import ProfileDreamList from "./ProfileDreamList";
 
-// Use username param from routing (react-router-dom)
-// <Route path="/profile/:username" element={<ProfilePage />} />
-
 export default function ProfilePage({ usernameParam }) {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
@@ -18,7 +15,6 @@ export default function ProfilePage({ usernameParam }) {
     useProfileFollowers(profile?.id);
 
   useEffect(() => {
-    // Fetch profile by username
     async function fetchProfile() {
       const { data } = await supabase
         .from("profiles")
@@ -32,7 +28,6 @@ export default function ProfilePage({ usernameParam }) {
 
   useEffect(() => {
     if (!profile?.id) return;
-    // Only public dreams, unless it is user's own profile
     async function getDreams() {
       let query = supabase
         .from("dream_entries")
@@ -52,7 +47,6 @@ export default function ProfilePage({ usernameParam }) {
   const { isFollowing, handleFollow, checkFollowing } = useProfileFollowAction(
     user,
     profile?.id,
-    // Add callback: after following/unfollowing, update counts/lists
     () => {
       fetchFollowers();
       fetchFollowing();
@@ -61,6 +55,9 @@ export default function ProfilePage({ usernameParam }) {
   useEffect(() => { checkFollowing(); }, [profile?.id, user]);
 
   if (!profile) return <div>Loading...</div>;
+
+  // Provide a no-op for refreshLikedDreams if not updating liked dreams from here
+  const refreshLikedDreams = () => {};
 
   return (
     <div className="max-w-xl mx-auto">
@@ -71,7 +68,6 @@ export default function ProfilePage({ usernameParam }) {
         isFollowing={isFollowing}
         onFollowToggle={async () => {
           await handleFollow();
-          // Extra safety: Ensure followers/following list are up to date
           fetchFollowers();
           fetchFollowing();
         }}
@@ -81,7 +77,7 @@ export default function ProfilePage({ usernameParam }) {
         <h3 className="font-bold text-lg mb-4">
           {profile.id === user?.id ? "Your Dreams" : `${profile.username}'s Dreams`}
         </h3>
-        <ProfileDreamList dreams={publicDreams} user={user} />
+        <ProfileDreamList dreams={publicDreams} user={user} refreshLikedDreams={refreshLikedDreams} />
       </div>
     </div>
   );

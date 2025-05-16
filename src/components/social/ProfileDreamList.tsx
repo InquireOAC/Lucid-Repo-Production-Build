@@ -1,6 +1,7 @@
 
 import React from "react";
 import DreamCard from "./DreamCard";
+import { useDreamLikes } from "@/hooks/useDreamLikes";
 
 export default function ProfileDreamList({ dreams, user, refreshLikedDreams }) {
   return (

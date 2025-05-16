@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -9,6 +10,8 @@ import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
 import DreamComments from "@/components/DreamComments";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Heart } from "lucide-react";
 
 interface DreamDetailProps {
   dream: DreamEntry;
@@ -17,37 +20,36 @@ interface DreamDetailProps {
   onUpdate?: (id: string, updates: Partial<DreamEntry>) => void;
   onDelete?: (id: string) => void;
   isAuthenticated?: boolean;
-  onLike?: () => void; // Add this line to fix the TypeScript error
+  onLike?: () => void;
 }
 
 const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated, onLike }: DreamDetailProps) => {
   const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
-  
-  // Ensure we normalize the dream data for consistency
-  const normalizedDream = {
-    ...dream,
-    generatedImage: dream.generatedImage || dream.image_url || null
-  };
-  
+
+  // Like state for like button near comments
+  const [localLiked, setLocalLiked] = useState(dream.liked || false);
+  const [localLikeCount, setLocalLikeCount] = useState(dream.likeCount || dream.like_count || 0);
+
+  useEffect(() => {
+    setLocalLiked(dream.liked || false);
+    setLocalLikeCount(dream.likeCount || dream.like_count || 0);
+  }, [dream.liked, dream.likeCount, dream.like_count]);
+
   // For audio URL, check both snake_case and camelCase properties
   const audioUrl = dream.audioUrl || dream.audio_url;
-  
-  // Check if the user is the dream owner
+
   const isOwner = user && user.id === dream.user_id;
 
   const handleTogglePublic = async () => {
     if (!onUpdate) return;
-    
     const newStatus = !(dream.is_public || dream.isPublic);
-    
     try {
       await onUpdate(dream.id, { 
         is_public: newStatus,
         isPublic: newStatus
       });
-      
       toast.success(newStatus ? "Dream is now public" : "Dream is now private");
     } catch (error) {
       console.error("Error toggling visibility:", error);
@@ -57,13 +59,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
   const handleDeleteDream = async () => {
     try {
       if (onDelete) {
-        // First close the dialog to prevent UI freezing
         setIsDeleteDialogOpen(false);
-        
-        // Small delay to ensure dialog closes
         setTimeout(() => {
           onDelete(dream.id);
-          // Close the main dream dialog is handled by the parent component
         }, 100);
       } else {
         setIsDeleteDialogOpen(false);
@@ -75,11 +73,9 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
       setIsDeleteDialogOpen(false);
     }
   };
-  
-  // Handle comment count updates
+
   const handleCommentCountChange = (count: number) => {
     setCommentCount(count);
-    // Update the parent component if needed
     if (onUpdate) {
       onUpdate(dream.id, { 
         comment_count: count,
@@ -87,8 +83,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
       });
     }
   };
-  
-  // Check either isPublic or is_public field
+
   const isPublic = dream.is_public || dream.isPublic;
 
   // Map tag IDs to tag objects
@@ -99,7 +94,17 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
     : [];
 
   const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
-  
+
+  // Handler for near-comments like button (propagate to parent and update local state)
+  const handleLikeClick = async () => {
+    if (typeof onLike === "function") {
+      await onLike();
+      // Optimistically update like count
+      setLocalLiked((prev) => !prev);
+      setLocalLikeCount((prev) => prev + (localLiked ? -1 : 1));
+    }
+  };
+
   return (
     <>
       <Dialog open onOpenChange={onClose}>
@@ -114,7 +119,7 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
             content={dream.content}
             formattedDate={formattedDate}
             dreamTags={dreamTags}
-            generatedImage={normalizedDream.generatedImage}
+            generatedImage={dream.generatedImage || dream.image_url || null}
             analysis={dream.analysis}
           />
           
@@ -123,23 +128,44 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
               <audio src={audioUrl} controls className="w-full" />
             </div>
           )}
-          
+
           <div className="flex justify-between items-center mt-4">
-            <ShareButton dream={normalizedDream} />
-            
+            <ShareButton dream={dream} />
             <DreamDetailActions
               isAuthenticated={isAuthenticated}
               isPublic={isPublic}
               onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
-              onLike={onLike} // Pass the onLike prop here
+              onLike={onLike}
               liked={dream.liked}
               likeCount={dream.likeCount || dream.like_count || 0}
             />
           </div>
-          
-          {/* Add comments section - only for public dreams */}
+
+          {/* Add like button above comments section */}
           {isPublic && (
-            <div className="mt-6">
+            <div className="flex items-center gap-3 mt-6 mb-2">
+              <Button 
+                variant={localLiked ? "ghost" : "outline"}
+                size="sm"
+                onClick={handleLikeClick}
+                disabled={!isAuthenticated}
+                className={localLiked ? "text-red-500" : ""}
+              >
+                <Heart 
+                  size={16} 
+                  className={localLiked ? "fill-red-500" : ""}
+                />
+                <span className="ml-1">{localLikeCount}</span>
+              </Button>
+              <span className="text-xs text-muted-foreground">
+                Like this dream
+              </span>
+            </div>
+          )}
+
+          {/* Comments */}
+          {isPublic && (
+            <div className="mt-0">
               <DreamComments 
                 dreamId={dream.id} 
                 onCommentCountChange={handleCommentCountChange}
@@ -149,7 +175,6 @@ const DreamDetail = ({ dream, tags, onClose, onUpdate, onDelete, isAuthenticated
         </DialogContent>
       </Dialog>
       
-      {/* Delete confirmation dialog - keeping this code for potential future use */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
