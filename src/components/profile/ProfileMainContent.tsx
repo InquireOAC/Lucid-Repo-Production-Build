@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
@@ -76,6 +75,7 @@ export default function ProfileMainContent(props: any) {
         subscription={props.subscription}
         selectedConversationUser={selectedConversationUser}
         setSelectedConversationUser={setSelectedConversationUser}
+        fetchConversations={props.fetchConversations}
       />
     </>
   );

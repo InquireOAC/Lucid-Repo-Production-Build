@@ -37,6 +37,7 @@ interface ProfileDialogsProps {
   subscription: any;
   selectedConversationUser: any;
   setSelectedConversationUser: (v: any) => void;
+  fetchConversations?: () => void;
 }
 
 const ProfileDialogs = ({
@@ -70,6 +71,7 @@ const ProfileDialogs = ({
   subscription,
   selectedConversationUser,
   setSelectedConversationUser,
+  fetchConversations,
 }: ProfileDialogsProps) => (
   <>
     <EditProfileDialog
@@ -116,6 +118,7 @@ const ProfileDialogs = ({
       conversations={conversations}
       selectedConversationUser={selectedConversationUser}
       setSelectedConversationUser={setSelectedConversationUser}
+      fetchConversations={fetchConversations}
     />
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}

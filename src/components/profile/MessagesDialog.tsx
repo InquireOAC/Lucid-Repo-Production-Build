@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { MessageSquare, Send } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,8 +12,9 @@ interface MessagesDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   conversations: any[];
-  selectedConversationUser?: any; // <--- new prop
-  setSelectedConversationUser?: (user: any) => void; // <--- new prop
+  selectedConversationUser?: any;
+  setSelectedConversationUser?: (user: any) => void;
+  fetchConversations?: () => void;
 }
 
 const MessagesDialog = ({
@@ -22,13 +22,21 @@ const MessagesDialog = ({
   onOpenChange,
   conversations,
   selectedConversationUser,
-  setSelectedConversationUser
+  setSelectedConversationUser,
+  fetchConversations,
 }: MessagesDialogProps) => {
   const { user } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Fetch all conversations every time dialog is (re)opened
+  useEffect(() => {
+    if (isOpen && fetchConversations) {
+      fetchConversations();
+    }
+  }, [isOpen, fetchConversations]);
 
   // Automatically select the desired DM on open via prop
   useEffect(() => {
