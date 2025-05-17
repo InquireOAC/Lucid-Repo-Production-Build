@@ -187,11 +187,15 @@ export const useJournalActions = () => {
     setIsSubmitting(true);
     try {
       let imageUrl = "";
+      let shouldUpdateImage = false;
+
+      // Check if a new image (base64) was provided, upload if needed
       if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
         console.log('[Dream Edit] Uploading base64 image to Supabase...');
         const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id, dreamId);
         if (supabaseImageUrl) {
           imageUrl = supabaseImageUrl;
+          shouldUpdateImage = true;
           console.log('[Dream Edit] New image saved to:', imageUrl);
         } else {
           console.error("[Dream Edit] Failed upload, supabaseImageUrl is null");
@@ -199,14 +203,35 @@ export const useJournalActions = () => {
           setIsSubmitting(false);
           return;
         }
+      } else if (dreamData.generatedImage && (
+        dreamData.generatedImage.startsWith("http")
+        || dreamData.generatedImage.startsWith("https")
+      )) {
+        // Direct HTTP(S) URL provided (already persisted)
+        imageUrl = dreamData.generatedImage;
+        shouldUpdateImage = true;
+        console.log('[Dream Edit] Using existing image URL:', imageUrl);
       }
 
       const updates: Partial<DreamEntry> = {
         ...dreamData,
-        generatedImage: imageUrl,
-        image_url: imageUrl,
-        image_dataurl: imageUrl,
+        // If a new or existing image URL is present, set all related props
+        ...(shouldUpdateImage
+          ? {
+              generatedImage: imageUrl,
+              image_url: imageUrl,
+              image_dataurl: imageUrl,
+            }
+          : {}
+        ),
       };
+
+      // Always stringify tags if not already a string[]
+      if (Array.isArray(updates.tags) && typeof updates.tags[0] !== "string") {
+        updates.tags = updates.tags.map((t: any) => (typeof t === "object" && t.id ? t.id : t));
+      }
+
+      console.log("[Dream Edit] Persisting updates:", updates);
 
       await handleUpdateDreamInternal(dreamId, updates);
     } catch (error) {
