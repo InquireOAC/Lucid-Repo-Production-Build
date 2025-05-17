@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Search, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,7 @@ interface LucidRepoHeaderProps {
   onTagClick: (tagId: string) => void;
   onClearTags: () => void;
 }
-// Add genre/tag search directly in header UI
+
 const LucidRepoHeader = ({
   searchQuery,
   setSearchQuery,
@@ -48,9 +47,8 @@ const LucidRepoHeader = ({
           Search
         </Button>
       </form>
-      {/* Add tag/genre filter */}
       {tags && tags.length > 0 && (
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="flex flex-wrap gap-1 items-center">
           <span className="text-sm text-muted-foreground">Tag Filter:</span>
           {tags.map((tag) => (
             <Button
