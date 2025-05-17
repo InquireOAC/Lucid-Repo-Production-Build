@@ -1,7 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, ImagePlus } from "lucide-react";
+import { Sparkles, ImagePlus, Download } from "lucide-react";
 
 // Import refactored hook and components
 import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
@@ -47,6 +47,18 @@ const DreamImageGenerator = ({
     dreamId 
   });
 
+  // Helper to generate download of PNG (works if generatedImage is a base64 PNG)
+  const handleSaveAsPng = () => {
+    if (generatedImage && generatedImage.startsWith("data:image/")) {
+      const link = document.createElement("a");
+      link.href = generatedImage;
+      link.download = "dream-image.png";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   if (showInfo && !isGenerating) { // Check !isGenerating to avoid flicker
     return (
       <Card>
@@ -83,11 +95,19 @@ const DreamImageGenerator = ({
         ) : (
           <>
             {generatedImage && (
-              <ImageDisplay 
-                imageUrl={generatedImage} 
-                imageDataUrl={generatedImage}
-                onError={() => setImageError(true)} 
-              />
+              <div className="flex flex-col gap-2">
+                <ImageDisplay 
+                  imageUrl={generatedImage} 
+                  imageDataUrl={generatedImage}
+                  onError={() => setImageError(true)} 
+                />
+                {/* Show Save as PNG button if image is base64 png url */}
+                {generatedImage.startsWith("data:image/") && (
+                  <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
+                    <Download className="h-4 w-4 mr-1" /> Save as PNG
+                  </Button>
+                )}
+              </div>
             )}
             {(generatedImage || isGenerating || imagePrompt) && (
               <ImagePromptInput
@@ -110,7 +130,7 @@ const DreamImageGenerator = ({
             )}
             {imageError && !isGenerating && (
                 <p className="text-xs text-red-500 mt-1 text-center">
-                    There was an issue with the image. Please try regenerating.
+                    There was an issue with the image. Please try regenerating or load your saved PNG.
                 </p>
             )}
           </>

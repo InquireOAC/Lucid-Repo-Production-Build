@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 interface ImageDisplayProps {
   imageUrl: string;
@@ -7,41 +7,75 @@ interface ImageDisplayProps {
   onError: () => void;
 }
 
-const LOCAL_PLACEHOLDER = "/placeholder.svg";
-
 const ImageDisplay = ({ imageUrl, imageDataUrl, onError }: ImageDisplayProps) => {
   const [imageError, setImageError] = useState(false);
+  const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setImageError(true);
     console.error("Image load error");
     onError();
-    const img = e.currentTarget;
-    // Only swap to local placeholder once to prevent infinite loop
-    if (img.src !== window.location.origin + LOCAL_PLACEHOLDER && img.src !== window.location.origin + "/" + LOCAL_PLACEHOLDER) {
-      img.src = LOCAL_PLACEHOLDER;
+  };
+
+  // Handler for users to select previously downloaded PNG on error
+  const handlePickLocalFile = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Reset so they can select the same file again.
+      fileInputRef.current.click();
     }
   };
 
-  const srcToShow =
-    imageDataUrl && imageDataUrl.startsWith("data:image/")
-      ? imageDataUrl
-      : imageUrl && !imageError
-      ? imageUrl
-      : LOCAL_PLACEHOLDER;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file);
+      setLocalFileUrl(url);
+      setImageError(false);
+    }
+  };
+
+  // Choose what to display: If local file from disk is set (after error), use that.
+  // Else, try base64 DataURL first, else imageUrl, else nothing if errored.
+  let srcToShow = null;
+  if (localFileUrl) {
+    srcToShow = localFileUrl;
+  } else if (imageDataUrl && imageDataUrl.startsWith("data:image/")) {
+    srcToShow = imageDataUrl;
+  } else if (imageUrl && !imageError) {
+    srcToShow = imageUrl;
+  }
 
   return (
     <div className="mb-4">
-      <img
-        src={srcToShow}
-        alt="Dream"
-        className="w-full rounded-md aspect-square object-cover"
-        onError={handleError}
-      />
+      {srcToShow && (
+        <img
+          src={srcToShow}
+          alt="Dream"
+          className="w-full rounded-md aspect-square object-cover"
+          onError={handleError}
+        />
+      )}
       {imageError && (
-        <p className="text-xs text-red-500 mt-1">
-          There was an issue displaying the image. Try regenerating.
-        </p>
+        <div className="flex flex-col items-center mt-2 gap-2">
+          <p className="text-xs text-red-500">
+            There was an issue displaying the image.
+          </p>
+          <button
+            type="button"
+            className="px-3 py-1 rounded bg-dream-purple text-white hover:bg-dream-lavender transition"
+            onClick={handlePickLocalFile}
+          >
+            Load Image from File
+          </button>
+          <input
+            type="file"
+            accept="image/png,image/jpeg"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+          />
+        </div>
       )}
     </div>
   );
