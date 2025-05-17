@@ -5,6 +5,7 @@ import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamDbActions } from "./useDreamDbActions";
 import { useDreamImageManager } from "./useDreamImageManager";
+import { uploadImageToSupabase } from "@/utils/uploadImageToSupabase";
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -33,19 +34,24 @@ export const useJournalActions = () => {
     }
 
     try {
-      let base64DataUrl = dreamData.generatedImage || "";
-      // Always ensure we have base64 version
-      if (dreamData.generatedImage && !dreamData.generatedImage.startsWith("data:image/")) {
-        const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-        base64DataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
+      let imageUrl = "";
+
+      // If the dream has a generated/selected image, upload it for persistence on Supabase
+      if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
+        const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id);
+        if (supabaseImageUrl) {
+          imageUrl = supabaseImageUrl;
+        } else {
+          throw new Error("Failed to upload image to Supabase storage.");
+        }
       }
 
       const newDreamForStore = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
         user_id: user.id,
-        generatedImage: base64DataUrl,
-        image_dataurl: base64DataUrl,
+        generatedImage: imageUrl, // Save the public URL (or empty string)
+        image_dataurl: imageUrl,
       });
       console.log("Adding dream locally with ID:", newDreamForStore.id);
 
@@ -60,26 +66,26 @@ export const useJournalActions = () => {
         date: newDreamForStore.date,
         is_public: false,
         analysis: dreamData.analysis || null,
-        generatedImage: base64DataUrl,
-        image_url: base64DataUrl,
-        image_dataurl: base64DataUrl,
+        generatedImage: imageUrl,
+        image_url: imageUrl,
+        image_dataurl: imageUrl,
         imagePrompt: dreamData.imagePrompt || null,
       };
-      
-      console.log("Saving dream to database with base64 image:", dreamForDb);
+
+      console.log("Saving dream to database with image:", dreamForDb);
       const { error } = await dreamDbActions.addDreamToDb(dreamForDb);
-          
+
       if (error) {
         console.error("Database error on insert:", error);
         toast.error("Error saving dream to database: " + error.message);
-        throw error; 
+        throw error;
       }
 
-      updateEntry(newDreamForStore.id, { generatedImage: base64DataUrl, image_url: base64DataUrl, image_dataurl: base64DataUrl });
+      updateEntry(newDreamForStore.id, { generatedImage: imageUrl, image_url: imageUrl, image_dataurl: imageUrl });
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      toast.error("Failed to save dream."); 
+      toast.error("Failed to save dream.");
     } finally {
       setIsSubmitting(false);
     }
@@ -123,7 +129,6 @@ export const useJournalActions = () => {
     }
   };
 
-
   const handleEditDream = async (dreamData: {
     title: string;
     content: string;
@@ -131,7 +136,7 @@ export const useJournalActions = () => {
     lucid: boolean;
     mood: string;
     analysis?: string;
-    generatedImage?: string; 
+    generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
   }, dreamId: string): Promise<void> => {
@@ -144,31 +149,35 @@ export const useJournalActions = () => {
       toast.error("You must be logged in to edit a dream.");
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
-      let base64DataUrl = dreamData.generatedImage || "";
-      if (dreamData.generatedImage && !dreamData.generatedImage.startsWith("data:image/")) {
-        const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-        base64DataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
+      let imageUrl = "";
+      if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
+        const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id, dreamId);
+        if (supabaseImageUrl) {
+          imageUrl = supabaseImageUrl;
+        } else {
+          throw new Error("Failed to upload image to Supabase storage.");
+        }
       }
 
       const updates: Partial<DreamEntry> = {
         ...dreamData,
-        generatedImage: base64DataUrl,
-        image_url: base64DataUrl,
-        image_dataurl: base64DataUrl,
+        generatedImage: imageUrl,
+        image_url: imageUrl,
+        image_dataurl: imageUrl,
       };
-      
-      await handleUpdateDreamInternal(dreamId, updates); 
+
+      await handleUpdateDreamInternal(dreamId, updates);
     } catch (error) {
-        console.error("Error editing dream:", error);
-        toast.error("Failed to update dream.");
+      console.error("Error editing dream:", error);
+      toast.error("Failed to update dream.");
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   const handleDeleteDream = async (id: string) => {
     setIsSubmitting(true); // Good to set submitting state here too
     try {

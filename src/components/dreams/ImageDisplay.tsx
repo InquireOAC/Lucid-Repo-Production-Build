@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 
 interface ImageDisplayProps {
@@ -23,10 +22,9 @@ const ImageDisplay = ({
     onError();
   };
 
-  // Handler for users to select previously downloaded PNG on error
   const handlePickLocalFile = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // Reset so they can select the same file again.
+      fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
   };
@@ -60,11 +58,11 @@ const ImageDisplay = ({
     }
   };
 
-  // Choose what to display: Use imageDataUrl (always base64), else imageUrl, else nothing if errored.
+  // Always display only cloud-hosted URL (public URL)
   let srcToShow = null;
-  if (imageDataUrl && imageDataUrl.startsWith("data:image/")) {
+  if (imageDataUrl && imageDataUrl.startsWith("http")) {
     srcToShow = imageDataUrl;
-  } else if (imageUrl && !imageError && imageUrl.startsWith("data:image/")) {
+  } else if (imageUrl && !imageError && imageUrl.startsWith("http")) {
     srcToShow = imageUrl;
   }
 
@@ -104,4 +102,3 @@ const ImageDisplay = ({
 };
 
 export default ImageDisplay;
-
