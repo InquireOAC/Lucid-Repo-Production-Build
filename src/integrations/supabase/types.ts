@@ -479,6 +479,24 @@ export type Database = {
         }
         Relationships: []
       }
+      public_dream_tags: {
+        Row: {
+          color: string
+          id: string
+          name: string
+        }
+        Insert: {
+          color?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          color?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       stripe_customers: {
         Row: {
           created_at: string | null

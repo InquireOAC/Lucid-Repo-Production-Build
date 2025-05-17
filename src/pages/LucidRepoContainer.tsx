@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,17 +8,10 @@ import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
 import { toast } from "sonner";
 import { useDreams } from "@/hooks/useDreams";
+import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 
 const ALLOWED_TAGS = [
-  "Nightmare",
-  "Lucid",
-  "Recurring",
-  "Adventure",
-  "Spiritual",
-  "Flying",
-  "Falling",
-  "Water",
-  "love"
+  "Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"
 ];
 
 const LucidRepoContainer = () => {
@@ -32,7 +24,6 @@ const LucidRepoContainer = () => {
 
   const {
     dreams,
-    dreamTags,
     isLoading,
     sortBy,
     setSortBy,
@@ -43,16 +34,11 @@ const LucidRepoContainer = () => {
     fetchPublicDreams
   } = useDreams();
 
-  // Ensure ALL dreams have .tags property (default to []) so filtering and tags show.
-  const normalizedDreams = dreams.map(dream => ({
-    ...dream,
-    tags: Array.isArray(dream.tags) ? dream.tags : []
-  }));
+  // NEW: Fetch globally visible dream tags for the repo page
+  const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
 
-  // Filter the dreamTags for only allowed tags
-  const filteredDreamTags = dreamTags.filter(tag =>
-    ALLOWED_TAGS.includes(tag.name)
-  );
+  // Only allow tags in the allowed list
+  const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
 
   useEffect(() => {
     fetchPublicDreams();
@@ -115,6 +101,12 @@ const LucidRepoContainer = () => {
   };
 
   // Filter dreams based on search query and tags using normalizedDreams now
+  const normalizedDreams = dreams.map(dream => ({
+    ...dream,
+    tags: Array.isArray(dream.tags) ? dream.tags : []
+  }));
+
+  // Tag filtering: Only show dreams where at least one dream.tags[] (ID string) matches activeTags[]
   const filteredDreams = normalizedDreams.filter((dream) => {
     let matchesSearch = true;
     let matchesTags = true;
@@ -149,7 +141,7 @@ const LucidRepoContainer = () => {
         onClearTags={handleClearTags}
       />
       <LucidRepoDreamList
-        isLoading={isLoading}
+        isLoading={isLoading || tagsLoading}
         filteredDreams={filteredDreams}
         dreamTags={filteredDreamTags}
         onLike={handleDreamLike}
