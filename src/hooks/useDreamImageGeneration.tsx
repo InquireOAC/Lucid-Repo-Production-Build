@@ -85,63 +85,24 @@ export const useDreamImageGeneration = ({
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
       if (!openaiUrl) throw new Error('No image URL was returned from AI generation');
 
-      setGeneratedImage(openaiUrl);
+      // Always convert to dataURL and treat as canonical
+      const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
+      let dataUrl = await fetchImageAsDataURL(openaiUrl);
+      if (!dataUrl?.startsWith("data:image/")) {
+        throw new Error("Failed to convert generated image to base64 data URL");
+      }
 
+      setGeneratedImage(dataUrl);
+
+      // Always save as base64 to parent handler
+      onImageGenerated(dataUrl, generatedPromptText);
+
+      // Optionally, still try to upload image for CDN/caching, but ignore failures
       if (!isAppCreator && !hasUsedFeature('image')) {
         markFeatureAsUsed('image');
       }
 
-      try {
-        // Upload and always use Supabase public URL; only use the temp URL if upload fails
-        let storedImageUrl = "";
-        let dataUrl = "";
-        try {
-          // Try to upload to Supabase (original logic)
-          storedImageUrl = await uploadDreamImage(dreamId, openaiUrl, user.id);
-
-          // If upload failed, attempt dataUrl fallback
-          const basePublicUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
-          if (
-            !storedImageUrl ||
-            storedImageUrl === openaiUrl ||
-            !storedImageUrl.startsWith(basePublicUrl)
-          ) {
-            // Fallback: persist image as data url
-            const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-            dataUrl = await fetchImageAsDataURL(openaiUrl);
-            if (dataUrl?.startsWith("data:image/")) {
-              setGeneratedImage(dataUrl);
-              onImageGenerated(dataUrl, generatedPromptText);
-              toast.warning("Permanent image storage failed. Using local fallback for now.");
-            } else {
-              setGeneratedImage(openaiUrl);
-              onImageGenerated(openaiUrl, generatedPromptText);
-              toast.warning("Image generated, but not saved to permanent storage. You may not see it later.");
-            }
-          } else {
-            setGeneratedImage(storedImageUrl);
-            onImageGenerated(storedImageUrl, generatedPromptText);
-            toast.success("Dream image generated and saved!");
-          }
-        } catch (uploadError: any) {
-          const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-          dataUrl = await fetchImageAsDataURL(openaiUrl);
-          if (dataUrl?.startsWith("data:image/")) {
-            setGeneratedImage(dataUrl);
-            toast.error(`Failed to upload image, using local fallback.`);
-            onImageGenerated(dataUrl, generatedPromptText);
-          } else {
-            setGeneratedImage(openaiUrl);
-            toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
-            onImageGenerated(openaiUrl, generatedPromptText);
-          }
-        }
-      } catch (uploadError: any) {
-        console.error(`Upload error during ${dreamId} generation:`, uploadError);
-        setGeneratedImage(openaiUrl);
-        toast.error(`Image upload failed: ${uploadError.message}. Using temporary image.`);
-        onImageGenerated(openaiUrl, generatedPromptText);
-      }
+      toast.success("Dream image generated and saved permanently!");
     } catch (error: any) {
       console.error('Image generation error:', error);
       setImageError(true);

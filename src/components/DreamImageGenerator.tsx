@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,6 +68,7 @@ const DreamImageGenerator = ({
     );
   }
 
+  // Pass both imageUrl and generatedImage as imageDataUrl (always base64 after our hook fix)
   return (
     <Card>
       <CardHeader>
@@ -85,34 +85,30 @@ const DreamImageGenerator = ({
             {generatedImage && (
               <ImageDisplay 
                 imageUrl={generatedImage} 
-                // If ImageDisplay itself has an error (e.g. broken link after generation),
-                // it can call setImageError to update the hook's state.
+                imageDataUrl={generatedImage}
                 onError={() => setImageError(true)} 
               />
             )}
-            
-            {/* Display prompt input only if an image has been generated or is being generated, or if there's an existing prompt */}
             {(generatedImage || isGenerating || imagePrompt) && (
               <ImagePromptInput
                 imagePrompt={imagePrompt}
                 onChange={setImagePrompt}
-                disabled={disabled || isGenerating} // Also disable if generating
+                disabled={disabled || isGenerating}
               />
             )}
-            
-            {!disabled && (generatedImage || imagePrompt) && !isGenerating && ( // Show regenerate only if there's an image/prompt and not generating
+            {!disabled && (generatedImage || imagePrompt) && !isGenerating && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={generateImage}
-                  disabled={isGenerating} // Redundant due to outer check, but good practice
+                  disabled={isGenerating}
                 >
                   <Sparkles className="h-4 w-4 mr-1" /> Regenerate
                 </Button>
               </div>
             )}
-            {imageError && !isGenerating && ( // Show general error message if imageError is true and not generating
+            {imageError && !isGenerating && (
                 <p className="text-xs text-red-500 mt-1 text-center">
                     There was an issue with the image. Please try regenerating.
                 </p>

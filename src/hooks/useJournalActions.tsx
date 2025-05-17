@@ -33,33 +33,22 @@ export const useJournalActions = () => {
     }
 
     try {
+      let base64DataUrl = dreamData.generatedImage || "";
+      // Always ensure we have base64 version
+      if (dreamData.generatedImage && !dreamData.generatedImage.startsWith("data:image/")) {
+        const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
+        base64DataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
+      }
+
       const newDreamForStore = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
         user_id: user.id,
+        generatedImage: base64DataUrl,
+        image_dataurl: base64DataUrl,
       });
       console.log("Adding dream locally with ID:", newDreamForStore.id);
 
-      let finalImageUrl = dreamData.generatedImage;
-      let finalDataUrl = null;
-      if (dreamData.generatedImage) {
-        console.log("Processing generated image for new dream:", dreamData.generatedImage);
-        const uploadedUrl = await dreamImageManager.uploadAndLinkImage(newDreamForStore.id, dreamData.generatedImage, user.id);
-        if (uploadedUrl && uploadedUrl !== dreamData.generatedImage) {
-          finalImageUrl = uploadedUrl;
-          console.log("Final image URL for new dream:", finalImageUrl);
-        } else {
-          // Failed upload: fallback to dataURL for persistence
-          const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-          finalDataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
-          if (finalDataUrl && finalDataUrl.startsWith("data:image/")) {
-            toast.warning("Permanent image storage failed, saved as local backup.");
-          } else {
-            toast.warning("Image was generated but failed to save permanently. It might be temporary.");
-          }
-        }
-      }
-      
       const dreamForDb = {
         id: newDreamForStore.id,
         user_id: user.id,
@@ -69,15 +58,15 @@ export const useJournalActions = () => {
         mood: dreamData.mood,
         lucid: dreamData.lucid,
         date: newDreamForStore.date,
-        is_public: false, // Default for new dreams
+        is_public: false,
         analysis: dreamData.analysis || null,
-        generatedImage: finalImageUrl || null,
-        image_url: finalImageUrl || null,
-        image_dataurl: finalDataUrl || null,
+        generatedImage: base64DataUrl,
+        image_url: base64DataUrl,
+        image_dataurl: base64DataUrl,
         imagePrompt: dreamData.imagePrompt || null,
       };
       
-      console.log("Saving dream to database:", dreamForDb);
+      console.log("Saving dream to database with base64 image:", dreamForDb);
       const { error } = await dreamDbActions.addDreamToDb(dreamForDb);
           
       if (error) {
@@ -85,14 +74,8 @@ export const useJournalActions = () => {
         toast.error("Error saving dream to database: " + error.message);
         throw error; 
       }
-      
-      if (finalImageUrl !== dreamData.generatedImage) {
-        updateEntry(newDreamForStore.id, { generatedImage: finalImageUrl, image_url: finalImageUrl });
-      }
-      if (finalDataUrl) {
-        updateEntry(newDreamForStore.id, { image_dataurl: finalDataUrl });
-      }
 
+      updateEntry(newDreamForStore.id, { generatedImage: base64DataUrl, image_url: base64DataUrl, image_dataurl: base64DataUrl });
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
@@ -150,7 +133,7 @@ export const useJournalActions = () => {
     analysis?: string;
     generatedImage?: string; 
     imagePrompt?: string;
-    audioUrl?: string; // Not currently saved to DB in this structure
+    audioUrl?: string;
   }, dreamId: string): Promise<void> => {
     if (!dreamId) {
       console.error("Error: dreamId is required for editing.");
@@ -164,30 +147,17 @@ export const useJournalActions = () => {
     
     setIsSubmitting(true);
     try {
-      let finalImageUrl = dreamData.generatedImage;
-      let finalDataUrl = null;
-
-      if (dreamData.generatedImage) {
-        console.log("Processing generated/updated image for existing dream:", dreamData.generatedImage);
-        const uploadedUrl = await dreamImageManager.uploadAndLinkImage(dreamId, dreamData.generatedImage, user.id);
-        if (uploadedUrl && uploadedUrl !== dreamData.generatedImage) {
-          finalImageUrl = uploadedUrl;
-          console.log("Final image URL for edited dream:", finalImageUrl);
-        } else {
-          // Failed upload: fallback to dataURL for persistence
-          const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
-          finalDataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
-          if (finalDataUrl && finalDataUrl.startsWith("data:image/")) {
-            toast.warning("Permanent image storage failed, saved as local backup.");
-          }
-        }
+      let base64DataUrl = dreamData.generatedImage || "";
+      if (dreamData.generatedImage && !dreamData.generatedImage.startsWith("data:image/")) {
+        const { fetchImageAsDataURL } = await import("@/utils/persistDreamImage");
+        base64DataUrl = await fetchImageAsDataURL(dreamData.generatedImage);
       }
-      
+
       const updates: Partial<DreamEntry> = {
-        ...dreamData, // title, content, tags, lucid, mood, analysis, imagePrompt
-        generatedImage: finalImageUrl, 
-        image_url: finalImageUrl,
-        image_dataurl: finalDataUrl,
+        ...dreamData,
+        generatedImage: base64DataUrl,
+        image_url: base64DataUrl,
+        image_dataurl: base64DataUrl,
       };
       
       await handleUpdateDreamInternal(dreamId, updates); 

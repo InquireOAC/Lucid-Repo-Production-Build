@@ -19,11 +19,11 @@ const ImageDisplay = ({ imageUrl, imageDataUrl, onError }: ImageDisplayProps) =>
     img.src = "https://via.placeholder.com/400?text=Image+Error";
   };
 
-  // Prefer imageUrl. If error or imageUrl is empty, try dataUrl. If neither, show placeholder.
-  const srcToShow = !imageError && imageUrl
-    ? imageUrl
-    : imageDataUrl && imageDataUrl.startsWith("data:image/")
-      ? imageDataUrl
+  // Always prefer dataUrl if available and valid, else fall back to imageUrl
+  const srcToShow = imageDataUrl && imageDataUrl.startsWith("data:image/")
+    ? imageDataUrl
+    : imageUrl && !imageError
+      ? imageUrl
       : "https://via.placeholder.com/400?text=Image+Error";
 
   return (
