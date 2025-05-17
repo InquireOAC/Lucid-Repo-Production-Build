@@ -18,7 +18,6 @@ const ImageDisplay = ({
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     setImageError(true);
-    console.error("Image load error");
     onError();
   };
 
@@ -29,36 +28,34 @@ const ImageDisplay = ({
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
+      // Always convert to base64 first and pass that to onImageChange for upload
       const reader = new FileReader();
-      reader.onload = () => {
+      reader.onload = async () => {
         if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
           setImageError(false);
           if (onImageChange) {
-            onImageChange(reader.result);
+            await onImageChange(reader.result); // Now, onImageChange uploads and returns publicUrl
           }
         } else {
           setImageError(true);
-          console.error("Failed to convert file to base64 DataURL.");
           onError();
         }
       };
       reader.onerror = (error) => {
         setImageError(true);
-        console.error("FileReader error", error);
         onError();
       };
       reader.readAsDataURL(file);
     } else {
       setImageError(true);
       onError();
-      console.error("Selected file is not an image.");
     }
   };
 
-  // Always display only cloud-hosted URL (public URL)
+  // Display only URL: prioritize normal URLs (png from Supabase) over base64s
   let srcToShow = null;
   if (imageDataUrl && imageDataUrl.startsWith("http")) {
     srcToShow = imageDataUrl;

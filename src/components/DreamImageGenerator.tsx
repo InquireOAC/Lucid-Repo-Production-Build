@@ -39,7 +39,8 @@ const DreamImageGenerator = ({
     setImageError,
     generateImage,
     isAppCreator,
-    hasUsedFeature
+    hasUsedFeature,
+    handleImageFromFile // new from hook
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
@@ -49,17 +50,9 @@ const DreamImageGenerator = ({
     dreamId 
   });
 
-  // New handler for when user picks a file and it gets converted to base64
-  const handleImageFromFile = (base64DataUrl: string) => {
-    // This will update the generatedImage in the parent (which will flow down here and into the DB)
-    if (base64DataUrl) {
-      onImageGenerated(base64DataUrl, imagePrompt || "");
-      toast.success("Image loaded from file!");
-      setImageError(false);
-    } else {
-      toast.error("Failed to convert file to image.");
-      setImageError(true);
-    }
+  // direct to the new handler, which uploads-to-Supabase & returns URL
+  const onImageFileUpload = async (base64DataUrl: string) => {
+    await handleImageFromFile(base64DataUrl);
   };
 
   // Helper to generate download of PNG (works if generatedImage is a base64 PNG)
@@ -115,10 +108,10 @@ const DreamImageGenerator = ({
                   imageUrl={generatedImage} 
                   imageDataUrl={generatedImage}
                   onError={() => setImageError(true)} 
-                  onImageChange={handleImageFromFile}
+                  onImageChange={onImageFileUpload}
                 />
                 {/* Show Save as PNG button if image is base64 png url */}
-                {generatedImage.startsWith("data:image/") && (
+                {generatedImage.startsWith("http") && (
                   <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
                     <Download className="h-4 w-4 mr-1" /> Save as PNG
                   </Button>
@@ -155,5 +148,4 @@ const DreamImageGenerator = ({
     </Card>
   );
 };
-
 export default DreamImageGenerator;
