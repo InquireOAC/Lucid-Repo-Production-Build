@@ -5,10 +5,8 @@ import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { uploadImageToSupabase } from "@/utils/uploadImageToSupabase"; // Use PNG uploader
-import { DreamEntry } from "@/types/dream";
+import { uploadImageToSupabase } from "@/utils/uploadImageToSupabase";
 
-// SAME interface as before
 interface UseDreamImageGenerationProps {
   dreamContent: string;
   existingPrompt?: string;
@@ -24,11 +22,11 @@ export const useDreamImageGeneration = ({
   existingImage = "",
   onImageGenerated,
   disabled = false,
-  dreamId = "preview"
+  dreamId = "preview",
 }: UseDreamImageGenerationProps) => {
   const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  
+
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
   const [generatedImage, setGeneratedImage] = useState(existingImage);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -40,32 +38,38 @@ export const useDreamImageGeneration = ({
     if (existingImage) {
       setGeneratedImage(existingImage);
       setImageError(false);
-      // Preloading can stay; no need to base64
     } else {
       setGeneratedImage("");
       setImagePrompt("");
     }
   }, [existingImage]);
 
-  // Helper to handle any image (base64 or url) and upload to Supabase, returns the public URL
+  // This method is called for both AI-generated or user-uploaded image
   const uploadAndGetPublicImageUrl = async (image: string, prompt: string) => {
     if (!user) {
       toast.error("Not logged in; cannot upload images.");
       return "";
     }
-    // image is either a base64 data url or external URL. Only handle "data:image" or "http"
-    if (image.startsWith("data:image/") || image.startsWith("http")) {
-      // Always upload as PNG to Supabase (handles both cases)
-      const uploadedUrl = await uploadImageToSupabase(image, user.id, dreamId);
-      if (!uploadedUrl || !uploadedUrl.startsWith("http")) {
-        toast.error("Problem uploading image. Please try again.");
+    if (image.startsWith("data:image") || image.startsWith("http")) {
+      try {
+        setIsGenerating(true);
+        setImageError(false);
+        const uploadedUrl = await uploadImageToSupabase(image, user.id, dreamId);
+        if (!uploadedUrl || !uploadedUrl.startsWith("http")) {
+          toast.error("Problem uploading image. Please try again.");
+          setImageError(true);
+          return "";
+        }
+        setGeneratedImage(uploadedUrl);
+        onImageGenerated(uploadedUrl, prompt);
+        return uploadedUrl;
+      } catch (error: any) {
         setImageError(true);
+        toast.error("Upload failed: " + (error?.message || "Unknown error"));
         return "";
+      } finally {
+        setIsGenerating(false);
       }
-      // Set final state & inform parent
-      setGeneratedImage(uploadedUrl);
-      onImageGenerated(uploadedUrl, prompt);
-      return uploadedUrl;
     }
     return "";
   };
@@ -79,40 +83,41 @@ export const useDreamImageGeneration = ({
     }
 
     try {
-      const canUse = isAppCreator || await canUseFeature('image');
+      const canUse = isAppCreator || (await canUseFeature("image"));
       if (!canUse) {
-        showSubscriptionPrompt('image');
+        showSubscriptionPrompt("image");
         return;
       }
 
       setIsGenerating(true);
       setImageError(false);
 
-      // 1. Get prompt
-      const promptResult = await supabase.functions.invoke('analyze-dream', {
-        body: { dreamContent, task: 'create_image_prompt' }
+      // 1. Generate prompt
+      const promptResult = await supabase.functions.invoke("analyze-dream", {
+        body: { dreamContent, task: "create_image_prompt" },
       });
 
-      if (promptResult.error) throw new Error(promptResult.error.message || 'Failed to generate image prompt');
-      const generatedPromptText = promptResult.data?.analysis || '';
-      if (!generatedPromptText) throw new Error('No image prompt was generated');
+      if (promptResult.error) throw new Error(promptResult.error.message || "Failed to generate image prompt");
+      const generatedPromptText = promptResult.data?.analysis || "";
+      if (!generatedPromptText) throw new Error("No image prompt was generated");
 
       setImagePrompt(generatedPromptText);
-      // 2. Generate image with OpenAI (returns temporary URL)
-      const imageResult = await supabase.functions.invoke('generate-dream-image', {
-        body: { prompt: generatedPromptText }
+
+      // 2. Generate AI image
+      const imageResult = await supabase.functions.invoke("generate-dream-image", {
+        body: { prompt: generatedPromptText },
       });
 
-      if (imageResult.error) throw new Error(imageResult.error.message || 'Failed to generate image');
+      if (imageResult.error) throw new Error(imageResult.error.message || "Failed to generate image");
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
-      if (!openaiUrl) throw new Error('No image URL was returned from AI generation');
+      if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
-      // 3. Upload to Supabase Storage as PNG and get its public URL
+      // 3. Upload to Supabase Storage as PNG
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText);
 
       if (supabaseUrl) {
         toast.success("Dream image generated and saved permanently!");
-        if (!isAppCreator && !hasUsedFeature('image')) markFeatureAsUsed('image');
+        if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       } else {
         throw new Error("Failed to persist generated image.");
       }
@@ -122,9 +127,19 @@ export const useDreamImageGeneration = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [user, disabled, dreamContent, dreamId, isAppCreator, canUseFeature, markFeatureAsUsed, hasUsedFeature, onImageGenerated]);
+  }, [
+    user,
+    disabled,
+    dreamContent,
+    dreamId,
+    isAppCreator,
+    canUseFeature,
+    markFeatureAsUsed,
+    hasUsedFeature,
+    onImageGenerated,
+  ]);
 
-  // New: Called by ImageDisplay for local file uploads, always saves to Supabase, then sets the URL
+  // Allow the user to upload their own image. This method must always be available!
   const handleImageFromFile = async (fileDataUrl: string) => {
     if (!fileDataUrl || !user) {
       setImageError(true);
@@ -137,6 +152,7 @@ export const useDreamImageGeneration = ({
     if (!publicUrl) setImageError(true);
   };
 
+  // "showInfo" is now only true if there is no image yet.
   const showInfo = !existingImage && !generatedImage;
 
   return {
@@ -149,7 +165,7 @@ export const useDreamImageGeneration = ({
     setImageError,
     generateImage,
     isAppCreator,
-    hasUsedFeature: (feature: 'image' | 'analysis') => hasUsedFeature(feature),
-    handleImageFromFile // Pass down to DreamImageGenerator
+    hasUsedFeature: (feature: "image" | "analysis") => hasUsedFeature(feature),
+    handleImageFromFile, // Always show
   };
 };

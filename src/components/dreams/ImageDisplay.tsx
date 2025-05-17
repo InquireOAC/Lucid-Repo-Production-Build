@@ -1,10 +1,12 @@
+
 import React, { useState, useRef } from "react";
 
 interface ImageDisplayProps {
   imageUrl: string;
   imageDataUrl?: string;
   onError: () => void;
-  onImageChange?: (base64DataUrl: string) => void; // New, optional
+  onImageChange?: (base64DataUrl: string) => void; // Optional, but always show
+  disabled?: boolean;
 }
 
 const ImageDisplay = ({
@@ -12,11 +14,12 @@ const ImageDisplay = ({
   imageDataUrl,
   onError,
   onImageChange,
+  disabled = false,
 }: ImageDisplayProps) => {
   const [imageError, setImageError] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+  const handleError = () => {
     setImageError(true);
     onError();
   };
@@ -31,20 +34,19 @@ const ImageDisplay = ({
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      // Always convert to base64 first and pass that to onImageChange for upload
       const reader = new FileReader();
       reader.onload = async () => {
         if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
           setImageError(false);
           if (onImageChange) {
-            await onImageChange(reader.result); // Now, onImageChange uploads and returns publicUrl
+            await onImageChange(reader.result); // Pass base64 string to hook, which persists to Supabase and updates state
           }
         } else {
           setImageError(true);
           onError();
         }
       };
-      reader.onerror = (error) => {
+      reader.onerror = () => {
         setImageError(true);
         onError();
       };
@@ -55,8 +57,8 @@ const ImageDisplay = ({
     }
   };
 
-  // Display only URL: prioritize normal URLs (png from Supabase) over base64s
-  let srcToShow = null;
+  // Prioritize URLs from Supabase/PNG (imageDataUrl)
+  let srcToShow: string | null = null;
   if (imageDataUrl && imageDataUrl.startsWith("http")) {
     srcToShow = imageDataUrl;
   } else if (imageUrl && !imageError && imageUrl.startsWith("http")) {
@@ -74,14 +76,19 @@ const ImageDisplay = ({
         />
       )}
       {imageError && (
+        <p className="text-xs text-red-500 mt-1 text-center">
+          There was an issue displaying the image.
+        </p>
+      )}
+
+      {/* The upload button is ALWAYS present if not disabled */}
+      {!disabled && (
         <div className="flex flex-col items-center mt-2 gap-2">
-          <p className="text-xs text-red-500">
-            There was an issue displaying the image.
-          </p>
           <button
             type="button"
             className="px-3 py-1 rounded bg-dream-purple text-white hover:bg-dream-lavender transition"
             onClick={handlePickLocalFile}
+            disabled={disabled}
           >
             Load Image from File
           </button>
@@ -91,11 +98,11 @@ const ImageDisplay = ({
             className="hidden"
             ref={fileInputRef}
             onChange={handleFileChange}
+            disabled={disabled}
           />
         </div>
       )}
     </div>
   );
 };
-
 export default ImageDisplay;
