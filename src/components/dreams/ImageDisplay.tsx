@@ -5,11 +5,16 @@ interface ImageDisplayProps {
   imageUrl: string;
   imageDataUrl?: string;
   onError: () => void;
+  onImageChange?: (base64DataUrl: string) => void; // New, optional
 }
 
-const ImageDisplay = ({ imageUrl, imageDataUrl, onError }: ImageDisplayProps) => {
+const ImageDisplay = ({
+  imageUrl,
+  imageDataUrl,
+  onError,
+  onImageChange,
+}: ImageDisplayProps) => {
   const [imageError, setImageError] = useState(false);
-  const [localFileUrl, setLocalFileUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
@@ -29,20 +34,37 @@ const ImageDisplay = ({ imageUrl, imageDataUrl, onError }: ImageDisplayProps) =>
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && file.type.startsWith("image/")) {
-      const url = URL.createObjectURL(file);
-      setLocalFileUrl(url);
-      setImageError(false);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
+          setImageError(false);
+          if (onImageChange) {
+            onImageChange(reader.result);
+          }
+        } else {
+          setImageError(true);
+          console.error("Failed to convert file to base64 DataURL.");
+          onError();
+        }
+      };
+      reader.onerror = (error) => {
+        setImageError(true);
+        console.error("FileReader error", error);
+        onError();
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImageError(true);
+      onError();
+      console.error("Selected file is not an image.");
     }
   };
 
-  // Choose what to display: If local file from disk is set (after error), use that.
-  // Else, try base64 DataURL first, else imageUrl, else nothing if errored.
+  // Choose what to display: Use imageDataUrl (always base64), else imageUrl, else nothing if errored.
   let srcToShow = null;
-  if (localFileUrl) {
-    srcToShow = localFileUrl;
-  } else if (imageDataUrl && imageDataUrl.startsWith("data:image/")) {
+  if (imageDataUrl && imageDataUrl.startsWith("data:image/")) {
     srcToShow = imageDataUrl;
-  } else if (imageUrl && !imageError) {
+  } else if (imageUrl && !imageError && imageUrl.startsWith("data:image/")) {
     srcToShow = imageUrl;
   }
 
@@ -82,3 +104,4 @@ const ImageDisplay = ({ imageUrl, imageDataUrl, onError }: ImageDisplayProps) =>
 };
 
 export default ImageDisplay;
+

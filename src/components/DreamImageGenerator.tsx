@@ -10,6 +10,8 @@ import ImageDisplay from "@/components/dreams/ImageDisplay";
 import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 
+import { toast } from "sonner";
+
 interface DreamImageGeneratorProps {
   dreamContent: string;
   existingPrompt?: string;
@@ -46,6 +48,19 @@ const DreamImageGenerator = ({
     disabled,
     dreamId 
   });
+
+  // New handler for when user picks a file and it gets converted to base64
+  const handleImageFromFile = (base64DataUrl: string) => {
+    // This will update the generatedImage in the parent (which will flow down here and into the DB)
+    if (base64DataUrl) {
+      onImageGenerated(base64DataUrl, imagePrompt || "");
+      toast.success("Image loaded from file!");
+      setImageError(false);
+    } else {
+      toast.error("Failed to convert file to image.");
+      setImageError(true);
+    }
+  };
 
   // Helper to generate download of PNG (works if generatedImage is a base64 PNG)
   const handleSaveAsPng = () => {
@@ -100,6 +115,7 @@ const DreamImageGenerator = ({
                   imageUrl={generatedImage} 
                   imageDataUrl={generatedImage}
                   onError={() => setImageError(true)} 
+                  onImageChange={handleImageFromFile}
                 />
                 {/* Show Save as PNG button if image is base64 png url */}
                 {generatedImage.startsWith("data:image/") && (
