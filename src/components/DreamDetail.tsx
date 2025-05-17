@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -24,7 +23,16 @@ interface DreamDetailProps {
   onLike?: () => void;
 }
 
-const DreamDetail = ({ dream, tags, dreamTags, onClose, onUpdate, onDelete, isAuthenticated, onLike }: DreamDetailProps) => {
+const DreamDetail = ({
+  dream,
+  tags,
+  dreamTags,
+  onClose,
+  onUpdate,
+  onDelete,
+  isAuthenticated,
+  onLike
+}: DreamDetailProps) => {
   const { user } = useAuth();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);

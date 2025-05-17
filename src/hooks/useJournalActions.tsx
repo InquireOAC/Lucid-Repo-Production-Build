@@ -95,36 +95,70 @@ export const useJournalActions = () => {
   const handleUpdateDreamInternal = async (id: string, updates: Partial<DreamEntry>): Promise<boolean> => {
     try {
       if (user) {
-        // The `updates` object passed to `updateDreamInDb` should be curated
-        // to only include fields relevant to the `dream_entries` table schema.
-        // `useDreamDbActions.updateDreamInDb` already filters to allowed fields.
+        // see if there's anything to actually update (not just detail open)
+        const keysToUpdate = Object.keys(updates).filter(
+          key => key !== "commentCount" && key !== "likeCount"
+        );
+        if (keysToUpdate.length === 0) {
+          // No meaningful fields to update, skip toast/log for passive loads
+          return true;
+        }
         const { error } = await dreamDbActions.updateDreamInDb(id, updates, user.id);
-        
         if (error) {
-          console.error("Database update error:", error);
-          toast.error("Failed to update dream in database: " + error.message);
+          // Only show toast for real update attempts (not on detail view)
+          if (
+            updates.hasOwnProperty('title') ||
+            updates.hasOwnProperty('tags') ||
+            updates.hasOwnProperty('content') ||
+            updates.hasOwnProperty('generatedImage') ||
+            updates.hasOwnProperty('imagePrompt') ||
+            updates.hasOwnProperty('mood') ||
+            updates.hasOwnProperty('lucid')
+          ) {
+            toast.error("Failed to update dream in database: " + error.message);
+          }
           return false; 
         }
       }
-      
-      // Update local store with all intended changes
       updateEntry(id, updates); 
-
       // Toasts based on update type
       if (updates.is_public === true || updates.isPublic === true) { 
         toast.success("Dream shared to Lucid Repo!");
       } else if (updates.is_public === false || updates.isPublic === false) { 
         toast.success("Dream set to private.");
       } else {
-        // Only show generic success if not a public toggle, and if there were actual updates
-        if (Object.keys(updates).length > 0 && !updates.hasOwnProperty('isPublic') && !updates.hasOwnProperty('is_public')) {
-            toast.success("Dream updated successfully");
+        // Only show a generic toast if it's a direct edit (never for passive loads)
+        if (
+          Object.keys(updates).length > 0 &&
+          !updates.hasOwnProperty('isPublic') &&
+          !updates.hasOwnProperty('is_public') &&
+          (
+            updates.hasOwnProperty('title') ||
+            updates.hasOwnProperty('tags') ||
+            updates.hasOwnProperty('content') ||
+            updates.hasOwnProperty('generatedImage') ||
+            updates.hasOwnProperty('imagePrompt') ||
+            updates.hasOwnProperty('mood') ||
+            updates.hasOwnProperty('lucid')
+          )
+        ) {
+          toast.success("Dream updated successfully");
         }
       }
       return true; 
     } catch (error: any) {
-      console.error("Error updating dream:", error);
-      toast.error("Failed to update dream: " + error.message);
+      // Don't spam error toasts unless it was a real update
+      if (
+        updates.hasOwnProperty('title') ||
+        updates.hasOwnProperty('tags') ||
+        updates.hasOwnProperty('content') ||
+        updates.hasOwnProperty('generatedImage') ||
+        updates.hasOwnProperty('imagePrompt') ||
+        updates.hasOwnProperty('mood') ||
+        updates.hasOwnProperty('lucid')
+      ) {
+        toast.error("Failed to update dream: " + error.message);
+      }
       return false; 
     }
   };
@@ -154,11 +188,16 @@ export const useJournalActions = () => {
     try {
       let imageUrl = "";
       if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
+        console.log('[Dream Edit] Uploading base64 image to Supabase...');
         const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id, dreamId);
         if (supabaseImageUrl) {
           imageUrl = supabaseImageUrl;
+          console.log('[Dream Edit] New image saved to:', imageUrl);
         } else {
-          throw new Error("Failed to upload image to Supabase storage.");
+          console.error("[Dream Edit] Failed upload, supabaseImageUrl is null");
+          toast.error("Failed to persist image—please try again.");
+          setIsSubmitting(false);
+          return;
         }
       }
 
