@@ -1,8 +1,7 @@
+
 import React from "react";
-import SearchBar from "@/components/SearchBar";
-import SortOrderSelect from "@/components/SortOrderSelect";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import TagFilter from "@/components/journal/TagFilter";
+// import TagFilter is intentionally kept commented out
 
 interface LucidRepoHeaderProps {
   searchQuery: string;
@@ -34,12 +33,25 @@ const LucidRepoHeader = ({
   return (
     <div className="mb-6">
       <form onSubmit={handleSearch} className="flex items-center space-x-2 mb-4">
-        <SearchBar
+        {/* Simple search input */}
+        <input
+          aria-label="Search dreams"
+          type="text"
+          className="bg-white border px-3 py-2 rounded w-full max-w-xs shadow-inner outline-none"
+          placeholder="Search dreams..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search dreams..."
         />
-        <SortOrderSelect sortBy={sortBy} setSortBy={setSortBy} />
+        {/* Simple sort order select */}
+        <select
+          aria-label="Sort dreams"
+          className="bg-white border px-3 py-2 rounded shadow-inner outline-none"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
+        >
+          <option value="popular">Popular</option>
+          <option value="recent">Recent</option>
+        </select>
       </form>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
@@ -51,13 +63,8 @@ const LucidRepoHeader = ({
         <TabsContent value="recent"></TabsContent>
       </Tabs>
 
-      {/* Hiding the tag filter on Lucid Repo page */}
-      {/* <TagFilter
-        tags={tags}
-        activeTags={activeTags}
-        onTagClick={onTagClick}
-        onClearTags={onClearTags}
-      /> */}
+      {/* Tag filter intentionally hidden */}
+      {/* <TagFilter ... /> */}
     </div>
   );
 };
