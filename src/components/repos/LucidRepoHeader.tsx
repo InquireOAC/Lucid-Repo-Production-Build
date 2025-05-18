@@ -1,7 +1,15 @@
 
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-// import TagFilter is intentionally kept commented out
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+// TagFilter import intentionally remains commented out
 
 interface LucidRepoHeaderProps {
   searchQuery: string;
@@ -32,26 +40,28 @@ const LucidRepoHeader = ({
 }: LucidRepoHeaderProps) => {
   return (
     <div className="mb-6">
-      <form onSubmit={handleSearch} className="flex items-center space-x-2 mb-4">
-        {/* Simple search input */}
-        <input
+      <form
+        onSubmit={handleSearch}
+        className="flex items-center space-x-2 mb-4"
+        autoComplete="off"
+      >
+        <Input
           aria-label="Search dreams"
           type="text"
-          className="bg-white border px-3 py-2 rounded w-full max-w-xs shadow-inner outline-none"
+          className="max-w-xs"
           placeholder="Search dreams..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        {/* Simple sort order select */}
-        <select
-          aria-label="Sort dreams"
-          className="bg-white border px-3 py-2 rounded shadow-inner outline-none"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value)}
-        >
-          <option value="popular">Popular</option>
-          <option value="recent">Recent</option>
-        </select>
+        <Select value={sortBy} onValueChange={setSortBy}>
+          <SelectTrigger aria-label="Sort dreams" className="w-[130px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="popular">Popular</SelectItem>
+            <SelectItem value="recent">Recent</SelectItem>
+          </SelectContent>
+        </Select>
       </form>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
@@ -70,3 +80,4 @@ const LucidRepoHeader = ({
 };
 
 export default LucidRepoHeader;
+
