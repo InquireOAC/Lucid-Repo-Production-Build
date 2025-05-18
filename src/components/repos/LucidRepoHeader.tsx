@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -30,8 +29,8 @@ const LucidRepoHeader = ({
   setSearchQuery,
   activeTab,
   setActiveTab,
-  sortBy,
-  setSortBy,
+  // sortBy,
+  // setSortBy,
   handleSearch,
   tags,
   activeTags,
@@ -53,15 +52,6 @@ const LucidRepoHeader = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger aria-label="Sort dreams" className="w-[130px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="popular">Popular</SelectItem>
-            <SelectItem value="recent">Recent</SelectItem>
-          </SelectContent>
-        </Select>
       </form>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
@@ -80,4 +70,3 @@ const LucidRepoHeader = ({
 };
 
 export default LucidRepoHeader;
-
