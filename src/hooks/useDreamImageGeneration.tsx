@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { uploadImageToSupabase } from "@/utils/uploadImageToSupabase";
+import { saveAs } from "file-saver";
 
 interface UseDreamImageGenerationProps {
   dreamContent: string;
@@ -74,6 +74,43 @@ export const useDreamImageGeneration = ({
     return "";
   };
 
+  // Util: download image as PNG
+  async function downloadImageAsPng(imageUrl: string, filename: string = "dream-image.png") {
+    try {
+      // Fetch image as blob
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      // Convert to PNG if not already
+      let pngBlob = blob;
+      if (blob.type !== "image/png") {
+        // Convert using HTMLCanvas
+        const img = document.createElement("img");
+        img.crossOrigin = "anonymous";
+        img.src = imageUrl;
+        // Wait for image to load
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL("image/png");
+        const base64 = dataUrl.split(',')[1];
+        const byteCharacters = atob(base64);
+        const byteNumbers = Array.from(byteCharacters).map(c => c.charCodeAt(0));
+        const byteArray = new Uint8Array(byteNumbers);
+        pngBlob = new Blob([byteArray], { type: "image/png" });
+      }
+      // Use FileSaver for best compatibility
+      saveAs(pngBlob, filename);
+    } catch (err) {
+      console.error("Failed to auto-download dream image:", err);
+    }
+  }
+
   const generateImage = useCallback(async () => {
     if (!user || disabled) return;
 
@@ -111,6 +148,9 @@ export const useDreamImageGeneration = ({
       if (imageResult.error) throw new Error(imageResult.error.message || "Failed to generate image");
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
+
+      // >>> AUTO-DOWNLOAD PNG FOR USER <<<
+      await downloadImageAsPng(openaiUrl, "dream-image.png");
 
       // 3. Upload to Supabase Storage as PNG
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText);
