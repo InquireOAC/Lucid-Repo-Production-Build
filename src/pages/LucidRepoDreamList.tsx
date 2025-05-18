@@ -28,7 +28,7 @@ const LucidRepoDreamList = ({
     <LucidDreamsContent
       isLoading={isLoading}
       filteredDreams={filteredDreams}
-      dreamTags={dreamTags}
+      dreamTags={dreamTags} // Pass along!
       onLike={onLike}
       onOpenDream={onOpenDream}
       onUserClick={onUserClick}

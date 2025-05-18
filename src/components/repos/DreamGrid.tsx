@@ -34,7 +34,6 @@ const DreamGrid = ({
           tags: Array.isArray(dream.tags) ? dream.tags : [],
           profiles: {
             ...userProfile,
-            // No custom properties injected here
           },
           avatarSymbol, // for explicit use
           avatarColor,  // for explicit use
@@ -45,15 +44,14 @@ const DreamGrid = ({
           <DreamCard
             key={normalizedDream.id}
             dream={normalizedDream}
-            tags={tags}
-            dreamTags={normalizedDream.tags}
+            tags={tags} // PUBLIC TAG OBJECTS
+            dreamTags={normalizedDream.tags} // ARRAY OF TAG IDS (should be string[])
             onLike={() => onLike(normalizedDream.id)}
             showUser={true}
             onClick={() => onOpenDream(normalizedDream)}
             onUserClick={() => onUserClick(username)}
             onTagClick={onTagClick}
             showSharedBadge={false}
-            // Pass avatar symbol/color for DreamCardUser (handled internally there)
           />
         );
       })}
