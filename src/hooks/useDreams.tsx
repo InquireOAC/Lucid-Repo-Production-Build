@@ -41,7 +41,9 @@ export function useDreams(refreshLikedDreams?: () => void) {
       
       let query = supabase
         .from("dream_entries")
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .select(
+          "*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)"
+        )
         .eq("is_public", true);
 
       if (sortBy === "newest") {
@@ -66,6 +68,9 @@ export function useDreams(refreshLikedDreams?: () => void) {
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
         profiles: dream.profiles,
+        // pass down avatar
+        avatarSymbol: dream.profiles?.avatar_symbol || null,
+        avatarColor: dream.profiles?.avatar_color || null,
         // Ensure image URLs are properly normalized
         generatedImage: dream.generatedImage || dream.image_url || null,
         image_url: dream.image_url || dream.generatedImage || null,
