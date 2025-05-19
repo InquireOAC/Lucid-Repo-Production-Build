@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LogOut, CreditCard, Bell } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 interface SettingsDialogProps {
   isOpen: boolean;
@@ -15,7 +15,7 @@ const SettingsDialog = ({
   isOpen,
   onOpenChange,
   handleSignOut,
-  onNotificationsClick
+  // onNotificationsClick, // notifications handler no longer needed for now
 }: SettingsDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -25,14 +25,7 @@ const SettingsDialog = ({
         </DialogHeader>
         
         <div className="flex flex-col gap-2">
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-2 justify-start"
-            onClick={onNotificationsClick}
-          >
-            <Bell size={16} />
-            <span>Notifications</span>
-          </Button>
+          {/* Notifications button is hidden for now */}
           <Button 
             variant="outline"
             className="w-full flex items-center gap-2 justify-start text-destructive hover:text-destructive"
