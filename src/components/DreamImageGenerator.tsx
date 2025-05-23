@@ -10,6 +10,8 @@ import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 import { toast } from "sonner";
 
+import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
+
 interface DreamImageGeneratorProps {
   dreamContent: string;
   existingPrompt?: string;
@@ -52,15 +54,10 @@ const DreamImageGenerator = ({
     await handleImageFromFile(base64DataUrl);
   };
 
-  // Download PNG if available (PNG only by our upload logic)
-  const handleSaveAsPng = () => {
+  // Update Save as PNG to handle cross-platform
+  const handleSaveAsPng = async () => {
     if (generatedImage && generatedImage.startsWith("http")) {
-      const link = document.createElement("a");
-      link.href = generatedImage;
-      link.download = "dream-image.png";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      await shareOrSaveImage(generatedImage, "dream-image.png");
     }
   };
 
