@@ -9,7 +9,7 @@ import ProfileMainContent from "./ProfileMainContent";
 import ProfileStateGuard from "./ProfileStateGuard";
 import { computeProfileTargets } from "./computeProfileTargets";
 import { useProfileDialogStates } from "./ProfileDialogStates";
-import PullToRefresh from "@/components/ui/PullToRefresh"; // <-- import pull to refresh
+import PullToRefresh from "@/components/ui/PullToRefresh";
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -111,9 +111,21 @@ const ProfileContent = () => {
     }
   }, [profileIdForHooks, isOwnProfile, effectiveIdentifier, user]);
 
+  // Handler: Pull to refresh (refresh avatar/profile + refresh dreams/likes)
+  const handlePullToRefresh = async () => {
+    if (effectiveIdentifier) {
+      await fetchUserProfile(effectiveIdentifier);
+    } else if (user?.id) {
+      // No identifier but user is logged in: refresh own profile
+      await fetchUserProfile(user.id);
+    }
+    // Always refresh dreams
+    await refreshDreams?.();
+  };
+
   // -------------- Render guarded states and main content -----------------
   return (
-    <PullToRefresh onRefresh={refreshDreams}>
+    <PullToRefresh onRefresh={handlePullToRefresh}>
       <ProfileStateGuard
         loading={loadingProfile}
         effectiveIdentifier={effectiveIdentifier}
@@ -183,4 +195,3 @@ const ProfileContent = () => {
 };
 
 export default ProfileContent;
-
