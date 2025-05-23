@@ -9,6 +9,7 @@ import AuthDialog from "@/components/repos/AuthDialog";
 import { toast } from "sonner";
 import { useDreams } from "@/hooks/useDreams";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
+import PullToRefresh from "@/components/ui/PullToRefresh";
 
 const ALLOWED_TAGS = [
   "Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"
@@ -125,43 +126,45 @@ const LucidRepoContainer = () => {
   });
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
-      <LucidRepoHeader
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-        handleSearch={(e: React.FormEvent) => e.preventDefault()}
-        tags={filteredDreamTags}
-        activeTags={activeTags}
-        onTagClick={handleTagClick}
-        onClearTags={handleClearTags}
-      />
-      <LucidRepoDreamList
-        isLoading={isLoading || tagsLoading}
-        filteredDreams={filteredDreams}
-        dreamTags={filteredDreamTags}
-        onLike={handleDreamLike}
-        onOpenDream={handleOpenDream}
-        onUserClick={handleNavigateToProfile}
-        onTagClick={handleTagClick}
-        searchQuery={searchQuery}
-      />
-      <DreamDetailWrapper
-        selectedDream={selectedDream}
-        tags={filteredDreamTags}
-        onClose={handleCloseDream}
-        onUpdate={handleDreamUpdate}
-        isAuthenticated={!!user}
-      />
-      <AuthDialog 
-        open={authDialogOpen} 
-        onOpenChange={setAuthDialogOpen}
-      />
-    </div>
+    <PullToRefresh onRefresh={fetchPublicDreams}>
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
+        <LucidRepoHeader
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          handleSearch={(e: React.FormEvent) => e.preventDefault()}
+          tags={filteredDreamTags}
+          activeTags={activeTags}
+          onTagClick={handleTagClick}
+          onClearTags={handleClearTags}
+        />
+        <LucidRepoDreamList
+          isLoading={isLoading || tagsLoading}
+          filteredDreams={filteredDreams}
+          dreamTags={filteredDreamTags}
+          onLike={handleDreamLike}
+          onOpenDream={handleOpenDream}
+          onUserClick={handleNavigateToProfile}
+          onTagClick={handleTagClick}
+          searchQuery={searchQuery}
+        />
+        <DreamDetailWrapper
+          selectedDream={selectedDream}
+          tags={filteredDreamTags}
+          onClose={handleCloseDream}
+          onUpdate={handleDreamUpdate}
+          isAuthenticated={!!user}
+        />
+        <AuthDialog 
+          open={authDialogOpen} 
+          onOpenChange={setAuthDialogOpen}
+        />
+      </div>
+    </PullToRefresh>
   );
 };
 

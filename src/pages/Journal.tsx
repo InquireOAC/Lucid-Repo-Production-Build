@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import DreamDetail from "@/components/DreamDetail";
@@ -9,6 +8,7 @@ import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import JournalTabs from "@/components/journal/JournalTabs";
 import { DreamEntry } from "@/types/dream"; // Ensure DreamEntry is imported
+import PullToRefresh from "@/components/ui/PullToRefresh";
 
 const Journal = () => {
   const {
@@ -102,85 +102,86 @@ const Journal = () => {
     }
   };
 
-
   return (
-    <div className="min-h-screen dream-background p-4 md:p-6">
-      <JournalHeader onAddDream={() => setIsAddingDream(true)} />
+    <PullToRefresh onRefresh={syncDreamsFromDb}>
+      <div className="min-h-screen dream-background p-4 md:p-6">
+        <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
-      <TagFilter
-        tags={uniqueTagsInDreams}
-        activeTags={activeTagIds}
-        onTagClick={handleTagClick}
-        onClearTags={() => setActiveTagIds([])}
-      />
+        <TagFilter
+          tags={uniqueTagsInDreams}
+          activeTags={activeTagIds}
+          onTagClick={handleTagClick}
+          onClearTags={() => setActiveTagIds([])}
+        />
 
-      <JournalTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        allEntries={entries}
-        filteredDreams={filteredDreams}
-        tags={tags}
-        onSelectDream={setSelectedDream}
-        onEditDream={handleOpenEditDialog}
-        onTogglePublic={handleTogglePublic}
-        onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
-        onTagClickInList={handleTagClick}
-        onAddDream={() => setIsAddingDream(true)}
-      />
+        <JournalTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          allEntries={entries}
+          filteredDreams={filteredDreams}
+          tags={tags}
+          onSelectDream={setSelectedDream}
+          onEditDream={handleOpenEditDialog}
+          onTogglePublic={handleTogglePublic}
+          onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
+          onTagClickInList={handleTagClick}
+          onAddDream={() => setIsAddingDream(true)}
+        />
 
-      <AddDreamDialog
-        isOpen={isAddingDream}
-        onOpenChange={(open) => {
-          setIsAddingDream(open);
-          if (!open && user) syncDreamsFromDb();
-        }}
-        onSubmit={handleAddDreamAndClose}
-        tags={tags}
-        isSubmitting={isSubmitting}
-      />
-
-      {selectedDream && (
-        <EditDreamDialog
-          isOpen={isEditingDream}
+        <AddDreamDialog
+          isOpen={isAddingDream}
           onOpenChange={(open) => {
-            setIsEditingDream(open);
-            if (!open) {
-              setSelectedDream(null);
-              if (user) syncDreamsFromDb();
-            }
+            setIsAddingDream(open);
+            if (!open && user) syncDreamsFromDb();
           }}
-          onSubmit={handleEditDreamSubmit}
-          existingDream={selectedDream}
+          onSubmit={handleAddDreamAndClose}
           tags={tags}
           isSubmitting={isSubmitting}
         />
-      )}
 
-      {selectedDream && !isEditingDream && (
-        <DreamDetail
-          dream={selectedDream}
-          tags={tags}
-          onClose={() => {
-            setSelectedDream(null);
-            if (user) syncDreamsFromDb();
+        {selectedDream && (
+          <EditDreamDialog
+            isOpen={isEditingDream}
+            onOpenChange={(open) => {
+              setIsEditingDream(open);
+              if (!open) {
+                setSelectedDream(null);
+                if (user) syncDreamsFromDb();
+              }
+            }}
+            onSubmit={handleEditDreamSubmit}
+            existingDream={selectedDream}
+            tags={tags}
+            isSubmitting={isSubmitting}
+          />
+        )}
+
+        {selectedDream && !isEditingDream && (
+          <DreamDetail
+            dream={selectedDream}
+            tags={tags}
+            onClose={() => {
+              setSelectedDream(null);
+              if (user) syncDreamsFromDb();
+            }}
+            onUpdate={handleDreamDetailUpdate}
+            onDelete={(id) => { // onDelete in DreamDetail usually triggers a confirmation
+              setDreamToDelete(id); // Set dream to delete to open confirmation dialog
+              setSelectedDream(null); // Close detail view
+            }}
+            isAuthenticated={!!user}
+          />
+        )}
+
+        <DeleteDreamConfirmationDialog
+          isOpen={!!dreamToDelete}
+          onOpenChange={(open) => {
+            if (!open) setDreamToDelete(null);
           }}
-          onUpdate={handleDreamDetailUpdate}
-          onDelete={(id) => { // onDelete in DreamDetail usually triggers a confirmation
-             setDreamToDelete(id); // Set dream to delete to open confirmation dialog
-             setSelectedDream(null); // Close detail view
-          }}
-          isAuthenticated={!!user}
+          onConfirmDelete={confirmDeleteDream}
         />
-      )}
-
-      <DeleteDreamConfirmationDialog
-        isOpen={!!dreamToDelete}
-        onOpenChange={(open) => {
-          if (!open) setDreamToDelete(null);
-        }}
-        onConfirmDelete={confirmDeleteDream}
-      />
-    </div>
+      </div>
+    </PullToRefresh>
   );
 };
 
