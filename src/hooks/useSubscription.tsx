@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -57,17 +56,32 @@ export function useSubscription(user: any) {
 
       if (subscriptionData) {
         console.log("Subscription data found:", subscriptionData);
+
+        // Get proper limits from plan id
+        let analysisTotal: number;
+        let imageTotal: number;
+        if (subscriptionData.price_id === 'price_premium') {
+          analysisTotal = 999999;
+          imageTotal = 999999;
+        } else if (subscriptionData.price_id === 'price_basic') {
+          analysisTotal = 10;
+          imageTotal = 10;
+        } else {
+          analysisTotal = 0;
+          imageTotal = 0;
+        }
+
         setSubscription({
           plan: subscriptionData.price_id === 'price_premium' ? 'Premium' : 'Basic',
           status: subscriptionData.status,
           currentPeriodEnd: new Date(subscriptionData.current_period_end * 1000).toLocaleDateString(),
           analysisCredits: {
             used: subscriptionData.dream_analyses_used || 0,
-            total: subscriptionData.price_id === 'price_premium' ? 999999 : 10
+            total: analysisTotal,
           },
           imageCredits: {
             used: subscriptionData.image_generations_used || 0,
-            total: subscriptionData.price_id === 'price_premium' ? 20 : 5
+            total: imageTotal,
           },
           cancelAtPeriodEnd: subscriptionData.cancel_at_period_end
         });

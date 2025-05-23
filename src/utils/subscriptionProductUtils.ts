@@ -1,4 +1,3 @@
-
 /**
  * Normalize Stripe product objects to return correct hardcoded features.
  * - Mystic plan: Unlimited features
@@ -31,12 +30,11 @@ export function normalizeProduct(product: any): Product {
     product.id === "price_basic"
   ) {
     features = [
-      "Unlimited Dream Analysis",
-      "15 Dream Art Generations",
+      "10 Dream Analysis",
+      "10 Dream Art Generations",
       "Priority Support"
     ];
   } else {
-    // Fallback: If not strictly Dreamer or Mystic, return whatever name/features exist
     features = product.features || [];
   }
   return {

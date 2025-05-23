@@ -215,13 +215,13 @@ BEGIN
     WHEN subscription.price_id = 'price_basic' THEN
       CASE credit_type
         WHEN 'analysis' THEN 10
-        WHEN 'image' THEN 5
+        WHEN 'image' THEN 10   -- UPDATED from 5 to 10
         ELSE 0
       END
     WHEN subscription.price_id = 'price_premium' THEN
       CASE credit_type
-        WHEN 'analysis' THEN 999999 -- Unlimited
-        WHEN 'image' THEN 20
+        WHEN 'analysis' THEN 999999 -- Unlimited analysis
+        WHEN 'image' THEN 999999    -- Unlimited images (for UI/logic; enforce with RLS if needed)
         ELSE 0
       END
     ELSE 0

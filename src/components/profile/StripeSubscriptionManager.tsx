@@ -165,8 +165,8 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         console.log("Active subscription found:", subscriptionData);
         // Get plans info to determine credit limits
         const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10;
-        const imageLimit = subscriptionData.price_id === "price_premium" ? 20 : 5;
-        
+        const imageLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10; // UPDATED
+
         setSubscriptionStatus({
           subscribed: true,
           subscription_tier: subscriptionData.price_id === "price_premium" ? "Premium" : "Basic",
