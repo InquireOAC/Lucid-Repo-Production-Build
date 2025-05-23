@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { saveAs } from "file-saver";
 import { useDreamImageUploader } from "./useDreamImageUploader";
 import { useDreamImageAI } from "./useDreamImageAI";
 import { downloadImageAsPng } from "@/utils/downloadImageAsPng";
@@ -77,10 +76,14 @@ export const useDreamImageGeneration = ({
       const openaiUrl = await generateDreamImageFromAI(generatedPromptText);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
+      // Immediately display the AI-generated image to the user while uploading
+      setGeneratedImage(openaiUrl);
+      onImageGenerated(openaiUrl, generatedPromptText); // temporarily pass this URL so UI can show image
+
       // 3. Download as PNG (for user's local copy, optional)
       await downloadImageAsPng(openaiUrl, "dream-image.png");
 
-      // 4. Upload/downloaded image to Supabase. (Persist, always use Supabase URL in app)
+      // 4. Upload/downloaded image to Supabase. (Persist, always use Supabase URL if possible)
       setIsGenerating(true); // ensure state during uploading
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText, dreamId);
 
@@ -90,8 +93,9 @@ export const useDreamImageGeneration = ({
         toast.success("Dream image generated and saved permanently!");
         if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       } else {
-        setGeneratedImage("");
-        throw new Error("Failed to persist generated image. It could not be saved in storage.");
+        // Even if failed, leave the openaiUrl showing in the dream entry
+        // Only show warning
+        toast.error("Failed to persist generated image in storage. Image will be shown but might be temporary.");
       }
     } catch (error: any) {
       setImageError(true);
@@ -124,8 +128,12 @@ export const useDreamImageGeneration = ({
     setIsGenerating(true);
     const publicUrl = await uploadAndGetPublicImageUrl(fileDataUrl, imagePrompt || "", dreamId);
     setIsGenerating(false);
-    if (!publicUrl) setImageError(true);
-    else {
+    if (!publicUrl) {
+      setImageError(true);
+      setGeneratedImage(fileDataUrl); // fallback: show uploaded file in UI, even if it’s just local
+      onImageGenerated(fileDataUrl, imagePrompt || "");
+      toast.error("Failed to persist uploaded image to storage. Using local version (might be temporary).");
+    } else {
       setGeneratedImage(publicUrl);
       onImageGenerated(publicUrl, imagePrompt || "");
     }
