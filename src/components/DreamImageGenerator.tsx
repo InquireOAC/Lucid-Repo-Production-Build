@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,14 +137,6 @@ const DreamImageGenerator = ({
               <p className="text-xs text-red-500 mt-1 text-center">
                 There was an issue with the image. Please try regenerating or load your saved PNG.
               </p>
-            )}
-            {/* Always show Upload button at the bottom for convenience */}
-            {!disabled && (
-              <div className="flex flex-col items-center mt-2 gap-2">
-                <Button type="button" size="sm" variant="secondary" onClick={() => { /* handled by ImageDisplay */ }}>
-                  Or Upload a New Image
-                </Button>
-              </div>
             )}
           </>
         )}

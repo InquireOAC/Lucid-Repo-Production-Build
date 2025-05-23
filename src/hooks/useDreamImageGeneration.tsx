@@ -114,22 +114,33 @@ export const useDreamImageGeneration = ({
   const generateImage = useCallback(async () => {
     if (!user || disabled) return;
 
+    // Always clear previous errors on generate attempt
+    setImageError(false);
+
+    // If a previous uploaded image exists or base64 image lingers, clear it
+    // (You may want to remove this reset if you want the previous upload to remain, up to UX)
+    setGeneratedImage("");
+    setImagePrompt("");
+
     if (dreamContent.trim().length < 20) {
       toast.error("Dream description is too short for image generation.");
       return;
     }
 
     setIsGenerating(true);
-    setImageError(false);
 
     try {
       const canUse = isAppCreator || (await canUseFeature("image"));
+
       if (!canUse) {
         showSubscriptionPrompt("image");
+        setIsGenerating(false); // Safety: ensure isGenerating false if early return
         return;
       }
 
-      // Step 1: Generate prompt
+      // Extra logging for debugging edge function failures:
+      console.log("[DreamImageGeneration] Calling analyze-dream edge function", { dreamContent });
+
       const promptResult = await supabase.functions.invoke("analyze-dream", {
         body: { dreamContent, task: "create_image_prompt" },
       });
@@ -143,9 +154,9 @@ export const useDreamImageGeneration = ({
 
       setImagePrompt(generatedPromptText);
 
-      // Step 2: Generate AI image
+      // Debug log for outgoing image generation
       const body = { prompt: generatedPromptText };
-      console.log("Invoking generate-dream-image with body:", body);
+      console.log("[DreamImageGeneration] Invoking generate-dream-image with body:", body);
       const imageResult = await supabase.functions.invoke("generate-dream-image", {
         body,
       });
@@ -154,7 +165,7 @@ export const useDreamImageGeneration = ({
         console.error("generate-dream-image error:", imageResult.error, imageResult);
         throw new Error(imageResult.error.message || "Failed to generate image");
       }
-      const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
+      const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url || imageResult.data?.generatedImage;
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
       // >>> AUTO-DOWNLOAD PNG FOR USER <<<
@@ -215,6 +226,6 @@ export const useDreamImageGeneration = ({
     generateImage,
     isAppCreator,
     hasUsedFeature: (feature: "image" | "analysis") => hasUsedFeature(feature),
-    handleImageFromFile, // Always show
+    handleImageFromFile, // Always show for file upload
   };
 };
