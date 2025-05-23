@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +9,7 @@ import ProfileMainContent from "./ProfileMainContent";
 import ProfileStateGuard from "./ProfileStateGuard";
 import { computeProfileTargets } from "./computeProfileTargets";
 import { useProfileDialogStates } from "./ProfileDialogStates";
+import PullToRefresh from "@/components/ui/PullToRefresh"; // <-- import pull to refresh
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -111,71 +113,74 @@ const ProfileContent = () => {
 
   // -------------- Render guarded states and main content -----------------
   return (
-    <ProfileStateGuard
-      loading={loadingProfile}
-      effectiveIdentifier={effectiveIdentifier}
-      user={user}
-      profile={profile}
-      isOwnProfile={isOwnProfile}
-      viewedProfile={viewedProfile}
-    >
-      <ProfileMainContent
-        profileToShow={profileToShow}
+    <PullToRefresh onRefresh={refreshDreams}>
+      <ProfileStateGuard
+        loading={loadingProfile}
+        effectiveIdentifier={effectiveIdentifier}
+        user={user}
+        profile={profile}
         isOwnProfile={isOwnProfile}
-        dreamCount={dreamCount}
-        followersCount={followersCountHook}
-        followingCount={followingCountHook}
-        isFollowing={isFollowing}
-        setIsEditProfileOpen={setIsEditProfileOpen}
-        setIsMessagesOpen={setIsMessagesOpen}
-        setIsSettingsOpen={setIsSettingsOpen}
-        setIsSocialLinksOpen={setIsSocialLinksOpen}
-        handleFollow={handleFollow}
-        handleStartConversation={handleStartConversation}
-        onFollowersClick={() => {
-          setShowFollowers(true);
-          fetchFollowers();
-        }}
-        onFollowingClick={() => {
-          setShowFollowing(true);
-          fetchFollowing();
-        }}
-        publicDreams={publicDreams}
-        likedDreams={likedDreams}
-        refreshDreams={refreshDreams}
-        isEditProfileOpen={isEditProfileOpen}
-        isSocialLinksOpen={isSocialLinksOpen}
-        isSettingsOpen={isSettingsOpen}
-        isMessagesOpen={isMessagesOpen}
-        isSubscriptionOpen={isSubscriptionOpen}
-        isNotificationsOpen={isNotificationsOpen}
-        displayName={displayName}
-        setDisplayName={setDisplayName}
-        username={currentUsername}
-        setUsername={setUsername}
-        bio={bio}
-        setBio={setBio}
-        avatarSymbol={avatarSymbol}
-        setAvatarSymbol={setAvatarSymbol}
-        avatarColor={avatarColor}
-        setAvatarColor={setAvatarColor}
-        handleUpdateProfile={handleUpdateProfile}
-        userId={user?.id}
-        socialLinks={socialLinks}
-        setSocialLinks={setSocialLinks}
-        handleUpdateSocialLinks={handleUpdateSocialLinks}
-        handleSignOut={handleSignOut}
-        conversations={conversations}
-        subscription={subscription}
-        followers={followers}
-        following={following}
-        showFollowers={showFollowers}
-        setShowFollowers={setShowFollowers}
-        showFollowing={showFollowing}
-        setShowFollowing={setShowFollowing}
-      />
-    </ProfileStateGuard>
+        viewedProfile={viewedProfile}
+      >
+        <ProfileMainContent
+          profileToShow={profileToShow}
+          isOwnProfile={isOwnProfile}
+          dreamCount={dreamCount}
+          followersCount={followersCountHook}
+          followingCount={followingCountHook}
+          isFollowing={isFollowing}
+          setIsEditProfileOpen={setIsEditProfileOpen}
+          setIsMessagesOpen={setIsMessagesOpen}
+          setIsSettingsOpen={setIsSettingsOpen}
+          setIsSocialLinksOpen={setIsSocialLinksOpen}
+          handleFollow={handleFollow}
+          handleStartConversation={handleStartConversation}
+          onFollowersClick={() => {
+            setShowFollowers(true);
+            fetchFollowers();
+          }}
+          onFollowingClick={() => {
+            setShowFollowing(true);
+            fetchFollowing();
+          }}
+          publicDreams={publicDreams}
+          likedDreams={likedDreams}
+          refreshDreams={refreshDreams}
+          isEditProfileOpen={isEditProfileOpen}
+          isSocialLinksOpen={isSocialLinksOpen}
+          isSettingsOpen={isSettingsOpen}
+          isMessagesOpen={isMessagesOpen}
+          isSubscriptionOpen={isSubscriptionOpen}
+          isNotificationsOpen={isNotificationsOpen}
+          displayName={displayName}
+          setDisplayName={setDisplayName}
+          username={currentUsername}
+          setUsername={setUsername}
+          bio={bio}
+          setBio={setBio}
+          avatarSymbol={avatarSymbol}
+          setAvatarSymbol={setAvatarSymbol}
+          avatarColor={avatarColor}
+          setAvatarColor={setAvatarColor}
+          handleUpdateProfile={handleUpdateProfile}
+          userId={user?.id}
+          socialLinks={socialLinks}
+          setSocialLinks={setSocialLinks}
+          handleUpdateSocialLinks={handleUpdateSocialLinks}
+          handleSignOut={handleSignOut}
+          conversations={conversations}
+          subscription={subscription}
+          followers={followers}
+          following={following}
+          showFollowers={showFollowers}
+          setShowFollowers={setShowFollowers}
+          showFollowing={showFollowing}
+          setShowFollowing={setShowFollowing}
+        />
+      </ProfileStateGuard>
+    </PullToRefresh>
   );
 };
 
 export default ProfileContent;
+
