@@ -114,11 +114,7 @@ export const useDreamImageGeneration = ({
   const generateImage = useCallback(async () => {
     if (!user || disabled) return;
 
-    // Always clear previous errors on generate attempt
     setImageError(false);
-
-    // If a previous uploaded image exists or base64 image lingers, clear it
-    // (You may want to remove this reset if you want the previous upload to remain, up to UX)
     setGeneratedImage("");
     setImagePrompt("");
 
@@ -134,13 +130,14 @@ export const useDreamImageGeneration = ({
 
       if (!canUse) {
         showSubscriptionPrompt("image");
-        setIsGenerating(false); // Safety: ensure isGenerating false if early return
+        setIsGenerating(false);
         return;
       }
 
       // Extra logging for debugging edge function failures:
       console.log("[DreamImageGeneration] Calling analyze-dream edge function", { dreamContent });
 
+      // Defensive: Ensure analyze-dream returns a prompt
       const promptResult = await supabase.functions.invoke("analyze-dream", {
         body: { dreamContent, task: "create_image_prompt" },
       });
@@ -154,19 +151,26 @@ export const useDreamImageGeneration = ({
 
       setImagePrompt(generatedPromptText);
 
-      // Debug log for outgoing image generation
+      // Add additional logging for debugging "generate-dream-image" edge call
       const body = { prompt: generatedPromptText };
       console.log("[DreamImageGeneration] Invoking generate-dream-image with body:", body);
+
+      // Sometimes networks drop; rethrow with details if this fails
       const imageResult = await supabase.functions.invoke("generate-dream-image", {
         body,
       });
 
-      if (imageResult.error) {
+      if (imageResult.error || !imageResult.data) {
         console.error("generate-dream-image error:", imageResult.error, imageResult);
-        throw new Error(imageResult.error.message || "Failed to generate image");
+        throw new Error(imageResult.error?.message || "Failed to generate image");
       }
-      const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url || imageResult.data?.generatedImage;
+      // Some edge returns might wrap URL under different property names
+      const openaiUrl =
+        imageResult.data?.imageUrl || imageResult.data?.image_url || imageResult.data?.generatedImage;
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
+
+      // Log the output URL for debugging
+      console.log("[DreamImageGeneration] Image generated. URL:", openaiUrl);
 
       // >>> AUTO-DOWNLOAD PNG FOR USER <<<
       await downloadImageAsPng(openaiUrl, "dream-image.png");
