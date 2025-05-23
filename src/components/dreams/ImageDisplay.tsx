@@ -1,10 +1,11 @@
+
 import React, { useState, useRef } from "react";
 
 interface ImageDisplayProps {
   imageUrl: string;
   imageDataUrl?: string;
   onError: () => void;
-  onImageChange?: (base64DataUrl: string) => void; // Optional, but always show
+  onImageChange?: (base64DataUrl: string) => void;
   disabled?: boolean;
 }
 
@@ -15,11 +16,11 @@ const ImageDisplay = ({
   onImageChange,
   disabled = false,
 }: ImageDisplayProps) => {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleError = () => {
-    setImageError(true);
+    setImageError("There was an issue displaying the image.");
     console.error("ImageDisplay: Error showing image");
     onError();
   };
@@ -33,41 +34,70 @@ const ImageDisplay = ({
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
-          setImageError(false);
-          console.log("ImageDisplay: Successfully read image as data URL", reader.result.slice(0, 40), "... (truncated)");
-          if (onImageChange) {
-            try {
-              await onImageChange(reader.result); // Pass base64 to hook, which persists to Supabase and updates state
-            } catch (err) {
-              setImageError(true);
-              console.error("ImageDisplay: onImageChange threw error", err);
-              onError();
-            }
-          }
-        } else {
-          setImageError(true);
-          console.error("ImageDisplay: Could not read file as image data URL, result:", reader.result);
-          onError();
-        }
-      };
-      reader.onerror = (error) => {
-        setImageError(true);
-        console.error("ImageDisplay: FileReader error", error);
-        onError();
-      };
-      reader.readAsDataURL(file);
-    } else {
-      setImageError(true);
-      console.error("ImageDisplay: Selected file not image type or missing", file);
+    if (!file) {
+      setImageError("No file selected.");
+      console.error("ImageDisplay: No file selected.");
       onError();
+      return;
     }
+    if (!file.type.startsWith("image/")) {
+      setImageError(
+        "Selected file is not a supported image type. Only PNG or JPG are allowed."
+      );
+      console.error("ImageDisplay: Selected file not image type", file.type);
+      onError();
+      return;
+    }
+
+    // On iOS devices, .heic is common but not supported by most web/CAP APIs
+    const fileExt = file.name.split(".").pop()?.toLowerCase();
+    if (fileExt === "heic" || file.type === "image/heic") {
+      setImageError(
+        "HEIC images are not supported. Please select a PNG or JPEG photo."
+      );
+      console.error(
+        "ImageDisplay: .heic file selected, not supported by browser nor Capacitor."
+      );
+      onError();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      if (
+        typeof reader.result === "string" &&
+        reader.result.startsWith("data:image/")
+      ) {
+        setImageError(null);
+        console.log(
+          "ImageDisplay: Successfully read image as data URL",
+          reader.result.slice(0, 40),
+          "... (truncated)"
+        );
+        if (onImageChange) {
+          try {
+            await onImageChange(reader.result);
+          } catch (err) {
+            setImageError("Something went wrong uploading your image.");
+            console.error("ImageDisplay: onImageChange error", err);
+            onError();
+          }
+        }
+      } else {
+        setImageError("Could not read file as image.");
+        console.error("ImageDisplay: result not an image data URL", reader.result);
+        onError();
+      }
+    };
+    reader.onerror = (error) => {
+      setImageError("Error reading image file.");
+      console.error("ImageDisplay: FileReader error", error);
+      onError();
+    };
+    reader.readAsDataURL(file);
   };
 
-  // Prioritize URLs from Supabase/PNG (imageDataUrl)
+  // Prefer imageDataUrl if given
   let srcToShow: string | null = null;
   if (imageDataUrl && imageDataUrl.startsWith("http")) {
     srcToShow = imageDataUrl;
@@ -86,9 +116,7 @@ const ImageDisplay = ({
         />
       )}
       {imageError && (
-        <p className="text-xs text-red-500 mt-1 text-center">
-          There was an issue displaying the image.
-        </p>
+        <p className="text-xs text-red-500 mt-1 text-center">{imageError}</p>
       )}
 
       {/* The upload button is ALWAYS present if not disabled */}
@@ -115,4 +143,5 @@ const ImageDisplay = ({
     </div>
   );
 };
+
 export default ImageDisplay;
