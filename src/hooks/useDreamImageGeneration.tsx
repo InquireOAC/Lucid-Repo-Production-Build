@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -120,26 +119,33 @@ export const useDreamImageGeneration = ({
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
-    console.log("useDreamImageGeneration: handleImageFromFile received", typeof fileDataUrl, fileDataUrl?.slice?.(0, 36), "... (truncated)");
+    console.log("[useDreamImageGeneration] handleImageFromFile triggered, received fileDataUrl type:", typeof fileDataUrl, "length:", fileDataUrl?.length, "preview:", fileDataUrl?.slice?.(0, 36));
     if (!fileDataUrl || !user) {
       setImageError(true);
       toast.error("Could not add image. Please try again.");
-      console.error("useDreamImageGeneration: fileDataUrl or user missing", { fileDataUrl, user });
+      console.error("[useDreamImageGeneration] Missing fileDataUrl or user", { fileDataUrl, user });
       return;
     }
     setIsGenerating(true);
-    const publicUrl = await uploadAndGetPublicImageUrl(fileDataUrl, imagePrompt || "", dreamId);
-    setIsGenerating(false);
-    if (!publicUrl) {
+    try {
+      const publicUrl = await uploadAndGetPublicImageUrl(fileDataUrl, imagePrompt || "", dreamId);
+      setIsGenerating(false);
+      if (!publicUrl) {
+        setImageError(true);
+        setGeneratedImage(fileDataUrl); // show local fallback
+        onImageGenerated(fileDataUrl, imagePrompt || "");
+        toast.error("Failed to persist uploaded image. Using local image.");
+        console.error("[useDreamImageGeneration] upload failed, fallback to data URL");
+      } else {
+        setGeneratedImage(publicUrl);
+        onImageGenerated(publicUrl, imagePrompt || "");
+        console.log("[useDreamImageGeneration] uploaded to Supabase, publicUrl result:", publicUrl);
+      }
+    } catch (error) {
+      setIsGenerating(false);
       setImageError(true);
-      setGeneratedImage(fileDataUrl); // fallback: show uploaded file in UI, even if it’s just local
-      onImageGenerated(fileDataUrl, imagePrompt || "");
-      toast.error("Failed to persist uploaded image to storage. Using local version (might be temporary).");
-      console.error("useDreamImageGeneration: upload failed, fallback to data URL");
-    } else {
-      setGeneratedImage(publicUrl);
-      onImageGenerated(publicUrl, imagePrompt || "");
-      console.log("useDreamImageGeneration: uploaded to Supabase, publicUrl:", publicUrl);
+      toast.error("Upload error (exception): " + (error as any)?.message);
+      console.error("[useDreamImageGeneration] error during uploadAndGetPublicImageUrl", error);
     }
   };
 

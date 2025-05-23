@@ -14,75 +14,88 @@ export function useImageFileHandler({
 }) {
   const [error, setError] = useState<string | null>(null);
 
-  // Helper for error reporting
+  // Extra deep log
   const reportError = (message: string, extra?: any) => {
     setError(message);
     onError?.(message);
+
     // Detailed log for dev
     if (extra !== undefined) {
-      console.error("useImageFileHandler:", message, extra);
+      console.error("[useImageFileHandler]", message, extra);
     } else {
-      console.error("useImageFileHandler:", message);
+      console.error("[useImageFileHandler]", message);
     }
   };
 
-  // Main file handler
   const handleFileInput = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setError(null); // Reset error
     const file = e.target.files?.[0];
+    console.log("[useImageFileHandler] file input triggered", file);
     if (!file) {
       reportError("No file selected.");
       return;
     }
 
+    // Log file type and name
+    console.log("[useImageFileHandler] Detected file: ", {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+    });
+
     // Check supported types
     if (!file.type.startsWith("image/")) {
       reportError(
-        "Selected file is not a supported image type. Only PNG or JPG are allowed.",
+        "Selected file is not an image. Only PNG or JPG/JPEG allowed.",
         file.type
       );
       return;
     }
 
-    // Check for HEIC
+    // Check for HEIC file extension or type
     const fileExt = file.name.split(".").pop()?.toLowerCase();
     if (fileExt === "heic" || file.type === "image/heic") {
       reportError(
-        "HEIC images are not supported. Please select a PNG or JPEG photo.",
+        "HEIC and Apple Live Photos are not supported. Please select a PNG or JPG.",
         file.name
       );
       return;
     }
 
-    // Read the file as DataURL
+    // Try reading file as DataURL
     const reader = new FileReader();
-
     reader.onload = async () => {
       if (
         typeof reader.result === "string" &&
         reader.result.startsWith("data:image/")
       ) {
         setError(null);
+        console.log("[useImageFileHandler] File loaded as base64 DataURL. Length: ", reader.result.length, " Preview: ", reader.result.slice(0, 40));
         if (onImageChange) {
           try {
             await onImageChange(reader.result);
+            console.log("[useImageFileHandler] onImageChange callback finished successfully.");
           } catch (err) {
-            reportError("Something went wrong uploading your image.", err);
+            reportError("Error uploading image from file.", err);
           }
         }
       } else {
         reportError(
-          "Could not read file as image. The file may be corrupted or incompatible.",
+          "File read error: could not decode as image. Corrupted or unsupported.",
           reader.result
         );
       }
     };
 
     reader.onerror = (ev) => {
-      reportError("Error reading image file.", ev);
+      reportError("Error reading image file (reader.onerror).", ev);
     };
 
-    reader.readAsDataURL(file);
+    try {
+      reader.readAsDataURL(file);
+    } catch(err) {
+      reportError("Error during file read as data URL.", err);
+    }
   };
 
   return { error, handleFileInput };
