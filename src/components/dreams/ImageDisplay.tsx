@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 
 interface ImageDisplayProps {
@@ -21,6 +20,7 @@ const ImageDisplay = ({
 
   const handleError = () => {
     setImageError(true);
+    console.error("ImageDisplay: Error showing image");
     onError();
   };
 
@@ -38,21 +38,31 @@ const ImageDisplay = ({
       reader.onload = async () => {
         if (typeof reader.result === "string" && reader.result.startsWith("data:image/")) {
           setImageError(false);
+          console.log("ImageDisplay: Successfully read image as data URL", reader.result.slice(0, 40), "... (truncated)");
           if (onImageChange) {
-            await onImageChange(reader.result); // Pass base64 string to hook, which persists to Supabase and updates state
+            try {
+              await onImageChange(reader.result); // Pass base64 to hook, which persists to Supabase and updates state
+            } catch (err) {
+              setImageError(true);
+              console.error("ImageDisplay: onImageChange threw error", err);
+              onError();
+            }
           }
         } else {
           setImageError(true);
+          console.error("ImageDisplay: Could not read file as image data URL, result:", reader.result);
           onError();
         }
       };
-      reader.onerror = () => {
+      reader.onerror = (error) => {
         setImageError(true);
+        console.error("ImageDisplay: FileReader error", error);
         onError();
       };
       reader.readAsDataURL(file);
     } else {
       setImageError(true);
+      console.error("ImageDisplay: Selected file not image type or missing", file);
       onError();
     }
   };

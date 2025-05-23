@@ -120,9 +120,11 @@ export const useDreamImageGeneration = ({
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
+    console.log("useDreamImageGeneration: handleImageFromFile received", typeof fileDataUrl, fileDataUrl?.slice?.(0, 36), "... (truncated)");
     if (!fileDataUrl || !user) {
       setImageError(true);
       toast.error("Could not add image. Please try again.");
+      console.error("useDreamImageGeneration: fileDataUrl or user missing", { fileDataUrl, user });
       return;
     }
     setIsGenerating(true);
@@ -133,9 +135,11 @@ export const useDreamImageGeneration = ({
       setGeneratedImage(fileDataUrl); // fallback: show uploaded file in UI, even if it’s just local
       onImageGenerated(fileDataUrl, imagePrompt || "");
       toast.error("Failed to persist uploaded image to storage. Using local version (might be temporary).");
+      console.error("useDreamImageGeneration: upload failed, fallback to data URL");
     } else {
       setGeneratedImage(publicUrl);
       onImageGenerated(publicUrl, imagePrompt || "");
+      console.log("useDreamImageGeneration: uploaded to Supabase, publicUrl:", publicUrl);
     }
   };
 
