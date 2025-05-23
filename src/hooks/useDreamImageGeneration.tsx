@@ -134,10 +134,8 @@ export const useDreamImageGeneration = ({
         return;
       }
 
-      // Extra logging for debugging edge function failures:
       console.log("[DreamImageGeneration] Calling analyze-dream edge function", { dreamContent });
 
-      // Defensive: Ensure analyze-dream returns a prompt
       const promptResult = await supabase.functions.invoke("analyze-dream", {
         body: { dreamContent, task: "create_image_prompt" },
       });
@@ -151,11 +149,9 @@ export const useDreamImageGeneration = ({
 
       setImagePrompt(generatedPromptText);
 
-      // Add additional logging for debugging "generate-dream-image" edge call
       const body = { prompt: generatedPromptText };
       console.log("[DreamImageGeneration] Invoking generate-dream-image with body:", body);
 
-      // Sometimes networks drop; rethrow with details if this fails
       const imageResult = await supabase.functions.invoke("generate-dream-image", {
         body,
       });
@@ -164,25 +160,33 @@ export const useDreamImageGeneration = ({
         console.error("generate-dream-image error:", imageResult.error, imageResult);
         throw new Error(imageResult.error?.message || "Failed to generate image");
       }
-      // Some edge returns might wrap URL under different property names
-      const openaiUrl =
-        imageResult.data?.imageUrl || imageResult.data?.image_url || imageResult.data?.generatedImage;
-      if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
-      // Log the output URL for debugging
+      const openaiUrl =
+        imageResult.data?.imageUrl ||
+        imageResult.data?.image_url ||
+        imageResult.data?.generatedImage;
+      if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
       console.log("[DreamImageGeneration] Image generated. URL:", openaiUrl);
 
-      // >>> AUTO-DOWNLOAD PNG FOR USER <<<
+      // Download image (to get a PNG, if not already), then upload to Supabase and persist
+      // (User will get an auto-download for local save but always use Supabase persisted URL in app)
       await downloadImageAsPng(openaiUrl, "dream-image.png");
 
-      // Step 3: Upload to Supabase Storage as PNG
+      // Now ensure upload to Supabase, only use Supabase URL!
+      setIsGenerating(true); // In case previous isGenerating was toggled by download fn
+
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText);
 
-      if (supabaseUrl) {
+      if (supabaseUrl && supabaseUrl.startsWith("http")) {
+        setGeneratedImage(supabaseUrl);
+        onImageGenerated(supabaseUrl, generatedPromptText);
         toast.success("Dream image generated and saved permanently!");
         if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       } else {
-        throw new Error("Failed to persist generated image.");
+        // Fail: do not use OpenAI/transient URL further
+        console.error("[DreamImageGeneration] Failed to persist the generated image to Supabase storage: ", supabaseUrl);
+        setGeneratedImage(""); // Clean up state
+        throw new Error("Failed to persist generated image. It could not be saved in storage.");
       }
     } catch (error: any) {
       setImageError(true);
