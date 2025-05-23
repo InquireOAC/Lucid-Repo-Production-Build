@@ -119,6 +119,9 @@ export const useDreamImageGeneration = ({
       return;
     }
 
+    setIsGenerating(true);
+    setImageError(false);
+
     try {
       const canUse = isAppCreator || (await canUseFeature("image"));
       if (!canUse) {
@@ -126,33 +129,38 @@ export const useDreamImageGeneration = ({
         return;
       }
 
-      setIsGenerating(true);
-      setImageError(false);
-
-      // 1. Generate prompt
+      // Step 1: Generate prompt
       const promptResult = await supabase.functions.invoke("analyze-dream", {
         body: { dreamContent, task: "create_image_prompt" },
       });
 
-      if (promptResult.error) throw new Error(promptResult.error.message || "Failed to generate image prompt");
+      if (promptResult.error) {
+        console.error("analyze-dream error:", promptResult.error, promptResult);
+        throw new Error(promptResult.error.message || "Failed to generate image prompt");
+      }
       const generatedPromptText = promptResult.data?.analysis || "";
       if (!generatedPromptText) throw new Error("No image prompt was generated");
 
       setImagePrompt(generatedPromptText);
 
-      // 2. Generate AI image
+      // Step 2: Generate AI image
+      const body = { prompt: generatedPromptText };
+      console.log("Invoking generate-dream-image with body:", body);
       const imageResult = await supabase.functions.invoke("generate-dream-image", {
-        body: { prompt: generatedPromptText },
+        body,
       });
 
-      if (imageResult.error) throw new Error(imageResult.error.message || "Failed to generate image");
+      if (imageResult.error) {
+        console.error("generate-dream-image error:", imageResult.error, imageResult);
+        throw new Error(imageResult.error.message || "Failed to generate image");
+      }
       const openaiUrl = imageResult.data?.imageUrl || imageResult.data?.image_url;
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
       // >>> AUTO-DOWNLOAD PNG FOR USER <<<
       await downloadImageAsPng(openaiUrl, "dream-image.png");
 
-      // 3. Upload to Supabase Storage as PNG
+      // Step 3: Upload to Supabase Storage as PNG
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText);
 
       if (supabaseUrl) {
@@ -164,6 +172,7 @@ export const useDreamImageGeneration = ({
     } catch (error: any) {
       setImageError(true);
       toast.error(`Image generation failed: ${error.message}`);
+      console.error("Image generation failed (full error):", error);
     } finally {
       setIsGenerating(false);
     }

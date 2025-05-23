@@ -25,7 +25,8 @@ const MainLayout = () => {
       </div>
       
       {/* Fixed tab bar positioned at the bottom with safe area insets */}
-      <div className="fixed bottom-0 left-0 right-0 bg-card shadow-lg border-t z-50 pb-safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 bg-card shadow-lg border-t z-50">
+        {/* Removed pb-safe-bottom so the tab bar always reaches the very bottom */}
         <div className="flex justify-around items-center h-16 pb-0">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucidrepo" icon={<Moon />} label="Lucid Repo" />
