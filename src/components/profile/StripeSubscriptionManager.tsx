@@ -99,7 +99,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           name: 'Basic',
           price: '$4.99/month',
           features: [
-            "10 Dream Analysis",
+            "Unlimited Dream Analysis", // updated!
             "10 Dream Art Generations",
             "Priority Support"
           ],
@@ -164,8 +164,12 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       if (subscriptionData) {
         console.log("Active subscription found:", subscriptionData);
         // Get plans info to determine credit limits
-        const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10;
-        const imageLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10; // UPDATED
+        const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999
+                              : subscriptionData.price_id === "price_basic" ? 999999
+                              : 0;
+        const imageLimit = subscriptionData.price_id === "price_premium" ? 999999
+                            : subscriptionData.price_id === "price_basic" ? 10
+                            : 0;
 
         setSubscriptionStatus({
           subscribed: true,

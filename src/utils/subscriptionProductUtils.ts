@@ -30,7 +30,7 @@ export function normalizeProduct(product: any): Product {
     product.id === "price_basic"
   ) {
     features = [
-      "10 Dream Analysis",
+      "Unlimited Dream Analysis",
       "10 Dream Art Generations",
       "Priority Support"
     ];

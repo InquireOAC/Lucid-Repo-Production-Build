@@ -64,7 +64,7 @@ export function useSubscription(user: any) {
           analysisTotal = 999999;
           imageTotal = 999999;
         } else if (subscriptionData.price_id === 'price_basic') {
-          analysisTotal = 10;
+          analysisTotal = 999999; // Unlimited for Basic!
           imageTotal = 10;
         } else {
           analysisTotal = 0;
