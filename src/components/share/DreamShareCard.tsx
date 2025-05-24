@@ -167,7 +167,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
                 style={{ 
                   borderRadius: '24px',
                   boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)',
-                  maxHeight: '800px',
+                  maxHeight: '900px',
                   backgroundColor: '#8976BF'
                 }}
                 crossOrigin="anonymous"
