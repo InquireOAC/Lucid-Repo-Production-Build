@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useDreams } from "@/hooks/useDreams";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import PullToRefresh from "@/components/ui/PullToRefresh";
+import { useLikes } from "@/hooks/useLikes";
 
 const ALLOWED_TAGS = [
   "Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"
@@ -30,10 +31,26 @@ const LucidRepoContainer = () => {
     setSortBy,
     activeTab,
     setActiveTab,
-    handleLike,
     handleUpdateDream,
     fetchPublicDreams
-  } = useDreams();
+  } = useDreams(refreshLikedDreams);
+
+  // Centralized setter for dreams, to ensure `useLikes` can sync state
+  const [dreamsState, setDreamsState] = useState<DreamEntry[]>([]);
+  useEffect(() => { setDreamsState(dreams); }, [dreams]);
+
+  // For profile liked dreams refresh (noop since this is repo)
+  function refreshLikedDreams() {
+    fetchPublicDreams();
+  }
+
+  // useLikes hook to keep liked state in sync and handle like logic
+  const { handleLike } = useLikes(
+    user,
+    dreamsState,
+    setDreamsState,
+    refreshLikedDreams
+  );
 
   // NEW: Fetch globally visible dream tags for the repo page
   const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
@@ -49,8 +66,11 @@ const LucidRepoContainer = () => {
     return () => clearInterval(refreshInterval);
   }, []);
 
+  // When backend dreams update, update local dreamsState
+  useEffect(() => { setDreamsState(dreams); }, [dreams]);
+
   const handleOpenDream = (dream: DreamEntry) => {
-    setSelectedDream(dream);
+    setSelectedDream({ ...dream });
   };
 
   const handleCloseDream = () => {
@@ -72,16 +92,18 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
-  const handleDreamLike = (dreamId: string) => {
+  // The MAIN handler: when liking a dream from card/list or modal, update state
+  const handleDreamLike = async (dreamId: string) => {
     if (!user) {
       setAuthDialogOpen(true);
       return;
     }
-    handleLike(dreamId);
+    await handleLike(dreamId); // Uses centralized useLikes, which does state sync and profile refresh
+    // After like/unlike, dreamsState changes, so UI and modal re-render
   };
 
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    const dreamToUpdate = dreams.find(d => d.id === id);
+    const dreamToUpdate = dreamsState.find(d => d.id === id);
     if (!dreamToUpdate) {
       toast.error("Dream not found");
       return;
@@ -102,7 +124,7 @@ const LucidRepoContainer = () => {
   };
 
   // Filter dreams based on search query and tags using normalizedDreams now
-  const normalizedDreams = dreams.map(dream => ({
+  const normalizedDreams = dreamsState.map(dream => ({
     ...dream,
     tags: Array.isArray(dream.tags) ? dream.tags : []
   }));
@@ -125,6 +147,7 @@ const LucidRepoContainer = () => {
     return matchesSearch && matchesTags;
   });
 
+  // ---- MAIN UI ----
   return (
     <PullToRefresh onRefresh={fetchPublicDreams}>
       <div className="container mx-auto px-4 py-6 max-w-4xl">
@@ -146,19 +169,23 @@ const LucidRepoContainer = () => {
           isLoading={isLoading || tagsLoading}
           filteredDreams={filteredDreams}
           dreamTags={filteredDreamTags}
-          onLike={handleDreamLike}
+          onLike={handleDreamLike} // Properly triggers like logic + updates
           onOpenDream={handleOpenDream}
           onUserClick={handleNavigateToProfile}
           onTagClick={handleTagClick}
           searchQuery={searchQuery}
         />
-        <DreamDetailWrapper
-          selectedDream={selectedDream}
-          tags={filteredDreamTags}
-          onClose={handleCloseDream}
-          onUpdate={handleDreamUpdate}
-          isAuthenticated={!!user}
-        />
+        {selectedDream && (
+          <DreamDetailWrapper
+            selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream}
+            tags={filteredDreamTags}
+            onClose={handleCloseDream}
+            onUpdate={handleDreamUpdate}
+            isAuthenticated={!!user}
+            // The crucial part: modal uses the same handler, and gets LIVE dream data
+            onLike={() => handleDreamLike(selectedDream.id)}
+          />
+        )}
         <AuthDialog 
           open={authDialogOpen} 
           onOpenChange={setAuthDialogOpen}
