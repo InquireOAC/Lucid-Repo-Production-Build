@@ -67,7 +67,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               className={`max-w-[80%] rounded-lg px-4 py-2 ${
                 message.sender_id === user?.id
                   ? "bg-dream-purple text-white"
-                  : "bg-blue-200 dark:bg-blue-700"
+                  : "bg-blue-700 dark:bg-blue-700"
               }`}
             >
               <p className="text-sm">{message.content}</p>
