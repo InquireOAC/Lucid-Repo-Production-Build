@@ -157,7 +157,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         
         {/* Dream Visualization - full width with rounded corners */}
         {dreamImageUrl && (
-          <div className="mb-[60px] flex items-center justify-center">
+          <div className="mb-[50px] flex items-center justify-center">
             <div className="w-half overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
               <img 
                 ref={imgRef}
