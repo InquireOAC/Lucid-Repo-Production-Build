@@ -158,12 +158,12 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         {/* Dream Visualization - full width with rounded corners */}
         {dreamImageUrl && (
           <div className="mb-[60px] flex items-center justify-center">
-            <div className="w-full overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
+            <div className="w-half overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
               <img 
                 ref={imgRef}
                 src={dreamImageUrl}
                 alt="Dream Visualization"
-                className="w-full object-cover dream-image-container"
+                className="w-half object-cover dream-image-container"
                 style={{ 
                   borderRadius: '24px',
                   boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)',
