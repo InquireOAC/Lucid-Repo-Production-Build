@@ -183,7 +183,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: '5px',
+            bottom: '15px',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
