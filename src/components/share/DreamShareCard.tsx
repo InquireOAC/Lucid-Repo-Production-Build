@@ -191,7 +191,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             src="/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
-              width: '700px',
+              width: '650px',
               maxWidth: '90%',
               height: 'auto',
               margin: '0 auto',
