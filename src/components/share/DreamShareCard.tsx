@@ -177,26 +177,39 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* --- Footer with uploaded logo image, no background or extra styling --- */}
+        {/* --- Footer background gradient and logo --- */}
+        {/* 1. Gradient footer background is absolutely positioned, touches bottom, is twice the previous height */}
         <div
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: '15px',
+            bottom: 0,
+            width: '100%',
+            height: '330px', // was ~165px, now double
+            background: "linear-gradient(0deg, #6C54D8 0%, #7859DF55 80%, transparent 100%)",
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+        />
+        {/* 2. Logo (positioned 5px from the now-taller bottom gradient) */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: '165px', // logo sits halfway into the gradient
             display: 'flex',
             justifyContent: 'center',
-            alignItems: 'center',
+            alignItems: 'flex-end',
             width: '100%',
             height: 'auto',
-            pointerEvents: 'none', // image should be non-interactive in share card rendering
+            pointerEvents: 'none',
             background: 'none',
-            borderRadius: 0,
-            boxShadow: 'none',
           }}
         >
           <img
-            src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
+            src="/lovable-uploads/fbfc72e1-bab9-44a2-b512-e00ecb8b62da.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
               width: '800px',
@@ -205,8 +218,6 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
               objectFit: 'contain',
               margin: 0,
               background: 'none',
-              borderRadius: 0,
-              boxShadow: 'none',
               display: 'block',
             }}
             draggable={false}
