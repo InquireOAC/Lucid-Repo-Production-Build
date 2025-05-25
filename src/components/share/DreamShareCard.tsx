@@ -15,10 +15,10 @@ interface DreamShareCardProps {
   onShareComplete?: (success: boolean) => void;
 }
 
-const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({ 
-  dream, 
-  onShareStart, 
-  onShareComplete 
+const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
+  dream,
+  onShareStart,
+  onShareComplete
 }, ref) => {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -177,28 +177,27 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* --- Replacing Footer with Custom Image --- */}
+        {/* --- Footer with uploaded logo image, no background or extra styling --- */}
         <div
           className="mt-auto flex items-center justify-center"
           style={{
             width: '100%',
             minHeight: '200px',
-            marginBottom: '-40px', // visually aligned close to card bottom
+            marginBottom: '-40px',
+            // No background, border radius, or box-shadow here!
           }}
         >
           <img
-            src="/lovable-uploads/6ace3c9c-ec6b-464f-85dd-e5f350cddd5a.png"
+            src="/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
-              maxWidth: '90%',
               width: '950px',
+              maxWidth: '90%',
               height: 'auto',
               margin: '0 auto',
               objectFit: 'contain',
               display: 'block',
-              backgroundColor: 'transparent',
-              borderRadius: '32px',
-              boxShadow: '0 4px 32px rgba(0,0,0,0.08)'
+              // REMOVE: backgroundColor, borderRadius, boxShadow, etc.
             }}
           />
         </div>
