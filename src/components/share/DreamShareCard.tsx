@@ -1,4 +1,3 @@
-
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -127,7 +126,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </h1>
         </div>
         
-        {/* Title & Date - title 64px bold, date 24px at 50% opacity */}
+        {/* Title & Date */}
         <div className="mb-[60px]">
           <h2 className="text-[64px] font-bold leading-tight text-white text-left">
             {dream.title || "Untitled Dream"}
@@ -137,14 +136,14 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </p>
         </div>
         
-        {/* Dream Story - 32px in semi-transparent container, height adjusts to fit content */}
+        {/* Dream Story */}
         <div className="mb-[60px] bg-white/20 p-8 rounded-2xl">
           <p className="text-[32px] leading-normal text-white text-left">
             {dreamContent}
           </p>
         </div>
         
-        {/* Dream Analysis - if it exists, height adjusts to fit content */}
+        {/* Dream Analysis */}
         {truncatedAnalysis && (
           <div className="mb-[60px]">
             <div className="border-l-[2px] border-purple-300 pl-[20px]">
@@ -155,7 +154,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* Dream Visualization - full width with rounded corners */}
+        {/* Dream Visualization */}
         {dreamImageUrl && (
           <div className="mb-[60px] flex items-center justify-center">
             <div className="w-half overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
@@ -178,35 +177,30 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* Footer with CTA - 120px tall purple bar */}
-        <div 
-          className="mt-auto bg-[#9F8FD9] h-[120px] mx-[-80px] flex items-center justify-between px-[40px]" 
-          style={{ 
-            marginBottom: '-80px',
-            boxSizing: 'content-box'
+        {/* --- Replacing Footer with Custom Image --- */}
+        <div
+          className="mt-auto flex items-center justify-center"
+          style={{
+            width: '100%',
+            minHeight: '200px',
+            marginBottom: '-40px', // visually aligned close to card bottom
           }}
         >
-          {/* Left: App Icon */}
-          <div className="flex items-center justify-center">
-            <img 
-              src="/lovable-uploads/75f9ca02-53e1-46b7-9296-dc40e6ad23fe.png" 
-              alt="Lucid Repo Logo" 
-              className="w-[125px] h-[125px]" 
-              style={{ backgroundColor: 'transparent' }}
-            />
-          </div>
-          
-          {/* Center: Download Text */}
-          <div className="flex-1 flex justify-center">
-            <div className="text-[64px] font-bold text-white">
-              Download Lucid Repo
-            </div>
-          </div>
-          
-          {/* Right: QR Code */}
-          <div className="flex items-center justify-center">
-            <QrCode size={72} className="text-white" />
-          </div>
+          <img
+            src="/lovable-uploads/6ace3c9c-ec6b-464f-85dd-e5f350cddd5a.png"
+            alt="Lucid Repo Logo and App Store Badge"
+            style={{
+              maxWidth: '90%',
+              width: '950px',
+              height: 'auto',
+              margin: '0 auto',
+              objectFit: 'contain',
+              display: 'block',
+              backgroundColor: 'transparent',
+              borderRadius: '32px',
+              boxShadow: '0 4px 32px rgba(0,0,0,0.08)'
+            }}
+          />
         </div>
       </div>
     </div>
