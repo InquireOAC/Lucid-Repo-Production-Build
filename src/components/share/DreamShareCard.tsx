@@ -119,7 +119,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           background: 'linear-gradient(to bottom, #6344A5, #8976BF)'
         }}
       >
-        {/* App Name at the top - 48px bold white centered */}
+        {/* App Name at the top */}
         <div className="flex items-center justify-center mb-[60px]">
           <h1 className="text-[48px] font-bold text-white tracking-tight">
             Lucid Repo
@@ -179,26 +179,37 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         
         {/* --- Footer with uploaded logo image, no background or extra styling --- */}
         <div
-          className="mt-auto flex items-center justify-center"
           style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: '5px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
             width: '100%',
-            minHeight: '200px',
-            marginBottom: '0px',
-            // No background, border radius, or box-shadow here!
+            height: 'auto',
+            pointerEvents: 'none', // image should be non-interactive in share card rendering
+            background: 'none',
+            borderRadius: 0,
+            boxShadow: 'none',
           }}
         >
           <img
-            src="/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png"
+            src="/lovable-uploads/75f9ca02-53e1-46b7-9296-dc40e6ad23fe.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
               width: '650px',
               maxWidth: '90%',
               height: 'auto',
-              margin: '0 auto',
               objectFit: 'contain',
+              margin: 0,
+              background: 'none',
+              borderRadius: 0,
+              boxShadow: 'none',
               display: 'block',
-              // REMOVE: backgroundColor, borderRadius, boxShadow, etc.
             }}
+            draggable={false}
           />
         </div>
       </div>
