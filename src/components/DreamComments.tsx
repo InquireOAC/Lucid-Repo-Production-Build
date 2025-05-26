@@ -113,7 +113,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             <div key={comment.id} className="flex gap-3">
               <Avatar className="h-8 w-8">
                 <AvatarImage
-                  src={comment.profiles?.avatar_url}
+                  src={comment.profiles?.avatar_url || ""}
                   alt={comment.profiles?.username || "User"}
                 />
                 <AvatarFallback>
@@ -146,7 +146,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
         <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
           <Avatar className="h-8 w-8 flex-shrink-0">
             <AvatarImage
-              src={user.user_metadata?.avatar_url}
+              src={user.user_metadata?.avatar_url || ""}
               alt={user.user_metadata?.username || "User"}
             />
             <AvatarFallback>
@@ -183,3 +183,4 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 };
 
 export default DreamComments;
+
