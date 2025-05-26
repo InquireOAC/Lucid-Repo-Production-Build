@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DreamDetail from "@/components/DreamDetail";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import SymbolAvatar from "./SymbolAvatar"; // Import SymbolAvatar
 
 interface DreamGridProps {
   dreams: any[];
@@ -147,16 +148,24 @@ const DreamGrid = ({
                 <div className="flex items-center justify-between mt-1">
                   {isLiked ? (
                     <div className="flex items-center gap-1">
-                      <Avatar className="h-4 w-4">
-                        <AvatarImage src={dream.profiles?.avatar_url} />
-                        <AvatarFallback className="bg-dream-purple/20 text-[8px]">
-                          {dream.profiles?.display_name?.[0]?.toUpperCase() ||
-                            dream.profiles?.username?.[0]?.toUpperCase() ||
-                            "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      {/* Use SymbolAvatar for liked dreams */}
+                      <SymbolAvatar
+                        symbol={dream.profiles?.avatar_symbol}
+                        color={dream.profiles?.avatar_color}
+                        fallbackLetter={
+                          (
+                            dream.profiles?.display_name?.[0] ||
+                            dream.profiles?.username?.[0] ||
+                            "U"
+                          ).toUpperCase()
+                        }
+                        size={16}
+                        className="h-4 w-4"
+                      />
                       <span className="text-xs text-muted-foreground truncate max-w-[70px]">
-                        {dream.profiles?.display_name || dream.profiles?.username || "User"}
+                        {dream.profiles?.display_name ||
+                          dream.profiles?.username ||
+                          "User"}
                       </span>
                     </div>
                   ) : (
