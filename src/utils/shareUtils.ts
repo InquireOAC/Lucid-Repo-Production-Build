@@ -1,4 +1,3 @@
-
 import html2canvas from "html2canvas";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
@@ -129,26 +128,43 @@ export const shareDream = async (
     if (!blob) {
       throw new Error("Failed to generate share image");
     }
-    
+
+    // Generate a File object from the blob (needed for iOS/Android Share sheets)
+    const file = new File([blob], `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`, { type: "image/png" });
+
     // If on a capacitor native platform (iOS/Android)
     if (Capacitor.isNativePlatform()) {
       console.log("Using native sharing");
-      
-      // Convert blob to data URL for capacitor share
-      const dataUrl = await blobToDataURL(blob);
-      
-      // Share using capacitor's native share plugin
-      await Share.share({
-        title: title,
-        text: text,
-        url: dataUrl,
-        dialogTitle: 'Share Your Dream',
-      });
-      
-      console.log("Native share completed");
-      return true;
-    } 
-    
+
+      // Prefer new Capacitor share API with `files` property if available
+      try {
+        // @ts-ignore 'files' property may not show in some type defs
+        await Share.share({
+          title: title,
+          text: text,
+          // The actual image to share
+          files: [file],
+          dialogTitle: 'Share Your Dream',
+        });
+        console.log("Native share with image file completed");
+        return true;
+      } catch (filesShareError) {
+        // Fall back to using dataUrl with url property if file attachment fails for some reason
+        console.warn("Native share with file failed or unsupported, falling back to data URL...");
+
+        const dataUrl = await blobToDataURL(blob);
+
+        await Share.share({
+          title: title,
+          text: text,
+          url: dataUrl,
+          dialogTitle: 'Share Your Dream',
+        });
+        console.log("Native share fallback with data URL completed");
+        return true;
+      }
+    }
+
     // Fallback for web: download the image
     console.log("Using web fallback for sharing");
     downloadImage(blob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
