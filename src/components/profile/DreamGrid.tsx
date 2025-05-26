@@ -150,7 +150,9 @@ const DreamGrid = ({
                       <Avatar className="h-4 w-4">
                         <AvatarImage src={dream.profiles?.avatar_url} />
                         <AvatarFallback className="bg-dream-purple/20 text-[8px]">
-                          {dream.profiles?.username?.[0]?.toUpperCase() || "U"}
+                          {dream.profiles?.display_name?.[0]?.toUpperCase() ||
+                            dream.profiles?.username?.[0]?.toUpperCase() ||
+                            "U"}
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-xs text-muted-foreground truncate max-w-[70px]">
