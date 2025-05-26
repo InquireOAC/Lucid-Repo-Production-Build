@@ -16,7 +16,8 @@ export function useProfileDreams(user: any, userId?: string) {
     try {
       const { data, error } = await supabase
         .from("dream_entries")
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        // Add avatar_symbol and avatar_color to the select
+        .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
         .eq("user_id", targetUserId)
         .eq("is_public", true)
         .order("created_at", { ascending: false });
@@ -61,7 +62,8 @@ export function useProfileDreams(user: any, userId?: string) {
 
         const { data: dreamData, error: dreamError } = await supabase
           .from("dream_entries")
-          .select("*, profiles:user_id(username, display_name, avatar_url)")
+          // Add avatar_symbol and avatar_color to the select
+          .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
           .in("id", dreamIds)
           .eq("is_public", true)
           .order("created_at", { ascending: false });
