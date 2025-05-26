@@ -15,8 +15,8 @@ interface Comment {
   created_at: string;
   user_id: string;
   profiles?: {
-    username: string;
-    display_name: string;
+    username?: string;
+    display_name?: string;
     avatar_symbol?: string;
     avatar_color?: string;
   };
@@ -106,14 +106,14 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
         <div className="space-y-4">
           {comments.map((comment) => {
             // Use SymbolAvatar and fallback logic
-            const profile = comment.profiles || {};
-            const displayName = profile.display_name ?? profile.username ?? "";
+            const profile = comment.profiles;
+            const displayName = profile?.display_name ?? profile?.username ?? "";
             const fallbackLetter = displayName?.[0]?.toUpperCase() ?? "U";
             return (
               <div key={comment.id} className="flex gap-3">
                 <SymbolAvatar
-                  symbol={profile.avatar_symbol}
-                  color={profile.avatar_color}
+                  symbol={profile?.avatar_symbol}
+                  color={profile?.avatar_color}
                   fallbackLetter={fallbackLetter}
                   size={32}
                   className="h-8 w-8"
@@ -183,3 +183,4 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 };
 
 export default DreamComments;
+
