@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,32 +108,47 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
         </div>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
-          {comments.map((comment) => (
-            <div key={comment.id} className="flex gap-3">
-              <Avatar className="h-8 w-8">
-                <AvatarImage
-                  src={comment.profiles?.avatar_url || ""}
-                  alt={comment.profiles?.username || "User"}
-                />
-                <AvatarFallback>
-                  {(comment.profiles?.username?.[0] || "U").toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="flex gap-2 items-baseline">
-                  <p className="font-medium text-sm">
-                    {comment.profiles?.display_name ||
-                      comment.profiles?.username ||
-                      "Anonymous"}
-                  </p>
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(comment.created_at), "MMM d, h:mm a")}
-                  </span>
+          {comments.map((comment) => {
+            // Prefer avatar_url, else fallback to profile_picture, else blank
+            const avatarUrl =
+              comment.profiles?.avatar_url ||
+              comment.profiles?.profile_picture ||
+              "";
+
+            const userInitial =
+              (
+                comment.profiles?.display_name?.[0] ??
+                comment.profiles?.username?.[0] ??
+                "U"
+              ).toUpperCase();
+
+            return (
+              <div key={comment.id} className="flex gap-3">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage
+                    src={avatarUrl}
+                    alt={comment.profiles?.username || "User"}
+                  />
+                  <AvatarFallback>
+                    {userInitial}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex gap-2 items-baseline">
+                    <p className="font-medium text-sm">
+                      {comment.profiles?.display_name ||
+                        comment.profiles?.username ||
+                        "Anonymous"}
+                    </p>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(comment.created_at), "MMM d, h:mm a")}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm">{comment.content}</p>
                 </div>
-                <p className="mt-1 text-sm">{comment.content}</p>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground text-center py-2">
@@ -146,11 +160,18 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
         <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
           <Avatar className="h-8 w-8 flex-shrink-0">
             <AvatarImage
-              src={user.user_metadata?.avatar_url || ""}
+              src={
+                user.user_metadata?.avatar_url ||
+                user.user_metadata?.profile_picture ||
+                ""
+              }
               alt={user.user_metadata?.username || "User"}
             />
             <AvatarFallback>
-              {(user.user_metadata?.username?.[0] || "U").toUpperCase()}
+              {(user.user_metadata?.display_name?.[0] ||
+                user.user_metadata?.username?.[0] ||
+                "U"
+              ).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           <Input
@@ -183,4 +204,3 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 };
 
 export default DreamComments;
-
