@@ -9,6 +9,9 @@ import DreamDetail from "@/components/DreamDetail";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SymbolAvatar from "./SymbolAvatar"; // Import SymbolAvatar
+import EmptyDreamGrid from "./EmptyDreamGrid";
+import DreamCardItem from "./DreamCardItem";
+import { showUpdateDreamErrorToast } from "./toastHelpers";
 
 interface DreamGridProps {
   dreams: any[];
@@ -24,10 +27,6 @@ interface DreamGridProps {
   actionText: string;
   refreshDreams?: () => void;
 }
-
-const showUpdateDreamErrorToast = () => {
-  toast.error("Failed to update dream");
-};
 
 const DreamGrid = ({
   dreams,
@@ -76,7 +75,6 @@ const DreamGrid = ({
   
   // Handle dream update
   const handleUpdateDream = async (id: string, updates: any) => {
-    // Only allow update if it's the owner's dream
     if (!isOwnProfile) {
       // Silently return (DO NOT show failed toast)
       return;
@@ -110,23 +108,20 @@ const DreamGrid = ({
       }
     } catch (error) {
       console.error("Error updating dream:", error);
-      // Only show the error toast if isOwnProfile (already checked above)
       showUpdateDreamErrorToast();
     }
   };
 
   if (dreams.length === 0) {
     return (
-      <div className="text-center py-12">
-        {emptyIcon}
-        <h3 className="text-lg font-medium mb-1">{emptyTitle}</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          {isOwnProfile ? emptyMessage.own : emptyMessage.other}
-        </p>
-        <Link to={actionLink}>
-          <Button variant="outline">{actionText}</Button>
-        </Link>
-      </div>
+      <EmptyDreamGrid
+        emptyIcon={emptyIcon}
+        emptyTitle={emptyTitle}
+        emptyMessage={emptyMessage}
+        isOwnProfile={isOwnProfile}
+        actionLink={actionLink}
+        actionText={actionText}
+      />
     );
   }
 
@@ -134,62 +129,12 @@ const DreamGrid = ({
     <>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
         {dreams.map((dream: any) => (
-          <Card 
-            key={dream.id} 
-            className="overflow-hidden cursor-pointer hover:shadow-md transition-all relative"
+          <DreamCardItem
+            key={dream.id}
+            dream={dream}
+            isLiked={isLiked}
             onClick={() => setSelectedDream(dream)}
-          >
-            <CardContent className="p-0">
-              {dream.generatedImage ? (
-                <div className="relative">
-                  <img 
-                    src={dream.generatedImage} 
-                    alt={dream.title}
-                    className="aspect-square object-cover w-full"
-                  />
-                </div>
-              ) : (
-                <div className="aspect-square flex items-center justify-center bg-dream-purple/10 relative">
-                  <Moon size={32} className="text-dream-purple opacity-50" />
-                </div>
-              )}
-              <div className="p-2">
-                <p className="text-sm font-semibold truncate">{dream.title}</p>
-                <div className="flex items-center justify-between mt-1">
-                  {isLiked ? (
-                    <div className="flex items-center gap-1">
-                      {/* Use SymbolAvatar for liked dreams (showing dream creator info) */}
-                      <SymbolAvatar
-                        symbol={dream.profiles?.avatar_symbol}
-                        color={dream.profiles?.avatar_color}
-                        fallbackLetter={
-                          (
-                            dream.profiles?.display_name?.[0] ||
-                            dream.profiles?.username?.[0] ||
-                            "U"
-                          ).toUpperCase()
-                        }
-                        size={16}
-                        className="h-4 w-4"
-                      />
-                      <span className="text-xs text-muted-foreground truncate max-w-[70px]">
-                        {dream.profiles?.display_name || dream.profiles?.username || "User"}
-                      </span>
-                    </div>
-                  ) : (
-                    <Badge variant="outline" className="text-xs">
-                      {new Date(dream.created_at).toLocaleDateString()}
-                    </Badge>
-                  )}
-                  {isLiked && (
-                    <Badge variant="outline" className="text-xs">
-                      {new Date(dream.created_at).toLocaleDateString()}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          />
         ))}
       </div>
       {selectedDream && (
