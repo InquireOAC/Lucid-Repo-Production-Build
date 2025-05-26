@@ -109,11 +109,8 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment) => {
-            // Prefer avatar_url, else fallback to profile_picture, else blank
-            const avatarUrl =
-              comment.profiles?.avatar_url ||
-              comment.profiles?.profile_picture ||
-              "";
+            // Use avatar_url ONLY, no longer fall back to profile_picture
+            const avatarUrl = comment.profiles?.avatar_url || "";
 
             const userInitial =
               (
@@ -162,7 +159,6 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             <AvatarImage
               src={
                 user.user_metadata?.avatar_url ||
-                user.user_metadata?.profile_picture ||
                 ""
               }
               alt={user.user_metadata?.username || "User"}
