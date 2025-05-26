@@ -91,6 +91,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
       const dreamToUpdate = dreams.find(d => d.id === id);
       if (!dreamToUpdate || (user && dreamToUpdate.user_id !== user.id)) {
         console.error("Cannot update dream: not the owner");
+        // Do NOT show a toast in this case; just return false
         return false;
       }
 
