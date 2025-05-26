@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Heart, Globe } from "lucide-react";
@@ -25,6 +24,10 @@ interface DreamGridProps {
   actionText: string;
   refreshDreams?: () => void;
 }
+
+const showUpdateDreamErrorToast = () => {
+  toast.error("Failed to update dream");
+};
 
 const DreamGrid = ({
   dreams,
@@ -107,8 +110,8 @@ const DreamGrid = ({
       }
     } catch (error) {
       console.error("Error updating dream:", error);
-      // Don't show error toast here if not owner (already checked above)
-      toast.error("Failed to update dream");
+      // Only show the error toast if isOwnProfile (already checked above)
+      showUpdateDreamErrorToast();
     }
   };
 
@@ -203,4 +206,3 @@ const DreamGrid = ({
   );
 };
 export default DreamGrid;
-
