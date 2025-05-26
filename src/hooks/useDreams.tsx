@@ -137,7 +137,6 @@ export function useDreams(refreshLikedDreams?: () => void) {
       return true; // Indicate success
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
       return false;
     }
   };
