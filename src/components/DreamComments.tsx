@@ -1,13 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
 import { format } from "date-fns";
 import { Loader2, Send } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface Comment {
   id: string;
@@ -17,7 +17,8 @@ interface Comment {
   profiles?: {
     username: string;
     display_name: string;
-    avatar_url: string;
+    avatar_symbol?: string;
+    avatar_color?: string;
   };
 }
 
@@ -35,7 +36,6 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
   useEffect(() => {
     fetchComments();
-    // This ensures the counter refreshes on mount
     // eslint-disable-next-line
   }, [dreamId]);
 
@@ -44,18 +44,17 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     try {
       const { data, error } = await supabase
         .from("dream_comments")
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .select("*, profiles:user_id(username, display_name, avatar_symbol, avatar_color)")
         .eq("dream_id", dreamId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
       setComments(data || []);
-      // Update comment count *after fetching*
       onCommentCountChange((data?.length || 0));
     } catch (error) {
       console.error("Error fetching comments:", error);
-      onCommentCountChange(0); // Defensive: set to 0 on error/fetch fail
+      onCommentCountChange(0);
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +66,6 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       toast.error("You need to sign in to comment");
       return;
     }
-
     if (!newComment.trim()) return;
     setIsSubmitting(true);
 
@@ -81,15 +79,13 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             content: newComment.trim(),
           },
         ])
-        .select("*, profiles:user_id(username, display_name, avatar_url)")
+        .select("*, profiles:user_id(username, display_name, avatar_symbol, avatar_color)")
         .single();
 
       if (error) throw error;
 
-      // Optimistically update local comment state/counter
       setComments([...comments, data]);
       setNewComment("");
-      // Trigger a refetch (so triggers update count too)
       fetchComments();
     } catch (error: any) {
       toast.error("Failed to post comment: " + (error?.message || "Unknown error"));
@@ -109,33 +105,23 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment) => {
-            // Use avatar_url ONLY, no longer fall back to profile_picture
-            const avatarUrl = comment.profiles?.avatar_url || "";
-
-            const userInitial =
-              (
-                comment.profiles?.display_name?.[0] ??
-                comment.profiles?.username?.[0] ??
-                "U"
-              ).toUpperCase();
-
+            // Use SymbolAvatar and fallback logic
+            const profile = comment.profiles || {};
+            const displayName = profile.display_name ?? profile.username ?? "";
+            const fallbackLetter = displayName?.[0]?.toUpperCase() ?? "U";
             return (
               <div key={comment.id} className="flex gap-3">
-                <Avatar className="h-8 w-8">
-                  <AvatarImage
-                    src={avatarUrl}
-                    alt={comment.profiles?.username || "User"}
-                  />
-                  <AvatarFallback>
-                    {userInitial}
-                  </AvatarFallback>
-                </Avatar>
+                <SymbolAvatar
+                  symbol={profile.avatar_symbol}
+                  color={profile.avatar_color}
+                  fallbackLetter={fallbackLetter}
+                  size={32}
+                  className="h-8 w-8"
+                />
                 <div>
                   <div className="flex gap-2 items-baseline">
                     <p className="font-medium text-sm">
-                      {comment.profiles?.display_name ||
-                        comment.profiles?.username ||
-                        "Anonymous"}
+                      {displayName || "Anonymous"}
                     </p>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(comment.created_at), "MMM d, h:mm a")}
@@ -155,21 +141,18 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
       {user ? (
         <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarImage
-              src={
-                user.user_metadata?.avatar_url ||
-                ""
-              }
-              alt={user.user_metadata?.username || "User"}
-            />
-            <AvatarFallback>
-              {(user.user_metadata?.display_name?.[0] ||
+          <SymbolAvatar
+            symbol={user.user_metadata?.avatar_symbol}
+            color={user.user_metadata?.avatar_color}
+            fallbackLetter={
+              (user.user_metadata?.display_name?.[0] ||
                 user.user_metadata?.username?.[0] ||
                 "U"
-              ).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+              ).toUpperCase()
+            }
+            size={32}
+            className="h-8 w-8 flex-shrink-0"
+          />
           <Input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
