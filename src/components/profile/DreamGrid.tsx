@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Heart, Globe } from "lucide-react";
@@ -72,6 +73,11 @@ const DreamGrid = ({
   
   // Handle dream update
   const handleUpdateDream = async (id: string, updates: any) => {
+    // Only allow update if it's the owner's dream
+    if (!isOwnProfile) {
+      // Silently return (DO NOT show failed toast)
+      return;
+    }
     try {
       // Update the dream in Supabase
       const { error } = await supabase
@@ -101,6 +107,7 @@ const DreamGrid = ({
       }
     } catch (error) {
       console.error("Error updating dream:", error);
+      // Don't show error toast here if not owner (already checked above)
       toast.error("Failed to update dream");
     }
   };
@@ -148,7 +155,7 @@ const DreamGrid = ({
                 <div className="flex items-center justify-between mt-1">
                   {isLiked ? (
                     <div className="flex items-center gap-1">
-                      {/* Use SymbolAvatar for liked dreams */}
+                      {/* Use SymbolAvatar for liked dreams (showing dream creator info) */}
                       <SymbolAvatar
                         symbol={dream.profiles?.avatar_symbol}
                         color={dream.profiles?.avatar_color}
@@ -163,9 +170,7 @@ const DreamGrid = ({
                         className="h-4 w-4"
                       />
                       <span className="text-xs text-muted-foreground truncate max-w-[70px]">
-                        {dream.profiles?.display_name ||
-                          dream.profiles?.username ||
-                          "User"}
+                        {dream.profiles?.display_name || dream.profiles?.username || "User"}
                       </span>
                     </div>
                   ) : (
@@ -198,3 +203,4 @@ const DreamGrid = ({
   );
 };
 export default DreamGrid;
+
