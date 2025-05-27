@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import Stripe from 'npm:stripe@14.14.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.39.3'
@@ -218,9 +217,25 @@ serve(async (req) => {
         }
       }
 
-      // Create checkout session
+      // --- NEW mobile-compatible origin & fallback handling ---
+      let origin = req.headers.get('origin');
+      const body = await req.json().catch(() => ({}));
+      // body might have { fallbackOrigin }
+      let fallbackOrigin = body.fallbackOrigin;
+
+      if (!origin || !origin.startsWith('http')) {
+        // use fallbackOrigin param from body if provided
+        if (fallbackOrigin && fallbackOrigin.startsWith('http')) {
+          origin = fallbackOrigin;
+          console.log(`Using fallbackOrigin from body: ${origin}`);
+        } else {
+          // fallback to production domain or localhost
+          origin = 'https://lucidrepo.com'; // << YOUR PRODUCTION URL HERE
+          console.log(`No valid origin in headers, using default: ${origin}`);
+        }
+      }
+
       try {
-        const origin = req.headers.get('origin') || 'http://localhost:3000';
         const session = await stripe.checkout.sessions.create({
           customer: customerId,
           payment_method_types: ['card'],
