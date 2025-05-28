@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -64,6 +63,8 @@ const DreamEntryForm = ({
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
 
+  const CHARACTER_LIMIT = 1000;
+
   useEffect(() => {
     setAvailableTags(tags);
   }, [tags]);
@@ -72,6 +73,12 @@ const DreamEntryForm = ({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    
+    // Apply character limit to content field
+    if (name === "content" && value.length > CHARACTER_LIMIT) {
+      return;
+    }
+    
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
@@ -210,7 +217,16 @@ const DreamEntryForm = ({
           />
           
           <div className="space-y-2">
-            <Label>Dream Description</Label>
+            <div className="flex justify-between items-center">
+              <Label>Dream Description</Label>
+              <span className={`text-sm ${
+                formData.content.length > CHARACTER_LIMIT * 0.9 
+                  ? 'text-red-500' 
+                  : 'text-muted-foreground'
+              }`}>
+                {formData.content.length}/{CHARACTER_LIMIT}
+              </span>
+            </div>
             <Textarea
               name="content"
               placeholder="Dream Description"
@@ -219,6 +235,7 @@ const DreamEntryForm = ({
               className="dream-input resize-none"
               rows={4}
               required
+              maxLength={CHARACTER_LIMIT}
             />
           </div>
           
