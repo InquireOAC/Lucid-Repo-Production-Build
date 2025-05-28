@@ -15,10 +15,14 @@ import Profile from "./pages/Profile";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
 import { initializeNotifications } from "./utils/notificationUtils";
+import OnboardingFlow from "./components/onboarding/OnboardingFlow";
+import { useOnboarding } from "./hooks/useOnboarding";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const AppContent = () => {
+  const { hasSeenOnboarding, isLoading } = useOnboarding();
+
   useEffect(() => {
     const setupStatusBar = async () => {
       if (Capacitor.isPluginAvailable('StatusBar')) {
@@ -39,24 +43,45 @@ const App = () => {
     initializeNotifications().catch(console.error);
   }, []);
 
+  // Show loading state while checking onboarding status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#1E1A2B] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show onboarding if user hasn't seen it
+  if (!hasSeenOnboarding) {
+    return <OnboardingFlow />;
+  }
+
+  // Show main app
+  return (
+    <HashRouter>
+      <Routes>
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={<MainLayout />}>
+          <Route index element={<Journal />} />
+          <Route path="/lucidrepo" element={<LucidRepo />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:userId" element={<Profile />} />
+        </Route>
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </HashRouter>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <HashRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Journal />} />
-                <Route path="/lucidrepo" element={<LucidRepo />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/profile/:userId" element={<Profile />} />
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </HashRouter>
+          <AppContent />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
