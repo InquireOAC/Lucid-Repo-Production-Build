@@ -67,10 +67,10 @@ const OnboardingFlow = () => {
         />
         
         {/* Button overlay positioned at bottom */}
-        <div className="absolute bottom-0 left-2 right-0 p-20 flex justify-center">
+        <div className="absolute bottom-0 left-0 right-0 p-20 flex justify-center">
           <Button
             onClick={isLastScreen ? handleStart : handleNext}
-            className="w-full max-w-sm h-14 text-lg font-medium bg-[#4A4063] hover:bg-[#5A5073] text-white rounded-2xl"
+            className="w-full max-w-sm h-16 text-lg font-medium bg-[#4A4063] hover:bg-[#5A5073] text-white rounded-2xl"
           >
             {isLastScreen ? "Start" : "Next"}
           </Button>
