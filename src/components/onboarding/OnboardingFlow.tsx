@@ -1,4 +1,5 @@
 
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Preferences } from "@capacitor/preferences";
@@ -6,19 +7,19 @@ import { Preferences } from "@capacitor/preferences";
 const OnboardingFlow = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const screens = [{
-    image: "/lovable-uploads/d077a453-8943-4e04-b7a7-a87dbcd89bb6.png",
+    image: "/lovable-uploads/0b968cd8-c33c-4ad9-a5c0-cdc574165296.png",
     alt: "Welcome to Lucid Repo"
   }, {
-    image: "/lovable-uploads/4102df71-b053-41ec-8755-568a0d56e141.png",
+    image: "/lovable-uploads/acff2ade-cf80-4a75-8ac3-212eba1cb9e5.png",
     alt: "Log Your Dreams"
   }, {
-    image: "/lovable-uploads/1f6f4a74-2368-46c6-a836-b0cf4eca5d27.png",
+    image: "/lovable-uploads/7c380809-f6e4-4e75-8d2c-aecbf2b82be1.png",
     alt: "Unlock Deeper Insight"
   }, {
-    image: "/lovable-uploads/f13ed434-e02c-4a2a-91c6-ec46399be11d.png",
+    image: "/lovable-uploads/31d4b740-9af8-41ab-ab9c-b009b40d0e0a.png",
     alt: "Dream Together"
   }, {
-    image: "/lovable-uploads/50708464-3597-4dee-8b0e-940d33ed33e0.png",
+    image: "/lovable-uploads/d479f36b-5afa-4ac7-8b6b-52b7d3b59d71.png",
     alt: "Ready to Join"
   }];
 
@@ -67,3 +68,4 @@ const OnboardingFlow = () => {
 };
 
 export default OnboardingFlow;
+
