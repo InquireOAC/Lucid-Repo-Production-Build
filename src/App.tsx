@@ -59,18 +59,16 @@ const AppContent = () => {
 
   // Show main app
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Journal />} />
-          <Route path="/lucidrepo" element={<LucidRepo />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:userId" element={<Profile />} />
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </HashRouter>
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Journal />} />
+        <Route path="/lucidrepo" element={<LucidRepo />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 };
 
@@ -81,7 +79,9 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <AppContent />
+          <HashRouter>
+            <AppContent />
+          </HashRouter>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
