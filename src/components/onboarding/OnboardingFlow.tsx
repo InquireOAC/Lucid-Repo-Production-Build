@@ -1,12 +1,10 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Preferences } from "@capacitor/preferences";
 
 const OnboardingFlow = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
-  const navigate = useNavigate();
 
   const screens = [
     {
@@ -45,12 +43,14 @@ const OnboardingFlow = () => {
         value: 'true'
       });
       
-      // Navigate to the Journal page
-      navigate('/');
+      // Navigate to the Journal page using window.location
+      window.location.href = '/';
+      window.location.reload();
     } catch (error) {
       console.error('Error setting onboarding preference:', error);
       // Still navigate even if storage fails
-      navigate('/');
+      window.location.href = '/';
+      window.location.reload();
     }
   };
 
@@ -66,11 +66,11 @@ const OnboardingFlow = () => {
           className="w-full h-full object-cover"
         />
         
-        {/* Button overlay positioned at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 p-20 flex justify-center">
+        {/* Button overlay positioned to cover the static nav buttons in the images */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
           <Button
             onClick={isLastScreen ? handleStart : handleNext}
-            className="w-full max-w-sm h-16 text-lg font-medium bg-[#4A4063] hover:bg-[#5A5073] text-white rounded-2xl"
+            className="w-80 h-14 text-lg font-semibold bg-transparent hover:bg-white/10 text-white border-2 border-white/30 rounded-full backdrop-blur-sm"
           >
             {isLastScreen ? "Start" : "Next"}
           </Button>
