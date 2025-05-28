@@ -66,8 +66,8 @@ const OnboardingFlow = () => {
           className="w-full h-full object-cover"
         />
         
-        {/* Button overlay positioned to cover the static nav buttons in the images */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+        {/* Button overlay positioned to cover the static nav buttons in the images - moved up 20px */}
+        <div className="absolute bottom-28 left-1/2 transform -translate-x-1/2">
           <Button
             onClick={isLastScreen ? handleStart : handleNext}
             className="w-80 h-14 text-lg font-semibold bg-transparent hover:bg-white/10 text-white border-2 border-white/30 rounded-full backdrop-blur-sm"
