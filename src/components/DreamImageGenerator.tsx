@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ImagePlus, Download } from "lucide-react";
+import { toast } from "sonner";
 
 import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
 import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
@@ -54,10 +55,24 @@ const DreamImageGenerator = ({
     await handleImageFromFile(base64DataUrl);
   };
 
-  // Save as PNG handler that uses the shareOrSaveImage utility
+  // Enhanced save handler that works with any image URL (including temporary ones)
   const handleSaveAsPng = async () => {
-    if (generatedImage && generatedImage.startsWith("http")) {
+    if (!generatedImage) {
+      toast.error("No image available to save");
+      return;
+    }
+
+    try {
       await shareOrSaveImage(generatedImage, "dream-image.png");
+    } catch (error) {
+      console.error("Save failed:", error);
+      
+      // If the main save fails, try fallback approach for temporary URLs
+      if (generatedImage.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+        toast.error("The temporary image URL has expired. Please regenerate the image to save it.");
+      } else {
+        toast.error("Failed to save image. Please try again.");
+      }
     }
   };
 
@@ -110,8 +125,8 @@ const DreamImageGenerator = ({
               onImageChange={onImageFileUpload}
               disabled={disabled || isGenerating}
             />
-            {/* Show Save as PNG button if image is a URL */}
-            {generatedImage && generatedImage.startsWith("http") && (
+            {/* Show Save button for any image that exists */}
+            {generatedImage && (
               <div className="flex justify-end mb-2">
                 <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
                   <Download className="h-4 w-4 mr-1" /> Save as PNG
@@ -134,7 +149,7 @@ const DreamImageGenerator = ({
             )}
             {imageError && !isGenerating && (
               <p className="text-xs text-red-500 mt-1 text-center">
-                There was an issue with the image. Please try regenerating or load your saved PNG.
+                There was an issue with the image. Please try regenerating or upload a new image.
               </p>
             )}
           </>

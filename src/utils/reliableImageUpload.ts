@@ -24,13 +24,13 @@ export const reliableImageUpload = async (
     
     let response;
     let retryCount = 0;
-    const maxRetries = 3;
+    const maxRetries = 2; // Reduced retries to fail faster
     
     while (retryCount < maxRetries) {
       try {
         // Add timeout to prevent hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
         
         response = await fetch(imageUrl, {
           method: 'GET',
@@ -55,13 +55,14 @@ export const reliableImageUpload = async (
         if (retryCount >= maxRetries) {
           // If it's an OpenAI URL that expired, provide specific guidance
           if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-            throw new Error("OpenAI image URL has expired. The image was generated successfully but couldn't be saved to permanent storage. Please regenerate the image.");
+            console.warn("OpenAI URL expired - upload failed but image was generated successfully");
+            return null; // Return null to indicate upload failed but don't throw error
           }
           throw new Error(`Failed to fetch image after ${maxRetries} attempts: ${fetchError.message}`);
         }
         
-        // Wait before retry (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+        // Wait before retry (shorter backoff)
+        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
       }
     }
 

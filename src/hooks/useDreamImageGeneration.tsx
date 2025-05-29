@@ -85,33 +85,35 @@ export const useDreamImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Upload image to Supabase in background with improved error handling
-      console.log("Step 3: Uploading to Supabase (with timeout protection)...");
-      
-      // Set a timeout for the upload process
-      const uploadPromise = uploadImage(openaiUrl, dreamId);
-      const timeoutPromise = new Promise<null>((_, reject) => 
-        setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000)
-      );
+      // 4. Try to upload image to Supabase in background (non-blocking)
+      console.log("Step 3: Attempting background upload to Supabase...");
       
       try {
+        // Set a shorter timeout for the upload process
+        const uploadPromise = uploadImage(openaiUrl, dreamId);
+        const timeoutPromise = new Promise<null>((_, reject) => 
+          setTimeout(() => reject(new Error("Upload timeout")), 15000) // Reduced timeout
+        );
+        
         const supabaseUrl = await Promise.race([uploadPromise, timeoutPromise]);
         
         if (supabaseUrl) {
           console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
           setGeneratedImage(supabaseUrl);
           onImageGenerated(supabaseUrl, generatedPromptText);
-          toast.success("Dream image generated and saved!");
-          if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
+          toast.success("Dream image generated and saved permanently!");
         } else {
-          console.warn("Upload returned null, keeping OpenAI URL");
-          toast.warning("Image generated successfully! Note: Image may be temporary and should be regenerated if it disappears.");
+          console.warn("Upload returned null - keeping temporary URL");
+          toast.success("Image generated! Note: Using temporary URL - please save to device if needed.");
         }
       } catch (uploadError) {
-        console.warn("Upload failed, keeping OpenAI URL:", uploadError);
-        // Don't show error toast since user can still see the image
-        toast.warning("Image generated successfully! Note: Could not save to permanent storage - image may be temporary.");
+        console.warn("Background upload failed:", uploadError);
+        // Don't show error toast since user can still see and save the image
+        toast.success("Image generated! Note: Could not save permanently - please save to device.");
       }
+
+      // Mark feature as used only after successful generation
+      if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       
     } catch (error: any) {
       console.error("=== IMAGE GENERATION FAILED ===");
@@ -155,7 +157,7 @@ export const useDreamImageGeneration = ({
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
         onImageGenerated(fileDataUrl, imagePrompt || "");
-        toast.error("Failed to persist uploaded image. Using local image.");
+        toast.warning("Failed to upload image permanently. Using local version - please save manually if needed.");
       } else {
         setGeneratedImage(publicUrl);
         onImageGenerated(publicUrl, imagePrompt || "");
@@ -163,7 +165,9 @@ export const useDreamImageGeneration = ({
       }
     } catch (error) {
       setImageError(true);
-      toast.error("Upload error: " + (error as any)?.message);
+      setGeneratedImage(fileDataUrl); // show local fallback even on error
+      onImageGenerated(fileDataUrl, imagePrompt || "");
+      toast.warning("Upload error, but image is available locally. Please save manually if needed.");
     } finally {
       setIsGenerating(false);
     }
