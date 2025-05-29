@@ -10,42 +10,44 @@ interface ImageDisplayProps {
   disabled?: boolean;
 }
 
-/**
- * Renders the image preview and file picker/upload button (using ImageFileUploader).
- * Surfaces file/image errors for easier diagnosis.
- */
-const ImageDisplay = ({
+const ImageDisplay: React.FC<ImageDisplayProps> = ({
   imageUrl,
   imageDataUrl,
   onError,
   onImageChange,
   disabled = false,
-}: ImageDisplayProps) => {
-  // Prefer imageDataUrl (from Supabase/upload) if valid and http/https URL
-  let srcToShow: string | null = null;
-  if (imageDataUrl && imageDataUrl.startsWith("http")) {
-    srcToShow = imageDataUrl;
-  } else if (imageUrl && imageUrl.startsWith("http")) {
-    srcToShow = imageUrl;
-  }
+}) => {
+  const displayUrl = imageDataUrl || imageUrl;
+
+  const handleUploadError = (errorMessage: string) => {
+    console.error("Image upload error:", errorMessage);
+    onError();
+  };
 
   return (
-    <div className="mb-4">
-      {srcToShow && (
-        <img
-          src={srcToShow}
-          alt="Dream"
-          className="w-full rounded-md aspect-square object-cover"
-          onError={onError}
-        />
+    <div className="space-y-4">
+      {displayUrl ? (
+        <div className="relative">
+          <img
+            src={displayUrl}
+            alt="Dream visualization"
+            className="w-full h-64 object-cover rounded-lg border border-gray-200"
+            onError={onError}
+          />
+        </div>
+      ) : (
+        <div className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
+          <p className="text-gray-500 text-center">
+            Generate an image or upload one from your device
+          </p>
+        </div>
       )}
-      {!disabled && (
-        <ImageFileUploader
-          onImageChange={onImageChange}
-          onUploadError={() => onError?.()}
-          disabled={disabled}
-        />
-      )}
+      
+      <ImageFileUploader
+        onImageChange={onImageChange}
+        onUploadError={handleUploadError}
+        disabled={disabled}
+      />
     </div>
   );
 };
