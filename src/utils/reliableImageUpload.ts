@@ -24,13 +24,13 @@ export const reliableImageUpload = async (
     
     let response;
     let retryCount = 0;
-    const maxRetries = 2; // Reduced retries to fail faster
+    const maxRetries = 2;
     
     while (retryCount < maxRetries) {
       try {
         // Add timeout to prevent hanging
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000); // Reduced timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
         
         response = await fetch(imageUrl, {
           method: 'GET',
@@ -61,7 +61,7 @@ export const reliableImageUpload = async (
           throw new Error(`Failed to fetch image after ${maxRetries} attempts: ${fetchError.message}`);
         }
         
-        // Wait before retry (shorter backoff)
+        // Wait before retry
         await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
       }
     }

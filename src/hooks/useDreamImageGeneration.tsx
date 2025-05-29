@@ -34,7 +34,7 @@ export const useDreamImageGeneration = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  const isAppCreator = user?.email === "inquireoac@gmail.com";
+  const isAppCreator = user?.email === "inqu********@gmail.com";
 
   useEffect(() => {
     if (existingImage) {
@@ -147,7 +147,7 @@ export const useDreamImageGeneration = ({
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
-    console.log("handleImageFromFile triggered");
+    console.log("handleImageFromFile triggered with file");
     if (!fileDataUrl || !user) {
       setImageError(true);
       toast.error("Could not add image. Please try again.");

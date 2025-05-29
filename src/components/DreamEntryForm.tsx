@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -53,8 +54,8 @@ const DreamEntryForm = ({
     tags: existingDream?.tags || [],
     mood: existingDream?.mood || "Neutral",
     analysis: existingDream?.analysis || "",
-    generatedImage: existingDream?.generatedImage || "",
-    imagePrompt: existingDream?.imagePrompt || "",
+    generatedImage: existingDream?.generatedImage || existingDream?.image_url || "",
+    imagePrompt: existingDream?.imagePrompt || existingDream?.image_prompt || "",
     lucid: existingDream?.lucid || false,
   });
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
@@ -155,10 +156,12 @@ const DreamEntryForm = ({
         user_id: user?.id,
         analysis: formData.analysis,
         is_public: false,
-        generatedImage: formData.generatedImage,
-        imagePrompt: formData.imagePrompt,
+        image_url: formData.generatedImage, // Use image_url for database storage
+        image_prompt: formData.imagePrompt,
         lucid: formData.lucid
       };
+
+      console.log("Saving dream with image URL:", formData.generatedImage);
 
       if (existingDream) {
         const { error } = await supabase
@@ -168,10 +171,11 @@ const DreamEntryForm = ({
           
         if (error) {
           console.error("Error updating dream:", error);
-          // Still show success toast since the local state was updated
-          toast.success("Dream saved successfully");
+          toast.error("Failed to save dream");
+          setIsSubmitting(false);
+          return;
         } else {
-          toast.success("Dream saved successfully");
+          toast.success("Dream updated successfully");
         }
       } else {
         const { error } = await supabase
@@ -371,13 +375,14 @@ const DreamEntryForm = ({
             dreamContent={formData.content}
             existingPrompt={formData.imagePrompt}
             existingImage={formData.generatedImage}
-            onImageGenerated={(url, prompt) =>
+            onImageGenerated={(url, prompt) => {
+              console.log("Image generated callback with URL:", url);
               setFormData((p) => ({
                 ...p,
                 generatedImage: url,
                 imagePrompt: prompt,
-              }))
-            }
+              }));
+            }}
           />
 
           {/* Save */}
