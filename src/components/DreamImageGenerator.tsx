@@ -55,7 +55,7 @@ const DreamImageGenerator = ({
     await handleImageFromFile(base64DataUrl);
   };
 
-  // Enhanced save handler that works with any image URL (including temporary ones)
+  // Enhanced save handler with better error handling and user feedback
   const handleSaveAsPng = async () => {
     if (!generatedImage) {
       toast.error("No image available to save");
@@ -63,16 +63,11 @@ const DreamImageGenerator = ({
     }
 
     try {
+      console.log("Attempting to save image:", generatedImage);
       await shareOrSaveImage(generatedImage, "dream-image.png");
     } catch (error) {
       console.error("Save failed:", error);
-      
-      // If the main save fails, try fallback approach for temporary URLs
-      if (generatedImage.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-        toast.error("The temporary image URL has expired. Please regenerate the image to save it.");
-      } else {
-        toast.error("Failed to save image. Please try again.");
-      }
+      // Error handling is now done in shareOrSaveImage utility
     }
   };
 
@@ -92,7 +87,6 @@ const DreamImageGenerator = ({
             isAppCreator={isAppCreator}
             onGenerate={generateImage}
           />
-          {/* Always show file upload option even if dream has no image yet */}
           <ImageDisplay
             imageUrl=""
             imageDataUrl=""
@@ -125,11 +119,16 @@ const DreamImageGenerator = ({
               onImageChange={onImageFileUpload}
               disabled={disabled || isGenerating}
             />
-            {/* Show Save button for any image that exists */}
+            {/* Show Save button for any image that exists - moved to be more prominent */}
             {generatedImage && (
-              <div className="flex justify-end mb-2">
-                <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
-                  <Download className="h-4 w-4 mr-1" /> Save as PNG
+              <div className="flex justify-end mb-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSaveAsPng}
+                  className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
+                >
+                  <Download className="h-4 w-4 mr-1" /> Save Image
                 </Button>
               </div>
             )}

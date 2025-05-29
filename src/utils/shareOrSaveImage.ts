@@ -6,8 +6,7 @@ import { saveAs } from "file-saver";
 
 /**
  * Saves or shares an image as PNG depending on platform.
- * If in a native environment (iOS/Android), use share sheet with PNG.
- * Else, download via web browser as PNG.
+ * Enhanced with better error handling for temporary URLs.
  */
 export async function shareOrSaveImage(imageUrl: string, filename = "dream-image.png") {
   try {
@@ -17,22 +16,79 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
       throw new Error("Invalid image URL provided");
     }
     
-    // Fetch and convert to PNG blob
-    const response = await fetch(imageUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status}`);
+    let blob: Blob;
+    
+    // Try multiple approaches to get the image data
+    try {
+      // First attempt: direct fetch
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'image/*',
+        },
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Fetch failed: ${response.status}`);
+      }
+      
+      blob = await response.blob();
+      
+      if (!blob || blob.size === 0) {
+        throw new Error("Empty blob received");
+      }
+    } catch (fetchError) {
+      console.warn("Direct fetch failed, trying canvas approach:", fetchError);
+      
+      // Fallback: try to get image from DOM if it's already loaded
+      const existingImages = document.querySelectorAll('img');
+      let targetImage: HTMLImageElement | null = null;
+      
+      for (const img of existingImages) {
+        if (img.src === imageUrl && img.complete && img.naturalWidth > 0) {
+          targetImage = img;
+          break;
+        }
+      }
+      
+      if (targetImage) {
+        console.log("Found existing image in DOM, using canvas to convert");
+        
+        const canvas = document.createElement("canvas");
+        canvas.width = targetImage.naturalWidth;
+        canvas.height = targetImage.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        
+        if (!ctx) {
+          throw new Error("Could not get canvas context");
+        }
+        
+        ctx.drawImage(targetImage, 0, 0);
+        
+        blob = await new Promise<Blob>((resolve, reject) => {
+          canvas.toBlob((canvasBlob) => {
+            if (canvasBlob) {
+              resolve(canvasBlob);
+            } else {
+              reject(new Error("Failed to convert canvas to blob"));
+            }
+          }, "image/png", 0.92);
+        });
+      } else {
+        throw new Error("Could not access image data - URL may have expired");
+      }
     }
     
-    const blob = await response.blob();
-    let pngBlob = blob;
-    
     // Convert to PNG if not already
+    let pngBlob = blob;
     if (blob.type !== "image/png") {
-      console.log("Converting image to PNG format");
+      console.log("Converting to PNG format");
       
-      const img = document.createElement("img");
+      const img = new Image();
       img.crossOrigin = "anonymous";
-      img.src = imageUrl;
+      
+      const imageDataUrl = URL.createObjectURL(blob);
+      img.src = imageDataUrl;
       
       await new Promise((resolve, reject) => {
         img.onload = resolve;
@@ -50,7 +106,6 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
       
       ctx.drawImage(img, 0, 0);
       
-      // Convert canvas to PNG blob
       pngBlob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((blob) => {
           if (blob) {
@@ -60,12 +115,13 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
           }
         }, "image/png", 0.92);
       });
+      
+      URL.revokeObjectURL(imageDataUrl);
     }
     
     if (Capacitor.isNativePlatform()) {
       console.log("Native platform detected, using share sheet with PNG");
       
-      // Create object URL for the PNG blob
       const pngUrl = URL.createObjectURL(pngBlob);
       
       await Share.share({
@@ -76,8 +132,6 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
       });
       
       toast.success("Opened share sheet!");
-      
-      // Clean up the object URL
       setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
     } else {
       // Web: download as PNG
@@ -88,7 +142,17 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
     
   } catch (error) {
     console.error("Failed to share/save dream image:", error);
-    toast.error(`Failed to export dream image: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
-    throw error; // Re-throw so calling code knows it failed
+    
+    // Provide specific error messages based on the type of failure
+    let errorMessage = 'Failed to export dream image. ';
+    
+    if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+      errorMessage += 'The image URL has expired. Try regenerating the image and saving it immediately.';
+    } else {
+      errorMessage += 'Please try again or regenerate the image.';
+    }
+    
+    toast.error(errorMessage);
+    throw error;
   }
 }
