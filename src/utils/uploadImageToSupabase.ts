@@ -114,11 +114,11 @@ export const uploadImageToSupabase = async (
     const timestamp = Date.now();
     const filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
 
-    console.log("Uploading PNG to Supabase storage:", filePath, "Size:", pngBlob.size, "bytes");
+    console.log("Uploading PNG to Supabase storage (dreamimages bucket):", filePath, "Size:", pngBlob.size, "bytes");
     
-    // Upload to Supabase storage
+    // Upload to Supabase storage using the new dreamimages bucket
     const { data, error } = await supabase.storage
-      .from("dream-images")
+      .from("dreamimages")
       .upload(filePath, pngBlob, {
         cacheControl: "public, max-age=31536000",
         upsert: true,
@@ -136,9 +136,9 @@ export const uploadImageToSupabase = async (
 
     console.log("Upload successful:", data);
 
-    // Get public URL
+    // Get public URL using the new dreamimages bucket
     const { data: publicUrlData } = supabase.storage
-      .from("dream-images")
+      .from("dreamimages")
       .getPublicUrl(filePath);
       
     const publicUrl = publicUrlData?.publicUrl;
