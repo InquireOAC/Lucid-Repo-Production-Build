@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+
+import React, { useState, useEffect, useCallback } from "react";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import DreamDetail from "@/components/DreamDetail";
 import JournalHeader from "@/components/journal/JournalHeader";
@@ -7,7 +8,7 @@ import AddDreamDialog from "@/components/journal/AddDreamDialog";
 import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import JournalTabs from "@/components/journal/JournalTabs";
-import { DreamEntry } from "@/types/dream"; // Ensure DreamEntry is imported
+import { DreamEntry } from "@/types/dream";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 
 const Journal = () => {
@@ -38,18 +39,23 @@ const Journal = () => {
 
   const [activeTab, setActiveTab] = useState("all");
 
-  useEffect(() => {
+  // Memoize the sync function to prevent infinite loops
+  const memoizedSyncDreams = useCallback(() => {
     if (user) {
       syncDreamsFromDb();
     }
-  }, [user, syncDreamsFromDb]); // Added syncDreamsFromDb to dependency array
+  }, [user, syncDreamsFromDb]);
+
+  // Only sync on initial mount and when user changes
+  useEffect(() => {
+    memoizedSyncDreams();
+  }, [user]); // Remove syncDreamsFromDb from dependencies
 
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
     setIsAddingDream(false);
-    if (user) {
-      setTimeout(() => syncDreamsFromDb(), 500); // Sync after a short delay
-    }
+    // Sync after a short delay to avoid conflicts
+    setTimeout(memoizedSyncDreams, 500);
   };
 
   const handleEditDreamSubmit = async (dreamData: {
@@ -66,9 +72,8 @@ const Journal = () => {
     await handleEditDream(dreamData, selectedDream.id);
     setIsEditingDream(false);
     setSelectedDream(null);
-    if (user) {
-      setTimeout(() => syncDreamsFromDb(), 500); // Sync after a short delay
-    }
+    // Sync after a short delay to avoid conflicts
+    setTimeout(memoizedSyncDreams, 500);
   };
 
   const confirmDeleteDream = async () => {
@@ -76,7 +81,7 @@ const Journal = () => {
       await handleDeleteDream(dreamToDelete);
       setDreamToDelete(null);
       if (user) {
-        syncDreamsFromDb(); // Refresh after deletion
+        memoizedSyncDreams();
       }
     }
   };
@@ -93,7 +98,7 @@ const Journal = () => {
         content: updates.content ?? selectedDream.content,
         tags: updates.tags ?? selectedDream.tags ?? [],
         lucid: typeof updates.lucid === 'boolean' ? updates.lucid : selectedDream.lucid,
-        mood: updates.mood ?? selectedDream.mood ?? "Neutral", // Default mood if undefined
+        mood: updates.mood ?? selectedDream.mood ?? "Neutral",
         analysis: updates.analysis ?? selectedDream.analysis,
         generatedImage: updates.generatedImage ?? selectedDream.generatedImage,
         imagePrompt: updates.imagePrompt ?? selectedDream.imagePrompt,
@@ -103,7 +108,7 @@ const Journal = () => {
   };
 
   return (
-    <PullToRefresh onRefresh={syncDreamsFromDb}>
+    <PullToRefresh onRefresh={memoizedSyncDreams}>
       <div className="min-h-screen dream-background p-4 md:p-6">
         <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
@@ -132,7 +137,10 @@ const Journal = () => {
           isOpen={isAddingDream}
           onOpenChange={(open) => {
             setIsAddingDream(open);
-            if (!open && user) syncDreamsFromDb();
+            if (!open && user) {
+              // Small delay to avoid conflicts
+              setTimeout(memoizedSyncDreams, 300);
+            }
           }}
           onSubmit={handleAddDreamAndClose}
           tags={tags}
@@ -146,7 +154,9 @@ const Journal = () => {
               setIsEditingDream(open);
               if (!open) {
                 setSelectedDream(null);
-                if (user) syncDreamsFromDb();
+                if (user) {
+                  setTimeout(memoizedSyncDreams, 300);
+                }
               }
             }}
             onSubmit={handleEditDreamSubmit}
@@ -162,12 +172,14 @@ const Journal = () => {
             tags={tags}
             onClose={() => {
               setSelectedDream(null);
-              if (user) syncDreamsFromDb();
+              if (user) {
+                setTimeout(memoizedSyncDreams, 300);
+              }
             }}
             onUpdate={handleDreamDetailUpdate}
-            onDelete={(id) => { // onDelete in DreamDetail usually triggers a confirmation
-              setDreamToDelete(id); // Set dream to delete to open confirmation dialog
-              setSelectedDream(null); // Close detail view
+            onDelete={(id) => {
+              setDreamToDelete(id);
+              setSelectedDream(null);
             }}
             isAuthenticated={!!user}
           />
