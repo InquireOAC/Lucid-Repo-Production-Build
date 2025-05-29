@@ -1,20 +1,20 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { uploadImageToStorage } from "@/utils/cleanImageUpload";
+import { uploadImageToStorage, urlToBlob } from "@/utils/cleanImageUpload";
 import { toast } from "sonner";
 
 export const useCleanImageUpload = () => {
   const { user } = useAuth();
 
-  const uploadImage = async (imageUrl: string, dreamId: string = "preview"): Promise<string | null> => {
+  const uploadImageData = async (imageData: Blob | File, dreamId: string = "preview"): Promise<string | null> => {
     if (!user) {
       toast.error("User not authenticated");
       return null;
     }
 
     try {
-      console.log("Starting upload process with clean uploader");
-      const uploadedUrl = await uploadImageToStorage(imageUrl, user.id, dreamId);
+      console.log("Starting upload process with raw image data");
+      const uploadedUrl = await uploadImageToStorage(imageData, user.id, dreamId);
       
       if (!uploadedUrl) {
         throw new Error("No URL returned from upload");
@@ -29,5 +29,22 @@ export const useCleanImageUpload = () => {
     }
   };
 
-  return { uploadImage };
+  const uploadImageFromUrl = async (imageUrl: string, dreamId: string = "preview"): Promise<string | null> => {
+    if (!user) {
+      toast.error("User not authenticated");
+      return null;
+    }
+
+    try {
+      console.log("Converting URL to blob then uploading");
+      const imageBlob = await urlToBlob(imageUrl);
+      return await uploadImageData(imageBlob, dreamId);
+    } catch (error: any) {
+      console.error("URL upload failed:", error);
+      toast.error(`Upload failed: ${error.message}`);
+      return null;
+    }
+  };
+
+  return { uploadImageData, uploadImageFromUrl };
 };

@@ -26,7 +26,7 @@ export const useDreamImageGeneration = ({
 }: UseDreamImageGenerationProps) => {
   const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  const { uploadImage } = useCleanImageUpload();
+  const { uploadImageFromUrl, uploadImageData } = useCleanImageUpload();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
@@ -83,9 +83,9 @@ export const useDreamImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Upload to Supabase in background
-      console.log("Uploading to Supabase storage...");
-      const supabaseUrl = await uploadImage(openaiUrl, dreamId);
+      // 4. Upload raw image data to Supabase in background
+      console.log("Uploading raw image data to Supabase storage...");
+      const supabaseUrl = await uploadImageFromUrl(openaiUrl, dreamId);
 
       if (supabaseUrl) {
         console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
@@ -116,7 +116,7 @@ export const useDreamImageGeneration = ({
     onImageGenerated,
     getImagePrompt,
     generateDreamImageFromAI,
-    uploadImage,
+    uploadImageFromUrl,
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
@@ -128,7 +128,11 @@ export const useDreamImageGeneration = ({
     }
     setIsGenerating(true);
     try {
-      const publicUrl = await uploadImage(fileDataUrl, dreamId);
+      // Convert data URL to blob
+      const response = await fetch(fileDataUrl);
+      const blob = await response.blob();
+      
+      const publicUrl = await uploadImageData(blob, dreamId);
       if (!publicUrl) {
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
