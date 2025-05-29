@@ -1,3 +1,4 @@
+
 // src/utils/imageUtils.ts
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -28,11 +29,11 @@ export const uploadDreamImage = async (
 
     console.log(`Starting image upload for dream: ${dreamId}, user: ${userId}`);
 
-    const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
+    const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/dreamimages/`;
 
-    // 1. If it's already a Supabase public URL from our dream-images bucket, return it directly
+    // 1. If it's already a Supabase public URL from our dreamimages bucket, return it directly
     if (imageUrl.startsWith(baseSupabaseStorageUrl)) {
-      console.log("Image is already in Supabase dream-images bucket, returning existing URL");
+      console.log("Image is already in Supabase dreamimages bucket, returning existing URL");
       return imageUrl;
     }
 
@@ -67,10 +68,10 @@ export const uploadDreamImage = async (
       filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
     }
 
-    // 4. Upload to Supabase storage with correct bucket name "dream-images"
-    console.log("Uploading to Supabase storage path:", filePath, "in bucket dream-images");
+    // 4. Upload to Supabase storage with correct bucket name "dreamimages"
+    console.log("Uploading to Supabase storage path:", filePath, "in bucket dreamimages");
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("dream-images") // Correct bucket name
+      .from("dreamimages") // Updated bucket name
       .upload(filePath, blob, {
         contentType: "image/png",
         upsert: true, 
@@ -84,7 +85,7 @@ export const uploadDreamImage = async (
 
     // 5. Get the public URL
     const { data } = supabase.storage
-      .from("dream-images") // Correct bucket name
+      .from("dreamimages") // Updated bucket name
       .getPublicUrl(filePath);
     
     const publicUrl = data.publicUrl;
@@ -152,7 +153,7 @@ export const persistImageURL = async (url: string): Promise<string> => {
     if (!url) return "";
     
     const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/`;
-    // If already a Supabase URL (from any bucket, though dream-images is primary), it should be persistent
+    // If already a Supabase URL (from any bucket, though dreamimages is primary), it should be persistent
     if (url.startsWith(baseSupabaseStorageUrl)) {
       return url;
     }
