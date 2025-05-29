@@ -1,6 +1,8 @@
+
 import html2canvas from "html2canvas";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
+import { saveAs } from "file-saver";
 
 /**
  * Converts an HTML element to a PNG blob with optimized settings for reliability
@@ -44,19 +46,19 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       
       // Give a small timeout to ensure all styles are applied and images are loaded
       console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Increased timeout for image loading
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
     
     console.log("Generating canvas");
     
     // Generate canvas with optimized settings for Instagram-quality images
     const canvas = await html2canvas(element, { 
-      scale: 2.0, // Optimized scale for good quality without excessive size
+      scale: 2.0,
       useCORS: true,
       allowTaint: true,
-      logging: true, // Enable logging for debugging
+      logging: true,
       backgroundColor: null,
-      imageTimeout: 15000, // Extended timeout for image processing
+      imageTimeout: 15000,
     });
     
     console.log("Canvas generated successfully");
@@ -65,7 +67,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       canvas.toBlob((blob) => {
         console.log("Blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
         resolve(blob);
-      }, "image/png", 0.92); // High quality for social sharing
+      }, "image/png", 0.92);
     });
   } catch (error) {
     console.error("Error converting element to PNG:", error);
@@ -74,41 +76,16 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
- * Converts a blob to a data URL string
+ * Downloads a blob as a PNG file (web fallback)
  */
-export const blobToDataURL = (blob: Blob): Promise<string> => {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result);
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
-/**
- * Downloads a blob as a file (fallback for non-capacitor environments)
- */
-export const downloadImage = (blob: Blob, fileName: string): void => {
+export const downloadPngBlob = (blob: Blob, fileName: string): void => {
   try {
-    console.log("Starting image download process");
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    
-    // Clean up
-    setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-      console.log("Download process completed");
-    }, 100);
+    console.log("Starting PNG download process");
+    saveAs(blob, fileName);
+    console.log("PNG download process completed");
   } catch (error) {
-    console.error("Error downloading image:", error);
-    throw new Error("Failed to download image");
+    console.error("Error downloading PNG:", error);
+    throw new Error("Failed to download PNG file");
   }
 };
 
@@ -123,31 +100,45 @@ export const shareDream = async (
   try {
     console.log("Starting dream share process");
 
-    // Generate image blob from the element
-    const blob = await elementToPngBlob(element);
-    if (!blob) {
+    // Generate PNG blob from the element
+    const pngBlob = await elementToPngBlob(element);
+    if (!pngBlob) {
       throw new Error("Failed to generate share image");
     }
 
     if (Capacitor.isNativePlatform()) {
-      console.log("Using native sharing");
-      // Convert blob to data URL for capacitor share
-      const dataUrl = await blobToDataURL(blob);
+      console.log("Using native sharing with PNG blob");
+      
+      // Create a temporary object URL for the blob
+      const imageUrl = URL.createObjectURL(pngBlob);
+      
+      try {
+        await Share.share({
+          title: title,
+          text: text,
+          url: imageUrl,
+          dialogTitle: 'Share Your Dream',
+        });
 
-      await Share.share({
-        title: title,
-        text: text,
-        url: dataUrl,
-        dialogTitle: 'Share Your Dream',
-      });
-
-      console.log("Native share with image dataUrl completed");
-      return true;
+        console.log("Native share with PNG completed");
+        
+        // Clean up the object URL
+        setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
+        
+        return true;
+      } catch (shareError) {
+        console.error("Native share failed:", shareError);
+        // Clean up on error
+        URL.revokeObjectURL(imageUrl);
+        // Fall back to download
+        downloadPngBlob(pngBlob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+        return true;
+      }
     }
 
-    // Fallback for web: download the image
-    console.log("Using web fallback for sharing");
-    downloadImage(blob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+    // Fallback for web: download the PNG directly
+    console.log("Using web fallback for sharing - downloading PNG");
+    downloadPngBlob(pngBlob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
     return true;
   } catch (error) {
     console.error("Error sharing dream:", error);

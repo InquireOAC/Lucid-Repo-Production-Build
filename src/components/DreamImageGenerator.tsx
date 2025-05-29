@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,6 @@ import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
 import ImageDisplay from "@/components/dreams/ImageDisplay";
 import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
-import { toast } from "sonner";
 
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 
@@ -54,7 +54,7 @@ const DreamImageGenerator = ({
     await handleImageFromFile(base64DataUrl);
   };
 
-  // Update Save as PNG to handle cross-platform
+  // Save as PNG handler that uses the shareOrSaveImage utility
   const handleSaveAsPng = async () => {
     if (generatedImage && generatedImage.startsWith("http")) {
       await shareOrSaveImage(generatedImage, "dream-image.png");
@@ -112,9 +112,11 @@ const DreamImageGenerator = ({
             />
             {/* Show Save as PNG button if image is a URL */}
             {generatedImage && generatedImage.startsWith("http") && (
-              <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
-                <Download className="h-4 w-4 mr-1" /> Save as PNG
-              </Button>
+              <div className="flex justify-end mb-2">
+                <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
+                  <Download className="h-4 w-4 mr-1" /> Save as PNG
+                </Button>
+              </div>
             )}
             {(generatedImage || isGenerating || imagePrompt) && (
               <ImagePromptInput

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -5,7 +6,6 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useDreamImageUploader } from "./useDreamImageUploader";
 import { useDreamImageAI } from "./useDreamImageAI";
-import { downloadImageAsPng } from "@/utils/downloadImageAsPng";
 
 interface UseDreamImageGenerationProps {
   dreamContent: string;
@@ -77,19 +77,16 @@ export const useDreamImageGeneration = ({
 
       // Immediately display the AI-generated image to the user while uploading
       setGeneratedImage(openaiUrl);
-      onImageGenerated(openaiUrl, generatedPromptText); // temporarily pass this URL so UI can show image
+      onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 3. Download as PNG (for user's local copy, optional)
-      await downloadImageAsPng(openaiUrl, "dream-image.png");
-
-      // 4. Upload/downloaded image to Supabase. (Persist, always use Supabase URL if possible)
-      setIsGenerating(true); // ensure state during uploading
+      // 3. Upload image to Supabase for persistence (no automatic download)
+      setIsGenerating(true);
       const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText, dreamId);
 
       if (supabaseUrl && supabaseUrl.startsWith("http")) {
         setGeneratedImage(supabaseUrl);
         onImageGenerated(supabaseUrl, generatedPromptText);
-        toast.success("Dream image generated and saved permanently!");
+        toast.success("Dream image generated and saved!");
         if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       } else {
         // Even if failed, leave the openaiUrl showing in the dream entry
@@ -162,6 +159,6 @@ export const useDreamImageGeneration = ({
     generateImage,
     isAppCreator,
     hasUsedFeature: (feature: "image" | "analysis") => hasUsedFeature(feature),
-    handleImageFromFile, // Always show for file upload
+    handleImageFromFile,
   };
 };
