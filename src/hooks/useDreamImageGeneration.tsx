@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -155,27 +154,41 @@ export const useDreamImageGeneration = ({
       return;
     }
     setIsGenerating(true);
+    setImageError(false);
+    
     try {
+      console.log("Converting file data URL to blob for upload...");
       // Convert data URL to blob
       const response = await fetch(fileDataUrl);
       const blob = await response.blob();
       
-      // Use reliable upload with blob data
-      const publicUrl = await uploadImage(URL.createObjectURL(blob), dreamId);
+      // Create object URL from blob for upload
+      const blobUrl = URL.createObjectURL(blob);
+      console.log("Created blob URL for upload:", blobUrl);
+      
+      // Use reliable upload with blob URL
+      const publicUrl = await uploadImage(blobUrl, dreamId);
+      
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
+      
       if (!publicUrl) {
+        console.warn("Upload failed, using local fallback");
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
-        onImageGenerated(fileDataUrl, imagePrompt || "");
+        onImageGenerated(fileDataUrl, imagePrompt || "Uploaded image");
         toast.warning("Failed to upload image permanently. Using local version - please save manually if needed.");
       } else {
+        console.log("File uploaded successfully to:", publicUrl);
         setGeneratedImage(publicUrl);
-        onImageGenerated(publicUrl, imagePrompt || "");
+        onImageGenerated(publicUrl, imagePrompt || "Uploaded image");
         toast.success("Image uploaded successfully!");
       }
     } catch (error) {
+      console.error("File upload error:", error);
       setImageError(true);
       setGeneratedImage(fileDataUrl); // show local fallback even on error
-      onImageGenerated(fileDataUrl, imagePrompt || "");
+      onImageGenerated(fileDataUrl, imagePrompt || "Uploaded image");
       toast.warning("Upload error, but image is available locally. Please save manually if needed.");
     } finally {
       setIsGenerating(false);
