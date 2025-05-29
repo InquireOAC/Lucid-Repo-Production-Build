@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { useDreamImageUploader } from "./useDreamImageUploader";
+import { useCleanImageUpload } from "./useCleanImageUpload";
 import { useDreamImageAI } from "./useDreamImageAI";
 
 interface UseDreamImageGenerationProps {
@@ -26,7 +26,7 @@ export const useDreamImageGeneration = ({
 }: UseDreamImageGenerationProps) => {
   const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  const { uploadAndGetPublicImageUrl } = useDreamImageUploader();
+  const { uploadImage } = useCleanImageUpload();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
@@ -79,27 +79,22 @@ export const useDreamImageGeneration = ({
 
       console.log("AI image generated:", openaiUrl);
 
-      // Immediately display the AI-generated image to the user
+      // 3. Immediately show the AI image to user
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 3. Upload image to Supabase for persistence
+      // 4. Upload to Supabase in background
       console.log("Uploading to Supabase storage...");
-      try {
-        const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText, dreamId);
+      const supabaseUrl = await uploadImage(openaiUrl, dreamId);
 
-        if (supabaseUrl && supabaseUrl.startsWith("http")) {
-          console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
-          setGeneratedImage(supabaseUrl);
-          onImageGenerated(supabaseUrl, generatedPromptText);
-          toast.success("Dream image generated and saved!");
-          if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
-        } else {
-          console.warn("Upload failed, keeping OpenAI URL");
-          toast.warning("Image generated but not saved to storage. Image may be temporary.");
-        }
-      } catch (uploadError) {
-        console.error("Upload error:", uploadError);
+      if (supabaseUrl) {
+        console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
+        setGeneratedImage(supabaseUrl);
+        onImageGenerated(supabaseUrl, generatedPromptText);
+        toast.success("Dream image generated and saved!");
+        if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
+      } else {
+        console.warn("Upload failed, keeping OpenAI URL");
         toast.warning("Image generated but not saved to storage. Image may be temporary.");
       }
     } catch (error: any) {
@@ -121,7 +116,7 @@ export const useDreamImageGeneration = ({
     onImageGenerated,
     getImagePrompt,
     generateDreamImageFromAI,
-    uploadAndGetPublicImageUrl,
+    uploadImage,
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
@@ -133,7 +128,7 @@ export const useDreamImageGeneration = ({
     }
     setIsGenerating(true);
     try {
-      const publicUrl = await uploadAndGetPublicImageUrl(fileDataUrl, imagePrompt || "", dreamId);
+      const publicUrl = await uploadImage(fileDataUrl, dreamId);
       if (!publicUrl) {
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
