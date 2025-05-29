@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { useCleanImageUpload } from "./useCleanImageUpload";
+import { useReliableImageUpload } from "./useReliableImageUpload";
 import { useDreamImageAI } from "./useDreamImageAI";
 
 interface UseDreamImageGenerationProps {
@@ -26,7 +26,7 @@ export const useDreamImageGeneration = ({
 }: UseDreamImageGenerationProps) => {
   const { user } = useAuth();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
-  const { uploadImageFromUrl, uploadImageData } = useCleanImageUpload();
+  const { uploadImage } = useReliableImageUpload();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
@@ -66,26 +66,28 @@ export const useDreamImageGeneration = ({
         return;
       }
 
-      console.log("Starting image generation process...");
+      console.log("=== STARTING IMAGE GENERATION PROCESS ===");
 
       // 1. Get image prompt from analyze-dream
+      console.log("Step 1: Getting image prompt...");
       const generatedPromptText = await getImagePrompt(dreamContent);
       if (!generatedPromptText) throw new Error("No image prompt was generated");
       setImagePrompt(generatedPromptText);
+      console.log("Image prompt generated:", generatedPromptText);
 
       // 2. Generate image from prompt via edge function
+      console.log("Step 2: Generating image from AI...");
       const openaiUrl = await generateDreamImageFromAI(generatedPromptText);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
-
       console.log("AI image generated:", openaiUrl);
 
       // 3. Immediately show the AI image to user
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Upload raw image data to Supabase in background
-      console.log("Uploading raw image data to Supabase storage...");
-      const supabaseUrl = await uploadImageFromUrl(openaiUrl, dreamId);
+      // 4. Upload image to Supabase in background
+      console.log("Step 3: Uploading to Supabase...");
+      const supabaseUrl = await uploadImage(openaiUrl, dreamId);
 
       if (supabaseUrl) {
         console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
@@ -98,7 +100,8 @@ export const useDreamImageGeneration = ({
         toast.warning("Image generated but not saved to storage. Image may be temporary.");
       }
     } catch (error: any) {
-      console.error("Image generation failed:", error);
+      console.error("=== IMAGE GENERATION FAILED ===");
+      console.error("Error details:", error);
       setImageError(true);
       toast.error(`Image generation failed: ${error.message}`);
     } finally {
@@ -116,7 +119,7 @@ export const useDreamImageGeneration = ({
     onImageGenerated,
     getImagePrompt,
     generateDreamImageFromAI,
-    uploadImageFromUrl,
+    uploadImage,
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
@@ -132,7 +135,8 @@ export const useDreamImageGeneration = ({
       const response = await fetch(fileDataUrl);
       const blob = await response.blob();
       
-      const publicUrl = await uploadImageData(blob, dreamId);
+      // Use reliable upload with blob data
+      const publicUrl = await uploadImage(URL.createObjectURL(blob), dreamId);
       if (!publicUrl) {
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
