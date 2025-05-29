@@ -14,13 +14,13 @@ export function useProfileFollowers(userId?: string) {
     if (!userId) return;
     const { data, error } = await supabase
       .from("follows")
-      .select("follower_id, follower:profiles!follower_id(id,username,profile_picture,display_name,avatar_url)")
+      .select("follower_id, follower:profiles!follower_id(id,username,profile_picture,display_name,avatar_url,avatar_symbol,avatar_color)")
       .eq("followed_id", userId);
 
     if (!error && data) {
       const followerUsers = data.map(f => f.follower);
       setFollowers(followerUsers);
-      setFollowersCount(followerUsers.length); // Always set count from array length
+      setFollowersCount(followerUsers.length);
     } else {
       setFollowers([]);
       setFollowersCount(0);
@@ -32,13 +32,13 @@ export function useProfileFollowers(userId?: string) {
     if (!userId) return;
     const { data, error } = await supabase
       .from("follows")
-      .select("followed_id, followed:profiles!followed_id(id,username,profile_picture,display_name,avatar_url)")
+      .select("followed_id, followed:profiles!followed_id(id,username,profile_picture,display_name,avatar_url,avatar_symbol,avatar_color)")
       .eq("follower_id", userId);
 
     if (!error && data) {
       const followedUsers = data.map(f => f.followed);
       setFollowing(followedUsers);
-      setFollowingCount(followedUsers.length); // Same here
+      setFollowingCount(followedUsers.length);
     } else {
       setFollowing([]);
       setFollowingCount(0);
