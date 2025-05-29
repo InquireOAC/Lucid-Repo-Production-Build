@@ -55,7 +55,6 @@ const DreamImageGenerator = ({
     await handleImageFromFile(base64DataUrl);
   };
 
-  // Enhanced save handler with better error handling and user feedback
   const handleSaveAsPng = async () => {
     if (!generatedImage) {
       toast.error("No image available to save");
@@ -119,16 +118,14 @@ const DreamImageGenerator = ({
               onImageChange={onImageFileUpload}
               disabled={disabled || isGenerating}
             />
-            {/* Show Save button for any image that exists - moved to be more prominent */}
             {generatedImage && (
               <div className="flex justify-end mb-4">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={handleSaveAsPng}
-                  className="bg-green-50 hover:bg-green-100 border-green-200 text-green-700"
                 >
-                  <Download className="h-4 w-4 mr-1" /> Save Image
+                  <Download className="h-4 w-4 mr-1" /> Save as PNG
                 </Button>
               </div>
             )}

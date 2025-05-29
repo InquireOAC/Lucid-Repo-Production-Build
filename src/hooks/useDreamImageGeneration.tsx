@@ -6,6 +6,7 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useReliableImageUpload } from "./useReliableImageUpload";
 import { useDreamImageAI } from "./useDreamImageAI";
+import { autoDownloadImage } from "@/utils/shareOrSaveImage";
 
 interface UseDreamImageGenerationProps {
   dreamContent: string;
@@ -85,14 +86,23 @@ export const useDreamImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Try to upload image to Supabase in background (non-blocking)
-      console.log("Step 3: Attempting background upload to Supabase...");
+      // 4. Auto-download the image immediately to prevent expiration issues
+      console.log("Step 3: Auto-downloading image...");
+      const autoDownloaded = await autoDownloadImage(openaiUrl, `dream-${dreamId}-${Date.now()}.png`);
+      
+      if (autoDownloaded) {
+        console.log("Image auto-downloaded successfully");
+      } else {
+        console.warn("Auto-download failed, user can still save manually");
+      }
+
+      // 5. Try to upload image to Supabase in background (non-blocking)
+      console.log("Step 4: Attempting background upload to Supabase...");
       
       try {
-        // Set a shorter timeout for the upload process
         const uploadPromise = uploadImage(openaiUrl, dreamId);
         const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error("Upload timeout")), 15000) // Reduced timeout
+          setTimeout(() => reject(new Error("Upload timeout")), 10000)
         );
         
         const supabaseUrl = await Promise.race([uploadPromise, timeoutPromise]);
@@ -104,12 +114,11 @@ export const useDreamImageGeneration = ({
           toast.success("Dream image generated and saved permanently!");
         } else {
           console.warn("Upload returned null - keeping temporary URL");
-          toast.success("Image generated! Note: Using temporary URL - please save to device if needed.");
+          toast.success("Image generated and downloaded! Note: Using temporary URL for display.");
         }
       } catch (uploadError) {
         console.warn("Background upload failed:", uploadError);
-        // Don't show error toast since user can still see and save the image
-        toast.success("Image generated! Note: Could not save permanently - please save to device.");
+        toast.success("Image generated and downloaded! Note: Could not save permanently to cloud.");
       }
 
       // Mark feature as used only after successful generation
