@@ -12,7 +12,7 @@ export const useDreamImageUploader = () => {
     }
     
     try {
-      console.log("Starting upload process...");
+      console.log("Starting upload process for user:", user.id, "dreamId:", dreamId);
       const uploadedUrl = await uploadImageToSupabase(image, user.id, dreamId);
       
       if (!uploadedUrl || !uploadedUrl.startsWith("http")) {
@@ -23,7 +23,14 @@ export const useDreamImageUploader = () => {
       return uploadedUrl;
     } catch (error: any) {
       console.error("Upload failed:", error);
-      throw new Error(`Upload failed: ${error?.message || "Unknown error"}`);
+      // More specific error messages
+      if (error.message.includes("Failed to fetch image")) {
+        throw new Error("Unable to download the generated image. The image URL may have expired.");
+      } else if (error.message.includes("Upload failed")) {
+        throw new Error("Failed to save image to storage. Please check your connection and try again.");
+      } else {
+        throw new Error(`Upload failed: ${error?.message || "Unknown error"}`);
+      }
     }
   };
 
