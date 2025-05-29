@@ -2,7 +2,7 @@
 import { saveAs } from "file-saver";
 
 /**
- * Downloads an image as PNG (converts to PNG if not already). Used for both preview and persisted files.
+ * Downloads an image as PNG (converts to PNG if not already). Works directly with blobs.
  * @param imageUrl - The image URL to download.
  * @param filename - Optional filename for the saved file.
  */
@@ -27,7 +27,7 @@ export async function downloadImageAsPng(imageUrl: string, filename: string = "d
     
     let pngBlob = blob;
     
-    // Convert to PNG if not already
+    // Convert to PNG if not already (using canvas but saving directly as blob)
     if (blob.type !== "image/png") {
       console.log("Converting image to PNG format");
       
@@ -50,12 +50,17 @@ export async function downloadImageAsPng(imageUrl: string, filename: string = "d
       }
       
       ctx.drawImage(img, 0, 0);
-      const dataUrl = canvas.toDataURL("image/png");
-      const base64 = dataUrl.split(',')[1];
-      const byteCharacters = atob(base64);
-      const byteNumbers = Array.from(byteCharacters).map(c => c.charCodeAt(0));
-      const byteArray = new Uint8Array(byteNumbers);
-      pngBlob = new Blob([byteArray], { type: "image/png" });
+      
+      // Convert canvas to blob directly (no base64 conversion)
+      pngBlob = await new Promise<Blob>((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Failed to convert canvas to blob"));
+          }
+        }, "image/png", 0.92);
+      });
     }
     
     console.log("Saving file with saveAs");
