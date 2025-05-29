@@ -5,13 +5,13 @@ import { Capacitor } from "@capacitor/core";
 import { saveAs } from "file-saver";
 
 /**
- * Converts an HTML element to a PNG blob with optimized settings for reliability
+ * Converts an HTML element to a PNG blob
  */
 export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | null> => {
   try {
     console.log("Starting HTML to Canvas conversion");
     
-    // Process any images and fonts in the element first
+    // Process any images in the element first
     const images = Array.from(element.querySelectorAll('img'));
     
     if (images.length > 0) {
@@ -25,47 +25,31 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
           img.parentElement.style.background = 
             'linear-gradient(to right, #6344A5, #8976BF)';
         }
-        
-        // Verify image URLs and make sure they're not empty
-        if (!img.src || img.src === '') {
-          console.error("Image has empty source", img);
-        } else {
-          console.log("Image src:", img.src.substring(0, 100) + '...');
-        }
-        
-        // Add load event listener for debugging
-        img.addEventListener('load', () => {
-          console.log("Image successfully loaded:", img.src ? (img.src.substring(0, 50) + "...") : "no source");
-        });
-        
-        // Add error event listener for debugging
-        img.addEventListener('error', (e) => {
-          console.error("Image failed to load:", img.src, e);
-        });
       });
       
-      // Give a small timeout to ensure all styles are applied and images are loaded
+      // Give time for images to load
       console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
-    console.log("Generating canvas");
+    console.log("Generating canvas from HTML element");
     
-    // Generate canvas with optimized settings for Instagram-quality images
+    // Generate canvas with settings optimized for PNG output
     const canvas = await html2canvas(element, { 
       scale: 2.0,
       useCORS: true,
       allowTaint: true,
-      logging: true,
+      logging: false,
       backgroundColor: null,
       imageTimeout: 15000,
     });
     
     console.log("Canvas generated successfully");
     
+    // Convert directly to PNG blob
     return new Promise<Blob | null>((resolve) => {
       canvas.toBlob((blob) => {
-        console.log("Blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
+        console.log("PNG blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
         resolve(blob);
       }, "image/png", 0.92);
     });
@@ -76,7 +60,7 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
 };
 
 /**
- * Downloads a blob as a PNG file (web fallback)
+ * Downloads a PNG blob as a file
  */
 export const downloadPngBlob = (blob: Blob, fileName: string): void => {
   try {
@@ -90,7 +74,7 @@ export const downloadPngBlob = (blob: Blob, fileName: string): void => {
 };
 
 /**
- * Shares a dream using the native share sheet on iOS or downloads on web
+ * Shares a dream using the native share sheet on mobile or downloads on web
  */
 export const shareDream = async (
   element: HTMLElement, 

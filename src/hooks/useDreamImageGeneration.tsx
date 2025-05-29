@@ -66,6 +66,8 @@ export const useDreamImageGeneration = ({
         return;
       }
 
+      console.log("Starting image generation process...");
+
       // 1. Get image prompt from analyze-dream
       const generatedPromptText = await getImagePrompt(dreamContent);
       if (!generatedPromptText) throw new Error("No image prompt was generated");
@@ -75,28 +77,35 @@ export const useDreamImageGeneration = ({
       const openaiUrl = await generateDreamImageFromAI(generatedPromptText);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
 
-      // Immediately display the AI-generated image to the user while uploading
+      console.log("AI image generated:", openaiUrl);
+
+      // Immediately display the AI-generated image to the user
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 3. Upload image to Supabase for persistence (no automatic download)
-      setIsGenerating(true);
-      const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText, dreamId);
+      // 3. Upload image to Supabase for persistence
+      console.log("Uploading to Supabase storage...");
+      try {
+        const supabaseUrl = await uploadAndGetPublicImageUrl(openaiUrl, generatedPromptText, dreamId);
 
-      if (supabaseUrl && supabaseUrl.startsWith("http")) {
-        setGeneratedImage(supabaseUrl);
-        onImageGenerated(supabaseUrl, generatedPromptText);
-        toast.success("Dream image generated and saved!");
-        if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
-      } else {
-        // Even if failed, leave the openaiUrl showing in the dream entry
-        // Only show warning
-        toast.error("Failed to persist generated image in storage. Image will be shown but might be temporary.");
+        if (supabaseUrl && supabaseUrl.startsWith("http")) {
+          console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
+          setGeneratedImage(supabaseUrl);
+          onImageGenerated(supabaseUrl, generatedPromptText);
+          toast.success("Dream image generated and saved!");
+          if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
+        } else {
+          console.warn("Upload failed, keeping OpenAI URL");
+          toast.warning("Image generated but not saved to storage. Image may be temporary.");
+        }
+      } catch (uploadError) {
+        console.error("Upload error:", uploadError);
+        toast.warning("Image generated but not saved to storage. Image may be temporary.");
       }
     } catch (error: any) {
+      console.error("Image generation failed:", error);
       setImageError(true);
       toast.error(`Image generation failed: ${error.message}`);
-      console.error("Image generation failed (full error):", error);
     } finally {
       setIsGenerating(false);
     }
@@ -116,33 +125,30 @@ export const useDreamImageGeneration = ({
   ]);
 
   const handleImageFromFile = async (fileDataUrl: string) => {
-    console.log("[useDreamImageGeneration] handleImageFromFile triggered, received fileDataUrl type:", typeof fileDataUrl, "length:", fileDataUrl?.length, "preview:", fileDataUrl?.slice?.(0, 36));
+    console.log("handleImageFromFile triggered");
     if (!fileDataUrl || !user) {
       setImageError(true);
       toast.error("Could not add image. Please try again.");
-      console.error("[useDreamImageGeneration] Missing fileDataUrl or user", { fileDataUrl, user });
       return;
     }
     setIsGenerating(true);
     try {
       const publicUrl = await uploadAndGetPublicImageUrl(fileDataUrl, imagePrompt || "", dreamId);
-      setIsGenerating(false);
       if (!publicUrl) {
         setImageError(true);
         setGeneratedImage(fileDataUrl); // show local fallback
         onImageGenerated(fileDataUrl, imagePrompt || "");
         toast.error("Failed to persist uploaded image. Using local image.");
-        console.error("[useDreamImageGeneration] upload failed, fallback to data URL");
       } else {
         setGeneratedImage(publicUrl);
         onImageGenerated(publicUrl, imagePrompt || "");
-        console.log("[useDreamImageGeneration] uploaded to Supabase, publicUrl result:", publicUrl);
+        toast.success("Image uploaded successfully!");
       }
     } catch (error) {
-      setIsGenerating(false);
       setImageError(true);
-      toast.error("Upload error (exception): " + (error as any)?.message);
-      console.error("[useDreamImageGeneration] error during uploadAndGetPublicImageUrl", error);
+      toast.error("Upload error: " + (error as any)?.message);
+    } finally {
+      setIsGenerating(false);
     }
   };
 
