@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Ultra-reliable image upload utility with extensive logging
+ * Ultra-reliable image upload utility with URL expiration handling
  */
 export const reliableImageUpload = async (
   imageUrl: string,
@@ -19,20 +19,53 @@ export const reliableImageUpload = async (
       throw new Error("Missing imageUrl or userId");
     }
 
-    // Step 2: Fetch the image
+    // Step 2: Fetch the image with aggressive timeout and retry logic
     console.log("Step 2: Fetching image from URL:", imageUrl);
-    const response = await fetch(imageUrl, {
-      method: 'GET',
-      headers: {
-        'Accept': 'image/*',
+    
+    let response;
+    let retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        // Add timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        response = await fetch(imageUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'image/*',
+            'User-Agent': 'Mozilla/5.0 (compatible; DreamApp/1.0)',
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          break; // Success, exit retry loop
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (fetchError) {
+        retryCount++;
+        console.warn(`Fetch attempt ${retryCount} failed:`, fetchError);
+        
+        if (retryCount >= maxRetries) {
+          // If it's an OpenAI URL that expired, provide specific guidance
+          if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+            throw new Error("OpenAI image URL has expired. The image was generated successfully but couldn't be saved to permanent storage. Please regenerate the image.");
+          }
+          throw new Error(`Failed to fetch image after ${maxRetries} attempts: ${fetchError.message}`);
+        }
+        
+        // Wait before retry (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
       }
-    });
+    }
 
     console.log("Fetch response status:", response.status, response.statusText);
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
-    }
 
     // Step 3: Convert to blob
     console.log("Step 3: Converting to blob...");
@@ -43,7 +76,7 @@ export const reliableImageUpload = async (
     });
 
     if (blob.size === 0) {
-      throw new Error("Blob is empty");
+      throw new Error("Downloaded image is empty");
     }
 
     // Step 4: Create file path

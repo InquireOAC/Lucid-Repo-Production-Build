@@ -85,20 +85,34 @@ export const useDreamImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Upload image to Supabase in background
-      console.log("Step 3: Uploading to Supabase...");
-      const supabaseUrl = await uploadImage(openaiUrl, dreamId);
-
-      if (supabaseUrl) {
-        console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
-        setGeneratedImage(supabaseUrl);
-        onImageGenerated(supabaseUrl, generatedPromptText);
-        toast.success("Dream image generated and saved!");
-        if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
-      } else {
-        console.warn("Upload failed, keeping OpenAI URL");
-        toast.warning("Image generated but not saved to storage. Image may be temporary.");
+      // 4. Upload image to Supabase in background with improved error handling
+      console.log("Step 3: Uploading to Supabase (with timeout protection)...");
+      
+      // Set a timeout for the upload process
+      const uploadPromise = uploadImage(openaiUrl, dreamId);
+      const timeoutPromise = new Promise<null>((_, reject) => 
+        setTimeout(() => reject(new Error("Upload timeout after 30 seconds")), 30000)
+      );
+      
+      try {
+        const supabaseUrl = await Promise.race([uploadPromise, timeoutPromise]);
+        
+        if (supabaseUrl) {
+          console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
+          setGeneratedImage(supabaseUrl);
+          onImageGenerated(supabaseUrl, generatedPromptText);
+          toast.success("Dream image generated and saved!");
+          if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
+        } else {
+          console.warn("Upload returned null, keeping OpenAI URL");
+          toast.warning("Image generated successfully! Note: Image may be temporary and should be regenerated if it disappears.");
+        }
+      } catch (uploadError) {
+        console.warn("Upload failed, keeping OpenAI URL:", uploadError);
+        // Don't show error toast since user can still see the image
+        toast.warning("Image generated successfully! Note: Could not save to permanent storage - image may be temporary.");
       }
+      
     } catch (error: any) {
       console.error("=== IMAGE GENERATION FAILED ===");
       console.error("Error details:", error);
