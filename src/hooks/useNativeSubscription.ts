@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { InAppPurchase2, IAPProduct, IAPProductOptions } from '@capacitor-community/in-app-purchases';
+import { InAppPurchase2 } from '@capacitor-community/in-app-purchases';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,11 +42,11 @@ export const useNativeSubscription = () => {
         products: [
           {
             id: PRODUCT_IDS.BASIC,
-            type: IAPProductOptions.PAID_SUBSCRIPTION
+            type: 'PAID_SUBSCRIPTION'
           },
           {
             id: PRODUCT_IDS.PREMIUM,
-            type: IAPProductOptions.PAID_SUBSCRIPTION
+            type: 'PAID_SUBSCRIPTION'
           }
         ]
       });
@@ -57,7 +57,7 @@ export const useNativeSubscription = () => {
       });
 
       // Convert App Store products to our format
-      const nativeProducts: NativeProduct[] = result.products.map((product: IAPProduct) => {
+      const nativeProducts: NativeProduct[] = result.products.map((product: any) => {
         const isBasic = product.productIdentifier === PRODUCT_IDS.BASIC;
         return {
           id: isBasic ? 'price_basic' : 'price_premium',
