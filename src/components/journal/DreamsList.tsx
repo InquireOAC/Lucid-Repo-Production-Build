@@ -45,6 +45,8 @@ const DreamsList = ({
             onLike={handleLike}
             onClick={() => onSelect(dream)}
             onTagClick={onTagClick}
+            showUserInfo={false}
+            showUser={false}
             showSharedBadge={true}
             showActions={true}
             onEdit={() => onEdit(dream)}
