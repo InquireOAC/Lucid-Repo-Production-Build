@@ -31,6 +31,32 @@ export const useNativeSubscription = () => {
     
     if (Capacitor.isNativePlatform()) {
       initializeInAppPurchases();
+    } else {
+      // Set fallback products for web/development
+      setProducts([
+        {
+          id: 'price_basic',
+          name: 'Basic',
+          price: '$4.99/month',
+          nativeProductId: PRODUCT_IDS.BASIC,
+          features: [
+            'Unlimited Dream Analysis',
+            '10 Dream Art Generations',
+            'Priority Support'
+          ]
+        },
+        {
+          id: 'price_premium',
+          name: 'Premium',
+          price: '$15.99/month',
+          nativeProductId: PRODUCT_IDS.PREMIUM,
+          features: [
+            'Unlimited Dream Analysis',
+            'Unlimited Dream Art Generation',
+            'Priority Support'
+          ]
+        }
+      ]);
     }
   }, []);
 
