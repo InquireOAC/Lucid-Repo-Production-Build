@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
+import { useNavigate } from "react-router-dom";
 
 interface Comment {
   id: string;
@@ -29,6 +30,7 @@ interface DreamCommentsProps {
 
 const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -94,6 +96,12 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     }
   };
 
+  const handleUserClick = (username?: string) => {
+    if (username && username.trim() !== "" && username !== "Anonymous User") {
+      navigate(`/profile/${username}`);
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="font-medium text-lg">Comments</h3>
@@ -109,18 +117,28 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             const profile = comment.profiles;
             const displayName = profile?.display_name ?? profile?.username ?? "";
             const fallbackLetter = displayName?.[0]?.toUpperCase() ?? "U";
+            const username = profile?.username;
+            
             return (
               <div key={comment.id} className="flex gap-3">
-                <SymbolAvatar
-                  symbol={profile?.avatar_symbol}
-                  color={profile?.avatar_color}
-                  fallbackLetter={fallbackLetter}
-                  size={32}
-                  className="h-8 w-8"
-                />
+                <div 
+                  className="cursor-pointer"
+                  onClick={() => handleUserClick(username)}
+                >
+                  <SymbolAvatar
+                    symbol={profile?.avatar_symbol}
+                    color={profile?.avatar_color}
+                    fallbackLetter={fallbackLetter}
+                    size={32}
+                    className="h-8 w-8"
+                  />
+                </div>
                 <div>
                   <div className="flex gap-2 items-baseline">
-                    <p className="font-medium text-sm">
+                    <p 
+                      className="font-medium text-sm cursor-pointer hover:underline"
+                      onClick={() => handleUserClick(username)}
+                    >
                       {displayName || "Anonymous"}
                     </p>
                     <span className="text-xs text-muted-foreground">
@@ -183,4 +201,3 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 };
 
 export default DreamComments;
-
