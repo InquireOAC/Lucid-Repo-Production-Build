@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -159,18 +158,6 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
       {user ? (
         <form onSubmit={handleSubmit} className="flex gap-2 items-center mt-4">
-          <SymbolAvatar
-            symbol={user.user_metadata?.avatar_symbol}
-            color={user.user_metadata?.avatar_color}
-            fallbackLetter={
-              (user.user_metadata?.display_name?.[0] ||
-                user.user_metadata?.username?.[0] ||
-                "U"
-              ).toUpperCase()
-            }
-            size={32}
-            className="h-8 w-8 flex-shrink-0"
-          />
           <Input
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
