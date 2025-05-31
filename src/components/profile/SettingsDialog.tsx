@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, Trash2 } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
+import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -15,6 +16,7 @@ interface SettingsDialogProps {
 
 const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }: SettingsDialogProps) => {
   const [showGuidelines, setShowGuidelines] = useState(false);
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
 
   return (
     <>
@@ -34,6 +36,14 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
               >
                 <Shield className="h-4 w-4 mr-2" />
                 Community Guidelines
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setShowBlockedUsers(true)}
+              >
+                <UserMinus className="h-4 w-4 mr-2" />
+                Blocked Users
               </Button>
             </div>
 
@@ -60,6 +70,11 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
       <CommunityGuidelinesDialog
         open={showGuidelines}
         onOpenChange={setShowGuidelines}
+      />
+
+      <BlockedUsersDialog
+        open={showBlockedUsers}
+        onOpenChange={setShowBlockedUsers}
       />
     </>
   );
