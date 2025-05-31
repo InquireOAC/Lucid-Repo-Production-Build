@@ -68,10 +68,11 @@ export const useNativeSubscription = () => {
         return;
       }
 
-      // Dynamic import with proper error handling
+      // Dynamic import with proper error handling using string path
       let InAppPurchase2;
       try {
-        const module = await import('@capacitor-community/in-app-purchases');
+        const moduleName = '@capacitor-community/in-app-purchases';
+        const module = await import(/* @vite-ignore */ moduleName);
         InAppPurchase2 = module.InAppPurchase2;
       } catch (importError) {
         console.error('In-app purchases plugin not available:', importError);
@@ -207,10 +208,11 @@ export const useNativeSubscription = () => {
     setIsLoading(true);
 
     try {
-      // Dynamic import with proper error handling
+      // Dynamic import with proper error handling using string path
       let InAppPurchase2;
       try {
-        const module = await import('@capacitor-community/in-app-purchases');
+        const moduleName = '@capacitor-community/in-app-purchases';
+        const module = await import(/* @vite-ignore */ moduleName);
         InAppPurchase2 = module.InAppPurchase2;
       } catch (importError) {
         console.error('In-app purchases plugin not available:', importError);
@@ -248,10 +250,11 @@ export const useNativeSubscription = () => {
     try {
       setIsLoading(true);
       
-      // Dynamic import with proper error handling
+      // Dynamic import with proper error handling using string path
       let InAppPurchase2;
       try {
-        const module = await import('@capacitor-community/in-app-purchases');
+        const moduleName = '@capacitor-community/in-app-purchases';
+        const module = await import(/* @vite-ignore */ moduleName);
         InAppPurchase2 = module.InAppPurchase2;
       } catch (importError) {
         console.error('In-app purchases plugin not available:', importError);
