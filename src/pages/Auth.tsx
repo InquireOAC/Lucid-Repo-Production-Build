@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -214,16 +215,6 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      {/* Back to Journal Button */}
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/")}
-        className="absolute top-4 left-4 flex items-center gap-2"
-      >
-        <ArrowLeft size={16} />
-        Back to Journal
-      </Button>
-
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl gradient-text">Welcome to Lucid Repository</CardTitle>
@@ -266,6 +257,18 @@ const Auth = () => {
                   {isLoading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+              
+              {/* Back to Journal Button positioned under sign in form */}
+              <div className="mt-4 text-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft size={16} />
+                  Back to Journal
+                </Button>
+              </div>
             </TabsContent>
             
             <TabsContent value="signup">
@@ -376,6 +379,18 @@ const Auth = () => {
                   {isLoading ? "Creating account..." : "Create Account"}
                 </Button>
               </form>
+              
+              {/* Back to Journal Button positioned under sign up form */}
+              <div className="mt-4 text-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                  className="flex items-center gap-2"
+                >
+                  <ArrowLeft size={16} />
+                  Back to Journal
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
