@@ -88,12 +88,17 @@ const DreamCard = ({
   const dateToFormat = dream.created_at || dream.date;
   const formattedDate = formatDistanceToNow(new Date(dateToFormat)) + " ago";
 
+  // Determine if this is a journal view (compact layout)
+  const isJournalView = !showUserInfo && !showUser;
+
   return (
     <Card 
-      className="hover:shadow-lg transition-shadow cursor-pointer dream-card"
+      className={`hover:shadow-lg transition-shadow cursor-pointer dream-card ${
+        isJournalView ? 'h-fit' : ''
+      }`}
       onClick={handleCardClick}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className={isJournalView ? "pb-2 p-4" : "pb-3"}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             {(showUserInfo || showUser) && (
@@ -102,8 +107,12 @@ const DreamCard = ({
                 onUserClick={handleUserClick}
               />
             )}
-            <h3 className="font-semibold text-lg leading-tight">{dream.title}</h3>
-            <p className="text-muted-foreground text-sm mt-1">
+            <h3 className={`font-semibold leading-tight ${
+              isJournalView ? 'text-base mb-1' : 'text-lg'
+            }`}>{dream.title}</h3>
+            <p className={`text-muted-foreground ${
+              isJournalView ? 'text-xs' : 'text-sm mt-1'
+            }`}>
               {formattedDate}
             </p>
           </div>
@@ -121,22 +130,26 @@ const DreamCard = ({
         </div>
       </CardHeader>
       
-      <CardContent className="pt-0">
-        <p className="text-sm line-clamp-3 mb-3">{dream.content}</p>
+      <CardContent className={isJournalView ? "pt-0 p-4" : "pt-0"}>
+        <p className={`line-clamp-2 mb-3 ${
+          isJournalView ? 'text-xs' : 'text-sm'
+        }`}>{dream.content}</p>
         
         {dream.generatedImage && (
-          <div className="mb-3">
+          <div className={isJournalView ? "mb-2" : "mb-3"}>
             <img 
               src={dream.generatedImage} 
               alt="Dream visualization" 
-              className="w-full h-32 object-cover rounded-md"
+              className={`w-full object-cover rounded-md ${
+                isJournalView ? 'h-24' : 'h-32'
+              }`}
             />
           </div>
         )}
         
         {mappedTags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-3">
-            {mappedTags.map((tag) => (
+          <div className={`flex flex-wrap gap-1 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
+            {mappedTags.slice(0, isJournalView ? 3 : mappedTags.length).map((tag) => (
               <Badge 
                 key={tag.id} 
                 variant="secondary" 
@@ -147,42 +160,49 @@ const DreamCard = ({
                 {tag.name}
               </Badge>
             ))}
+            {isJournalView && mappedTags.length > 3 && (
+              <Badge variant="secondary" className="text-xs">
+                +{mappedTags.length - 3}
+              </Badge>
+            )}
           </div>
         )}
 
         {showSharedBadge && (dream.is_public || dream.isPublic) && (
-          <Badge variant="outline" className="mb-3">Public</Badge>
+          <Badge variant="outline" className={isJournalView ? "mb-2 text-xs" : "mb-3"}>Public</Badge>
         )}
 
         {showActions && (
-          <div className="flex gap-2 mb-3">
+          <div className={`flex gap-2 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
             {onEdit && (
-              <Button variant="outline" size="sm" onClick={(e) => handleButtonClick(e, onEdit)}>
+              <Button variant="outline" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onEdit)}>
                 Edit
               </Button>
             )}
             {onTogglePublic && (
-              <Button variant="outline" size="sm" onClick={(e) => handleButtonClick(e, onTogglePublic)}>
-                {dream.is_public || dream.isPublic ? 'Make Private' : 'Make Public'}
+              <Button variant="outline" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onTogglePublic)}>
+                {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
               </Button>
             )}
             {onDelete && (
-              <Button variant="destructive" size="sm" onClick={(e) => handleButtonClick(e, onDelete)}>
+              <Button variant="destructive" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onDelete)}>
                 Delete
               </Button>
             )}
           </div>
         )}
         
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className={`flex items-center justify-between text-muted-foreground ${
+          isJournalView ? 'text-xs' : 'text-sm'
+        }`}>
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               size="sm"
-              className="h-auto p-1 hover:text-red-500"
+              className={`h-auto p-1 hover:text-red-500 ${isJournalView ? 'text-xs' : ''}`}
               onClick={(e) => handleButtonClick(e, () => onLike(dream.id))}
             >
-              <Heart className="h-4 w-4 mr-1" />
+              <Heart className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
               {dream.likeCount || dream.like_count || 0}
             </Button>
             
@@ -190,10 +210,10 @@ const DreamCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-1 hover:text-blue-500"
+                className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
                 onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
               >
-                <MessageCircle className="h-4 w-4 mr-1" />
+                <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 {dream.commentCount || dream.comment_count || 0}
               </Button>
             )}
@@ -202,17 +222,17 @@ const DreamCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-auto p-1 hover:text-green-500"
+                className={`h-auto p-1 hover:text-green-500 ${isJournalView ? 'text-xs' : ''}`}
                 onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}
               >
-                <Share2 className="h-4 w-4 mr-1" />
+                <Share2 className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
                 Share
               </Button>
             )}
           </div>
           
           <div className="flex items-center">
-            <Eye className="h-3 w-3 mr-1" />
+            <Eye className={`mr-1 ${isJournalView ? 'h-2 w-2' : 'h-3 w-3'}`} />
             {dream.view_count || 0}
           </div>
         </div>
