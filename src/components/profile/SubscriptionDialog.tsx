@@ -2,9 +2,10 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CreditCard, Sparkles, ImageIcon, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Crown, CreditCard, Sparkles, ImageIcon } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
+import NativeSubscriptionManager from "./NativeSubscriptionManager";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ const SubscriptionDialog = ({
   onOpenChange,
   subscription
 }: SubscriptionDialogProps) => {
+  const isNative = Capacitor.isNativePlatform();
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
@@ -49,14 +52,7 @@ const SubscriptionDialog = ({
         </DialogHeader>
         <div className="overflow-y-auto max-h-[70vh] pr-1">
           <div className="space-y-5 py-2">
-            {!subscription ? (
-              <div>
-                <p className="text-sm text-center text-muted-foreground mb-3">
-                  Subscribe for unlimited dream analysis, more image generations, and early access features!
-                </p>
-                <StripeSubscriptionManager />
-              </div>
-            ) : (
+            {subscription && (
               <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -90,10 +86,14 @@ const SubscriptionDialog = ({
                     total={subscription.imageCredits.total}
                   />
                 </div>
-                <div className="pt-2">
-                  <StripeSubscriptionManager currentPlan={subscription.plan} />
-                </div>
               </>
+            )}
+            
+            {/* Use native subscription manager on mobile, Stripe on web */}
+            {isNative ? (
+              <NativeSubscriptionManager currentPlan={subscription?.plan} />
+            ) : (
+              <StripeSubscriptionManager currentPlan={subscription?.plan} />
             )}
           </div>
         </div>
