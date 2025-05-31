@@ -11,6 +11,7 @@ import { useDreams } from "@/hooks/useDreams";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import { useLikes } from "@/hooks/useLikes";
+import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
 const ALLOWED_TAGS = [
   "Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"
@@ -23,6 +24,8 @@ const LucidRepoContainer = () => {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
+
+  const { isUserBlocked } = useBlockedUsers();
 
   const {
     dreams,
@@ -98,8 +101,7 @@ const LucidRepoContainer = () => {
       setAuthDialogOpen(true);
       return;
     }
-    await handleLike(dreamId); // Uses centralized useLikes, which does state sync and profile refresh
-    // After like/unlike, dreamsState changes, so UI and modal re-render
+    await handleLike(dreamId);
   };
 
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
@@ -123,11 +125,13 @@ const LucidRepoContainer = () => {
     });
   };
 
-  // Filter dreams based on search query and tags using normalizedDreams now
-  const normalizedDreams = dreamsState.map(dream => ({
-    ...dream,
-    tags: Array.isArray(dream.tags) ? dream.tags : []
-  }));
+  // Filter dreams based on search query and tags and blocked users
+  const normalizedDreams = dreamsState
+    .filter(dream => !isUserBlocked(dream.user_id)) // Filter out blocked users
+    .map(dream => ({
+      ...dream,
+      tags: Array.isArray(dream.tags) ? dream.tags : []
+    }));
 
   // Tag filtering: Only show dreams where at least one dream.tags[] (ID string) matches activeTags[]
   const filteredDreams = normalizedDreams.filter((dream) => {
@@ -169,11 +173,12 @@ const LucidRepoContainer = () => {
           isLoading={isLoading || tagsLoading}
           filteredDreams={filteredDreams}
           dreamTags={filteredDreamTags}
-          onLike={handleDreamLike} // Properly triggers like logic + updates
+          onLike={handleDreamLike}
           onOpenDream={handleOpenDream}
           onUserClick={handleNavigateToProfile}
           onTagClick={handleTagClick}
           searchQuery={searchQuery}
+          currentUser={user}
         />
         {selectedDream && (
           <DreamDetailWrapper
@@ -182,7 +187,6 @@ const LucidRepoContainer = () => {
             onClose={handleCloseDream}
             onUpdate={handleDreamUpdate}
             isAuthenticated={!!user}
-            // The crucial part: modal uses the same handler, and gets LIVE dream data
             onLike={() => handleDreamLike(selectedDream.id)}
           />
         )}

@@ -1,81 +1,85 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { UserPlus, MessageSquare } from "lucide-react";
+import { Settings, MessageCircle, UserPlus, UserMinus } from "lucide-react";
+import BlockUserButton from "@/components/moderation/BlockUserButton";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
   isFollowing: boolean;
-  onFollow: () => void;
+  profileToShow: any;
+  onEditProfile: () => void;
   onMessages: () => void;
   onSettings: () => void;
-  onSubscription: () => void;
-  loading: boolean;
+  onFollow: () => void;
+  onStartConversation: () => void;
 }
 
 const ProfileHeaderActions = ({
   isOwnProfile,
   isFollowing,
-  onFollow,
+  profileToShow,
+  onEditProfile,
   onMessages,
   onSettings,
-  onSubscription,
-  loading,
+  onFollow,
+  onStartConversation
 }: ProfileHeaderActionsProps) => {
-  // Removes icons from the three core buttons, keeps logic intact with proper feedback.
   if (isOwnProfile) {
     return (
-      <>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onMessages}
-          className="flex items-center gap-1 text-sm"
-        >
-          Messages
+      <div className="flex gap-2">
+        <Button onClick={onEditProfile} variant="outline" size="sm">
+          Edit Profile
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSubscription}
-          className="flex items-center gap-1 text-sm relative"
-          disabled={loading}
-        >
-          {loading && (
-            <span className="absolute left-2 animate-spin w-4 h-4 border-2 border-t-transparent border-dream-purple rounded-full" />
-          )}
-          <span className={loading ? "ml-5" : ""}>Subscription</span>
+        <Button onClick={onMessages} variant="outline" size="sm">
+          <MessageCircle className="h-4 w-4" />
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={onSettings}
-          className="flex items-center gap-1 text-sm"
-        >
-          Settings
+        <Button onClick={onSettings} variant="outline" size="sm">
+          <Settings className="h-4 w-4" />
         </Button>
-      </>
+      </div>
     );
   }
+
   return (
-    <>
+    <div className="flex gap-2">
       <Button 
+        onClick={onFollow}
         variant={isFollowing ? "outline" : "default"}
         size="sm"
-        onClick={onFollow}
-        className="flex items-center gap-1 text-sm"
+        className="flex items-center gap-1"
       >
-        <UserPlus size={14} /> {isFollowing ? "Unfollow" : "Follow"}
+        {isFollowing ? (
+          <>
+            <UserMinus className="h-4 w-4" />
+            Unfollow
+          </>
+        ) : (
+          <>
+            <UserPlus className="h-4 w-4" />
+            Follow
+          </>
+        )}
       </Button>
+      
       <Button 
+        onClick={onStartConversation}
         variant="outline" 
         size="sm"
-        onClick={onMessages}
-        disabled={loading}
-        className="flex items-center gap-1 text-sm"
       >
-        <MessageSquare size={14} /> Message
+        <MessageCircle className="h-4 w-4" />
       </Button>
-    </>
+
+      <BlockUserButton
+        userToBlock={{
+          id: profileToShow.id,
+          username: profileToShow.username,
+          display_name: profileToShow.display_name
+        }}
+        variant="outline"
+        size="sm"
+      />
+    </div>
   );
 };
 

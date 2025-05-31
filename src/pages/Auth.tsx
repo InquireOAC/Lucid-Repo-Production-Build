@@ -1,138 +1,214 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { Moon } from "lucide-react";
+import TermsAcceptanceDialog from "@/components/moderation/TermsAcceptanceDialog";
+import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
+import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 
 const Auth = () => {
-  const { user, loading, signIn, signUp } = useAuth();
-  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { hasAcceptedTerms, isLoading: termsLoading, markTermsAsAccepted } = useTermsAcceptance();
+  
+  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const navigate = useNavigate();
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [pendingSignup, setPendingSignup] = useState<{email: string, password: string, username: string} | null>(null);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: "#1A1F2C" }}>
-        <div className="text-center text-white">Loading...</div>
-      </div>
-    );
-  }
+  // Redirect if user is authenticated and has accepted terms
+  useEffect(() => {
+    if (user && hasAcceptedTerms === true) {
+      navigate("/");
+    } else if (user && hasAcceptedTerms === false) {
+      setShowTermsDialog(true);
+    }
+  }, [user, hasAcceptedTerms, navigate]);
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      if (authMode === "signin") {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password, username);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password");
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
+
+      toast.success("Signed in successfully!");
+    } catch (error) {
+      console.error("Sign in error:", error);
+      toast.error("An error occurred during sign in");
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  return (
-    <div
-      className="min-h-screen flex items-center justify-center p-4"
-      style={{
-        background: "#1A1F2C",
-      }}
-    >
-      <Card className="w-full max-w-md bg-dream-purple/90 backdrop-blur-sm shadow-xl">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Moon size={48} className="text-dream-white animate-float" />
-          </div>
-          <CardTitle className="text-3xl font-bold white-text">
-            Lucid Repo
-          </CardTitle>
-        </CardHeader>
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password || !username) {
+      toast.error("Please fill in all fields");
+      return;
+    }
 
+    // Check for inappropriate content in username
+    if (containsInappropriateContent(username)) {
+      toast.error("Username contains inappropriate content. Please choose a different username.");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long");
+      return;
+    }
+
+    // Store signup data and show terms dialog
+    setPendingSignup({ email, password, username });
+    setShowTermsDialog(true);
+  };
+
+  const completeSignup = async () => {
+    if (!pendingSignup) return;
+
+    setIsLoading(true);
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email: pendingSignup.email,
+        password: pendingSignup.password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            username: pendingSignup.username,
+          }
+        }
+      });
+
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          toast.error("An account with this email already exists");
+        } else {
+          toast.error(error.message);
+        }
+        return;
+      }
+
+      toast.success("Account created successfully! Please check your email to verify your account.");
+      setPendingSignup(null);
+    } catch (error) {
+      console.error("Sign up error:", error);
+      toast.error("An error occurred during sign up");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTermsAccepted = () => {
+    markTermsAsAccepted();
+    setShowTermsDialog(false);
+    
+    if (pendingSignup) {
+      completeSignup();
+    } else {
+      // User was already signed in, just needed to accept terms
+      navigate("/");
+    }
+  };
+
+  if (termsLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl gradient-text">Welcome to Lucid Repository</CardTitle>
+          <CardDescription>
+            Sign in to your account or create a new one to start sharing your dreams
+          </CardDescription>
+        </CardHeader>
         <CardContent>
-          <Tabs value={authMode} onValueChange={(v) => setAuthMode(v as "signin" | "signup")}>
+          <Tabs defaultValue="signin" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-
+            
             <TabsContent value="signin">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="signin-email">Email</Label>
                   <Input
-                    id="email"
+                    id="signin-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+                  <Label htmlFor="signin-password">Password</Label>
                   <Input
-                    id="password"
+                    id="signin-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
                 </div>
-                <div className="flex justify-between items-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => navigate("/")}
-                  >
-                    Back to Journal
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-gradient-to-r from-dream-lavender to-dream-purple"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Signing In..." : "Sign In"}
-                  </Button>
-                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Signing in..." : "Sign In"}
+                </Button>
               </form>
             </TabsContent>
-
+            
             <TabsContent value="signup">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-username">Username</Label>
+                  <Input
+                    id="signup-username"
+                    type="text"
+                    placeholder="Choose a username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-email">Email</Label>
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Enter your email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input
-                    id="username"
-                    type="text"
-                    placeholder="dreamwalker"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
                     required
                   />
                 </div>
@@ -141,33 +217,26 @@ const Auth = () => {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Create a password (min 6 characters)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    minLength={6}
                   />
                 </div>
-                <div className="flex justify-between items-center">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => navigate("/")}
-                  >
-                    Back to Journal
-                  </Button>
-                  <Button
-                    type="submit"
-                    className="bg-gradient-to-r from-dream-lavender to-dream-purple"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Creating Account..." : "Create Account"}
-                  </Button>
-                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Creating account..." : "Create Account"}
+                </Button>
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+
+      <TermsAcceptanceDialog
+        open={showTermsDialog}
+        onAccept={handleTermsAccepted}
+      />
     </div>
   );
 };

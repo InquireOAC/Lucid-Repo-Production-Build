@@ -1,178 +1,166 @@
+
 import React from "react";
-import { format } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Moon, Globe, Pencil, Trash2, Lock } from "lucide-react";
-import { toast } from "sonner";
-import { DreamEntry, DreamTag } from "@/types/dream";
-import DreamCardUser from "./DreamCardUser";
-import DreamCardTags from "./DreamCardTags";
-import DreamCardSocial from "./DreamCardSocial";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Heart, MessageCircle, Share2, Eye } from "lucide-react";
+import { DreamEntry, DreamTag } from "@/types/dream";
+import { formatDistanceToNow } from "date-fns";
+import DreamCardUser from "./DreamCardUser";
+import FlagButton from "@/components/moderation/FlagButton";
+import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
 interface DreamCardProps {
   dream: DreamEntry;
-  tags?: DreamTag[];
-  dreamTags?: string[];
-  onLike?: () => void;
-  showUser?: boolean;
-  onClick?: () => void;
-  onUserClick?: () => void;
+  tags: DreamTag[];
+  onLike: (dreamId: string) => void;
+  onComment?: (dreamId: string) => void;
+  onShare?: (dreamId: string) => void;
+  onCardClick?: (dream: DreamEntry) => void;
+  onUserClick?: (username: string) => void;
   onTagClick?: (tagId: string) => void;
-  // Removed audio props
-  // New props for actions
-  showActions?: boolean;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onTogglePublic?: () => void;
-  // Prop to control badge visibility
-  showSharedBadge?: boolean;
+  currentUser?: any;
+  showUserInfo?: boolean;
 }
 
-const DreamCard = ({ 
-  dream, 
-  tags = [], 
-  dreamTags = [],
-  onLike, 
-  showUser = false, 
-  onClick, 
+const DreamCard = ({
+  dream,
+  tags,
+  onLike,
+  onComment,
+  onShare,
+  onCardClick,
   onUserClick,
   onTagClick,
-  // Removed audio props
-  // New action props with defaults
-  showActions = false,
-  onEdit,
-  onDelete,
-  onTogglePublic,
-  // Default to false so it's only shown when explicitly requested
-  showSharedBadge = false
+  currentUser,
+  showUserInfo = true
 }: DreamCardProps) => {
-  // Format the dream date
-  const formattedDate = dream.date ? format(new Date(dream.date), "MMM d, yyyy") : "No date";
+  const { isUserBlocked } = useBlockedUsers();
   
-  // Check either isPublic or is_public field
-  const isPublic = dream.is_public || dream.isPublic;
-  
-  // Use either likeCount or like_count, ensuring we have a consistent value
-  const likeCount = typeof dream.likeCount !== 'undefined' ? dream.likeCount : (dream.like_count || 0);
-  
-  // Similarly handle comment count
-  const commentCount = typeof dream.commentCount !== 'undefined' ? dream.commentCount : (dream.comment_count || 0);
+  // Don't render if the dream's author is blocked
+  if (isUserBlocked(dream.user_id)) {
+    return null;
+  }
 
-  const handleUserClick = (e: React.MouseEvent) => {
-    if (onUserClick) {
-      e.stopPropagation();
-      onUserClick();
+  const dreamTags = Array.isArray(dream.tags) 
+    ? dream.tags.map(tagId => tags.find(t => t.id === tagId)).filter(Boolean)
+    : [];
+
+  const handleCardClick = () => {
+    if (onCardClick) {
+      onCardClick(dream);
     }
   };
 
-  const handleEdit = (e: React.MouseEvent) => {
-    if (onEdit) {
-      e.stopPropagation();
-      onEdit();
-    }
-  };
-  
-  const handleDelete = (e: React.MouseEvent) => {
-    if (onDelete) {
-      e.stopPropagation();
-      onDelete();
-    }
-  };
-  
-  const handleTogglePublic = (e: React.MouseEvent) => {
-    if (onTogglePublic) {
-      e.stopPropagation();
-      onTogglePublic();
-    }
+  const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
+    e.stopPropagation();
+    action();
   };
 
   return (
     <Card 
-      className="dream-card h-full cursor-pointer transition-all relative"
-      onClick={onClick}
+      className="hover:shadow-lg transition-shadow cursor-pointer dream-card"
+      onClick={handleCardClick}
     >
-      {/* Only show Shared badge when specifically requested AND the dream is public */}
-      {showSharedBadge && isPublic && (
-        <div className="absolute top-1/2 right-0 transform -translate-y-1/2 translate-y-[-1rem] z-10">
-          <div className="bg-dream-purple text-white text-xs py-1 px-2 rounded-l-md flex items-center gap-1">
-            <Globe size={12} /> Shared
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            {showUserInfo && (
+              <DreamCardUser
+                dream={dream}
+                onUserClick={onUserClick}
+              />
+            )}
+            <h3 className="font-semibold text-lg leading-tight">{dream.title}</h3>
+            <p className="text-muted-foreground text-sm mt-1">
+              {formatDistanceToNow(new Date(dream.created_at))} ago
+            </p>
           </div>
-        </div>
-      )}
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-lg gradient-text font-bold line-clamp-1">
-            {dream.title}
-          </CardTitle>
-          <div className="flex items-center text-xs text-muted-foreground">
-            <Moon size={12} className="mr-1" />
-            {formattedDate}
-          </div>
+          
+          {/* Flag button for inappropriate content */}
+          {currentUser && currentUser.id !== dream.user_id && (
+            <div onClick={(e) => e.stopPropagation()}>
+              <FlagButton
+                contentType="dream"
+                contentId={dream.id}
+                contentOwnerId={dream.user_id}
+              />
+            </div>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="p-4 pt-2">
-        {showUser && (
-          <DreamCardUser
-            profile={dream.profiles}
-            onUserClick={handleUserClick}
-          />
-        )}
-        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-          {dream.content}
-        </p>
-        <DreamCardTags
-          tags={tags}
-          dreamTags={dreamTags}
-          lucid={dream.lucid}
-          onTagClick={onTagClick}
-        />
+      
+      <CardContent className="pt-0">
+        <p className="text-sm line-clamp-3 mb-3">{dream.content}</p>
+        
         {dream.generatedImage && (
-          <div className="mt-2 h-20 w-full overflow-hidden rounded-md">
-            <img
-              src={dream.generatedImage}
-              alt="Dream visualization"
-              className="h-full w-full object-cover"
+          <div className="mb-3">
+            <img 
+              src={dream.generatedImage} 
+              alt="Dream visualization" 
+              className="w-full h-32 object-cover rounded-md"
             />
           </div>
         )}
-        {/* Remove DreamCardSocial (which included likeCount and commentCount) */}
-        {/* Action buttons (Edit/Delete/Public) remain unchanged */}
-        {showActions && (
-          <div className="flex justify-end gap-1 mt-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              className="h-8"
-              onClick={handleEdit}
-            >
-              <Pencil size={14} className="mr-1" /> Edit
-            </Button>
-            <Button
-              size="sm"
-              variant={isPublic ? "outline" : "default"}
-              className={`h-8 ${isPublic ? "bg-white text-gray-800" : "bg-dream-purple"}`}
-              onClick={handleTogglePublic}
-            >
-              {isPublic ? (
-                <>
-                  <Lock size={14} className="mr-1" /> Private
-                </>
-              ) : (
-                <>
-                  <Globe size={14} className="mr-1" /> Share
-                </>
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              className="h-8"
-              onClick={handleDelete}
-            >
-              <Trash2 size={14} className="mr-1" /> Delete
-            </Button>
+        
+        {dreamTags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-3">
+            {dreamTags.map((tag) => (
+              <Badge 
+                key={tag.id} 
+                variant="secondary" 
+                className="text-xs cursor-pointer"
+                style={{ backgroundColor: tag.color + '20', color: tag.color }}
+                onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}
+              >
+                {tag.name}
+              </Badge>
+            ))}
           </div>
         )}
+        
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-auto p-1 hover:text-red-500"
+              onClick={(e) => handleButtonClick(e, () => onLike(dream.id))}
+            >
+              <Heart className="h-4 w-4 mr-1" />
+              {dream.likeCount || 0}
+            </Button>
+            
+            {onComment && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-1 hover:text-blue-500"
+                onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                {dream.commentCount || 0}
+              </Button>
+            )}
+            
+            {onShare && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-1 hover:text-green-500"
+                onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}
+              >
+                <Share2 className="h-4 w-4 mr-1" />
+                Share
+              </Button>
+            )}
+          </div>
+          
+          <div className="flex items-center">
+            <Eye className="h-3 w-3 mr-1" />
+            {dream.view_count || 0}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

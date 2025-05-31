@@ -58,6 +58,30 @@ export type Database = {
           },
         ]
       }
+      blocked_users: {
+        Row: {
+          blocked_user_id: string
+          blocker_user_id: string
+          created_at: string
+          id: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_user_id: string
+          blocker_user_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_user_id?: string
+          blocker_user_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           comment_text: string
@@ -96,6 +120,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      content_flags: {
+        Row: {
+          additional_notes: string | null
+          created_at: string
+          flagged_content_id: string
+          flagged_content_type: string
+          flagged_user_id: string
+          id: string
+          reason: string
+          reporter_user_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          additional_notes?: string | null
+          created_at?: string
+          flagged_content_id: string
+          flagged_content_type: string
+          flagged_user_id: string
+          id?: string
+          reason: string
+          reporter_user_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          additional_notes?: string | null
+          created_at?: string
+          flagged_content_id?: string
+          flagged_content_type?: string
+          flagged_user_id?: string
+          id?: string
+          reason?: string
+          reporter_user_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       dream_comments: {
         Row: {
@@ -672,6 +738,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      terms_acceptance: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          terms_version: string
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version?: string
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
