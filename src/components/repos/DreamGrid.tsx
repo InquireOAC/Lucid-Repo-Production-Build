@@ -10,6 +10,7 @@ interface DreamGridProps {
   onOpenDream: (dream: DreamEntry) => void;
   onUserClick: (username: string | undefined) => void;
   onTagClick: (tagId: string) => void;
+  currentUser?: any;
 }
 
 const DreamGrid = ({
@@ -19,6 +20,7 @@ const DreamGrid = ({
   onOpenDream,
   onUserClick,
   onTagClick,
+  currentUser,
 }: DreamGridProps) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -51,6 +53,7 @@ const DreamGrid = ({
             onUserClick={() => onUserClick(username)}
             onTagClick={onTagClick}
             showSharedBadge={false}
+            currentUser={currentUser}
           />
         );
       })}

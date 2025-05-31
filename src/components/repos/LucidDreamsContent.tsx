@@ -12,6 +12,7 @@ interface LucidDreamsContentProps {
   onUserClick: (userId: string | undefined) => void;
   onTagClick: (tagId: string) => void;
   searchQuery: string;
+  currentUser?: any;
 }
 
 const LucidDreamsContent = ({
@@ -23,6 +24,7 @@ const LucidDreamsContent = ({
   onUserClick,
   onTagClick,
   searchQuery,
+  currentUser,
 }: LucidDreamsContentProps) => {
   if (isLoading) {
     return (
@@ -50,6 +52,7 @@ const LucidDreamsContent = ({
       onOpenDream={onOpenDream}
       onUserClick={onUserClick}
       onTagClick={onTagClick}
+      currentUser={currentUser}
     />
   );
 };

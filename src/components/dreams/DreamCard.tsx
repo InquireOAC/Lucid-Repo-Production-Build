@@ -72,7 +72,8 @@ const DreamCard = ({
     }
   };
 
-  const handleUserClick = () => {
+  const handleUserClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (onUserClick && dream.profiles?.username) {
       onUserClick(dream.profiles.username);
     }
@@ -97,7 +98,7 @@ const DreamCard = ({
           <div className="flex-1">
             {(showUserInfo || showUser) && (
               <DreamCardUser
-                dream={dream}
+                profile={dream.profiles}
                 onUserClick={handleUserClick}
               />
             )}
