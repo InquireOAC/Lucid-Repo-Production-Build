@@ -1,3 +1,4 @@
+
 import React from "react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
@@ -51,6 +52,13 @@ const ProfileHeader = ({
   const { openChatWithUser, loading } = useDirectConversation(myId, theirId);
   const [isSubscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+
+  console.log("ProfileHeader render:", { 
+    isOwnProfile, 
+    profileToShow: profileToShow?.username, 
+    profileId: profileToShow?.id,
+    hasProfileToShow: !!profileToShow 
+  });
 
   const onMessageOtherUser = () => {
     console.log("[ProfileHeader] Message btn clicked. isOwnProfile:", isOwnProfile, { myId, theirId });
@@ -114,6 +122,7 @@ const ProfileHeader = ({
         <ProfileHeaderActions
           isOwnProfile={isOwnProfile}
           isFollowing={isFollowing}
+          profileToShow={profileToShow}
           onFollow={handleFollow}
           onMessages={() => {
             console.log("[ProfileHeaderActions] onMessages prop called");

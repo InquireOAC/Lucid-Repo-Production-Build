@@ -29,6 +29,8 @@ const ProfileHeaderActions = ({
   onSubscription,
   loading
 }: ProfileHeaderActionsProps) => {
+  console.log("ProfileHeaderActions render:", { isOwnProfile, profileToShow: profileToShow?.username, hasProfileToShow: !!profileToShow });
+  
   if (isOwnProfile) {
     return (
       <div className="flex gap-2">
@@ -83,8 +85,8 @@ const ProfileHeaderActions = ({
         <MessageCircle className="h-4 w-4" />
       </Button>
 
-      {/* Block User Button - only show for other user's profiles */}
-      {profileToShow && !isOwnProfile && (
+      {/* Block User Button - always show for other user's profiles if we have profile data */}
+      {profileToShow && (
         <BlockUserButton
           userToBlock={{
             id: profileToShow.id,
