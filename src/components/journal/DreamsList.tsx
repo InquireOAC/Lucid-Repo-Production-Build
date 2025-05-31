@@ -30,6 +30,11 @@ const DreamsList = ({
     );
   }
 
+  // Dummy onLike function for journal dreams (not used in journal context)
+  const handleLike = () => {
+    // Journal dreams don't have like functionality
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {dreams.map((dream) => (
@@ -37,6 +42,7 @@ const DreamsList = ({
           <DreamCard
             dream={dream}
             tags={tags}
+            onLike={handleLike}
             onClick={() => onSelect(dream)}
             onTagClick={onTagClick}
             showSharedBadge={true}

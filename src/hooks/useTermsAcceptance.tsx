@@ -38,8 +38,24 @@ export const useTermsAcceptance = () => {
     checkTermsAcceptance();
   }, [user]);
 
-  const markTermsAsAccepted = () => {
-    setHasAcceptedTerms(true);
+  const markTermsAsAccepted = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("terms_acceptance")
+        .insert({
+          user_id: user.id,
+          terms_version: "1.0"
+        });
+
+      if (error) throw error;
+      
+      setHasAcceptedTerms(true);
+    } catch (error) {
+      console.error("Error accepting terms:", error);
+      throw error;
+    }
   };
 
   return {
