@@ -17,7 +17,7 @@ interface BlockedUser {
     display_name: string;
     avatar_symbol: string;
     avatar_color: string;
-  };
+  } | null;
 }
 
 interface BlockedUsersDialogProps {
@@ -54,7 +54,14 @@ const BlockedUsersDialog = ({ open, onOpenChange }: BlockedUsersDialogProps) => 
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setBlockedUsers(data || []);
+      
+      // Transform the data to match our interface since Supabase returns profiles as a single object, not an array
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      }));
+      
+      setBlockedUsers(transformedData);
     } catch (error) {
       console.error("Error fetching blocked users:", error);
       toast.error("Failed to load blocked users");
