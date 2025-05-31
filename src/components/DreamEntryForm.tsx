@@ -20,6 +20,7 @@ import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
 import { Check } from "lucide-react";
 import { toast } from "sonner";
+import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 
 interface DreamEntryFormProps {
   existingDream?: any;
@@ -125,6 +126,13 @@ const DreamEntryForm = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
+
+    // Check for inappropriate content
+    const textToCheck = `${formData.title} ${formData.content}`;
+    if (containsInappropriateContent(textToCheck)) {
+      toast.error(getContentWarningMessage());
+      return;
+    }
     
     // Use external submit handler if provided
     if (onSubmit) {
@@ -156,7 +164,7 @@ const DreamEntryForm = ({
         user_id: user?.id,
         analysis: formData.analysis,
         is_public: false,
-        image_url: formData.generatedImage, // Use image_url for database storage
+        image_url: formData.generatedImage,
         image_prompt: formData.imagePrompt,
         lucid: formData.lucid
       };
@@ -203,7 +211,6 @@ const DreamEntryForm = ({
 
   return (
     <div className="relative bg-background">
-      {/* Scrollable Form */}
       <form
         onSubmit={handleSubmit}
         className="overflow-y-auto pt-4 pb-6 space-y-8"
