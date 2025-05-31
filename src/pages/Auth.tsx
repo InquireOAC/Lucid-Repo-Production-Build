@@ -26,12 +26,18 @@ const Auth = () => {
   const [hasAcceptedTermsLocal, setHasAcceptedTermsLocal] = useState(false);
   const [showTermsText, setShowTermsText] = useState(false);
 
-  // Redirect if user is authenticated and has accepted terms
+  // Redirect if user is authenticated
   useEffect(() => {
-    if (user && hasAcceptedTerms === true) {
-      navigate("/");
+    if (user && !termsLoading) {
+      // If user exists and we're not loading terms, check terms acceptance
+      if (hasAcceptedTerms === true) {
+        navigate("/");
+      } else if (hasAcceptedTerms === false) {
+        // User hasn't accepted terms, they need to accept them
+        console.log("User needs to accept terms");
+      }
     }
-  }, [user, hasAcceptedTerms, navigate]);
+  }, [user, hasAcceptedTerms, termsLoading, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +49,7 @@ const Auth = () => {
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(), // Trim whitespace to prevent typos
+        email: email.trim(),
         password,
       });
 
@@ -57,6 +63,7 @@ const Auth = () => {
       }
 
       toast.success("Signed in successfully!");
+      // Don't navigate here - let the useEffect handle it after checking terms
     } catch (error) {
       console.error("Sign in error:", error);
       toast.error("An error occurred during sign in");
@@ -93,7 +100,7 @@ const Auth = () => {
       const redirectUrl = `${window.location.origin}/`;
       
       const { error } = await supabase.auth.signUp({
-        email: email.trim(), // Trim whitespace
+        email: email.trim(),
         password,
         options: {
           emailRedirectTo: redirectUrl,
@@ -124,8 +131,85 @@ const Auth = () => {
     }
   };
 
+  // Handle terms acceptance for existing users
+  const handleAcceptTerms = async () => {
+    if (!user) return;
+    
+    try {
+      await markTermsAsAccepted();
+      toast.success("Terms accepted successfully!");
+      navigate("/");
+    } catch (error) {
+      console.error("Error accepting terms:", error);
+      toast.error("Failed to accept terms. Please try again.");
+    }
+  };
+
   if (termsLoading) {
     return <div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>;
+  }
+
+  // If user is logged in but hasn't accepted terms, show terms acceptance
+  if (user && hasAcceptedTerms === false) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl gradient-text">Terms of Use</CardTitle>
+            <CardDescription>
+              Please accept our Terms of Use to continue using Lucid Repository
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-48 w-full rounded border p-3 bg-muted/50 mb-4">
+              <div className="space-y-3 text-xs">
+                <h4 className="font-semibold text-sm">Terms of Use Agreement</h4>
+                
+                <p>
+                  By continuing to use this app, you agree to abide by our community standards and guidelines. 
+                  We are committed to maintaining a safe, respectful, and inclusive environment for all users.
+                </p>
+
+                <h5 className="font-semibold text-red-600">Zero Tolerance Policy</h5>
+                <p><strong>We have ZERO TOLERANCE for:</strong></p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Hate speech, discrimination, or content targeting individuals based on race, religion, gender, sexual orientation, or other protected characteristics</li>
+                  <li>Harassment, bullying, or threatening behavior toward other users</li>
+                  <li>Abusive, violent, or harmful language or imagery</li>
+                  <li>Sexual content, explicit material, or inappropriate imagery</li>
+                  <li>Spam, promotional content, or attempts to deceive other users</li>
+                  <li>Sharing personal information of others without consent</li>
+                </ul>
+
+                <h5 className="font-semibold">Community Expectations</h5>
+                <p>We expect all users to:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Treat others with respect and kindness</li>
+                  <li>Share dream content that is appropriate for all audiences</li>
+                  <li>Report any content that violates these guidelines</li>
+                  <li>Respect others' privacy and personal boundaries</li>
+                  <li>Use the platform for its intended purpose of sharing dreams and experiences</li>
+                </ul>
+
+                <h5 className="font-semibold">Consequences</h5>
+                <p>
+                  Violations of these terms may result in content removal, account suspension, or permanent ban 
+                  from the platform. We reserve the right to take action at our discretion to maintain community safety.
+                </p>
+
+                <p className="text-muted-foreground mt-4">
+                  Last updated: December 2024 | Version 1.0
+                </p>
+              </div>
+            </ScrollArea>
+            
+            <Button onClick={handleAcceptTerms} className="w-full">
+              Accept Terms and Continue
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
