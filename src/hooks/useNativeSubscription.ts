@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { InAppPurchase2 } from '@capacitor-community/in-app-purchases';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +36,9 @@ export const useNativeSubscription = () => {
 
   const initializeInAppPurchases = async () => {
     try {
+      // Dynamic import to avoid issues when package isn't available
+      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
+
       // Initialize the plugin
       await InAppPurchase2.initialize({
         products: [
@@ -136,6 +138,8 @@ export const useNativeSubscription = () => {
     setIsLoading(true);
 
     try {
+      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
+      
       const product = products.find(p => p.id === productId);
       if (!product) {
         throw new Error('Product not found');
@@ -159,6 +163,7 @@ export const useNativeSubscription = () => {
   const restorePurchases = async () => {
     try {
       setIsLoading(true);
+      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
       await InAppPurchase2.restorePurchases();
       toast.success('Purchases restored successfully');
     } catch (error) {
