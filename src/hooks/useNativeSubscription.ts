@@ -36,8 +36,46 @@ export const useNativeSubscription = () => {
 
   const initializeInAppPurchases = async () => {
     try {
-      // Dynamic import to avoid issues when package isn't available
-      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
+      // Only try to import and use the plugin on native platforms
+      if (!Capacitor.isNativePlatform()) {
+        console.log('Not on native platform, skipping in-app purchase initialization');
+        return;
+      }
+
+      // Dynamic import with proper error handling
+      let InAppPurchase2;
+      try {
+        const module = await import('@capacitor-community/in-app-purchases');
+        InAppPurchase2 = module.InAppPurchase2;
+      } catch (importError) {
+        console.error('In-app purchases plugin not available:', importError);
+        // Fallback to mock data for development/web
+        setProducts([
+          {
+            id: 'price_basic',
+            name: 'Basic',
+            price: '$4.99/month',
+            nativeProductId: PRODUCT_IDS.BASIC,
+            features: [
+              'Unlimited Dream Analysis',
+              '10 Dream Art Generations',
+              'Priority Support'
+            ]
+          },
+          {
+            id: 'price_premium',
+            name: 'Premium',
+            price: '$15.99/month',
+            nativeProductId: PRODUCT_IDS.PREMIUM,
+            features: [
+              'Unlimited Dream Analysis',
+              'Unlimited Dream Art Generation',
+              'Priority Support'
+            ]
+          }
+        ]);
+        return;
+      }
 
       // Initialize the plugin
       await InAppPurchase2.initialize({
@@ -135,10 +173,25 @@ export const useNativeSubscription = () => {
       return;
     }
 
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('In-app purchases are only available on mobile devices');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
+      // Dynamic import with proper error handling
+      let InAppPurchase2;
+      try {
+        const module = await import('@capacitor-community/in-app-purchases');
+        InAppPurchase2 = module.InAppPurchase2;
+      } catch (importError) {
+        console.error('In-app purchases plugin not available:', importError);
+        toast.error('In-app purchases not available');
+        setIsLoading(false);
+        return;
+      }
       
       const product = products.find(p => p.id === productId);
       if (!product) {
@@ -161,9 +214,26 @@ export const useNativeSubscription = () => {
   };
 
   const restorePurchases = async () => {
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('Restore purchases is only available on mobile devices');
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const { InAppPurchase2 } = await import('@capacitor-community/in-app-purchases');
+      
+      // Dynamic import with proper error handling
+      let InAppPurchase2;
+      try {
+        const module = await import('@capacitor-community/in-app-purchases');
+        InAppPurchase2 = module.InAppPurchase2;
+      } catch (importError) {
+        console.error('In-app purchases plugin not available:', importError);
+        toast.error('In-app purchases not available');
+        setIsLoading(false);
+        return;
+      }
+
       await InAppPurchase2.restorePurchases();
       toast.success('Purchases restored successfully');
     } catch (error) {
