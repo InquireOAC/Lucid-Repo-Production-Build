@@ -39,10 +39,10 @@ const FlagButton = ({ contentType, contentId, contentOwnerId, size = 'sm' }: Fla
         variant="ghost"
         size={size}
         onClick={handleFlagClick}
-        className="text-muted-foreground hover:text-red-500 p-1 h-auto"
+        className="text-muted-foreground hover:text-red-500 p-2 h-8 w-8"
         title="Flag inappropriate content"
       >
-        <Flag className="h-3 w-3" />
+        <Flag className="h-4 w-4" />
       </Button>
 
       <ContentFlagDialog

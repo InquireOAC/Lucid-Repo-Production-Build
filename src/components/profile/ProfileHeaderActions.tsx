@@ -55,7 +55,7 @@ const ProfileHeaderActions = ({
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 flex-wrap">
       <Button 
         onClick={onFollow}
         variant={isFollowing ? "outline" : "default"}
@@ -83,7 +83,8 @@ const ProfileHeaderActions = ({
         <MessageCircle className="h-4 w-4" />
       </Button>
 
-      {profileToShow && (
+      {/* Block User Button - only show for other user's profiles */}
+      {profileToShow && !isOwnProfile && (
         <BlockUserButton
           userToBlock={{
             id: profileToShow.id,

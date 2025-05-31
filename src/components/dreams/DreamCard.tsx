@@ -117,13 +117,14 @@ const DreamCard = ({
             </p>
           </div>
           
-          {/* Flag button for inappropriate content */}
-          {currentUser && currentUser.id !== dream.user_id && (
-            <div onClick={(e) => e.stopPropagation()}>
+          {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
+          {!isJournalView && currentUser && currentUser.id !== dream.user_id && (
+            <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
               <FlagButton
                 contentType="dream"
                 contentId={dream.id}
                 contentOwnerId={dream.user_id}
+                size="sm"
               />
             </div>
           )}
