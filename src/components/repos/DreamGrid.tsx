@@ -35,20 +35,19 @@ const DreamGrid = ({
           profiles: {
             ...userProfile,
           },
-          avatarSymbol, // for explicit use
-          avatarColor,  // for explicit use
+          avatarSymbol,
+          avatarColor,
         };
-        // Use username from dream.profiles for navigation
+        
         const username = normalizedDream.profiles?.username;
         return (
           <DreamCard
             key={normalizedDream.id}
             dream={normalizedDream}
-            tags={tags} // PUBLIC TAG OBJECTS
-            dreamTags={normalizedDream.tags} // ARRAY OF TAG IDS (should be string[])
+            tags={tags}
             onLike={() => onLike(normalizedDream.id)}
             showUser={true}
-            onClick={() => onOpenDream(normalizedDream)}
+            onCardClick={() => onOpenDream(normalizedDream)}
             onUserClick={() => onUserClick(username)}
             onTagClick={onTagClick}
             showSharedBadge={false}

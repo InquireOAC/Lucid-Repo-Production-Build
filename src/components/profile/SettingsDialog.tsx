@@ -10,9 +10,10 @@ interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSignOut: () => void;
+  onNotificationsClick?: () => void;
 }
 
-const SettingsDialog = ({ open, onOpenChange, onSignOut }: SettingsDialogProps) => {
+const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }: SettingsDialogProps) => {
   const [showGuidelines, setShowGuidelines] = useState(false);
 
   return (

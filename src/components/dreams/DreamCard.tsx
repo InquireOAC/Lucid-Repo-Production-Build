@@ -13,27 +13,43 @@ import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 interface DreamCardProps {
   dream: DreamEntry;
   tags: DreamTag[];
+  dreamTags?: string[]; // Made optional since it's passed from some components
   onLike: (dreamId: string) => void;
   onComment?: (dreamId: string) => void;
   onShare?: (dreamId: string) => void;
   onCardClick?: (dream: DreamEntry) => void;
+  onClick?: () => void; // Alternative click handler
   onUserClick?: (username: string) => void;
   onTagClick?: (tagId: string) => void;
   currentUser?: any;
   showUserInfo?: boolean;
+  showUser?: boolean; // Alternative prop name used by some components
+  showSharedBadge?: boolean;
+  showActions?: boolean;
+  onEdit?: () => void;
+  onTogglePublic?: () => void;
+  onDelete?: () => void;
 }
 
 const DreamCard = ({
   dream,
   tags,
+  dreamTags,
   onLike,
   onComment,
   onShare,
   onCardClick,
+  onClick,
   onUserClick,
   onTagClick,
   currentUser,
-  showUserInfo = true
+  showUserInfo = true,
+  showUser = true,
+  showSharedBadge = false,
+  showActions = false,
+  onEdit,
+  onTogglePublic,
+  onDelete
 }: DreamCardProps) => {
   const { isUserBlocked } = useBlockedUsers();
   
@@ -42,13 +58,23 @@ const DreamCard = ({
     return null;
   }
 
-  const dreamTags = Array.isArray(dream.tags) 
-    ? dream.tags.map(tagId => tags.find(t => t.id === tagId)).filter(Boolean)
-    : [];
+  // Use dreamTags if provided, otherwise fall back to dream.tags
+  const tagIdList: string[] = dreamTags ?? dream.tags ?? [];
+  const mappedTags = tagIdList
+    .map((tagId) => tags.find((tag) => tag.id === tagId))
+    .filter(Boolean) as DreamTag[];
 
   const handleCardClick = () => {
     if (onCardClick) {
       onCardClick(dream);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+
+  const handleUserClick = () => {
+    if (onUserClick && dream.profiles?.username) {
+      onUserClick(dream.profiles.username);
     }
   };
 
@@ -56,6 +82,10 @@ const DreamCard = ({
     e.stopPropagation();
     action();
   };
+
+  // Use created_at if available, otherwise fall back to date
+  const dateToFormat = dream.created_at || dream.date;
+  const formattedDate = formatDistanceToNow(new Date(dateToFormat)) + " ago";
 
   return (
     <Card 
@@ -65,15 +95,15 @@ const DreamCard = ({
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            {showUserInfo && (
+            {(showUserInfo || showUser) && (
               <DreamCardUser
                 dream={dream}
-                onUserClick={onUserClick}
+                onUserClick={handleUserClick}
               />
             )}
             <h3 className="font-semibold text-lg leading-tight">{dream.title}</h3>
             <p className="text-muted-foreground text-sm mt-1">
-              {formatDistanceToNow(new Date(dream.created_at))} ago
+              {formattedDate}
             </p>
           </div>
           
@@ -103,9 +133,9 @@ const DreamCard = ({
           </div>
         )}
         
-        {dreamTags.length > 0 && (
+        {mappedTags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
-            {dreamTags.map((tag) => (
+            {mappedTags.map((tag) => (
               <Badge 
                 key={tag.id} 
                 variant="secondary" 
@@ -118,6 +148,30 @@ const DreamCard = ({
             ))}
           </div>
         )}
+
+        {showSharedBadge && (dream.is_public || dream.isPublic) && (
+          <Badge variant="outline" className="mb-3">Public</Badge>
+        )}
+
+        {showActions && (
+          <div className="flex gap-2 mb-3">
+            {onEdit && (
+              <Button variant="outline" size="sm" onClick={(e) => handleButtonClick(e, onEdit)}>
+                Edit
+              </Button>
+            )}
+            {onTogglePublic && (
+              <Button variant="outline" size="sm" onClick={(e) => handleButtonClick(e, onTogglePublic)}>
+                {dream.is_public || dream.isPublic ? 'Make Private' : 'Make Public'}
+              </Button>
+            )}
+            {onDelete && (
+              <Button variant="destructive" size="sm" onClick={(e) => handleButtonClick(e, onDelete)}>
+                Delete
+              </Button>
+            )}
+          </div>
+        )}
         
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <div className="flex items-center gap-4">
@@ -128,7 +182,7 @@ const DreamCard = ({
               onClick={(e) => handleButtonClick(e, () => onLike(dream.id))}
             >
               <Heart className="h-4 w-4 mr-1" />
-              {dream.likeCount || 0}
+              {dream.likeCount || dream.like_count || 0}
             </Button>
             
             {onComment && (
@@ -139,7 +193,7 @@ const DreamCard = ({
                 onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
               >
                 <MessageCircle className="h-4 w-4 mr-1" />
-                {dream.commentCount || 0}
+                {dream.commentCount || dream.comment_count || 0}
               </Button>
             )}
             

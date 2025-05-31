@@ -12,6 +12,7 @@ interface LucidRepoDreamListProps {
   onUserClick: (userId: string | undefined) => void;
   onTagClick: (tagId: string) => void;
   searchQuery: string;
+  currentUser?: any; // Added missing prop
 }
 
 const LucidRepoDreamList = ({
@@ -22,18 +23,20 @@ const LucidRepoDreamList = ({
   onOpenDream,
   onUserClick,
   onTagClick,
-  searchQuery
+  searchQuery,
+  currentUser
 }: LucidRepoDreamListProps) => {
   return (
     <LucidDreamsContent
       isLoading={isLoading}
       filteredDreams={filteredDreams}
-      dreamTags={dreamTags} // Pass along!
+      dreamTags={dreamTags}
       onLike={onLike}
       onOpenDream={onOpenDream}
       onUserClick={onUserClick}
       onTagClick={onTagClick}
       searchQuery={searchQuery}
+      currentUser={currentUser}
     />
   );
 };

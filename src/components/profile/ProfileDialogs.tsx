@@ -1,3 +1,4 @@
+
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -101,9 +102,9 @@ const ProfileDialogs = ({
       handleUpdateSocialLinks={handleUpdateSocialLinks}
     />
     <SettingsDialog
-      isOpen={isSettingsOpen}
+      open={isSettingsOpen}
       onOpenChange={setIsSettingsOpen}
-      handleSignOut={handleSignOut}
+      onSignOut={handleSignOut}
       onNotificationsClick={() => {
         setIsSettingsOpen(false);
         setIsNotificationsOpen(true);

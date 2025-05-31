@@ -37,11 +37,10 @@ const DreamsList = ({
           <DreamCard
             dream={dream}
             tags={tags}
-            dreamTags={dream.tags || []}
             onClick={() => onSelect(dream)}
             onTagClick={onTagClick}
-            showSharedBadge={true} // Explicitly enable shared badge in Journal
-            showActions={true} // Enable action buttons
+            showSharedBadge={true}
+            showActions={true}
             onEdit={() => onEdit(dream)}
             onTogglePublic={() => onTogglePublic(dream)}
             onDelete={() => onDelete(dream.id)}

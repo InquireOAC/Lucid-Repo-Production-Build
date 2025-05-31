@@ -7,12 +7,14 @@ import BlockUserButton from "@/components/moderation/BlockUserButton";
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
   isFollowing: boolean;
-  profileToShow: any;
-  onEditProfile: () => void;
+  profileToShow?: any;
+  onEditProfile?: () => void;
   onMessages: () => void;
-  onSettings: () => void;
+  onSettings?: () => void;
   onFollow: () => void;
-  onStartConversation: () => void;
+  onStartConversation?: () => void;
+  onSubscription?: () => void;
+  loading?: boolean;
 }
 
 const ProfileHeaderActions = ({
@@ -23,20 +25,31 @@ const ProfileHeaderActions = ({
   onMessages,
   onSettings,
   onFollow,
-  onStartConversation
+  onStartConversation,
+  onSubscription,
+  loading
 }: ProfileHeaderActionsProps) => {
   if (isOwnProfile) {
     return (
       <div className="flex gap-2">
-        <Button onClick={onEditProfile} variant="outline" size="sm">
-          Edit Profile
-        </Button>
+        {onEditProfile && (
+          <Button onClick={onEditProfile} variant="outline" size="sm">
+            Edit Profile
+          </Button>
+        )}
         <Button onClick={onMessages} variant="outline" size="sm">
           <MessageCircle className="h-4 w-4" />
         </Button>
-        <Button onClick={onSettings} variant="outline" size="sm">
-          <Settings className="h-4 w-4" />
-        </Button>
+        {onSettings && (
+          <Button onClick={onSettings} variant="outline" size="sm">
+            <Settings className="h-4 w-4" />
+          </Button>
+        )}
+        {onSubscription && (
+          <Button onClick={onSubscription} variant="outline" size="sm" disabled={loading}>
+            Subscription
+          </Button>
+        )}
       </div>
     );
   }
@@ -63,22 +76,24 @@ const ProfileHeaderActions = ({
       </Button>
       
       <Button 
-        onClick={onStartConversation}
+        onClick={onStartConversation || onMessages}
         variant="outline" 
         size="sm"
       >
         <MessageCircle className="h-4 w-4" />
       </Button>
 
-      <BlockUserButton
-        userToBlock={{
-          id: profileToShow.id,
-          username: profileToShow.username,
-          display_name: profileToShow.display_name
-        }}
-        variant="outline"
-        size="sm"
-      />
+      {profileToShow && (
+        <BlockUserButton
+          userToBlock={{
+            id: profileToShow.id,
+            username: profileToShow.username,
+            display_name: profileToShow.display_name
+          }}
+          variant="outline"
+          size="sm"
+        />
+      )}
     </div>
   );
 };
