@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Smartphone, RotateCcw } from "lucide-react";
+import { Loader2, Smartphone, RotateCcw, AlertCircle } from "lucide-react";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 
 interface NativeSubscriptionManagerProps {
@@ -34,11 +34,29 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
       )}
 
       <div className="space-y-4">
-        {products.length === 0 && !isLoading ? (
+        {isLoading ? (
           <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              No subscription products available. Please try again later.
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+            <p className="text-muted-foreground">Loading subscription options...</p>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-8">
+            <AlertCircle className="h-12 w-12 mx-auto text-orange-500 mb-4" />
+            <p className="text-muted-foreground mb-2">
+              No subscription products available.
             </p>
+            <p className="text-xs text-muted-foreground mb-4">
+              Make sure your RevenueCat offerings are configured with products:<br/>
+              • com.lucidrepo.limited.monthly (Basic)<br/>
+              • com.lucidrepo.unlimited.monthly (Premium)
+            </p>
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              size="sm"
+            >
+              Retry Loading
+            </Button>
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -47,6 +65,9 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
                 <div>
                   <h4 className="text-lg font-medium">{product.name}</h4>
                   <p className="text-2xl font-bold text-dream-purple">{product.price}</p>
+                  <p className="text-xs text-muted-foreground">
+                    ID: {product.packageObject.product.identifier}
+                  </p>
                 </div>
                 
                 <ul className="space-y-2 text-sm">

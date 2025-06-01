@@ -34,37 +34,76 @@ export const useNativeSubscription = () => {
 
   const initializePurchases = async () => {
     try {
+      console.log('Initializing RevenueCat with user ID:', user?.id);
+      
       await Purchases.configure({
         apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
         appUserID: user?.id || undefined
       });
 
+      console.log('RevenueCat configured successfully');
+
       const offerings: PurchasesOfferings = await Purchases.getOfferings();
+      console.log('RevenueCat offerings received:', offerings);
+      
       const availablePackages = offerings.current?.availablePackages || [];
+      console.log('Available packages:', availablePackages);
+
+      if (availablePackages.length === 0) {
+        console.warn('No packages found in RevenueCat offerings');
+        toast.error('No subscription packages available. Please check RevenueCat configuration.');
+        return;
+      }
 
       const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
+        console.log('Processing package:', pkg.product.identifier, pkg.product.priceString);
+        
         const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
-        return {
-          id: isBasic ? 'price_basic' : 'price_premium',
-          name: isBasic ? 'Basic' : 'Premium',
-          price: pkg.product.priceString,
-          packageObject: pkg,
-          features: isBasic ? [
+        const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
+        
+        // If the product ID doesn't match our expected IDs, still create a product
+        let productName = 'Unknown Plan';
+        let productId = 'price_unknown';
+        let features: string[] = [];
+
+        if (isBasic) {
+          productName = 'Basic';
+          productId = 'price_basic';
+          features = [
             'Unlimited Dream Analysis',
             '10 Dream Art Generations',
             'Priority Support'
-          ] : [
+          ];
+        } else if (isPremium) {
+          productName = 'Premium';
+          productId = 'price_premium';
+          features = [
             'Unlimited Dream Analysis',
             'Unlimited Dream Art Generation',
             'Priority Support'
-          ]
+          ];
+        } else {
+          // Handle unexpected product IDs by creating a generic product
+          productName = pkg.product.title || pkg.product.identifier;
+          productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
+          features = ['All features included'];
+          console.warn('Unexpected product ID:', pkg.product.identifier);
+        }
+
+        return {
+          id: productId,
+          name: productName,
+          price: pkg.product.priceString,
+          packageObject: pkg,
+          features
         };
       });
 
+      console.log('Processed native products:', nativeProducts);
       setProducts(nativeProducts);
     } catch (error) {
       console.error('Failed to initialize RevenueCat:', error);
-      toast.error('Failed to load subscription options');
+      toast.error(`Failed to load subscription options: ${error.message || 'Unknown error'}`);
     }
   };
 
@@ -82,13 +121,18 @@ export const useNativeSubscription = () => {
     setIsLoading(true);
 
     try {
+      console.log('Attempting to purchase product:', productId);
       const product = products.find(p => p.id === productId);
-      if (!product) throw new Error('Product not found');
+      if (!product) {
+        throw new Error('Product not found');
+      }
 
+      console.log('Purchasing package:', product.packageObject);
       const purchaseResult = await Purchases.purchasePackage({ 
         aPackage: product.packageObject 
       });
 
+      console.log('Purchase result:', purchaseResult);
       await verifyPurchase(purchaseResult);
       toast.success('Subscription activated successfully!');
     } catch (error: any) {
@@ -101,6 +145,7 @@ export const useNativeSubscription = () => {
 
   const verifyPurchase = async (purchase: any) => {
     try {
+      console.log('Verifying purchase:', purchase);
       const { error } = await supabase.functions.invoke('verify-ios-purchase', {
         body: {
           receiptData: purchase.customerInfo.entitlements.active,
@@ -125,7 +170,9 @@ export const useNativeSubscription = () => {
 
     try {
       setIsLoading(true);
+      console.log('Restoring purchases...');
       await Purchases.restorePurchases();
+      console.log('Purchases restored successfully');
       toast.success('Purchases restored successfully');
     } catch (error) {
       console.error('Failed to restore purchases:', error);
