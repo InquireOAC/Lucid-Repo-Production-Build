@@ -1,13 +1,14 @@
+
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Purchases } from '@revenuecat/purchases-capacitor';
+import { Purchases, PurchasesOfferings, PurchasesPackage } from '@revenuecat/purchases-capacitor';
 
 const PRODUCT_IDS = {
   BASIC: 'com.lucidrepo.limited.monthly',
-  PREMIUM: 'com.lucidrepo.unlimited.monthly.'
+  PREMIUM: 'com.lucidrepo.unlimited.monthly'
 };
 
 interface NativeProduct {
@@ -15,7 +16,7 @@ interface NativeProduct {
   name: string;
   price: string;
   features: string[];
-  packageObject: any; // Store the full package object
+  packageObject: PurchasesPackage;
 }
 
 export const useNativeSubscription = () => {
@@ -34,20 +35,20 @@ export const useNativeSubscription = () => {
   const initializePurchases = async () => {
     try {
       await Purchases.configure({
-        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk', // replace this with your actual public SDK key
+        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
         appUserID: user?.id || undefined
       });
 
-      const offerings = await Purchases.getOfferings();
+      const offerings: PurchasesOfferings = await Purchases.getOfferings();
       const availablePackages = offerings.current?.availablePackages || [];
 
-      const nativeProducts: NativeProduct[] = availablePackages.map((pkg: any) => {
+      const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
         const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
         return {
           id: isBasic ? 'price_basic' : 'price_premium',
           name: isBasic ? 'Basic' : 'Premium',
           price: pkg.product.priceString,
-          packageObject: pkg, // Store the full package object
+          packageObject: pkg,
           features: isBasic ? [
             'Unlimited Dream Analysis',
             '10 Dream Art Generations',
