@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
@@ -16,7 +15,7 @@ interface NativeProduct {
   name: string;
   price: string;
   features: string[];
-  nativeProductId: string;
+  packageObject: any; // Store the full package object
 }
 
 export const useNativeSubscription = () => {
@@ -48,7 +47,7 @@ export const useNativeSubscription = () => {
           id: isBasic ? 'price_basic' : 'price_premium',
           name: isBasic ? 'Basic' : 'Premium',
           price: pkg.product.priceString,
-          nativeProductId: pkg.identifier,
+          packageObject: pkg, // Store the full package object
           features: isBasic ? [
             'Unlimited Dream Analysis',
             '10 Dream Art Generations',
@@ -86,7 +85,7 @@ export const useNativeSubscription = () => {
       if (!product) throw new Error('Product not found');
 
       const purchaseResult = await Purchases.purchasePackage({ 
-        aPackage: product.nativeProductId 
+        aPackage: product.packageObject 
       });
 
       await verifyPurchase(purchaseResult);
