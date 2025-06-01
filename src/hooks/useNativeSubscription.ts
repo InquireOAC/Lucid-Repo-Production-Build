@@ -34,7 +34,7 @@ export const useNativeSubscription = () => {
   const initializePurchases = async () => {
     try {
       await Purchases.configure({
-        apiKey: 'your_revenuecat_public_sdk_key', // replace this with your actual public SDK key
+        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk', // replace this with your actual public SDK key
         appUserID: user?.id || undefined
       });
 
