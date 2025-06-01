@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Purchases } from '@capgo/capacitor-purchases';
+import Purchases from '@revenuecat/purchases-capacitor';
 
 const PRODUCT_IDS = {
   BASIC: 'com.lucidrepo.basic.monthly',
