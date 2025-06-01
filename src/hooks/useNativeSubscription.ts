@@ -6,8 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Purchases } from '@revenuecat/purchases-capacitor';
 
 const PRODUCT_IDS = {
-  BASIC: 'com.lucidrepo.basic.monthly',
-  PREMIUM: 'com.lucidrepo.premium.monthly'
+  BASIC: 'com.lucidrepo.limited.monthly',
+  PREMIUM: 'com.lucidrepo.unlimited.monthly.'
 };
 
 interface NativeProduct {
