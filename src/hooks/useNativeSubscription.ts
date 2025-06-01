@@ -36,8 +36,7 @@ export const useNativeSubscription = () => {
     try {
       await Purchases.configure({
         apiKey: 'your_revenuecat_public_sdk_key', // replace this with your actual public SDK key
-        appUserID: user?.id || undefined,
-        observerMode: false
+        appUserID: user?.id || undefined
       });
 
       const offerings = await Purchases.getOfferings();
@@ -86,7 +85,9 @@ export const useNativeSubscription = () => {
       const product = products.find(p => p.id === productId);
       if (!product) throw new Error('Product not found');
 
-      const purchaseResult = await Purchases.purchasePackage({ identifier: product.nativeProductId });
+      const purchaseResult = await Purchases.purchasePackage({ 
+        aPackage: product.nativeProductId 
+      });
 
       await verifyPurchase(purchaseResult);
       toast.success('Subscription activated successfully!');
