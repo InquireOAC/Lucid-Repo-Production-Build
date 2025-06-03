@@ -807,6 +807,10 @@ export type Database = {
         Args: { customer_id: string; credit_type: string }
         Returns: boolean
       }
+      delete_user_account: {
+        Args: { user_id_to_delete: string }
+        Returns: undefined
+      }
       increment_subscription_usage: {
         Args: { customer_id: string; credit_type: string }
         Returns: undefined

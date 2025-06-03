@@ -3,9 +3,10 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2 } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
+import DeleteAccountDialog from "./DeleteAccountDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface SettingsDialogProps {
 const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }: SettingsDialogProps) => {
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
 
   return (
     <>
@@ -62,6 +64,14 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeleteAccount(true)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Account
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -75,6 +85,11 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
       <BlockedUsersDialog
         open={showBlockedUsers}
         onOpenChange={setShowBlockedUsers}
+      />
+
+      <DeleteAccountDialog
+        open={showDeleteAccount}
+        onOpenChange={setShowDeleteAccount}
       />
     </>
   );
