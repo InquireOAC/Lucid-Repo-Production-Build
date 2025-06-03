@@ -17,10 +17,12 @@ interface ContentFlagDialogProps {
 }
 
 const FLAG_REASONS = [
+  { value: 'spam', label: 'Spam' },
   { value: 'inappropriate', label: 'Inappropriate Content' },
+  { value: 'obscene_nudity', label: 'Obscene/Nudity' },
+  { value: 'vulgar_language', label: 'Vulgar Language' },
   { value: 'hate_speech', label: 'Hate Speech' },
-  { value: 'harassment', label: 'Harassment' },
-  { value: 'spam', label: 'Spam' }
+  { value: 'harassment', label: 'Harassment' }
 ];
 
 const ContentFlagDialog = ({ 

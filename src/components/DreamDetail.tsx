@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,6 +9,7 @@ import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
 import DreamComments from "@/components/DreamComments";
+import FlagButton from "@/components/moderation/FlagButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
@@ -50,6 +52,7 @@ const DreamDetail = ({
   const audioUrl = dream.audioUrl || dream.audio_url;
 
   const isOwner = user && user.id === dream.user_id;
+  const isPublic = dream.is_public || dream.isPublic;
 
   const handleTogglePublic = async () => {
     if (!onUpdate) return;
@@ -93,8 +96,6 @@ const DreamDetail = ({
     }
   };
 
-  const isPublic = dream.is_public || dream.isPublic;
-
   // Map tag IDs to tag objects using dreamTags if provided, else dream.tags
   const tagIdList: string[] = dreamTags ?? dream.tags ?? [];
   const mappedTags = tagIdList
@@ -120,6 +121,15 @@ const DreamDetail = ({
           <DialogHeader>
             <div className="flex items-center justify-between">
               <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
+              {/* Flag button for public dreams when user is not the owner */}
+              {isPublic && user && !isOwner && (
+                <FlagButton
+                  contentType="dream"
+                  contentId={dream.id}
+                  contentOwnerId={dream.user_id}
+                  size="sm"
+                />
+              )}
             </div>
           </DialogHeader>
           
@@ -148,7 +158,6 @@ const DreamDetail = ({
             />
           </div>
 
-          {/* REMOVED extra like button above comments section */}
           {/* Comments */}
           {isPublic && (
             <div className="mt-0">
