@@ -13,11 +13,12 @@ interface BlockUserButtonProps {
     display_name?: string;
   };
   onUserBlocked?: () => void;
+  onFollowStateChanged?: () => void;
   variant?: "outline" | "ghost" | "default";
   size?: "sm" | "default";
 }
 
-const BlockUserButton = ({ userToBlock, onUserBlocked, variant = "outline", size = "sm" }: BlockUserButtonProps) => {
+const BlockUserButton = ({ userToBlock, onUserBlocked, onFollowStateChanged, variant = "outline", size = "sm" }: BlockUserButtonProps) => {
   const { user } = useAuth();
   const [blockDialogOpen, setBlockDialogOpen] = useState(false);
 
@@ -55,6 +56,7 @@ const BlockUserButton = ({ userToBlock, onUserBlocked, variant = "outline", size
           onUserBlocked?.();
           setBlockDialogOpen(false);
         }}
+        onFollowStateChanged={onFollowStateChanged}
       />
     </>
   );

@@ -14,9 +14,10 @@ interface BlockUserDialogProps {
     display_name?: string;
   };
   onUserBlocked: () => void;
+  onFollowStateChanged?: () => void;
 }
 
-const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked }: BlockUserDialogProps) => {
+const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked, onFollowStateChanged }: BlockUserDialogProps) => {
   const [isBlocking, setIsBlocking] = useState(false);
   const { blockUser, refetchBlockedUsers } = useBlockedUsers();
 
@@ -46,6 +47,11 @@ const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked }: Blo
         
         // Refetch to ensure consistency
         refetchBlockedUsers();
+        
+        // Trigger follow state refresh if callback provided
+        if (onFollowStateChanged) {
+          onFollowStateChanged();
+        }
         
         toast.success(`${userToBlock.username || userToBlock.display_name || 'User'} has been blocked`);
         onUserBlocked();
