@@ -19,7 +19,6 @@ interface ProfileDialogsProps {
   isSubscriptionOpen: boolean;
   setIsSubscriptionOpen: (v: boolean) => void;
   isNotificationsOpen: boolean;
-  setIsNotificationsOpen: (v: boolean) => void;
   displayName: string;
   setDisplayName: (v: string) => void;
   username: string;
@@ -31,16 +30,19 @@ interface ProfileDialogsProps {
   avatarColor: string | null;
   setAvatarColor: (v: string) => void;
   handleUpdateProfile: () => void;
-  userId: string;
+  userId?: string;
   socialLinks: any;
   setSocialLinks: (v: any) => void;
   handleUpdateSocialLinks: () => void;
   handleSignOut: () => void;
   conversations: any[];
   subscription: any;
-  selectedConversationUser: any;
-  setSelectedConversationUser: (v: any) => void;
-  fetchConversations?: () => void;
+  followers: any[];
+  following: any[];
+  showFollowers: boolean;
+  setShowFollowers: (show: boolean) => void;
+  showFollowing: boolean;
+  setShowFollowing: (show: boolean) => void;
 }
 
 const ProfileDialogs = ({
@@ -55,7 +57,6 @@ const ProfileDialogs = ({
   isSubscriptionOpen,
   setIsSubscriptionOpen,
   isNotificationsOpen,
-  setIsNotificationsOpen,
   displayName,
   setDisplayName,
   username,
@@ -74,9 +75,12 @@ const ProfileDialogs = ({
   handleSignOut,
   conversations,
   subscription,
-  selectedConversationUser,
-  setSelectedConversationUser,
-  fetchConversations,
+  followers,
+  following,
+  showFollowers,
+  setShowFollowers,
+  showFollowing,
+  setShowFollowing
 }: ProfileDialogsProps) => (
   <>
     <EditProfileDialog
@@ -107,19 +111,13 @@ const ProfileDialogs = ({
       onSignOut={handleSignOut}
       onNotificationsClick={() => {
         setIsSettingsOpen(false);
-        setIsNotificationsOpen(true);
       }}
     />
     <MessagesDialog
       isOpen={isMessagesOpen}
-      onOpenChange={(open) => {
-        setIsMessagesOpen(open);
-        if (!open) setSelectedConversationUser(null);
-      }}
+      onOpenChange={setIsMessagesOpen}
       conversations={conversations}
-      selectedConversationUser={selectedConversationUser}
-      setSelectedConversationUser={setSelectedConversationUser}
-      fetchConversations={fetchConversations}
+      fetchConversations={() => {}}
     />
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}
@@ -128,7 +126,7 @@ const ProfileDialogs = ({
     />
     <NotificationsDialog
       isOpen={isNotificationsOpen}
-      onOpenChange={setIsNotificationsOpen}
+      onOpenChange={() => {}}
     />
   </>
 );

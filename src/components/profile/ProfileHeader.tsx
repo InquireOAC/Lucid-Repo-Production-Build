@@ -42,20 +42,12 @@ const ProfileHeader = ({
     <div className="flex flex-col items-center text-center mb-8">
       <div className="relative mb-4">
         <ProfileAvatar
-          profile={profile}
-          size="lg"
-          className="w-24 h-24"
+          avatarSymbol={profile?.avatar_symbol}
+          avatarColor={profile?.avatar_color}
+          username={profile?.username}
+          isOwnProfile={isOwnProfile}
+          onEdit={onEditProfileClick}
         />
-        {isOwnProfile && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEditProfileClick}
-            className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-          >
-            <Edit className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       <h1 className="text-2xl font-bold mb-2">
