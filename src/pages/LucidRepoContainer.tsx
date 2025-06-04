@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,7 +40,32 @@ const LucidRepoContainer = () => {
 
   // Centralized state for dreams, to ensure `useLikes` can sync state
   const [dreamsState, setDreamsState] = useState<DreamEntry[]>([]);
-  useEffect(() => { setDreamsState(dreams); }, [dreams]);
+  
+  // Only update dreamsState when dreams data actually changes (not on every render)
+  useEffect(() => { 
+    if (dreams.length > 0) {
+      setDreamsState(prevState => {
+        // If we have existing state with view count updates, preserve those
+        if (prevState.length === dreams.length) {
+          return prevState.map(prevDream => {
+            const newDream = dreams.find(d => d.id === prevDream.id);
+            if (newDream) {
+              // Keep the higher view count (in case we've updated it locally)
+              return {
+                ...newDream,
+                view_count: Math.max(prevDream.view_count || 0, newDream.view_count || 0)
+              };
+            }
+            return prevDream;
+          });
+        }
+        // If dreams length changed, use new data
+        return dreams;
+      });
+    } else if (dreams.length === 0) {
+      setDreamsState([]);
+    }
+  }, [dreams]);
 
   // For profile liked dreams refresh (noop since this is repo)
   function refreshLikedDreams() {
@@ -66,9 +90,6 @@ const LucidRepoContainer = () => {
     fetchPublicDreams();
     // Only fetch on initial load - no automatic refresh interval
   }, []); 
-
-  // When backend dreams update, update local dreamsState
-  useEffect(() => { setDreamsState(dreams); }, [dreams]);
 
   const handleOpenDream = (dream: DreamEntry) => {
     setSelectedDream({ ...dream });
