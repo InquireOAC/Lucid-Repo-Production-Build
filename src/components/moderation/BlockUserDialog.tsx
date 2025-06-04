@@ -27,6 +27,17 @@ const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked, onFol
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in to block users");
 
+      // First, remove follow relationships
+      const { error: unfollowError } = await supabase
+        .from("follows")
+        .delete()
+        .or(`and(follower_id.eq.${user.id},followed_id.eq.${userToBlock.id}),and(follower_id.eq.${userToBlock.id},followed_id.eq.${user.id})`);
+
+      if (unfollowError) {
+        console.error("Error removing follow relationships:", unfollowError);
+      }
+
+      // Then block the user
       const { error } = await supabase
         .from("blocked_users")
         .insert({

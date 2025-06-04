@@ -7,6 +7,7 @@ import ProfileAvatar from "./SymbolAvatar";
 import ProfileStatsBar from "./ProfileStatsBar";
 import ProfileSocialLinks from "./ProfileSocialLinks";
 import BlockUserButton from "../moderation/BlockUserButton";
+import UnblockUserButton from "../moderation/UnblockUserButton";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
 interface ProfileHeaderProps {
@@ -132,7 +133,7 @@ const ProfileHeader = ({
           </>
         ) : (
           <>
-            {!isBlocked && (
+            {!isBlocked ? (
               <>
                 <Button
                   key={refreshKey}
@@ -162,29 +163,29 @@ const ProfileHeader = ({
                   <MessageCircle className="h-4 w-4 mr-2" />
                   Message
                 </Button>
+                <BlockUserButton
+                  userToBlock={{
+                    id: profileToShow.id,
+                    username: profileToShow.username,
+                    display_name: profileToShow.display_name
+                  }}
+                  onFollowStateChanged={handleFollowStateChanged}
+                  variant="outline"
+                  size="default"
+                />
               </>
+            ) : (
+              <UnblockUserButton
+                userToUnblock={{
+                  id: profileToShow.id,
+                  username: profileToShow.username,
+                  display_name: profileToShow.display_name
+                }}
+                onUserUnblocked={handleFollowStateChanged}
+                variant="outline"
+                size="default"
+              />
             )}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem asChild>
-                  <BlockUserButton
-                    userToBlock={{
-                      id: profileToShow.id,
-                      username: profileToShow.username,
-                      display_name: profileToShow.display_name
-                    }}
-                    onFollowStateChanged={handleFollowStateChanged}
-                    variant="ghost"
-                    size="sm"
-                  />
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </>
         )}
       </div>
