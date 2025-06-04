@@ -17,7 +17,7 @@ serve(async (req) => {
     
     // Set system prompt based on the requested task
     const systemPrompt = task === 'create_image_prompt' 
-      ? 'You are an expert at creating concise, detailed image prompts for AI image generators. Generate a SINGLE, vivid prompt in plain English (max 35 words) based on the dream description. Focus on visual elements, mood, colors, and atmosphere, but keep it as brief as possible while still being clear and evocative.'
+      ? 'You are an expert at creating concise, detailed image prompts for AI image generators from a first-person perspective. Generate a SINGLE, vivid prompt in plain English (max 35 words) based on the dream description. Always frame the scene from the dreamer\'s point of view using phrases like "I see", "in front of me", "I am standing", "looking at", etc. Focus on what the dreamer would visually experience from their perspective, including mood, colors, and atmosphere. Do NOT include any text overlays or prompts on the image itself.'
       : 'You are an expert dream analyst. Analyze the dream and provide meaningful insights about its potential psychological significance, symbolism, and what it might reveal about the dreamer\'s subconscious mind. Keep the analysis concise but insightful.'
     
     console.log(`Generating ${task} for dream content. System prompt: ${systemPrompt.substring(0, 50)}...`)
