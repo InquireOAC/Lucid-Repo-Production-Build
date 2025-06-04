@@ -24,6 +24,9 @@ const DreamDetailWrapper = ({
   onLike,
   onViewCountUpdate
 }: DreamDetailWrapperProps) => {
+  // Track which dreams have already had their view count updated
+  const [viewCountUpdated, setViewCountUpdated] = React.useState<Set<string>>(new Set());
+
   if (!selectedDream) return null;
   
   // Ensure we have all possible fields from both camelCase and snake_case versions
@@ -67,9 +70,9 @@ const DreamDetailWrapper = ({
     }
   };
 
-  // Update view count when dream is opened
+  // Update view count when dream is opened - but only once per dream
   React.useEffect(() => {
-    if (selectedDream && selectedDream.id) {
+    if (selectedDream && selectedDream.id && !viewCountUpdated.has(selectedDream.id)) {
       const updateViewCount = async () => {
         try {
           // Get current view count to increment
@@ -86,6 +89,9 @@ const DreamDetailWrapper = ({
           if (error) {
             console.error("Error updating view count:", error);
           } else {
+            // Mark this dream as having its view count updated
+            setViewCountUpdated(prev => new Set(prev).add(selectedDream.id));
+            
             // Update the local state through the callback
             if (onViewCountUpdate) {
               onViewCountUpdate(selectedDream.id);
@@ -98,7 +104,7 @@ const DreamDetailWrapper = ({
 
       updateViewCount();
     }
-  }, [selectedDream?.id, onViewCountUpdate]);
+  }, [selectedDream?.id, onViewCountUpdate, viewCountUpdated]);
 
   const handleLike = () => {
     if (onLike && selectedDream) {
