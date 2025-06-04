@@ -20,6 +20,13 @@ export const uploadImageToSupabase = async (
       dreamId 
     });
     
+    // Check if it's already a Supabase URL from dream-images bucket
+    const baseDreamImagesUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
+    if (dataUrlOrUrl.startsWith(baseDreamImagesUrl)) {
+      console.log("Image is already in Supabase dream-images bucket, returning existing URL");
+      return dataUrlOrUrl;
+    }
+
     let pngBlob: Blob;
 
     if (dataUrlOrUrl.startsWith("data:image/")) {
@@ -32,76 +39,28 @@ export const uploadImageToSupabase = async (
       pngBlob = await response.blob();
       console.log("Data URL converted to blob:", pngBlob.size, "bytes");
     } else if (dataUrlOrUrl.startsWith("http")) {
-      // Fetch remote image and convert to PNG
-      console.log("Fetching remote image for PNG conversion:", dataUrlOrUrl);
+      // For remote URLs (like OpenAI), use the dedicated edge function
+      console.log("Using edge function for remote URL upload:", dataUrlOrUrl);
       
-      const response = await fetch(dataUrlOrUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'image/*',
-          'User-Agent': 'Mozilla/5.0 (compatible; Supabase-Function)'
+      const { data, error } = await supabase.functions.invoke('upload-openai-image', {
+        body: {
+          imageUrl: dataUrlOrUrl,
+          userId: `${userId}/dreams/${dreamId}`
         }
       });
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+
+      if (error) {
+        console.error("Edge function upload error:", error);
+        throw new Error(`Upload function failed: ${error.message}`);
       }
-      
-      const originalBlob = await response.blob();
-      console.log("Original image fetched:", originalBlob.size, "bytes, type:", originalBlob.type);
-      
-      // If it's already a PNG, use it directly
-      if (originalBlob.type === "image/png") {
-        pngBlob = originalBlob;
-        console.log("Image is already PNG, using directly");
-      } else {
-        // Convert to PNG using canvas
-        console.log("Converting image to PNG format");
-        
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        
-        // Create object URL for the blob
-        const imageUrl = URL.createObjectURL(originalBlob);
-        img.src = imageUrl;
-        
-        await new Promise((resolve, reject) => {
-          img.onload = () => {
-            console.log("Image loaded for conversion, dimensions:", img.width, "x", img.height);
-            resolve(void 0);
-          };
-          img.onerror = (error) => {
-            console.error("Failed to load image for conversion:", error);
-            reject(new Error("Failed to load image for PNG conversion"));
-          };
-        });
-        
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d");
-        
-        if (!ctx) {
-          throw new Error("Failed to get canvas context");
-        }
-        
-        ctx.drawImage(img, 0, 0);
-        
-        // Convert to PNG blob
-        pngBlob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob((blob) => {
-            if (blob) {
-              console.log("Canvas converted to PNG blob:", blob.size, "bytes");
-              resolve(blob);
-            } else {
-              reject(new Error("Failed to convert canvas to PNG blob"));
-            }
-          }, "image/png", 1.0); // Use maximum quality
-        });
-        
-        // Clean up object URL
-        URL.revokeObjectURL(imageUrl);
+
+      if (!data?.success || !data?.publicUrl) {
+        console.error("Upload function returned invalid response:", data);
+        throw new Error("Upload function did not return a valid URL");
       }
+
+      console.log("Edge function upload successful:", data.publicUrl);
+      return data.publicUrl;
     } else {
       throw new Error("Unsupported image format for upload");
     }
@@ -110,15 +69,15 @@ export const uploadImageToSupabase = async (
       throw new Error("Generated PNG blob is empty");
     }
 
-    // Create storage path
+    // Create storage path for local blob uploads
     const timestamp = Date.now();
     const filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
 
-    console.log("Uploading PNG to Supabase storage (dreamimages bucket):", filePath, "Size:", pngBlob.size, "bytes");
+    console.log("Uploading PNG to Supabase storage (dream-images bucket):", filePath, "Size:", pngBlob.size, "bytes");
     
-    // Upload to Supabase storage using the new dreamimages bucket
+    // Upload to Supabase storage using the dream-images bucket
     const { data, error } = await supabase.storage
-      .from("dreamimages")
+      .from("dream-images")
       .upload(filePath, pngBlob, {
         cacheControl: "public, max-age=31536000",
         upsert: true,
@@ -136,9 +95,9 @@ export const uploadImageToSupabase = async (
 
     console.log("Upload successful:", data);
 
-    // Get public URL using the new dreamimages bucket
+    // Get public URL using the dream-images bucket
     const { data: publicUrlData } = supabase.storage
-      .from("dreamimages")
+      .from("dream-images")
       .getPublicUrl(filePath);
       
     const publicUrl = publicUrlData?.publicUrl;

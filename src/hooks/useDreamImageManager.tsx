@@ -19,15 +19,15 @@ export const useDreamImageManager = () => {
   const deleteManagedImage = async (imageUrl: string | null | undefined): Promise<void> => {
     if (!imageUrl) return;
 
-    // Update to use the new dreamimages bucket URL
-    const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/dreamimages/`;
+    // Update to use the new dream-images bucket URL
+    const baseDreamImagesUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
     
-    if (imageUrl.startsWith(baseSupabaseStorageUrl)) {
+    if (imageUrl.startsWith(baseDreamImagesUrl)) {
       try {
-        const imagePath = imageUrl.substring(baseSupabaseStorageUrl.length);
+        const imagePath = imageUrl.substring(baseDreamImagesUrl.length);
         if (imagePath) {
           console.log("Deleting associated image from Supabase storage:", imagePath);
-          const { error } = await supabase.storage.from("dreamimages").remove([imagePath]);
+          const { error } = await supabase.storage.from("dream-images").remove([imagePath]);
           if (error) {
             console.error("Error deleting image from storage:", error.message);
             // Optionally re-throw or toast

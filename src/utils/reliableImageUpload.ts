@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Ultra-reliable image upload utility with URL expiration handling
+ * Ultra-reliable image upload utility using dedicated edge function
  */
 export const reliableImageUpload = async (
   imageUrl: string,
@@ -19,109 +19,42 @@ export const reliableImageUpload = async (
       throw new Error("Missing imageUrl or userId");
     }
 
-    // Step 2: Fetch the image with aggressive timeout and retry logic
-    console.log("Step 2: Fetching image from URL:", imageUrl);
+    // Step 2: Call the dedicated upload edge function
+    console.log("Calling upload-openai-image edge function...");
     
-    let response;
-    let retryCount = 0;
-    const maxRetries = 2;
-    
-    while (retryCount < maxRetries) {
-      try {
-        // Add timeout to prevent hanging
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
-        
-        response = await fetch(imageUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'image/*',
-            'User-Agent': 'Mozilla/5.0 (compatible; DreamApp/1.0)',
-          },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          break; // Success, exit retry loop
-        } else {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-      } catch (fetchError) {
-        retryCount++;
-        console.warn(`Fetch attempt ${retryCount} failed:`, fetchError);
-        
-        if (retryCount >= maxRetries) {
-          // If it's an OpenAI URL that expired, provide specific guidance
-          if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
-            console.warn("OpenAI URL expired - upload failed but image was generated successfully");
-            return null; // Return null to indicate upload failed but don't throw error
-          }
-          throw new Error(`Failed to fetch image after ${maxRetries} attempts: ${fetchError.message}`);
-        }
-        
-        // Wait before retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+    const { data, error } = await supabase.functions.invoke('upload-openai-image', {
+      body: {
+        imageUrl,
+        userId: `${userId}/dreams/${dreamId}`
       }
-    }
-
-    console.log("Fetch response status:", response.status, response.statusText);
-
-    // Step 3: Convert to blob
-    console.log("Step 3: Converting to blob...");
-    const blob = await response.blob();
-    console.log("Blob created:", {
-      size: blob.size,
-      type: blob.type
     });
 
-    if (blob.size === 0) {
-      throw new Error("Downloaded image is empty");
+    if (error) {
+      console.error("Edge function error:", error);
+      throw new Error(`Upload function failed: ${error.message}`);
     }
 
-    // Step 4: Create file path
-    const timestamp = Date.now();
-    const filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
-    console.log("Step 4: File path created:", filePath);
-
-    // Step 5: Upload to Supabase
-    console.log("Step 5: Uploading to Supabase storage...");
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("dreamimages")
-      .upload(filePath, blob, {
-        cacheControl: "public, max-age=31536000",
-        upsert: true,
-        contentType: "image/png",
-      });
-
-    if (uploadError) {
-      console.error("Supabase upload error:", uploadError);
-      throw new Error(`Upload failed: ${uploadError.message}`);
-    }
-
-    console.log("Upload successful:", uploadData);
-
-    // Step 6: Get public URL
-    console.log("Step 6: Getting public URL...");
-    const { data: publicUrlData } = supabase.storage
-      .from("dreamimages")
-      .getPublicUrl(filePath);
-
-    const publicUrl = publicUrlData?.publicUrl;
-    
-    if (!publicUrl) {
-      throw new Error("Failed to generate public URL");
+    if (!data?.success || !data?.publicUrl) {
+      console.error("Upload function returned invalid response:", data);
+      throw new Error("Upload function did not return a valid URL");
     }
 
     console.log("=== UPLOAD COMPLETE ===");
-    console.log("Final public URL:", publicUrl);
-    return publicUrl;
+    console.log("Final public URL:", data.publicUrl);
+    console.log("Upload details:", { path: data.path, size: data.size });
+    
+    return data.publicUrl;
 
   } catch (error) {
     console.error("=== UPLOAD FAILED ===");
     console.error("Error details:", error);
-    console.error("Error stack:", error instanceof Error ? error.stack : 'No stack');
+    
+    // If it's an OpenAI URL that expired, provide specific guidance
+    if (imageUrl.includes('oaidalleapiprodscus.blob.core.windows.net')) {
+      console.warn("OpenAI URL may have expired - this is expected behavior");
+      return null; // Return null to indicate upload failed but don't throw error
+    }
+    
     return null;
   }
 };

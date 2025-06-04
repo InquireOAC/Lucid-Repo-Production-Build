@@ -29,18 +29,62 @@ export const uploadDreamImage = async (
 
     console.log(`Starting image upload for dream: ${dreamId}, user: ${userId}`);
 
-    const baseSupabaseStorageUrl = `${SUPABASE_URL}/storage/v1/object/public/dreamimages/`;
+    const baseDreamImagesUrl = `${SUPABASE_URL}/storage/v1/object/public/dream-images/`;
 
-    // 1. If it's already a Supabase public URL from our dreamimages bucket, return it directly
-    if (imageUrl.startsWith(baseSupabaseStorageUrl)) {
-      console.log("Image is already in Supabase dreamimages bucket, returning existing URL");
+    // 1. If it's already a Supabase public URL from our dream-images bucket, return it directly
+    if (imageUrl.startsWith(baseDreamImagesUrl)) {
+      console.log("Image is already in Supabase dream-images bucket, returning existing URL");
       return imageUrl;
     }
 
-    // 2. Fetch the remote image (e.g., from OpenAI)
-    console.log("Fetching image from URL:", imageUrl);
+    // 2. For remote URLs (like OpenAI), use the dedicated edge function
+    if (imageUrl.startsWith("http")) {
+      console.log("Using edge function for remote URL upload:", imageUrl);
+      
+      const { data, error } = await supabase.functions.invoke('upload-openai-image', {
+        body: {
+          imageUrl,
+          userId: `${userId}/dreams/${dreamId}`
+        }
+      });
+
+      if (error) {
+        console.error("Edge function upload error:", error);
+        throw new Error(`Upload function failed: ${error.message}`);
+      }
+
+      if (!data?.success || !data?.publicUrl) {
+        console.error("Upload function returned invalid response:", data);
+        throw new Error("Upload function did not return a valid URL");
+      }
+
+      const publicUrl = data.publicUrl;
+      console.log("Edge function upload successful:", publicUrl);
+
+      // 3. Update the dream entry with the permanent URL if not a preview
+      if (dreamId !== "preview" && dreamId) { 
+        console.log("Updating dream entry in database with image URL:", publicUrl);
+        const { error: dbError } = await supabase
+          .from("dream_entries")
+          .update({ 
+            generatedImage: publicUrl,
+            image_url: publicUrl 
+          })
+          .eq("id", dreamId)
+          .eq("user_id", userId); 
+        
+        if (dbError) {
+          console.error("Error updating dream entry in database:", dbError);
+        }
+      }
+
+      return publicUrl;
+    }
+
+    // 3. For data URLs, fetch and upload manually
+    console.log("Fetching data URL for manual upload");
     const response = await fetch(imageUrl, {
-      cache: "no-cache", // Avoid caching issues with temporary URLs
+      cache: "no-cache",
       headers: {
         "Cache-Control": "no-cache",
       },
@@ -58,7 +102,7 @@ export const uploadDreamImage = async (
       throw new Error("Image blob is empty, cannot upload.");
     }
 
-    // 3. Create a unique file path with timestamp, incorporating userId
+    // 4. Create a unique file path with timestamp
     const timestamp = Date.now();
     let filePath: string;
 
@@ -68,10 +112,10 @@ export const uploadDreamImage = async (
       filePath = `${userId}/dreams/${dreamId}-${timestamp}.png`;
     }
 
-    // 4. Upload to Supabase storage with correct bucket name "dreamimages"
-    console.log("Uploading to Supabase storage path:", filePath, "in bucket dreamimages");
+    // 5. Upload to Supabase storage with correct bucket name "dream-images"
+    console.log("Uploading to Supabase storage path:", filePath, "in bucket dream-images");
     const { error: uploadError, data: uploadData } = await supabase.storage
-      .from("dreamimages") // Updated bucket name
+      .from("dream-images")
       .upload(filePath, blob, {
         contentType: "image/png",
         upsert: true, 
@@ -83,15 +127,15 @@ export const uploadDreamImage = async (
       throw uploadError;
     }
 
-    // 5. Get the public URL
+    // 6. Get the public URL
     const { data } = supabase.storage
-      .from("dreamimages") // Updated bucket name
+      .from("dream-images")
       .getPublicUrl(filePath);
     
     const publicUrl = data.publicUrl;
     console.log("Public URL from Supabase:", publicUrl);
 
-    // 6. Update the dream entry with the permanent URL if not a preview
+    // 7. Update the dream entry with the permanent URL if not a preview
     if (dreamId !== "preview" && dreamId) { 
       console.log("Updating dream entry in database with image URL:", publicUrl);
       const { error: dbError } = await supabase
