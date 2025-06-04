@@ -5,6 +5,7 @@ import { Settings, MessageCircle, UserPlus, UserMinus, MoreVertical } from "luci
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import ProfileAvatar from "./SymbolAvatar";
 import ProfileStatsBar from "./ProfileStatsBar";
+import ProfileSocialLinks from "./ProfileSocialLinks";
 import BlockUserButton from "../moderation/BlockUserButton";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
@@ -81,6 +82,11 @@ const ProfileHeader = ({
         {profileToShow.bio && (
           <p className="text-sm text-muted-foreground mt-2">{profileToShow.bio}</p>
         )}
+        <ProfileSocialLinks
+          socialLinks={profileToShow.social_links}
+          isOwnProfile={isOwnProfile}
+          onEdit={() => setIsSocialLinksOpen(true)}
+        />
       </div>
 
       <ProfileStatsBar
@@ -108,9 +114,6 @@ const ProfileHeader = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setIsSocialLinksOpen(true)}>
-                  Social Links
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsSubscriptionOpen(true)}>
                   Subscription
                 </DropdownMenuItem>
