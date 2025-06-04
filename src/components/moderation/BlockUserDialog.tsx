@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
 interface BlockUserDialogProps {
   open: boolean;
@@ -17,6 +18,7 @@ interface BlockUserDialogProps {
 
 const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked }: BlockUserDialogProps) => {
   const [isBlocking, setIsBlocking] = useState(false);
+  const { blockUser, refetchBlockedUsers } = useBlockedUsers();
 
   const handleBlockUser = async () => {
     setIsBlocking(true);
@@ -39,6 +41,12 @@ const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked }: Blo
           throw error;
         }
       } else {
+        // Update local state immediately
+        blockUser(userToBlock.id);
+        
+        // Refetch to ensure consistency
+        refetchBlockedUsers();
+        
         toast.success(`${userToBlock.username || userToBlock.display_name || 'User'} has been blocked`);
         onUserBlocked();
       }
@@ -62,6 +70,7 @@ const BlockUserDialog = ({ open, onOpenChange, userToBlock, onUserBlocked }: Blo
           <AlertDialogDescription>
             Are you sure you want to block <strong>{displayName}</strong>? 
             You will no longer see their posts, comments, or be able to interact with them. 
+            This action will also automatically unfollow them and delete any message history between you.
             This action can be undone from your settings.
           </AlertDialogDescription>
         </AlertDialogHeader>

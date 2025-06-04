@@ -87,11 +87,16 @@ const BlockedUsersDialog = ({ open, onOpenChange }: BlockedUsersDialogProps) => 
       await unblockUser(blockedUserId);
       toast.success(`${username} has been unblocked`);
       
-      // Remove from local state
+      // Remove from local state immediately
       setBlockedUsers(prev => prev.filter(u => u.blocked_user_id !== blockedUserId));
       
       // Refetch to ensure consistency
       refetchBlockedUsers();
+      
+      // Refresh the list after unblocking
+      setTimeout(() => {
+        fetchBlockedUsers();
+      }, 500);
     } catch (error) {
       console.error("Error unblocking user:", error);
       toast.error("Failed to unblock user. Please try again.");
