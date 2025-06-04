@@ -102,22 +102,27 @@ const DreamDetail = ({
     .map((tagId) => tags.find((tag) => tag.id === tagId))
     .filter(Boolean) as DreamTag[];
 
-  // Safe date formatting with validation
+  // Safe date formatting with validation - only return valid dates
   const formatDreamDate = (dateValue: string | undefined) => {
     if (!dateValue) {
-      return "Date not available";
+      return null;
     }
     
     const date = new Date(dateValue);
     if (!isValid(date)) {
       console.warn("Invalid date value:", dateValue);
-      return "Invalid date";
+      return null;
     }
     
     return format(date, "MMMM d, yyyy");
   };
 
   const formattedDate = formatDreamDate(dream.date || dream.created_at);
+
+  // Don't render if we don't have essential dream data
+  if (!dream.id || !dream.title) {
+    return null;
+  }
 
   // Handler for near-comments like button (propagate to parent and update local state)
   const handleLikeClick = async () => {
@@ -150,7 +155,7 @@ const DreamDetail = ({
           
           <DreamDetailContent
             content={dream.content}
-            formattedDate={formattedDate}
+            formattedDate={formattedDate || ""}
             dreamTags={mappedTags}
             generatedImage={dream.generatedImage || dream.image_url || null}
             analysis={dream.analysis}
