@@ -75,7 +75,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Send notification email
     const emailResponse = await resend.emails.send({
       from: "Content Moderation <onboarding@resend.dev>",
-      to: ["admin@yourdomain.com"], // Replace with your admin email
+      to: ["Lucidrepofficial@gmail.com"],
       subject: `🚩 Content Flagged - ${reason}`,
       html: `
         <h2>Content Flagged for Review</h2>
