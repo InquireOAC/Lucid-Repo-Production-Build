@@ -47,7 +47,7 @@ const ContentFlagDialog = ({
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be logged in to flag content");
 
-      const { error } = await supabase
+      const { data: flagData, error } = await supabase
         .from("content_flags")
         .insert({
           reporter_user_id: user.id,
@@ -56,9 +56,29 @@ const ContentFlagDialog = ({
           flagged_user_id: contentOwnerId,
           reason: selectedReason,
           additional_notes: additionalNotes.trim() || null
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+
+      // Send email notification
+      try {
+        await supabase.functions.invoke('send-flag-notification', {
+          body: {
+            flagId: flagData.id,
+            contentType,
+            contentId,
+            reason: selectedReason,
+            additionalNotes: additionalNotes.trim() || null,
+            reporterEmail: user.email,
+            contentOwnerId
+          }
+        });
+      } catch (emailError) {
+        console.error("Error sending flag notification email:", emailError);
+        // Don't fail the flag submission if email fails
+      }
 
       toast.success("Content has been flagged for review. Thank you for helping keep our community safe.");
       onOpenChange(false);
