@@ -143,12 +143,14 @@ const DreamDetail = ({
               <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
               {/* Flag button for public dreams when user is not the owner */}
               {isPublic && user && !isOwner && (
-                <FlagButton
-                  contentType="dream"
-                  contentId={dream.id}
-                  contentOwnerId={dream.user_id}
-                  size="sm"
-                />
+                <div className="mt-1">
+                  <FlagButton
+                    contentType="dream"
+                    contentId={dream.id}
+                    contentOwnerId={dream.user_id}
+                    size="sm"
+                  />
+                </div>
               )}
             </div>
           </DialogHeader>
