@@ -24,6 +24,9 @@ const LucidRepoContainer = () => {
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  
+  // Track which dreams have already had their view count updated
+  const [viewCountUpdated, setViewCountUpdated] = useState<Set<string>>(new Set());
 
   const { isUserBlocked } = useBlockedUsers();
 
@@ -246,6 +249,8 @@ const LucidRepoContainer = () => {
             isAuthenticated={!!user}
             onLike={() => handleDreamLike(selectedDream.id)}
             onViewCountUpdate={handleViewCountUpdate}
+            viewCountUpdated={viewCountUpdated}
+            setViewCountUpdated={setViewCountUpdated}
           />
         )}
         <AuthDialog 

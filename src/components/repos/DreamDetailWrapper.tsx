@@ -13,6 +13,8 @@ interface DreamDetailWrapperProps {
   isAuthenticated: boolean;
   onLike?: (dreamId: string) => void;
   onViewCountUpdate?: (dreamId: string) => void;
+  viewCountUpdated: Set<string>;
+  setViewCountUpdated: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 const DreamDetailWrapper = ({
@@ -22,11 +24,10 @@ const DreamDetailWrapper = ({
   onUpdate,
   isAuthenticated,
   onLike,
-  onViewCountUpdate
+  onViewCountUpdate,
+  viewCountUpdated,
+  setViewCountUpdated
 }: DreamDetailWrapperProps) => {
-  // Track which dreams have already had their view count updated
-  const [viewCountUpdated, setViewCountUpdated] = React.useState<Set<string>>(new Set());
-
   if (!selectedDream) return null;
   
   // Ensure we have all possible fields from both camelCase and snake_case versions
@@ -104,7 +105,7 @@ const DreamDetailWrapper = ({
 
       updateViewCount();
     }
-  }, [selectedDream?.id, onViewCountUpdate, viewCountUpdated]);
+  }, [selectedDream?.id, onViewCountUpdate, viewCountUpdated, setViewCountUpdated]);
 
   const handleLike = () => {
     if (onLike && selectedDream) {
