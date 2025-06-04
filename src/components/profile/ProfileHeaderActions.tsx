@@ -63,7 +63,7 @@ const ProfileHeaderActions = ({
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
-            <Button variant="outline" onClick={onMessageClick} size="sm">
+            <Button variant="outline" onClick={onMessageClick} size="sm" title="Messages">
               <MessageCircle className="h-4 w-4" />
             </Button>
           </>
@@ -86,7 +86,7 @@ const ProfileHeaderActions = ({
                 </>
               )}
             </Button>
-            <Button variant="outline" onClick={onMessageClick} size="sm">
+            <Button variant="outline" onClick={onMessageClick} size="sm" title="Send Message">
               <MessageCircle className="h-4 w-4" />
             </Button>
           </>
