@@ -59,7 +59,14 @@ const BlockedUsersDialog = ({ open, onOpenChange }: BlockedUsersDialogProps) => 
       }
       
       console.log("Fetched blocked users data:", data);
-      setBlockedUsers(data || []);
+      
+      // Transform the data to handle the profiles array/object mismatch
+      const transformedData = (data || []).map(item => ({
+        ...item,
+        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
+      }));
+      
+      setBlockedUsers(transformedData);
     } catch (error) {
       console.error("Error fetching blocked users:", error);
       toast.error("Failed to load blocked users");
