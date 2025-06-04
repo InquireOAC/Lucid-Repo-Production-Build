@@ -53,15 +53,13 @@ const BlockedUsersDialog = ({ open, onOpenChange }: BlockedUsersDialogProps) => 
         .eq("blocker_user_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
-      // Transform the data to match our interface since Supabase returns profiles as a single object, not an array
-      const transformedData = (data || []).map(item => ({
-        ...item,
-        profiles: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles
-      }));
-      
-      setBlockedUsers(transformedData);
+      console.log("Fetched blocked users data:", data);
+      setBlockedUsers(data || []);
     } catch (error) {
       console.error("Error fetching blocked users:", error);
       toast.error("Failed to load blocked users");
