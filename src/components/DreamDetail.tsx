@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, isValid } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { DreamEntry, DreamTag } from "@/types/dream";
@@ -102,7 +102,22 @@ const DreamDetail = ({
     .map((tagId) => tags.find((tag) => tag.id === tagId))
     .filter(Boolean) as DreamTag[];
 
-  const formattedDate = format(new Date(dream.date), "MMMM d, yyyy");
+  // Safe date formatting with validation
+  const formatDreamDate = (dateValue: string | undefined) => {
+    if (!dateValue) {
+      return "Date not available";
+    }
+    
+    const date = new Date(dateValue);
+    if (!isValid(date)) {
+      console.warn("Invalid date value:", dateValue);
+      return "Invalid date";
+    }
+    
+    return format(date, "MMMM d, yyyy");
+  };
+
+  const formattedDate = formatDreamDate(dream.date || dream.created_at);
 
   // Handler for near-comments like button (propagate to parent and update local state)
   const handleLikeClick = async () => {
