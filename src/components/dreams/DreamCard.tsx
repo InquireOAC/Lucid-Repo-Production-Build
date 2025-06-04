@@ -228,9 +228,10 @@ const DreamCard = ({
             )}
           </div>
           
+          {/* View counter - visible to ALL users */}
           <div className="flex items-center">
             <Eye className={`mr-1 ${isJournalView ? 'h-2 w-2' : 'h-3 w-3'}`} />
-            {dream.view_count || 0}
+            <span>{dream.view_count || 0}</span>
           </div>
         </div>
       </CardContent>

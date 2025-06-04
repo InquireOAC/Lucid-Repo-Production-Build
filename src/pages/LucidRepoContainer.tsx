@@ -39,7 +39,7 @@ const LucidRepoContainer = () => {
     fetchPublicDreams
   } = useDreams(refreshLikedDreams);
 
-  // Centralized setter for dreams, to ensure `useLikes` can sync state
+  // Centralized state for dreams, to ensure `useLikes` can sync state
   const [dreamsState, setDreamsState] = useState<DreamEntry[]>([]);
   useEffect(() => { setDreamsState(dreams); }, [dreams]);
 
@@ -56,7 +56,7 @@ const LucidRepoContainer = () => {
     refreshLikedDreams
   );
 
-  // NEW: Fetch globally visible dream tags for the repo page
+  // Fetch globally visible dream tags for the repo page
   const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
 
   // Only allow tags in the allowed list
@@ -64,8 +64,8 @@ const LucidRepoContainer = () => {
 
   useEffect(() => {
     fetchPublicDreams();
-    // Remove automatic refresh interval - only refresh on pull-to-refresh
-  }, []);
+    // Only fetch on initial load - no automatic refresh interval
+  }, []); 
 
   // When backend dreams update, update local dreamsState
   useEffect(() => { setDreamsState(dreams); }, [dreams]);
@@ -105,6 +105,14 @@ const LucidRepoContainer = () => {
           : dream
       )
     );
+    
+    // Also update the selectedDream if it's the one being updated
+    if (selectedDream && selectedDream.id === dreamId) {
+      setSelectedDream(prevDream => ({
+        ...prevDream!,
+        view_count: (prevDream?.view_count || 0) + 1
+      }));
+    }
   };
 
   // The MAIN handler: when liking a dream from modal, update state
@@ -116,10 +124,12 @@ const LucidRepoContainer = () => {
     
     const success = await handleLike(dreamId);
     if (success) {
-      // Update the selected dream if it's the one being liked
-      if (selectedDream && selectedDream.id === dreamId) {
-        const updatedDream = dreamsState.find(d => d.id === dreamId);
-        if (updatedDream) {
+      // Find the updated dream with the new like count
+      const updatedDream = dreamsState.find(d => d.id === dreamId);
+      
+      if (updatedDream) {
+        // Update the selected dream if it's the one being liked
+        if (selectedDream && selectedDream.id === dreamId) {
           setSelectedDream({ ...updatedDream });
         }
       }

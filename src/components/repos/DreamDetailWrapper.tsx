@@ -72,18 +72,21 @@ const DreamDetailWrapper = ({
     if (selectedDream && selectedDream.id) {
       const updateViewCount = async () => {
         try {
+          // Get current view count to increment
+          const currentViewCount = selectedDream.view_count || 0;
+          
           // Increment view count in database
           const { error } = await supabase
             .from("dream_entries")
             .update({ 
-              view_count: (selectedDream.view_count || 0) + 1 
+              view_count: currentViewCount + 1 
             })
             .eq("id", selectedDream.id);
 
           if (error) {
             console.error("Error updating view count:", error);
           } else {
-            // Update the local state immediately
+            // Update the local state through the callback
             if (onViewCountUpdate) {
               onViewCountUpdate(selectedDream.id);
             }
