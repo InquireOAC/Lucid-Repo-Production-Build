@@ -3,6 +3,7 @@ import React from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
 import ProfileDialogs from "./ProfileDialogs";
+import FollowersModal from "./FollowersModal";
 
 interface ProfileMainContentProps {
   profileToShow: any;
@@ -30,19 +31,19 @@ interface ProfileMainContentProps {
   isSubscriptionOpen: boolean;
   isNotificationsOpen: boolean;
   displayName: string;
-  setDisplayName: (name: string) => void;
+  setDisplayName: (value: string) => void;
   username: string;
-  setUsername: (username: string) => void;
+  setUsername: (value: string) => void;
   bio: string;
-  setBio: (bio: string) => void;
-  avatarSymbol: string;
-  setAvatarSymbol: (symbol: string) => void;
-  avatarColor: string;
-  setAvatarColor: (color: string) => void;
+  setBio: (value: string) => void;
+  avatarSymbol: string | null;
+  setAvatarSymbol: (value: string) => void;
+  avatarColor: string | null;
+  setAvatarColor: (value: string) => void;
   handleUpdateProfile: () => void;
   userId?: string;
   socialLinks: any;
-  setSocialLinks: (links: any) => void;
+  setSocialLinks: (value: any) => void;
   handleUpdateSocialLinks: () => void;
   handleSignOut: () => void;
   conversations: any[];
@@ -103,74 +104,89 @@ const ProfileMainContent = ({
   showFollowers,
   setShowFollowers,
   showFollowing,
-  setShowFollowing
+  setShowFollowing,
 }: ProfileMainContentProps) => {
   return (
-    <div className="min-h-screen">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <ProfileHeader
-          profile={profileToShow}
-          isOwnProfile={isOwnProfile}
-          dreamCount={dreamCount}
-          followersCount={followersCount}
-          followingCount={followingCount}
-          isFollowing={isFollowing}
-          onEditProfileClick={() => setIsEditProfileOpen(true)}
-          onMessageClick={() => setIsMessagesOpen(true)}
-          onSettingsClick={() => setIsSettingsOpen(true)}
-          onSubscriptionClick={() => setIsSubscriptionOpen(true)}
-          onFollowClick={handleFollow}
-          onStartConversation={handleStartConversation}
-          onFollowersClick={onFollowersClick}
-          onFollowingClick={onFollowingClick}
-        />
+    <>
+      <ProfileHeader
+        profile={profileToShow}
+        isOwnProfile={isOwnProfile}
+        dreamCount={dreamCount}
+        followersCount={followersCount}
+        followingCount={followingCount}
+        isFollowing={isFollowing}
+        onEditProfileClick={() => setIsEditProfileOpen(true)}
+        onMessageClick={() => setIsMessagesOpen(true)}
+        onSettingsClick={() => setIsSettingsOpen(true)}
+        onSubscriptionClick={() => setIsSubscriptionOpen(true)}
+        onFollowClick={handleFollow}
+        onStartConversation={handleStartConversation}
+        onFollowersClick={onFollowersClick}
+        onFollowingClick={onFollowingClick}
+      />
 
-        <ProfileTabs
-          isOwnProfile={isOwnProfile}
-          publicDreams={publicDreams}
-          likedDreams={likedDreams}
-          refreshDreams={refreshDreams}
-        />
+      <ProfileTabs
+        isOwnProfile={isOwnProfile}
+        publicDreams={publicDreams}
+        likedDreams={likedDreams}
+        refreshDreams={refreshDreams}
+        onSocialLinksClick={() => setIsSocialLinksOpen(true)}
+      />
 
-        <ProfileDialogs
-          isEditProfileOpen={isEditProfileOpen}
-          setIsEditProfileOpen={setIsEditProfileOpen}
-          isSocialLinksOpen={isSocialLinksOpen}
-          setIsSocialLinksOpen={setIsSocialLinksOpen}
-          isSettingsOpen={isSettingsOpen}
-          setIsSettingsOpen={setIsSettingsOpen}
-          isMessagesOpen={isMessagesOpen}
-          setIsMessagesOpen={setIsMessagesOpen}
-          isSubscriptionOpen={isSubscriptionOpen}
-          setIsSubscriptionOpen={setIsSubscriptionOpen}
-          isNotificationsOpen={isNotificationsOpen}
-          displayName={displayName}
-          setDisplayName={setDisplayName}
-          username={username}
-          setUsername={setUsername}
-          bio={bio}
-          setBio={setBio}
-          avatarSymbol={avatarSymbol}
-          setAvatarSymbol={setAvatarSymbol}
-          avatarColor={avatarColor}
-          setAvatarColor={setAvatarColor}
-          handleUpdateProfile={handleUpdateProfile}
-          userId={userId}
-          socialLinks={socialLinks}
-          setSocialLinks={setSocialLinks}
-          handleUpdateSocialLinks={handleUpdateSocialLinks}
-          handleSignOut={handleSignOut}
-          conversations={conversations}
-          subscription={subscription}
-          followers={followers}
-          following={following}
-          showFollowers={showFollowers}
-          setShowFollowers={setShowFollowers}
-          showFollowing={showFollowing}
-          setShowFollowing={setShowFollowing}
-        />
-      </div>
-    </div>
+      <ProfileDialogs
+        isEditProfileOpen={isEditProfileOpen}
+        setIsEditProfileOpen={setIsEditProfileOpen}
+        isSocialLinksOpen={isSocialLinksOpen}
+        setIsSocialLinksOpen={setIsSocialLinksOpen}
+        isSettingsOpen={isSettingsOpen}
+        setIsSettingsOpen={setIsSettingsOpen}
+        isMessagesOpen={isMessagesOpen}
+        setIsMessagesOpen={setIsMessagesOpen}
+        isSubscriptionOpen={isSubscriptionOpen}
+        setIsSubscriptionOpen={setIsSubscriptionOpen}
+        isNotificationsOpen={isNotificationsOpen}
+        displayName={displayName}
+        setDisplayName={setDisplayName}
+        username={username}
+        setUsername={setUsername}
+        bio={bio}
+        setBio={setBio}
+        avatarSymbol={avatarSymbol}
+        setAvatarSymbol={setAvatarSymbol}
+        avatarColor={avatarColor}
+        setAvatarColor={setAvatarColor}
+        handleUpdateProfile={handleUpdateProfile}
+        userId={userId}
+        socialLinks={socialLinks}
+        setSocialLinks={setSocialLinks}
+        handleUpdateSocialLinks={handleUpdateSocialLinks}
+        handleSignOut={handleSignOut}
+        conversations={conversations}
+        subscription={subscription}
+        followers={followers}
+        following={following}
+        showFollowers={showFollowers}
+        setShowFollowers={setShowFollowers}
+        showFollowing={showFollowing}
+        setShowFollowing={setShowFollowing}
+      />
+
+      {/* Followers Modal */}
+      <FollowersModal
+        title="Followers"
+        open={showFollowers}
+        onOpenChange={setShowFollowers}
+        users={followers}
+      />
+
+      {/* Following Modal */}
+      <FollowersModal
+        title="Following"
+        open={showFollowing}
+        onOpenChange={setShowFollowing}
+        users={following}
+      />
+    </>
   );
 };
 
