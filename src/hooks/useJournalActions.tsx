@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
@@ -5,7 +6,7 @@ import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamDbActions } from "./useDreamDbActions";
 import { useDreamImageManager } from "./useDreamImageManager";
-import { uploadImageToSupabase } from "@/utils/uploadImageToSupabase";
+import { uploadDreamImage } from "@/utils/imageUtils";
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -34,26 +35,30 @@ export const useJournalActions = () => {
     }
 
     try {
-      let imageUrl = "";
-
-      // If the dream has a generated/selected image, upload it for persistence on Supabase
-      if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
-        const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id);
-        if (supabaseImageUrl) {
-          imageUrl = supabaseImageUrl;
-        } else {
-          throw new Error("Failed to upload image to Supabase storage.");
-        }
-      }
-
+      // First add to local store to get the dream ID
       const newDreamForStore = addEntry({
         ...dreamData,
         date: new Date().toISOString(),
         user_id: user.id,
-        generatedImage: imageUrl, // Save the public URL (or empty string)
-        image_dataurl: imageUrl,
+        generatedImage: dreamData.generatedImage || "", 
+        image_dataurl: dreamData.generatedImage || "",
       });
       console.log("Adding dream locally with ID:", newDreamForStore.id);
+
+      let finalImageUrl = "";
+
+      // If the dream has a generated image, upload it for persistence on Supabase
+      if (dreamData.generatedImage) {
+        console.log("Uploading image to Supabase for dream:", newDreamForStore.id);
+        const uploadedImageUrl = await uploadDreamImage(newDreamForStore.id, dreamData.generatedImage, user.id);
+        if (uploadedImageUrl) {
+          finalImageUrl = uploadedImageUrl;
+          console.log("Image uploaded successfully:", finalImageUrl);
+        } else {
+          console.warn("Image upload failed, using original URL");
+          finalImageUrl = dreamData.generatedImage;
+        }
+      }
 
       const dreamForDb = {
         id: newDreamForStore.id,
@@ -66,13 +71,13 @@ export const useJournalActions = () => {
         date: newDreamForStore.date,
         is_public: false,
         analysis: dreamData.analysis || null,
-        generatedImage: imageUrl,
-        image_url: imageUrl,
-        image_dataurl: imageUrl,
+        generatedImage: finalImageUrl,
+        image_url: finalImageUrl,
+        image_dataurl: finalImageUrl,
         imagePrompt: dreamData.imagePrompt || null,
       };
 
-      console.log("Saving dream to database with image:", dreamForDb);
+      console.log("Saving dream to database with final image URL:", finalImageUrl);
       const { error } = await dreamDbActions.addDreamToDb(dreamForDb);
 
       if (error) {
@@ -81,7 +86,13 @@ export const useJournalActions = () => {
         throw error;
       }
 
-      updateEntry(newDreamForStore.id, { generatedImage: imageUrl, image_url: imageUrl, image_dataurl: imageUrl });
+      // Update local store with final image URL
+      updateEntry(newDreamForStore.id, { 
+        generatedImage: finalImageUrl, 
+        image_url: finalImageUrl, 
+        image_dataurl: finalImageUrl 
+      });
+      
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
@@ -186,31 +197,32 @@ export const useJournalActions = () => {
 
     setIsSubmitting(true);
     try {
-      let imageUrl = "";
+      let finalImageUrl = "";
       let shouldUpdateImage = false;
 
-      // Check if a new image (base64) was provided, upload if needed
-      if (dreamData.generatedImage && dreamData.generatedImage.startsWith("data:image/")) {
-        console.log('[Dream Edit] Uploading base64 image to Supabase...');
-        const supabaseImageUrl = await uploadImageToSupabase(dreamData.generatedImage, user.id, dreamId);
-        if (supabaseImageUrl) {
-          imageUrl = supabaseImageUrl;
-          shouldUpdateImage = true;
-          console.log('[Dream Edit] New image saved to:', imageUrl);
+      // Check if a new image was provided that needs uploading
+      if (dreamData.generatedImage) {
+        if (dreamData.generatedImage.startsWith("data:image/") || 
+            (dreamData.generatedImage.startsWith("http") && !dreamData.generatedImage.includes("supabase.co"))) {
+          // New image that needs uploading
+          console.log('[Dream Edit] Uploading new image to Supabase...');
+          const uploadedImageUrl = await uploadDreamImage(dreamId, dreamData.generatedImage, user.id);
+          if (uploadedImageUrl) {
+            finalImageUrl = uploadedImageUrl;
+            shouldUpdateImage = true;
+            console.log('[Dream Edit] New image saved to:', finalImageUrl);
+          } else {
+            console.error("[Dream Edit] Failed upload");
+            toast.error("Failed to persist image—please try again.");
+            setIsSubmitting(false);
+            return;
+          }
         } else {
-          console.error("[Dream Edit] Failed upload, supabaseImageUrl is null");
-          toast.error("Failed to persist image—please try again.");
-          setIsSubmitting(false);
-          return;
+          // Already a persisted URL
+          finalImageUrl = dreamData.generatedImage;
+          shouldUpdateImage = true;
+          console.log('[Dream Edit] Using existing image URL:', finalImageUrl);
         }
-      } else if (dreamData.generatedImage && (
-        dreamData.generatedImage.startsWith("http")
-        || dreamData.generatedImage.startsWith("https")
-      )) {
-        // Direct HTTP(S) URL provided (already persisted)
-        imageUrl = dreamData.generatedImage;
-        shouldUpdateImage = true;
-        console.log('[Dream Edit] Using existing image URL:', imageUrl);
       }
 
       const updates: Partial<DreamEntry> = {
@@ -218,9 +230,9 @@ export const useJournalActions = () => {
         // If a new or existing image URL is present, set all related props
         ...(shouldUpdateImage
           ? {
-              generatedImage: imageUrl,
-              image_url: imageUrl,
-              image_dataurl: imageUrl,
+              generatedImage: finalImageUrl,
+              image_url: finalImageUrl,
+              image_dataurl: finalImageUrl,
             }
           : {}
         ),
@@ -304,8 +316,7 @@ export const useJournalActions = () => {
   return {
     isSubmitting,
     handleAddDream,
-    handleEditDream, // Expose this refined version
-    // handleUpdateDream, // This is now internal, not exposed directly unless needed
+    handleEditDream,
     handleDeleteDream,
     handleTogglePublic
   };

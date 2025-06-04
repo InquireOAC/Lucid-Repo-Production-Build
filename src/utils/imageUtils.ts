@@ -75,6 +75,8 @@ export const uploadDreamImage = async (
         
         if (dbError) {
           console.error("Error updating dream entry in database:", dbError);
+        } else {
+          console.log("Successfully updated dream entry with image URL");
         }
       }
 
@@ -149,6 +151,8 @@ export const uploadDreamImage = async (
       
       if (dbError) {
         console.error("Error updating dream entry in database:", dbError);
+      } else {
+        console.log("Successfully updated dream entry with image URL");
       }
     }
 
