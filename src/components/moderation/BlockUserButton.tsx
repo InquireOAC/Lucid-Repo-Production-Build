@@ -42,10 +42,10 @@ const BlockUserButton = ({ userToBlock, onUserBlocked, onFollowStateChanged, var
         variant={variant}
         size={size}
         onClick={handleBlockClick}
-        className="text-red-600 hover:text-red-700"
+        className="text-red-600 hover:text-red-700 text-xs px-2"
       >
-        <UserMinus className="h-4 w-4 mr-1" />
-        Block User
+        <UserMinus className="h-3 w-3 mr-1" />
+        Block
       </Button>
 
       <BlockUserDialog

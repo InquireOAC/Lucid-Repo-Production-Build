@@ -57,10 +57,10 @@ const UnblockUserButton = ({
       size={size}
       onClick={handleUnblock}
       disabled={isUnblocking}
-      className="text-green-600 hover:text-green-700"
+      className="text-green-600 hover:text-green-700 text-xs px-2"
     >
-      <UserPlus className="h-4 w-4 mr-2" />
-      {isUnblocking ? "Unblocking..." : "Unblock User"}
+      <UserPlus className="h-3 w-3 mr-1" />
+      {isUnblocking ? "Unblocking..." : "Unblock"}
     </Button>
   );
 };

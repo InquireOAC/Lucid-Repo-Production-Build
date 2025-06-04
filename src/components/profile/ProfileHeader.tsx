@@ -88,7 +88,7 @@ const ProfileHeader = ({
         )}
         
         {/* Centered Social Links */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mt-2">
           <ProfileSocialLinks
             socialLinks={profileToShow.social_links}
             isOwnProfile={isOwnProfile}
@@ -105,7 +105,7 @@ const ProfileHeader = ({
         onFollowingClick={onFollowingClick}
       />
 
-      <div className="flex gap-2 justify-center">
+      <div className="flex gap-2 justify-center flex-wrap">
         {isOwnProfile ? (
           <>
             <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
@@ -139,28 +139,31 @@ const ProfileHeader = ({
                   key={refreshKey}
                   variant={isFollowing ? "outline" : "default"}
                   onClick={handleFollow}
-                  className="flex-1"
+                  size="sm"
+                  className="text-xs px-2"
                 >
                   {isFollowing ? (
                     <>
-                      <UserMinus className="h-4 w-4 mr-2" />
+                      <UserMinus className="h-3 w-3 mr-1" />
                       Unfollow
                     </>
                   ) : (
                     <>
-                      <UserPlus className="h-4 w-4 mr-2" />
+                      <UserPlus className="h-3 w-3 mr-1" />
                       Follow
                     </>
                   )}
                 </Button>
                 <Button
                   variant="outline"
+                  size="sm"
+                  className="text-xs px-2"
                   onClick={() => {
                     handleStartConversation(profileToShow.id);
                     setSelectedConversationUser(profileToShow);
                   }}
                 >
-                  <MessageCircle className="h-4 w-4 mr-2" />
+                  <MessageCircle className="h-3 w-3 mr-1" />
                   Message
                 </Button>
                 <BlockUserButton
@@ -171,7 +174,7 @@ const ProfileHeader = ({
                   }}
                   onFollowStateChanged={handleFollowStateChanged}
                   variant="outline"
-                  size="default"
+                  size="sm"
                 />
               </>
             ) : (
@@ -183,7 +186,7 @@ const ProfileHeader = ({
                 }}
                 onUserUnblocked={handleFollowStateChanged}
                 variant="outline"
-                size="default"
+                size="sm"
               />
             )}
           </>
