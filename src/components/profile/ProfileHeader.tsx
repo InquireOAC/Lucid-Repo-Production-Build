@@ -67,12 +67,15 @@ const ProfileHeader = ({
 
   return (
     <div className="text-center space-y-4">
-      <ProfileAvatar
-        symbol={profileToShow.avatar_symbol}
-        color={profileToShow.avatar_color}
-        fallbackLetter={fallbackLetter}
-        size={80}
-      />
+      {/* Centered Profile Avatar */}
+      <div className="flex justify-center">
+        <ProfileAvatar
+          symbol={profileToShow.avatar_symbol}
+          color={profileToShow.avatar_color}
+          fallbackLetter={fallbackLetter}
+          size={80}
+        />
+      </div>
 
       <div>
         <h1 className="text-2xl font-bold">{displayName}</h1>
@@ -82,11 +85,15 @@ const ProfileHeader = ({
         {profileToShow.bio && (
           <p className="text-sm text-muted-foreground mt-2">{profileToShow.bio}</p>
         )}
-        <ProfileSocialLinks
-          socialLinks={profileToShow.social_links}
-          isOwnProfile={isOwnProfile}
-          onEdit={() => setIsSocialLinksOpen(true)}
-        />
+        
+        {/* Centered Social Links */}
+        <div className="flex justify-center">
+          <ProfileSocialLinks
+            socialLinks={profileToShow.social_links}
+            isOwnProfile={isOwnProfile}
+            onEdit={() => setIsSocialLinksOpen(true)}
+          />
+        </div>
       </div>
 
       <ProfileStatsBar
