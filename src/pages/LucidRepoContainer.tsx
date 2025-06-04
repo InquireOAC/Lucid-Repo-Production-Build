@@ -76,7 +76,7 @@ const LucidRepoContainer = () => {
 
   const handleCloseDream = () => {
     setSelectedDream(null);
-    // Don't refresh here - let the like/view updates handle state changes
+    // Don't refresh here - the view count and like updates should already be in dreamsState
   };
 
   const handleNavigateToProfile = (username: string | undefined) => {
