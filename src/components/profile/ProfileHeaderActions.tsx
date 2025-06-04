@@ -1,101 +1,89 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, MessageCircle, UserPlus, UserMinus } from "lucide-react";
-import BlockUserButton from "@/components/moderation/BlockUserButton";
+import { Crown, Settings, MessageCircle, UserPlus, UserMinus, Users } from "lucide-react";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
   isFollowing: boolean;
-  profileToShow?: any;
-  onEditProfile?: () => void;
-  onMessages: () => void;
-  onSettings?: () => void;
-  onFollow: () => void;
-  onStartConversation?: () => void;
-  onSubscription?: () => void;
-  loading?: boolean;
+  onFollowClick: () => void;
+  onMessageClick: () => void;
+  onSettingsClick: () => void;
+  onSubscriptionClick: () => void;
+  onFollowersClick: () => void;
+  onFollowingClick: () => void;
+  followersCount: number;
+  followingCount: number;
 }
 
 const ProfileHeaderActions = ({
   isOwnProfile,
   isFollowing,
-  profileToShow,
-  onEditProfile,
-  onMessages,
-  onSettings,
-  onFollow,
-  onStartConversation,
-  onSubscription,
-  loading
+  onFollowClick,
+  onMessageClick,
+  onSettingsClick,
+  onSubscriptionClick,
+  onFollowersClick,
+  onFollowingClick,
+  followersCount,
+  followingCount
 }: ProfileHeaderActionsProps) => {
-  console.log("ProfileHeaderActions render:", { isOwnProfile, profileToShow: profileToShow?.username, hasProfileToShow: !!profileToShow });
-  
-  if (isOwnProfile) {
-    return (
-      <div className="flex gap-2">
-        {onEditProfile && (
-          <Button onClick={onEditProfile} variant="outline" size="sm">
-            Edit Profile
-          </Button>
-        )}
-        <Button onClick={onMessages} variant="outline" size="sm">
-          <MessageCircle className="h-4 w-4" />
-        </Button>
-        {onSettings && (
-          <Button onClick={onSettings} variant="outline" size="sm">
-            <Settings className="h-4 w-4" />
-          </Button>
-        )}
-        {onSubscription && (
-          <Button onClick={onSubscription} variant="outline" size="sm" disabled={loading}>
-            Subscription
-          </Button>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div className="flex gap-2 flex-wrap">
-      <Button 
-        onClick={onFollow}
-        variant={isFollowing ? "outline" : "default"}
-        size="sm"
-        className="flex items-center gap-1"
+    <div className="flex items-center gap-2 mt-4 flex-wrap">
+      {/* Followers/Following buttons */}
+      <Button
+        variant="ghost"
+        onClick={onFollowersClick}
+        className="flex items-center gap-1 px-3 py-1 h-8 text-sm"
       >
-        {isFollowing ? (
-          <>
-            <UserMinus className="h-4 w-4" />
-            Unfollow
-          </>
-        ) : (
-          <>
-            <UserPlus className="h-4 w-4" />
-            Follow
-          </>
-        )}
+        <Users className="h-3 w-3" />
+        <span>{followersCount} followers</span>
       </Button>
       
-      <Button 
-        onClick={onStartConversation || onMessages}
-        variant="outline" 
-        size="sm"
+      <Button
+        variant="ghost"
+        onClick={onFollowingClick}
+        className="flex items-center gap-1 px-3 py-1 h-8 text-sm"
       >
-        <MessageCircle className="h-4 w-4" />
+        <Users className="h-3 w-3" />
+        <span>{followingCount} following</span>
       </Button>
 
-      {/* Block User Button - always show for other user's profiles if we have profile data */}
-      {profileToShow && (
-        <BlockUserButton
-          userToBlock={{
-            id: profileToShow.id,
-            username: profileToShow.username,
-            display_name: profileToShow.display_name
-          }}
-          variant="outline"
-          size="sm"
-        />
+      {isOwnProfile ? (
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onSubscriptionClick} size="sm">
+            <Crown className="h-4 w-4 mr-2" />
+            Subscription
+          </Button>
+          <Button variant="outline" onClick={onSettingsClick} size="sm">
+            <Settings className="h-4 w-4 mr-2" />
+            Settings
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <Button
+            variant={isFollowing ? "outline" : "default"}
+            onClick={onFollowClick}
+            size="sm"
+          >
+            {isFollowing ? (
+              <>
+                <UserMinus className="h-4 w-4 mr-2" />
+                Unfollow
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Follow
+              </>
+            )}
+          </Button>
+          <Button variant="outline" onClick={onMessageClick} size="sm">
+            <MessageCircle className="h-4 w-4 mr-2" />
+            Message
+          </Button>
+        </div>
       )}
     </div>
   );

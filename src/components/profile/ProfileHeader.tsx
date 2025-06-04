@@ -1,203 +1,91 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
-import { Settings, MessageCircle, UserPlus, UserMinus, MoreVertical } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import ProfileAvatar from "./SymbolAvatar";
-import ProfileStatsBar from "./ProfileStatsBar";
-import ProfileSocialLinks from "./ProfileSocialLinks";
-import BlockUserButton from "../moderation/BlockUserButton";
-import UnblockUserButton from "../moderation/UnblockUserButton";
-import { useBlockedUsers } from "@/hooks/useBlockedUsers";
+import { Edit } from "lucide-react";
+import ProfileAvatar from "./ProfileAvatar";
+import ProfileHeaderActions from "./ProfileHeaderActions";
 
 interface ProfileHeaderProps {
-  profileToShow: any;
+  profile: any;
   isOwnProfile: boolean;
   dreamCount: number;
   followersCount: number;
   followingCount: number;
   isFollowing: boolean;
-  setIsEditProfileOpen: (open: boolean) => void;
-  setIsMessagesOpen: (open: boolean) => void;
-  setIsSettingsOpen: (open: boolean) => void;
-  setIsSubscriptionOpen: (open: boolean) => void;
-  setIsSocialLinksOpen: (open: boolean) => void;
-  handleFollow: () => void;
-  handleStartConversation: (userId: string) => void;
+  onEditProfileClick: () => void;
+  onMessageClick: () => void;
+  onSettingsClick: () => void;
+  onSubscriptionClick: () => void;
+  onFollowClick: () => void;
+  onStartConversation: () => void;
   onFollowersClick: () => void;
   onFollowingClick: () => void;
-  setSelectedConversationUser: (user: any) => void;
 }
 
 const ProfileHeader = ({
-  profileToShow,
+  profile,
   isOwnProfile,
   dreamCount,
   followersCount,
   followingCount,
   isFollowing,
-  setIsEditProfileOpen,
-  setIsMessagesOpen,
-  setIsSettingsOpen,
-  setIsSubscriptionOpen,
-  setIsSocialLinksOpen,
-  handleFollow,
-  handleStartConversation,
+  onEditProfileClick,
+  onMessageClick,
+  onSettingsClick,
+  onSubscriptionClick,
+  onFollowClick,
+  onStartConversation,
   onFollowersClick,
-  onFollowingClick,
-  setSelectedConversationUser
+  onFollowingClick
 }: ProfileHeaderProps) => {
-  const { isUserBlocked } = useBlockedUsers();
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleFollowStateChanged = () => {
-    // Force refresh of follow state by triggering a re-render
-    setRefreshKey(prev => prev + 1);
-    // Call the follow handler to refresh the actual follow state
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-  };
-
-  const isBlocked = profileToShow?.id ? isUserBlocked(profileToShow.id) : false;
-
-  if (!profileToShow) return null;
-
-  const displayName = profileToShow.display_name || profileToShow.username || "User";
-  const fallbackLetter = displayName.charAt(0).toUpperCase();
-
   return (
-    <div className="text-center space-y-4">
-      {/* Centered Profile Avatar */}
-      <div className="flex justify-center">
+    <div className="flex flex-col items-center text-center mb-8">
+      <div className="relative mb-4">
         <ProfileAvatar
-          symbol={profileToShow.avatar_symbol}
-          color={profileToShow.avatar_color}
-          fallbackLetter={fallbackLetter}
-          size={80}
+          profile={profile}
+          size="lg"
+          className="w-24 h-24"
         />
+        {isOwnProfile && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onEditProfileClick}
+            className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <div>
-        <h1 className="text-2xl font-bold">{displayName}</h1>
-        {profileToShow.username && (
-          <p className="text-muted-foreground">@{profileToShow.username}</p>
-        )}
-        {profileToShow.bio && (
-          <p className="text-sm text-muted-foreground mt-2">{profileToShow.bio}</p>
-        )}
-        
-        {/* Centered Social Links */}
-        <div className="flex justify-center mt-2">
-          <ProfileSocialLinks
-            socialLinks={profileToShow.social_links}
-            isOwnProfile={isOwnProfile}
-            onEdit={() => setIsSocialLinksOpen(true)}
-          />
-        </div>
+      <h1 className="text-2xl font-bold mb-2">
+        {profile?.display_name || profile?.username || "Unknown User"}
+      </h1>
+      
+      {profile?.username && (
+        <p className="text-muted-foreground mb-2">@{profile.username}</p>
+      )}
+      
+      {profile?.bio && (
+        <p className="text-sm text-muted-foreground max-w-md mb-4">{profile.bio}</p>
+      )}
+
+      <div className="text-sm text-muted-foreground mb-4">
+        {dreamCount} dreams shared
       </div>
 
-      <ProfileStatsBar
-        dreamCount={dreamCount}
-        followersCount={followersCount}
-        followingCount={followingCount}
+      <ProfileHeaderActions
+        isOwnProfile={isOwnProfile}
+        isFollowing={isFollowing}
+        onFollowClick={onFollowClick}
+        onMessageClick={onStartConversation}
+        onSettingsClick={onSettingsClick}
+        onSubscriptionClick={onSubscriptionClick}
         onFollowersClick={onFollowersClick}
         onFollowingClick={onFollowingClick}
+        followersCount={followersCount}
+        followingCount={followingCount}
       />
-
-      <div className="flex gap-2 justify-center flex-wrap">
-        {isOwnProfile ? (
-          <>
-            <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
-              Edit Profile
-            </Button>
-            <Button variant="outline" onClick={() => setIsMessagesOpen(true)}>
-              <MessageCircle className="h-4 w-4 mr-2" />
-              Messages
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="icon">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setIsSubscriptionOpen(true)}>
-                  Subscription
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsSettingsOpen(true)}>
-                  Settings
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        ) : (
-          <>
-            {!isBlocked ? (
-              <>
-                <Button
-                  key={refreshKey}
-                  variant={isFollowing ? "outline" : "default"}
-                  onClick={handleFollow}
-                  size="sm"
-                  className="text-xs px-2"
-                >
-                  {isFollowing ? (
-                    <>
-                      <UserMinus className="h-3 w-3 mr-1" />
-                      Unfollow
-                    </>
-                  ) : (
-                    <>
-                      <UserPlus className="h-3 w-3 mr-1" />
-                      Follow
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs px-2"
-                  onClick={() => {
-                    handleStartConversation(profileToShow.id);
-                    setSelectedConversationUser(profileToShow);
-                  }}
-                >
-                  <MessageCircle className="h-3 w-3 mr-1" />
-                  Message
-                </Button>
-                <BlockUserButton
-                  userToBlock={{
-                    id: profileToShow.id,
-                    username: profileToShow.username,
-                    display_name: profileToShow.display_name
-                  }}
-                  onFollowStateChanged={handleFollowStateChanged}
-                  variant="outline"
-                  size="sm"
-                />
-              </>
-            ) : (
-              <UnblockUserButton
-                userToUnblock={{
-                  id: profileToShow.id,
-                  username: profileToShow.username,
-                  display_name: profileToShow.display_name
-                }}
-                onUserUnblocked={handleFollowStateChanged}
-                variant="outline"
-                size="sm"
-              />
-            )}
-          </>
-        )}
-      </div>
-
-      {isBlocked && (
-        <div className="text-center py-4">
-          <p className="text-muted-foreground">You have blocked this user</p>
-        </div>
-      )}
     </div>
   );
 };

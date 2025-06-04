@@ -1,3 +1,4 @@
+
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -26,7 +27,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   // Log when the component renders with the current dream data
   useEffect(() => {
     console.log("DreamShareCard rendering with dream:", dream);
-    console.log("DreamShareCard image URL:", dream.generatedImage || dream.image_url);
+    console.log("DreamShareCard image URL:", dream.image_url || dream.generatedImage);
   }, [dream]);
   
   // Expose the shareDream method via ref
@@ -37,7 +38,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
       if (onShareStart) onShareStart();
       
       // Ensure image has loaded before proceeding
-      if (imgRef.current && dream.generatedImage && !imgRef.current.complete) {
+      if (imgRef.current && dreamImageUrl && !imgRef.current.complete) {
         console.log("Image not loaded yet, waiting...");
         await new Promise<void>((resolve) => {
           const img = imgRef.current;
@@ -92,8 +93,8 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   // Extract dream content for display - truncated
   const dreamContent = truncateText(dream.content || "No dream content recorded.", 280);
   
-  // Get the dream image - use generatedImage, image_url, or imageUrl properties
-  const dreamImageUrl = dream.generatedImage || dream.image_url || "";
+  // Prioritize image_url (Supabase bucket) over generatedImage (temporary URL)
+  const dreamImageUrl = dream.image_url || dream.generatedImage || "";
   
   // Truncate analysis to shorter length
   const truncatedAnalysis = truncateText(dream.analysis || "", 140);

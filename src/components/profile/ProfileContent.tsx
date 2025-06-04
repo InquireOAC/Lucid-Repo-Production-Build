@@ -145,6 +145,7 @@ const ProfileContent = () => {
           setIsMessagesOpen={setIsMessagesOpen}
           setIsSettingsOpen={setIsSettingsOpen}
           setIsSocialLinksOpen={setIsSocialLinksOpen}
+          setIsSubscriptionOpen={setIsSubscriptionOpen}
           handleFollow={handleFollow}
           handleStartConversation={handleStartConversation}
           onFollowersClick={() => {
