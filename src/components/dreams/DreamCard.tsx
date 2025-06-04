@@ -197,7 +197,7 @@ const DreamCard = ({
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>
           <div className="flex items-center gap-4">
-            {/* Display-only like counter - no click handler */}
+            {/* Display-only like counter - visible to ALL users */}
             <div className="flex items-center gap-1">
               <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />
               <span>{dream.likeCount || dream.like_count || 0}</span>
