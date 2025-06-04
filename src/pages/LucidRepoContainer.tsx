@@ -45,15 +45,19 @@ const LucidRepoContainer = () => {
   useEffect(() => { 
     if (dreams.length > 0) {
       setDreamsState(prevState => {
-        // If we have existing state with view count updates, preserve those
+        // If we have existing state with local updates, preserve those
         if (prevState.length === dreams.length) {
           return prevState.map(prevDream => {
             const newDream = dreams.find(d => d.id === prevDream.id);
             if (newDream) {
-              // Keep the higher view count (in case we've updated it locally)
+              // Keep the higher view count and like count (in case we've updated them locally)
               return {
                 ...newDream,
-                view_count: Math.max(prevDream.view_count || 0, newDream.view_count || 0)
+                view_count: Math.max(prevDream.view_count || 0, newDream.view_count || 0),
+                like_count: Math.max(prevDream.like_count || 0, newDream.like_count || 0),
+                likeCount: Math.max(prevDream.likeCount || 0, newDream.likeCount || 0),
+                // Also preserve the liked state if it was updated locally
+                liked: prevDream.liked !== undefined ? prevDream.liked : newDream.liked
               };
             }
             return prevDream;
