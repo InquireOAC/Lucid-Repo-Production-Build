@@ -2,37 +2,10 @@
 import { Capacitor } from "@capacitor/core";
 import { Share } from "@capacitor/share";
 import { toast } from "sonner";
-import { saveAs } from "file-saver";
-
-/**
- * Automatically downloads image on generation and provides manual save option
- */
-export async function autoDownloadImage(imageUrl: string, filename = "dream-image.png") {
-  try {
-    console.log("Auto-downloading image:", imageUrl);
-    
-    // Create a download link and trigger it
-    const link = document.createElement('a');
-    link.href = imageUrl;
-    link.download = filename;
-    link.target = '_blank';
-    
-    // Append to body, click, and remove
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success("Dream image downloaded automatically!");
-    return true;
-  } catch (error) {
-    console.warn("Auto download failed, will provide manual save option:", error);
-    return false;
-  }
-}
 
 /**
  * Saves or shares an image as PNG depending on platform.
- * Simplified approach to handle CORS issues with external URLs.
+ * Now optimized to work with Supabase storage URLs.
  */
 export async function shareOrSaveImage(imageUrl: string, filename = "dream-image.png") {
   try {
@@ -58,7 +31,7 @@ export async function shareOrSaveImage(imageUrl: string, filename = "dream-image
       console.log("Web platform detected, attempting download");
       
       try {
-        // For external URLs (like OpenAI), try direct download link
+        // For Supabase URLs or any accessible URLs, try direct download link
         const link = document.createElement('a');
         link.href = imageUrl;
         link.download = filename;

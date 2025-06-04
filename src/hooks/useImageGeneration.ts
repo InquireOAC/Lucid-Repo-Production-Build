@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useDreamImageAI } from "./useDreamImageAI";
-import { autoDownloadImage } from "@/utils/shareOrSaveImage";
 
 interface UseImageGenerationProps {
   dreamContent: string;
@@ -69,18 +68,8 @@ export const useImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Auto-download the image immediately to prevent expiration issues
-      console.log("Step 3: Auto-downloading image...");
-      const autoDownloaded = await autoDownloadImage(openaiUrl, `dream-${dreamId}-${Date.now()}.png`);
-      
-      if (autoDownloaded) {
-        console.log("Image auto-downloaded successfully");
-      } else {
-        console.warn("Auto-download failed, user can still save manually");
-      }
-
-      // 5. Try to upload image to Supabase in background (non-blocking)
-      console.log("Step 4: Attempting background upload to Supabase...");
+      // 4. Try to upload image to Supabase in background (non-blocking)
+      console.log("Step 3: Attempting background upload to Supabase...");
       
       try {
         const uploadPromise = uploadImage(openaiUrl, dreamId);
@@ -97,11 +86,11 @@ export const useImageGeneration = ({
           toast.success("Dream image generated and saved permanently!");
         } else {
           console.warn("Upload returned null - keeping temporary URL");
-          toast.success("Image generated and downloaded! Note: Using temporary URL for display.");
+          toast.success("Image generated! Note: Using temporary URL for display.");
         }
       } catch (uploadError) {
         console.warn("Background upload failed:", uploadError);
-        toast.success("Image generated and downloaded! Note: Could not save permanently to cloud.");
+        toast.success("Image generated! Note: Could not save permanently to cloud.");
       }
 
       // Mark feature as used only after successful generation
