@@ -64,10 +64,7 @@ const LucidRepoContainer = () => {
 
   useEffect(() => {
     fetchPublicDreams();
-    const refreshInterval = setInterval(() => {
-      fetchPublicDreams();
-    }, 30000);
-    return () => clearInterval(refreshInterval);
+    // Remove automatic refresh interval - only refresh on pull-to-refresh
   }, []);
 
   // When backend dreams update, update local dreamsState
@@ -79,8 +76,7 @@ const LucidRepoContainer = () => {
 
   const handleCloseDream = () => {
     setSelectedDream(null);
-    // Refresh the dreams list to get updated like/view counts
-    fetchPublicDreams();
+    // Don't refresh here - let the like/view updates handle state changes
   };
 
   const handleNavigateToProfile = (username: string | undefined) => {
@@ -97,7 +93,21 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
-  // The MAIN handler: when liking a dream from modal, update state and refresh
+  // Handler for updating view count when opening dream
+  const handleViewCountUpdate = (dreamId: string) => {
+    setDreamsState(prevDreams =>
+      prevDreams.map(dream =>
+        dream.id === dreamId
+          ? {
+              ...dream,
+              view_count: (dream.view_count || 0) + 1
+            }
+          : dream
+      )
+    );
+  };
+
+  // The MAIN handler: when liking a dream from modal, update state
   const handleDreamLike = async (dreamId: string) => {
     if (!user) {
       setAuthDialogOpen(true);
@@ -200,6 +210,7 @@ const LucidRepoContainer = () => {
             onUpdate={handleDreamUpdate}
             isAuthenticated={!!user}
             onLike={() => handleDreamLike(selectedDream.id)}
+            onViewCountUpdate={handleViewCountUpdate}
           />
         )}
         <AuthDialog 

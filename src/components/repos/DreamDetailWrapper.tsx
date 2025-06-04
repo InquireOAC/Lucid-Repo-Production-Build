@@ -12,6 +12,7 @@ interface DreamDetailWrapperProps {
   onUpdate: (id: string, updates: Partial<DreamEntry>) => void;
   isAuthenticated: boolean;
   onLike?: (dreamId: string) => void;
+  onViewCountUpdate?: (dreamId: string) => void;
 }
 
 const DreamDetailWrapper = ({
@@ -20,7 +21,8 @@ const DreamDetailWrapper = ({
   onClose,
   onUpdate,
   isAuthenticated,
-  onLike
+  onLike,
+  onViewCountUpdate
 }: DreamDetailWrapperProps) => {
   if (!selectedDream) return null;
   
@@ -80,6 +82,11 @@ const DreamDetailWrapper = ({
 
           if (error) {
             console.error("Error updating view count:", error);
+          } else {
+            // Update the local state immediately
+            if (onViewCountUpdate) {
+              onViewCountUpdate(selectedDream.id);
+            }
           }
         } catch (error) {
           console.error("Error updating view count:", error);
@@ -88,7 +95,7 @@ const DreamDetailWrapper = ({
 
       updateViewCount();
     }
-  }, [selectedDream?.id]);
+  }, [selectedDream?.id, onViewCountUpdate]);
 
   const handleLike = () => {
     if (onLike && selectedDream) {
