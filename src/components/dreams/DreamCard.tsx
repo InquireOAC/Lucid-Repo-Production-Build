@@ -197,15 +197,11 @@ const DreamCard = ({
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-auto p-1 hover:text-red-500 ${isJournalView ? 'text-xs' : ''}`}
-              onClick={(e) => handleButtonClick(e, () => onLike(dream.id))}
-            >
-              <Heart className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {dream.likeCount || dream.like_count || 0}
-            </Button>
+            {/* Display-only like counter - no click handler */}
+            <div className="flex items-center gap-1">
+              <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />
+              <span>{dream.likeCount || dream.like_count || 0}</span>
+            </div>
             
             {onComment && (
               <Button

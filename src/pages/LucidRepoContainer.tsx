@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,6 +79,7 @@ const LucidRepoContainer = () => {
 
   const handleCloseDream = () => {
     setSelectedDream(null);
+    // Refresh the dreams list to get updated like/view counts
     fetchPublicDreams();
   };
 
@@ -95,13 +97,23 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
-  // The MAIN handler: when liking a dream from card/list or modal, update state
+  // The MAIN handler: when liking a dream from modal, update state and refresh
   const handleDreamLike = async (dreamId: string) => {
     if (!user) {
       setAuthDialogOpen(true);
       return;
     }
-    await handleLike(dreamId);
+    
+    const success = await handleLike(dreamId);
+    if (success) {
+      // Update the selected dream if it's the one being liked
+      if (selectedDream && selectedDream.id === dreamId) {
+        const updatedDream = dreamsState.find(d => d.id === dreamId);
+        if (updatedDream) {
+          setSelectedDream({ ...updatedDream });
+        }
+      }
+    }
   };
 
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
@@ -173,7 +185,7 @@ const LucidRepoContainer = () => {
           isLoading={isLoading || tagsLoading}
           filteredDreams={filteredDreams}
           dreamTags={filteredDreamTags}
-          onLike={handleDreamLike}
+          onLike={() => {}} // Pass empty function since likes should only work from modal
           onOpenDream={handleOpenDream}
           onUserClick={handleNavigateToProfile}
           onTagClick={handleTagClick}

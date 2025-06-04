@@ -65,6 +65,31 @@ const DreamDetailWrapper = ({
     }
   };
 
+  // Update view count when dream is opened
+  React.useEffect(() => {
+    if (selectedDream && selectedDream.id) {
+      const updateViewCount = async () => {
+        try {
+          // Increment view count in database
+          const { error } = await supabase
+            .from("dream_entries")
+            .update({ 
+              view_count: (selectedDream.view_count || 0) + 1 
+            })
+            .eq("id", selectedDream.id);
+
+          if (error) {
+            console.error("Error updating view count:", error);
+          }
+        } catch (error) {
+          console.error("Error updating view count:", error);
+        }
+      };
+
+      updateViewCount();
+    }
+  }, [selectedDream?.id]);
+
   const handleLike = () => {
     if (onLike && selectedDream) {
       onLike(selectedDream.id);
