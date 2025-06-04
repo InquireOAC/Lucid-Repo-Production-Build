@@ -97,6 +97,10 @@ const ProfileHeader = ({
             <Button variant="outline" onClick={() => setIsEditProfileOpen(true)}>
               Edit Profile
             </Button>
+            <Button variant="outline" onClick={() => setIsMessagesOpen(true)}>
+              <MessageCircle className="h-4 w-4 mr-2" />
+              Messages
+            </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="icon">
@@ -104,10 +108,6 @@ const ProfileHeader = ({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setIsMessagesOpen(true)}>
-                  <MessageCircle className="h-4 w-4 mr-2" />
-                  Messages
-                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setIsSocialLinksOpen(true)}>
                   Social Links
                 </DropdownMenuItem>
