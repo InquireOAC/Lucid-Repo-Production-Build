@@ -20,8 +20,10 @@ const DreamDetailContent = ({
 }: DreamDetailContentProps) => {
   return (
     <div className="space-y-4 mt-2">
-      {/* Date */}
-      <div className="text-sm text-muted-foreground">{formattedDate}</div>
+      {/* Only show date if it's provided (backward compatibility) */}
+      {formattedDate && (
+        <div className="text-sm text-muted-foreground">{formattedDate}</div>
+      )}
       
       {/* Content */}
       <div className="text-sm whitespace-pre-wrap">{content}</div>

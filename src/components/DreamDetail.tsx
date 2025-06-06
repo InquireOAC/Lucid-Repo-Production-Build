@@ -139,25 +139,26 @@ const DreamDetail = ({
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
-              {/* Flag button for public dreams when user is not the owner */}
-              {isPublic && user && !isOwner && (
-                <div className="mt-1">
-                  <FlagButton
-                    contentType="dream"
-                    contentId={dream.id}
-                    contentOwnerId={dream.user_id}
-                    size="sm"
-                  />
-                </div>
-              )}
-            </div>
+            <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
           </DialogHeader>
+          
+          {/* Date section with flag button inline */}
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">{formattedDate || ""}</div>
+            {/* Flag button for public dreams when user is not the owner */}
+            {isPublic && user && !isOwner && (
+              <FlagButton
+                contentType="dream"
+                contentId={dream.id}
+                contentOwnerId={dream.user_id}
+                size="sm"
+              />
+            )}
+          </div>
           
           <DreamDetailContent
             content={dream.content}
-            formattedDate={formattedDate || ""}
+            formattedDate="" // Pass empty string since we're showing date above
             dreamTags={mappedTags}
             generatedImage={dream.generatedImage || dream.image_url || null}
             analysis={dream.analysis}
