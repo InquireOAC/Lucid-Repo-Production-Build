@@ -1,18 +1,17 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Shield, Heart, AlertTriangle, Users, Lock } from "lucide-react";
-
 interface CommunityGuidelinesDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-const CommunityGuidelinesDialog = ({ open, onOpenChange }: CommunityGuidelinesDialogProps) => {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+const CommunityGuidelinesDialog = ({
+  open,
+  onOpenChange
+}: CommunityGuidelinesDialogProps) => {
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -117,9 +116,7 @@ const CommunityGuidelinesDialog = ({ open, onOpenChange }: CommunityGuidelinesDi
               </p>
             </section>
 
-            <p className="text-xs text-muted-foreground">
-              Last updated: December 2024 | Questions? Contact our support team.
-            </p>
+            <p className="text-xs text-muted-foreground">Last updated: December 2024 | Questions? Contact support - LucidRepofficial@gmail.com</p>
           </div>
         </ScrollArea>
 
@@ -129,8 +126,6 @@ const CommunityGuidelinesDialog = ({ open, onOpenChange }: CommunityGuidelinesDi
           </Button>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default CommunityGuidelinesDialog;
