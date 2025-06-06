@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loader2, Smartphone, RotateCcw, AlertCircle } from "lucide-react";
+import { Loader2, Smartphone, RotateCcw, AlertCircle, Crown } from "lucide-react";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 
 interface NativeSubscriptionManagerProps {
@@ -10,7 +10,7 @@ interface NativeSubscriptionManagerProps {
 }
 
 const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerProps) => {
-  const { products, isLoading, purchaseSubscription, restorePurchases } = useNativeSubscription();
+  const { products, isLoading, showPaywall, restorePurchases } = useNativeSubscription();
 
   return (
     <div className="space-y-6">
@@ -34,16 +34,38 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
       )}
 
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="text-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p className="text-muted-foreground">Loading subscription options...</p>
-          </div>
-        ) : products.length === 0 ? (
+        {/* Main Paywall Button */}
+        <Card className="p-6 text-center bg-gradient-to-br from-dream-purple/5 to-dream-lavender/5 border-dream-purple/20">
+          <Crown className="h-16 w-16 mx-auto text-dream-purple mb-4" />
+          <h4 className="text-xl font-bold mb-2">Unlock Premium Features</h4>
+          <p className="text-muted-foreground mb-4">
+            Get unlimited dream analysis and image generation
+          </p>
+          <Button
+            className="w-full h-12 text-lg bg-gradient-to-r from-dream-purple to-dream-lavender hover:from-dream-purple/90 hover:to-dream-lavender/90"
+            onClick={showPaywall}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                <Crown className="h-5 w-5 mr-2" />
+                View Subscription Options
+              </>
+            )}
+          </Button>
+        </Card>
+
+        {/* Fallback product display if needed */}
+        {products.length === 0 && !isLoading && (
           <div className="text-center py-8">
             <AlertCircle className="h-12 w-12 mx-auto text-orange-500 mb-4" />
             <p className="text-muted-foreground mb-2">
-              No subscription products available.
+              Subscription options are loading...
             </p>
             <p className="text-xs text-muted-foreground mb-4">
               Make sure your RevenueCat offerings are configured with products:<br/>
@@ -57,44 +79,6 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
             >
               Retry Loading
             </Button>
-          </div>
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {products.map((product) => (
-              <Card key={product.id} className="p-4 space-y-4">
-                <div>
-                  <h4 className="text-lg font-medium">{product.name}</h4>
-                  <p className="text-2xl font-bold text-dream-purple">{product.price}</p>
-                  <p className="text-xs text-muted-foreground">
-                    ID: {product.packageObject.product.identifier}
-                  </p>
-                </div>
-                
-                <ul className="space-y-2 text-sm">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button
-                  className="w-full"
-                  onClick={() => purchaseSubscription(product.id)}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Subscribe via App Store`
-                  )}
-                </Button>
-              </Card>
-            ))}
           </div>
         )}
       </div>

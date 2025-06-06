@@ -61,7 +61,6 @@ export const useNativeSubscription = () => {
         const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
         const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
         
-        // If the product ID doesn't match our expected IDs, still create a product
         let productName = 'Unknown Plan';
         let productId = 'price_unknown';
         let features: string[] = [];
@@ -83,7 +82,6 @@ export const useNativeSubscription = () => {
             'Priority Support'
           ];
         } else {
-          // Handle unexpected product IDs by creating a generic product
           productName = pkg.product.title || pkg.product.identifier;
           productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
           features = ['All features included'];
@@ -104,6 +102,52 @@ export const useNativeSubscription = () => {
     } catch (error) {
       console.error('Failed to initialize RevenueCat:', error);
       toast.error(`Failed to load subscription options: ${error.message || 'Unknown error'}`);
+    }
+  };
+
+  const showPaywall = async () => {
+    if (!user) {
+      toast.error('Please sign in to access subscriptions');
+      return;
+    }
+
+    if (!Capacitor.isNativePlatform()) {
+      toast.error('Paywall is only available on mobile devices');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      console.log('Showing RevenueCat paywall...');
+      
+      // Get current offerings to show in paywall
+      const offerings: PurchasesOfferings = await Purchases.getOfferings();
+      
+      if (!offerings.current || offerings.current.availablePackages.length === 0) {
+        throw new Error('No subscription packages available');
+      }
+
+      // Show the paywall - this will present RevenueCat's native paywall UI
+      const purchaseResult = await Purchases.presentPaywall({
+        offering: offerings.current
+      });
+
+      if (purchaseResult) {
+        console.log('Purchase result from paywall:', purchaseResult);
+        await verifyPurchase(purchaseResult);
+        toast.success('Subscription activated successfully!');
+      } else {
+        console.log('User dismissed paywall without purchasing');
+      }
+    } catch (error: any) {
+      console.error('Paywall error:', error);
+      if (error.message?.includes('dismissed') || error.message?.includes('cancelled')) {
+        console.log('User cancelled subscription flow');
+      } else {
+        toast.error(`Subscription error: ${error.message}`);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -186,6 +230,7 @@ export const useNativeSubscription = () => {
     products,
     isLoading,
     isNative,
+    showPaywall,
     purchaseSubscription,
     restorePurchases
   };
