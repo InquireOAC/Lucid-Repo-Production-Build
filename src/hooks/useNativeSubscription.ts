@@ -125,7 +125,7 @@ export const useNativeSubscription = () => {
       console.log('Customer info:', customerInfo);
       
       // Check if user has "pro" entitlement (you'll need to configure this in RevenueCat)
-      const hasProEntitlement = customerInfo.entitlements.active['pro'] !== undefined;
+      const hasProEntitlement = customerInfo.customerInfo.entitlements.active['pro'] !== undefined;
       
       if (hasProEntitlement) {
         toast.success('You already have an active subscription!');
