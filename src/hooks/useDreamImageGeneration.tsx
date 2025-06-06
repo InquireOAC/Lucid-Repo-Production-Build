@@ -1,7 +1,6 @@
 
 import { useReliableImageUpload } from "./useReliableImageUpload";
 import { useImageGeneration } from "./useImageGeneration";
-import { useImageFileUpload } from "./useImageFileUpload";
 import { useImageState } from "./useImageState";
 
 interface UseDreamImageGenerationProps {
@@ -45,34 +44,20 @@ export const useDreamImageGeneration = ({
     disabled,
   });
 
-  const {
-    isUploading,
-    handleImageFromFile: handleImageFromFileCore,
-  } = useImageFileUpload({
-    dreamId,
-    onImageGenerated,
-    imagePrompt,
-  });
-
   const generateImage = () => {
     generateImageCore(setImagePrompt, setGeneratedImage, uploadImage);
-  };
-
-  const handleImageFromFile = (fileDataUrl: string) => {
-    handleImageFromFileCore(fileDataUrl, uploadImage, setImageError);
   };
 
   return {
     imagePrompt,
     setImagePrompt,
     generatedImage,
-    isGenerating: isGenerating || isUploading,
+    isGenerating,
     showInfo,
     imageError,
     setImageError,
     generateImage,
     isAppCreator,
     hasUsedFeature,
-    handleImageFromFile,
   };
 };

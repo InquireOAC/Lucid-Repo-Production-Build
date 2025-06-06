@@ -41,7 +41,6 @@ const DreamImageGenerator = ({
     generateImage,
     isAppCreator,
     hasUsedFeature,
-    handleImageFromFile,
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
@@ -50,10 +49,6 @@ const DreamImageGenerator = ({
     disabled,
     dreamId,
   });
-
-  const onImageFileUpload = async (base64DataUrl: string) => {
-    await handleImageFromFile(base64DataUrl);
-  };
 
   const handleSaveAsPng = async () => {
     if (!generatedImage) {
@@ -90,7 +85,6 @@ const DreamImageGenerator = ({
             imageUrl=""
             imageDataUrl=""
             onError={() => setImageError(true)}
-            onImageChange={onImageFileUpload}
             disabled={disabled || isGenerating}
           />
         </CardContent>
@@ -115,7 +109,6 @@ const DreamImageGenerator = ({
               imageUrl={generatedImage || ""}
               imageDataUrl={generatedImage}
               onError={() => setImageError(true)}
-              onImageChange={onImageFileUpload}
               disabled={disabled || isGenerating}
             />
             {generatedImage && (
@@ -145,7 +138,7 @@ const DreamImageGenerator = ({
             )}
             {imageError && !isGenerating && (
               <p className="text-xs text-red-500 mt-1 text-center">
-                There was an issue with the image. Please try regenerating or upload a new image.
+                There was an issue with the image. Please try regenerating.
               </p>
             )}
           </>
