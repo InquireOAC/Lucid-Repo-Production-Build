@@ -118,8 +118,20 @@ export const useNativeSubscription = () => {
 
     try {
       setIsLoading(true);
-      console.log('Showing RevenueCat paywall...');
+      console.log('Checking entitlements and showing paywall if needed...');
       
+      // First check if user already has an active subscription
+      const customerInfo = await Purchases.getCustomerInfo();
+      console.log('Customer info:', customerInfo);
+      
+      // Check if user has "pro" entitlement (you'll need to configure this in RevenueCat)
+      const hasProEntitlement = customerInfo.entitlements.active['pro'] !== undefined;
+      
+      if (hasProEntitlement) {
+        toast.success('You already have an active subscription!');
+        return;
+      }
+
       // Get current offerings
       const offerings: PurchasesOfferings = await Purchases.getOfferings();
       
@@ -127,35 +139,21 @@ export const useNativeSubscription = () => {
         throw new Error('No subscription packages available');
       }
 
-      // Use presentPaywallIfNeeded or show packages manually
-      try {
-        const result = await Purchases.presentPaywallIfNeeded({
-          offering: offerings.current
+      // Since there's no direct paywall method in Capacitor plugin, 
+      // we'll purchase the first package (usually the main offering)
+      const mainPackage = offerings.current.availablePackages[0];
+      
+      if (mainPackage) {
+        console.log('Purchasing package:', mainPackage.product.identifier);
+        const purchaseResult = await Purchases.purchasePackage({ 
+          aPackage: mainPackage 
         });
         
-        if (result?.customerInfo) {
-          console.log('Paywall completed with result:', result);
-          await verifyPurchase(result);
-          toast.success('Subscription activated successfully!');
-        } else {
-          console.log('User dismissed paywall without purchasing');
-        }
-      } catch (paywallError: any) {
-        // If presentPaywallIfNeeded doesn't exist, fall back to purchasing the first package
-        console.log('Paywall method not available, showing first package:', paywallError);
-        
-        const firstPackage = offerings.current.availablePackages[0];
-        if (firstPackage) {
-          const purchaseResult = await Purchases.purchasePackage({ 
-            aPackage: firstPackage 
-          });
-          
-          console.log('Purchase result:', purchaseResult);
-          await verifyPurchase(purchaseResult);
-          toast.success('Subscription activated successfully!');
-        } else {
-          throw new Error('No packages available for purchase');
-        }
+        console.log('Purchase result:', purchaseResult);
+        await verifyPurchase(purchaseResult);
+        toast.success('Subscription activated successfully!');
+      } else {
+        throw new Error('No packages available for purchase');
       }
     } catch (error: any) {
       console.error('Paywall error:', error);
