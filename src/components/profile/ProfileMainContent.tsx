@@ -1,4 +1,3 @@
-
 import React from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
@@ -121,8 +120,14 @@ const ProfileMainContent = ({
         onSubscriptionClick={() => setIsSubscriptionOpen(true)}
         onFollowClick={handleFollow}
         onStartConversation={handleStartConversation}
-        onFollowersClick={onFollowersClick}
-        onFollowingClick={onFollowingClick}
+        onFollowersClick={() => {
+          setShowFollowers(true);
+          onFollowersClick();
+        }}
+        onFollowingClick={() => {
+          setShowFollowing(true);
+          onFollowingClick();
+        }}
       />
 
       <ProfileTabs
@@ -130,7 +135,6 @@ const ProfileMainContent = ({
         publicDreams={publicDreams}
         likedDreams={likedDreams}
         refreshDreams={refreshDreams}
-        onSocialLinksClick={() => setIsSocialLinksOpen(true)}
       />
 
       <ProfileDialogs
