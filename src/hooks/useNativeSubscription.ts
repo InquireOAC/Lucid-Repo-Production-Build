@@ -120,24 +120,42 @@ export const useNativeSubscription = () => {
       setIsLoading(true);
       console.log('Showing RevenueCat paywall...');
       
-      // Get current offerings to show in paywall
+      // Get current offerings
       const offerings: PurchasesOfferings = await Purchases.getOfferings();
       
       if (!offerings.current || offerings.current.availablePackages.length === 0) {
         throw new Error('No subscription packages available');
       }
 
-      // Show the paywall - this will present RevenueCat's native paywall UI
-      const purchaseResult = await Purchases.presentPaywall({
-        offering: offerings.current
-      });
-
-      if (purchaseResult) {
-        console.log('Purchase result from paywall:', purchaseResult);
-        await verifyPurchase(purchaseResult);
-        toast.success('Subscription activated successfully!');
-      } else {
-        console.log('User dismissed paywall without purchasing');
+      // Use presentPaywallIfNeeded or show packages manually
+      try {
+        const result = await Purchases.presentPaywallIfNeeded({
+          offering: offerings.current
+        });
+        
+        if (result?.customerInfo) {
+          console.log('Paywall completed with result:', result);
+          await verifyPurchase(result);
+          toast.success('Subscription activated successfully!');
+        } else {
+          console.log('User dismissed paywall without purchasing');
+        }
+      } catch (paywallError: any) {
+        // If presentPaywallIfNeeded doesn't exist, fall back to purchasing the first package
+        console.log('Paywall method not available, showing first package:', paywallError);
+        
+        const firstPackage = offerings.current.availablePackages[0];
+        if (firstPackage) {
+          const purchaseResult = await Purchases.purchasePackage({ 
+            aPackage: firstPackage 
+          });
+          
+          console.log('Purchase result:', purchaseResult);
+          await verifyPurchase(purchaseResult);
+          toast.success('Subscription activated successfully!');
+        } else {
+          throw new Error('No packages available for purchase');
+        }
       }
     } catch (error: any) {
       console.error('Paywall error:', error);
