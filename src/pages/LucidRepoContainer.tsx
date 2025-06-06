@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +10,6 @@ import AuthDialog from "@/components/repos/AuthDialog";
 import { toast } from "sonner";
 import { useDreams } from "@/hooks/useDreams";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
-import PullToRefresh from "@/components/ui/PullToRefresh";
 import { useLikes } from "@/hooks/useLikes";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
@@ -97,6 +97,13 @@ const LucidRepoContainer = () => {
     fetchPublicDreams();
     // Only fetch on initial load - no automatic refresh interval
   }, []); 
+
+  // Refresh data when tab changes (background refresh)
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    // Refresh in background when switching tabs
+    setTimeout(fetchPublicDreams, 100);
+  };
 
   const handleOpenDream = (dream: DreamEntry) => {
     setSelectedDream({ ...dream });
@@ -213,52 +220,50 @@ const LucidRepoContainer = () => {
 
   // ---- MAIN UI ----
   return (
-    <PullToRefresh onRefresh={fetchPublicDreams}>
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
-        <LucidRepoHeader
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          handleSearch={(e: React.FormEvent) => e.preventDefault()}
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <h1 className="text-2xl font-bold mb-6 gradient-text">Lucid Repository</h1>
+      <LucidRepoHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        activeTab={activeTab}
+        setActiveTab={handleTabChange}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        handleSearch={(e: React.FormEvent) => e.preventDefault()}
+        tags={filteredDreamTags}
+        activeTags={activeTags}
+        onTagClick={handleTagClick}
+        onClearTags={handleClearTags}
+      />
+      <LucidRepoDreamList
+        isLoading={isLoading || tagsLoading}
+        filteredDreams={filteredDreams}
+        dreamTags={filteredDreamTags}
+        onLike={() => {}} // Pass empty function since likes should only work from modal
+        onOpenDream={handleOpenDream}
+        onUserClick={handleNavigateToProfile}
+        onTagClick={handleTagClick}
+        searchQuery={searchQuery}
+        currentUser={user}
+      />
+      {selectedDream && (
+        <DreamDetailWrapper
+          selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream}
           tags={filteredDreamTags}
-          activeTags={activeTags}
-          onTagClick={handleTagClick}
-          onClearTags={handleClearTags}
+          onClose={handleCloseDream}
+          onUpdate={handleDreamUpdate}
+          isAuthenticated={!!user}
+          onLike={() => handleDreamLike(selectedDream.id)}
+          onViewCountUpdate={handleViewCountUpdate}
+          viewCountUpdated={viewCountUpdated}
+          setViewCountUpdated={setViewCountUpdated}
         />
-        <LucidRepoDreamList
-          isLoading={isLoading || tagsLoading}
-          filteredDreams={filteredDreams}
-          dreamTags={filteredDreamTags}
-          onLike={() => {}} // Pass empty function since likes should only work from modal
-          onOpenDream={handleOpenDream}
-          onUserClick={handleNavigateToProfile}
-          onTagClick={handleTagClick}
-          searchQuery={searchQuery}
-          currentUser={user}
-        />
-        {selectedDream && (
-          <DreamDetailWrapper
-            selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream}
-            tags={filteredDreamTags}
-            onClose={handleCloseDream}
-            onUpdate={handleDreamUpdate}
-            isAuthenticated={!!user}
-            onLike={() => handleDreamLike(selectedDream.id)}
-            onViewCountUpdate={handleViewCountUpdate}
-            viewCountUpdated={viewCountUpdated}
-            setViewCountUpdated={setViewCountUpdated}
-          />
-        )}
-        <AuthDialog 
-          open={authDialogOpen} 
-          onOpenChange={setAuthDialogOpen}
-        />
-      </div>
-    </PullToRefresh>
+      )}
+      <AuthDialog 
+        open={authDialogOpen} 
+        onOpenChange={setAuthDialogOpen}
+      />
+    </div>
   );
 };
 

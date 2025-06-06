@@ -9,7 +9,6 @@ import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import JournalTabs from "@/components/journal/JournalTabs";
 import { DreamEntry } from "@/types/dream";
-import PullToRefresh from "@/components/ui/PullToRefresh";
 
 const Journal = () => {
   const {
@@ -50,6 +49,15 @@ const Journal = () => {
   useEffect(() => {
     memoizedSyncDreams();
   }, [user]); // Remove syncDreamsFromDb from dependencies
+
+  // Refresh data when tab changes (background refresh)
+  const handleTabChange = (newTab: string) => {
+    setActiveTab(newTab);
+    // Refresh in background when switching tabs
+    if (user) {
+      setTimeout(memoizedSyncDreams, 100);
+    }
+  };
 
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
@@ -108,92 +116,90 @@ const Journal = () => {
   };
 
   return (
-    <PullToRefresh onRefresh={memoizedSyncDreams}>
-      <div className="min-h-screen dream-background p-4 md:p-6">
-        <JournalHeader onAddDream={() => setIsAddingDream(true)} />
+    <div className="min-h-screen dream-background p-4 md:p-6">
+      <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
-        <TagFilter
-          tags={uniqueTagsInDreams}
-          activeTags={activeTagIds}
-          onTagClick={handleTagClick}
-          onClearTags={() => setActiveTagIds([])}
-        />
+      <TagFilter
+        tags={uniqueTagsInDreams}
+        activeTags={activeTagIds}
+        onTagClick={handleTagClick}
+        onClearTags={() => setActiveTagIds([])}
+      />
 
-        <JournalTabs
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-          allEntries={entries}
-          filteredDreams={filteredDreams}
-          tags={tags}
-          onSelectDream={setSelectedDream}
-          onEditDream={handleOpenEditDialog}
-          onTogglePublic={handleTogglePublic}
-          onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
-          onTagClickInList={handleTagClick}
-          onAddDream={() => setIsAddingDream(true)}
-        />
+      <JournalTabs
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        allEntries={entries}
+        filteredDreams={filteredDreams}
+        tags={tags}
+        onSelectDream={setSelectedDream}
+        onEditDream={handleOpenEditDialog}
+        onTogglePublic={handleTogglePublic}
+        onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
+        onTagClickInList={handleTagClick}
+        onAddDream={() => setIsAddingDream(true)}
+      />
 
-        <AddDreamDialog
-          isOpen={isAddingDream}
+      <AddDreamDialog
+        isOpen={isAddingDream}
+        onOpenChange={(open) => {
+          setIsAddingDream(open);
+          if (!open && user) {
+            // Small delay to avoid conflicts
+            setTimeout(memoizedSyncDreams, 300);
+          }
+        }}
+        onSubmit={handleAddDreamAndClose}
+        tags={tags}
+        isSubmitting={isSubmitting}
+      />
+
+      {selectedDream && (
+        <EditDreamDialog
+          isOpen={isEditingDream}
           onOpenChange={(open) => {
-            setIsAddingDream(open);
-            if (!open && user) {
-              // Small delay to avoid conflicts
-              setTimeout(memoizedSyncDreams, 300);
-            }
-          }}
-          onSubmit={handleAddDreamAndClose}
-          tags={tags}
-          isSubmitting={isSubmitting}
-        />
-
-        {selectedDream && (
-          <EditDreamDialog
-            isOpen={isEditingDream}
-            onOpenChange={(open) => {
-              setIsEditingDream(open);
-              if (!open) {
-                setSelectedDream(null);
-                if (user) {
-                  setTimeout(memoizedSyncDreams, 300);
-                }
-              }
-            }}
-            onSubmit={handleEditDreamSubmit}
-            existingDream={selectedDream}
-            tags={tags}
-            isSubmitting={isSubmitting}
-          />
-        )}
-
-        {selectedDream && !isEditingDream && (
-          <DreamDetail
-            dream={selectedDream}
-            tags={tags}
-            onClose={() => {
+            setIsEditingDream(open);
+            if (!open) {
               setSelectedDream(null);
               if (user) {
                 setTimeout(memoizedSyncDreams, 300);
               }
-            }}
-            onUpdate={handleDreamDetailUpdate}
-            onDelete={(id) => {
-              setDreamToDelete(id);
-              setSelectedDream(null);
-            }}
-            isAuthenticated={!!user}
-          />
-        )}
-
-        <DeleteDreamConfirmationDialog
-          isOpen={!!dreamToDelete}
-          onOpenChange={(open) => {
-            if (!open) setDreamToDelete(null);
+            }
           }}
-          onConfirmDelete={confirmDeleteDream}
+          onSubmit={handleEditDreamSubmit}
+          existingDream={selectedDream}
+          tags={tags}
+          isSubmitting={isSubmitting}
         />
-      </div>
-    </PullToRefresh>
+      )}
+
+      {selectedDream && !isEditingDream && (
+        <DreamDetail
+          dream={selectedDream}
+          tags={tags}
+          onClose={() => {
+            setSelectedDream(null);
+            if (user) {
+              setTimeout(memoizedSyncDreams, 300);
+            }
+          }}
+          onUpdate={handleDreamDetailUpdate}
+          onDelete={(id) => {
+            setDreamToDelete(id);
+            setSelectedDream(null);
+          }}
+          isAuthenticated={!!user}
+        />
+      )}
+
+      <DeleteDreamConfirmationDialog
+        isOpen={!!dreamToDelete}
+        onOpenChange={(open) => {
+          if (!open) setDreamToDelete(null);
+        }}
+        onConfirmDelete={confirmDeleteDream}
+      />
+    </div>
   );
 };
 
