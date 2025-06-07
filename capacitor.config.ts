@@ -2,7 +2,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.lucidrepo.app',
+  appId: 'app.dreamweaver.LucidRepo',
   appName: 'Lucid Repo',
   webDir: 'dist',
   server: {
