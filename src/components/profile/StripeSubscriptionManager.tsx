@@ -260,6 +260,11 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     }
   };
 
+  // Handle external link
+  const handleExternalLink = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
   // Loading state
   if (checkingStatus || productsLoading) {
     return <SubscriptionLoadingState />;
@@ -317,6 +322,18 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           loading={loading}
         />
       )}
+
+      <div className="pt-4 border-t">
+        <p className="text-xs text-muted-foreground text-center">
+          Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your iTunes account settings.{" "}
+          <button
+            onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
+            className="text-dream-purple underline hover:text-dream-purple/80"
+          >
+            Terms of Service
+          </button>
+        </p>
+      </div>
     </div>
   );
 };
