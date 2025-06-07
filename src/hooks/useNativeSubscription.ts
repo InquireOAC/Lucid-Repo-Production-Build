@@ -61,6 +61,7 @@ export const useNativeSubscription = () => {
         const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
         const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
         
+        // If the product ID doesn't match our expected IDs, still create a product
         let productName = 'Unknown Plan';
         let productId = 'price_unknown';
         let features: string[] = [];
@@ -82,6 +83,7 @@ export const useNativeSubscription = () => {
             'Priority Support'
           ];
         } else {
+          // Handle unexpected product IDs by creating a generic product
           productName = pkg.product.title || pkg.product.identifier;
           productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
           features = ['All features included'];
@@ -102,68 +104,6 @@ export const useNativeSubscription = () => {
     } catch (error) {
       console.error('Failed to initialize RevenueCat:', error);
       toast.error(`Failed to load subscription options: ${error.message || 'Unknown error'}`);
-    }
-  };
-
-  const showPaywall = async () => {
-    if (!user) {
-      toast.error('Please sign in to access subscriptions');
-      return;
-    }
-
-    if (!Capacitor.isNativePlatform()) {
-      toast.error('Paywall is only available on mobile devices');
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      console.log('Checking entitlements and showing paywall if needed...');
-      
-      // First check if user already has an active subscription
-      const customerInfo = await Purchases.getCustomerInfo();
-      console.log('Customer info:', customerInfo);
-      
-      // Check if user has "pro" entitlement (you'll need to configure this in RevenueCat)
-      const hasProEntitlement = customerInfo.customerInfo.entitlements.active['pro'] !== undefined;
-      
-      if (hasProEntitlement) {
-        toast.success('You already have an active subscription!');
-        return;
-      }
-
-      // Get current offerings
-      const offerings: PurchasesOfferings = await Purchases.getOfferings();
-      
-      if (!offerings.current || offerings.current.availablePackages.length === 0) {
-        throw new Error('No subscription packages available');
-      }
-
-      // Since there's no direct paywall method in Capacitor plugin, 
-      // we'll purchase the first package (usually the main offering)
-      const mainPackage = offerings.current.availablePackages[0];
-      
-      if (mainPackage) {
-        console.log('Purchasing package:', mainPackage.product.identifier);
-        const purchaseResult = await Purchases.purchasePackage({ 
-          aPackage: mainPackage 
-        });
-        
-        console.log('Purchase result:', purchaseResult);
-        await verifyPurchase(purchaseResult);
-        toast.success('Subscription activated successfully!');
-      } else {
-        throw new Error('No packages available for purchase');
-      }
-    } catch (error: any) {
-      console.error('Paywall error:', error);
-      if (error.message?.includes('dismissed') || error.message?.includes('cancelled')) {
-        console.log('User cancelled subscription flow');
-      } else {
-        toast.error(`Subscription error: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -246,7 +186,6 @@ export const useNativeSubscription = () => {
     products,
     isLoading,
     isNative,
-    showPaywall,
     purchaseSubscription,
     restorePurchases
   };
