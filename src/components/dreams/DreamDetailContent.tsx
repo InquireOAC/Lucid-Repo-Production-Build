@@ -2,6 +2,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { DreamTag } from "@/types/dream";
+import FlagButton from "@/components/moderation/FlagButton";
 
 interface DreamDetailContentProps {
   content: string;
@@ -9,6 +10,9 @@ interface DreamDetailContentProps {
   dreamTags: DreamTag[];
   generatedImage?: string;
   analysis?: string;
+  showFlagButton?: boolean;
+  dreamId?: string;
+  contentOwnerId?: string;
 }
 
 const DreamDetailContent = ({
@@ -16,12 +20,25 @@ const DreamDetailContent = ({
   formattedDate,
   dreamTags,
   generatedImage,
-  analysis
+  analysis,
+  showFlagButton,
+  dreamId,
+  contentOwnerId
 }: DreamDetailContentProps) => {
   return (
     <div className="space-y-4 mt-2">
-      {/* Date */}
-      <div className="text-sm text-muted-foreground">{formattedDate}</div>
+      {/* Date with Flag Button */}
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">{formattedDate}</div>
+        {showFlagButton && dreamId && contentOwnerId && (
+          <FlagButton
+            contentType="dream"
+            contentId={dreamId}
+            contentOwnerId={contentOwnerId}
+            size="sm"
+          />
+        )}
+      </div>
       
       {/* Content */}
       <div className="text-sm whitespace-pre-wrap">{content}</div>

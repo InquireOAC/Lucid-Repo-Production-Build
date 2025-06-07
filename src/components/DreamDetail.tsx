@@ -9,7 +9,6 @@ import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
 import DreamComments from "@/components/DreamComments";
-import FlagButton from "@/components/moderation/FlagButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
@@ -139,20 +138,7 @@ const DreamDetail = ({
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
-              {/* Flag button for public dreams when user is not the owner */}
-              {isPublic && user && !isOwner && (
-                <div className="mt-1">
-                  <FlagButton
-                    contentType="dream"
-                    contentId={dream.id}
-                    contentOwnerId={dream.user_id}
-                    size="sm"
-                  />
-                </div>
-              )}
-            </div>
+            <DialogTitle className="text-xl gradient-text">{dream.title}</DialogTitle>
           </DialogHeader>
           
           <DreamDetailContent
@@ -161,6 +147,9 @@ const DreamDetail = ({
             dreamTags={mappedTags}
             generatedImage={dream.generatedImage || dream.image_url || null}
             analysis={dream.analysis}
+            showFlagButton={isPublic && user && !isOwner}
+            dreamId={dream.id}
+            contentOwnerId={dream.user_id}
           />
           
           {audioUrl && (
