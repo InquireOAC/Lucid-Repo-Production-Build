@@ -65,6 +65,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
                 <div>
                   <h4 className="text-lg font-medium">{product.name}</h4>
                   <p className="text-2xl font-bold text-dream-purple">{product.price}</p>
+                  <p className="text-sm text-muted-foreground">Monthly subscription</p>
                   <p className="text-xs text-muted-foreground">
                     ID: {product.packageObject.product.identifier}
                   </p>

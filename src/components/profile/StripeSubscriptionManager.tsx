@@ -460,7 +460,7 @@ const NoSubscription = ({
   </div>
 );
 
-// Product card component
+// Product card component with updated monthly display
 interface ProductCardProps {
   product: Product;
   handleSubscribe: (priceId: string) => Promise<void>;
@@ -497,6 +497,7 @@ const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) =>
       )}
       <h4 className="text-lg font-medium">{product.name}</h4>
       <p className="text-2xl font-bold">{product.price}</p>
+      <p className="text-sm text-muted-foreground">Monthly subscription</p>
       <ul className="space-y-2 text-sm">
         {product.features.map((feature, index) => (
           <li key={index} className="flex items-start">
