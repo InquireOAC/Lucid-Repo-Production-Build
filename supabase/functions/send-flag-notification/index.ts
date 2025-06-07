@@ -72,10 +72,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const contentOwnerName = profile?.display_name || 'Unknown User';
 
-    // Send notification email
+    // Send notification email to your verified email address
     const emailResponse = await resend.emails.send({
       from: "Content Moderation <onboarding@resend.dev>",
-      to: ["Lucidrepofficial@gmail.com"],
+      to: ["lucidrepofficial@gmail.com"],
       subject: `🚩 Content Flagged - ${reason}`,
       html: `
         <h2>Content Flagged for Review</h2>
