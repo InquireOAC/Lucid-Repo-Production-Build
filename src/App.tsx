@@ -11,6 +11,7 @@ import Auth from "./pages/Auth";
 import MainLayout from "./layouts/MainLayout";
 import Journal from "./pages/Journal";
 import LucidRepo from "./pages/LucidRepo";
+import Chat from "./pages/Chat";
 import Profile from "./pages/Profile";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
@@ -64,6 +65,7 @@ const AppContent = () => {
       <Route path="/" element={<MainLayout />}>
         <Route index element={<Journal />} />
         <Route path="/lucidrepo" element={<LucidRepo />} />
+        <Route path="/chat" element={<Chat />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/:userId" element={<Profile />} />
       </Route>
