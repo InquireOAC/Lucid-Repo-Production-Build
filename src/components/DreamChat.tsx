@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader2, Save, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -75,7 +76,13 @@ const DreamChat = () => {
   };
 
   const saveCurrentSession = async () => {
-    if (!user || messages.length === 0 || isSaving) return;
+    // Check if there are messages before saving
+    if (!user || messages.length === 0 || isSaving) {
+      if (messages.length === 0) {
+        toast.error('Cannot save empty chat session');
+      }
+      return;
+    }
 
     setIsSaving(true);
     try {
