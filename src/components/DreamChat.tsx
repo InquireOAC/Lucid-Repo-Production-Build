@@ -276,7 +276,7 @@ const DreamChat = () => {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="h-screen bg-background p-4 flex items-center justify-center overflow-hidden">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
           <p className="text-muted-foreground">Please sign in to use the AI Dream Chat</p>
@@ -290,8 +290,8 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button 
             onClick={() => setViewMode('savedChats')} 
@@ -339,63 +339,65 @@ const DreamChat = () => {
               </SelectContent>
             </Select>
           </div>
+        </div>
+      </div>
 
-          {/* Messages Area */}
-          <div className="h-96 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground">
-                <p className="mb-2">Welcome to AI Dream Chat!</p>
-                <p className="text-sm">
-                  Ask questions about your dreams and get insights from your chosen expert.
-                  Your dreams from the journal will provide context for personalized interpretations.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <span className="text-xs opacity-70">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">AI is typing...</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                disabled={isLoading || isReadOnly}
-              />
-              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
-                <Send className="h-4 w-4" />
-              </Button>
+      {/* Messages Area - Takes remaining space and scrollable */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.length === 0 ? (
+            <div className="text-center text-muted-foreground">
+              <p className="mb-2">Welcome to AI Dream Chat!</p>
+              <p className="text-sm">
+                Ask questions about your dreams and get insights from your chosen expert.
+                Your dreams from the journal will provide context for personalized interpretations.
+              </p>
             </div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    message.sender === 'user'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  <p className="text-sm">{message.content}</p>
+                  <span className="text-xs opacity-70">
+                    {new Date(message.timestamp).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="bg-muted px-4 py-2 rounded-lg flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm">AI is typing...</span>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area - Fixed at bottom */}
+        <div className="flex-shrink-0 p-4 border-t bg-card">
+          <div className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              disabled={isLoading || isReadOnly}
+            />
+            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
