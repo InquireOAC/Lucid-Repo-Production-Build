@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -16,11 +17,16 @@ import "@/App.css";
 const queryClient = new QueryClient();
 
 function App() {
+  const handleRefresh = () => {
+    // Refresh the query client cache
+    queryClient.invalidateQueries();
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <MainLayout>
+          <MainLayout onRefresh={handleRefresh}>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/journal" element={<Journal />} />

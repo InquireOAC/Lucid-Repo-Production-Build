@@ -1,3 +1,4 @@
+
 import React, { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, BookOpen, Users, User, Brain } from "lucide-react";
@@ -5,10 +6,10 @@ import PullToRefresh from "@/components/ui/PullToRefresh";
 
 interface MainLayoutProps {
   children: ReactNode;
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, onRefresh }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children, onRefresh = () => {} }) => {
   const location = useLocation();
 
   const handleRefresh = () => {
