@@ -208,19 +208,23 @@ export type Database = {
       dream_entries: {
         Row: {
           analysis: string | null
+          cbt_analysis: string | null
           comment_count: number | null
           content: string
           created_at: string
           date: string
+          favorite_therapy_mode: string | null
           generatedImage: string | null
           id: string
           image_dataurl: string | null
           image_url: string | null
           imagePrompt: string | null
           is_public: boolean | null
+          jungian_analysis: string | null
           like_count: number | null
           lucid: boolean | null
           mood: string | null
+          shamanic_analysis: string | null
           tags: string[] | null
           title: string
           updated_at: string
@@ -229,19 +233,23 @@ export type Database = {
         }
         Insert: {
           analysis?: string | null
+          cbt_analysis?: string | null
           comment_count?: number | null
           content: string
           created_at?: string
           date?: string
+          favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
           image_dataurl?: string | null
           image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null
+          jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
           mood?: string | null
+          shamanic_analysis?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
@@ -250,19 +258,23 @@ export type Database = {
         }
         Update: {
           analysis?: string | null
+          cbt_analysis?: string | null
           comment_count?: number | null
           content?: string
           created_at?: string
           date?: string
+          favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
           image_dataurl?: string | null
           image_url?: string | null
           imagePrompt?: string | null
           is_public?: boolean | null
+          jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
           mood?: string | null
+          shamanic_analysis?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
