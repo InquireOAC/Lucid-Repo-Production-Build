@@ -300,9 +300,9 @@ const DreamChat = () => {
             className="flex items-center gap-2"
           >
             <MessageCircle className="h-4 w-4" />
-            💬 Chats
+            Chats
           </Button>
-          <h1 className="text-lg font-bold absolute left-1/2 transform -translate-x-1/2">AI Dream Chat</h1>
+          <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2">AI Dream Chat</h1>
           <div className="flex gap-2">
             {messages.length > 0 && !isReadOnly && (
               <Button 
