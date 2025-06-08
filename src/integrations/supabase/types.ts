@@ -200,6 +200,7 @@ export type Database = {
           created_at: string
           expert_type: string
           id: string
+          messages: Json | null
           title: string | null
           updated_at: string
           user_id: string
@@ -208,6 +209,7 @@ export type Database = {
           created_at?: string
           expert_type: string
           id?: string
+          messages?: Json | null
           title?: string | null
           updated_at?: string
           user_id: string
@@ -216,6 +218,7 @@ export type Database = {
           created_at?: string
           expert_type?: string
           id?: string
+          messages?: Json | null
           title?: string | null
           updated_at?: string
           user_id?: string

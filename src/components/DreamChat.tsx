@@ -1,12 +1,12 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Save } from 'lucide-react';
+import { Send, Loader2, Save, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import SavedChats from './SavedChats';
 
 interface Message {
   id: string;
@@ -22,6 +22,17 @@ interface ChatSession {
   created_at: string;
 }
 
+interface SavedSession {
+  id: string;
+  expert_type: string;
+  messages: Array<{
+    sender: 'user' | 'ai';
+    content: string;
+    timestamp: string;
+  }>;
+  created_at: string;
+}
+
 const DreamChat = () => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,6 +41,9 @@ const DreamChat = () => {
   const [expertType, setExpertType] = useState<'jungian' | 'shamanic' | 'cbt'>('jungian');
   const [currentSession, setCurrentSession] = useState<string | null>(null);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [viewMode, setViewMode] = useState<'chat' | 'savedChats' | 'readOnly'>('chat');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -58,6 +72,62 @@ const DreamChat = () => {
     } catch (error) {
       console.error('Error loading sessions:', error);
     }
+  };
+
+  const saveCurrentSession = async () => {
+    if (!user || messages.length === 0 || isSaving) return;
+
+    setIsSaving(true);
+    try {
+      const { data, error } = await supabase
+        .from('dream_chat_sessions')
+        .insert({
+          user_id: user.id,
+          expert_type: expertType,
+          messages: messages.map(msg => ({
+            sender: msg.sender,
+            content: msg.content,
+            timestamp: msg.timestamp
+          })),
+          title: `${expertType.charAt(0).toUpperCase() + expertType.slice(1)} Session`
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      toast.success('Chat session saved successfully!');
+      loadSessions();
+    } catch (error) {
+      console.error('Error saving session:', error);
+      toast.error('Failed to save chat session');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const openSavedSession = (session: SavedSession) => {
+    setMessages(session.messages.map((msg, index) => ({
+      id: `${session.id}-${index}`,
+      sender: msg.sender,
+      content: msg.content,
+      timestamp: msg.timestamp
+    })));
+    setExpertType(session.expert_type as 'jungian' | 'shamanic' | 'cbt');
+    setIsReadOnly(true);
+    setViewMode('readOnly');
+  };
+
+  const handleBackToChat = () => {
+    setViewMode('chat');
+    setIsReadOnly(false);
+  };
+
+  const handleNewChat = () => {
+    setMessages([]);
+    setCurrentSession(null);
+    setIsReadOnly(false);
+    setViewMode('chat');
   };
 
   const createNewSession = async () => {
@@ -122,7 +192,7 @@ const DreamChat = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!input.trim() || !user || isLoading) return;
+    if (!input.trim() || !user || isLoading || isReadOnly) return;
 
     const userMessage = input.trim();
     setInput('');
@@ -193,22 +263,6 @@ const DreamChat = () => {
     }
   };
 
-  const handleNewChat = () => {
-    setMessages([]);
-    setCurrentSession(null);
-  };
-
-  const handleLoadSession = async (sessionId: string) => {
-    setCurrentSession(sessionId);
-    await loadSessionMessages(sessionId);
-    
-    // Update expert type based on session
-    const session = sessions.find(s => s.id === sessionId);
-    if (session) {
-      setExpertType(session.expert_type as 'jungian' | 'shamanic' | 'cbt');
-    }
-  };
-
   const handleExpertChange = (newExpertType: 'jungian' | 'shamanic' | 'cbt') => {
     if (messages.length > 0) {
       const confirmed = window.confirm(
@@ -231,18 +285,50 @@ const DreamChat = () => {
     );
   }
 
+  if (viewMode === 'savedChats') {
+    return <SavedChats onBack={handleBackToChat} onOpenSession={openSavedSession} />;
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold">AI Dream Chat</h1>
+          <Button 
+            onClick={() => setViewMode('savedChats')} 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-2"
+          >
+            <MessageCircle className="h-4 w-4" />
+            💬 Chats
+          </Button>
+          <h1 className="text-lg font-bold absolute left-1/2 transform -translate-x-1/2">AI Dream Chat</h1>
+          <div className="flex gap-2">
+            {messages.length > 0 && !isReadOnly && (
+              <Button 
+                onClick={saveCurrentSession} 
+                variant="outline" 
+                size="sm"
+                disabled={isSaving}
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isSaving ? 'Saving...' : 'Save Chat'}
+              </Button>
+            )}
+            {isReadOnly && (
+              <Button onClick={handleNewChat} variant="outline" size="sm">
+                New Chat
+              </Button>
+            )}
+          </div>
         </div>
 
         <div className="bg-card rounded-lg border">
           {/* Expert Selection */}
           <div className="p-4 border-b">
             <label className="block text-sm font-medium mb-2">Choose Your Dream Expert:</label>
-            <Select value={expertType} onValueChange={handleExpertChange}>
+            <Select value={expertType} onValueChange={handleExpertChange} disabled={isReadOnly}>
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -302,11 +388,11 @@ const DreamChat = () => {
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask about your dreams..."
+                placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                disabled={isLoading}
+                disabled={isLoading || isReadOnly}
               />
-              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim()}>
+              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
                 <Send className="h-4 w-4" />
               </Button>
             </div>
