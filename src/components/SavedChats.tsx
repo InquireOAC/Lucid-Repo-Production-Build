@@ -1,6 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, MessageCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Trash2, Clock, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -104,6 +107,15 @@ const SavedChats = ({ onBack, onOpenSession }: SavedChatsProps) => {
     }
   };
 
+  const getExpertColor = (type: string) => {
+    switch (type) {
+      case 'jungian': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'shamanic': return 'bg-green-100 text-green-800 border-green-200';
+      case 'cbt': return 'bg-blue-100 text-blue-800 border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -118,84 +130,118 @@ const SavedChats = ({ onBack, onOpenSession }: SavedChatsProps) => {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center mb-6">
-          <Button onClick={onBack} variant="ghost" size="sm" className="mr-3">
+        <div className="flex items-center mb-8">
+          <Button onClick={onBack} variant="ghost" size="sm" className="mr-3 hover:bg-accent">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <h1 className="text-xl font-bold">Saved Chats</h1>
+          <div>
+            <h1 className="text-2xl font-bold">Saved Chats</h1>
+            <p className="text-muted-foreground text-sm">
+              {sessions.length} {sessions.length === 1 ? 'conversation' : 'conversations'} saved
+            </p>
+          </div>
         </div>
 
         {sessions.length === 0 ? (
-          <div className="text-center py-12">
-            <MessageCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-medium mb-2">No saved chats yet</h3>
-            <p className="text-muted-foreground">
-              Start a conversation and save it as a session to see it here.
+          <div className="text-center py-16">
+            <div className="bg-muted/30 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <MessageCircle className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3">No saved chats yet</h3>
+            <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+              Start a conversation with an AI dream expert and save it as a session to see it here. 
+              Your saved conversations will help you track your dream analysis journey.
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid gap-4">
             {sessions.map((session) => (
-              <div
+              <Card
                 key={session.id}
-                className="bg-card rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                className="cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/20 group"
                 onClick={() => onOpenSession(session)}
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {formatExpertType(session.expert_type)}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(session.created_at).toLocaleDateString()} at{' '}
-                        {new Date(session.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {getFirstMessage(session.messages)}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 ml-4">
-                    <div className="text-xs text-muted-foreground">
-                      {session.messages.length} messages
-                    </div>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          onClick={(e) => e.stopPropagation()}
-                          variant="ghost"
-                          size="sm"
-                          disabled={deletingId === session.id}
-                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      {/* Header with expert type and timestamp */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <Badge 
+                          variant="outline" 
+                          className={`font-medium ${getExpertColor(session.expert_type)}`}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Chat Session</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete this chat session? This action cannot be undone and will permanently remove all messages in this conversation.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteSession(session.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          <User className="h-3 w-3 mr-1" />
+                          {formatExpertType(session.expert_type)}
+                        </Badge>
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {new Date(session.created_at).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          })} at{' '}
+                          {new Date(session.created_at).toLocaleTimeString([], { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Preview of first message */}
+                      <div className="mb-3">
+                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                          {getFirstMessage(session.messages)}
+                        </p>
+                      </div>
+
+                      {/* Message count */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center text-xs text-muted-foreground">
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          {session.messages.length} {session.messages.length === 1 ? 'message' : 'messages'}
+                        </div>
+                        <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to continue →
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Delete button */}
+                    <div className="ml-4 flex-shrink-0">
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            onClick={(e) => e.stopPropagation()}
+                            variant="ghost"
+                            size="sm"
+                            disabled={deletingId === session.id}
+                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                           >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Chat Session</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this chat session? This action cannot be undone and will permanently remove all messages in this conversation.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteSession(session.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         )}
