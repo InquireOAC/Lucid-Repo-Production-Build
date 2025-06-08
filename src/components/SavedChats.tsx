@@ -1,7 +1,17 @@
-
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, MessageCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -59,9 +69,7 @@ const SavedChats = ({ onBack, onOpenSession }: SavedChatsProps) => {
     }
   };
 
-  const deleteSession = async (sessionId: string, event: React.MouseEvent) => {
-    event.stopPropagation(); // Prevent opening the session when clicking delete
-    
+  const deleteSession = async (sessionId: string) => {
     setDeletingId(sessionId);
     try {
       const { error } = await supabase
@@ -155,15 +163,36 @@ const SavedChats = ({ onBack, onOpenSession }: SavedChatsProps) => {
                     <div className="text-xs text-muted-foreground">
                       {session.messages.length} messages
                     </div>
-                    <Button
-                      onClick={(e) => deleteSession(session.id, e)}
-                      variant="ghost"
-                      size="sm"
-                      disabled={deletingId === session.id}
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          onClick={(e) => e.stopPropagation()}
+                          variant="ghost"
+                          size="sm"
+                          disabled={deletingId === session.id}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Chat Session</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this chat session? This action cannot be undone and will permanently remove all messages in this conversation.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteSession(session.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </div>
               </div>
