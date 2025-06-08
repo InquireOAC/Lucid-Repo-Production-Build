@@ -1,6 +1,5 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, Loader2, Save, MessageCircle } from 'lucide-react';
+import { Send, Loader2, Save, MessageCircle, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SavedChats from './SavedChats';
+import { useChatFeatureAccess } from '@/hooks/useChatFeatureAccess';
 
 interface Message {
   id: string;
@@ -36,6 +36,7 @@ interface SavedSession {
 
 const DreamChat = () => {
   const { user } = useAuth();
+  const { canUseChat, recordChatUsage, isChecking, isAppCreator, hasUsedFeature } = useChatFeatureAccess();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -201,6 +202,12 @@ const DreamChat = () => {
   const handleSendMessage = async () => {
     if (!input.trim() || !user || isLoading || isReadOnly) return;
 
+    // Check if user can use chat feature before sending
+    const canUse = await canUseChat();
+    if (!canUse) {
+      return; // canUseChat already shows the subscription prompt
+    }
+
     const userMessage = input.trim();
     setInput('');
     setIsLoading(true);
@@ -258,6 +265,9 @@ const DreamChat = () => {
         .from('dream_chat_sessions')
         .update({ updated_at: new Date().toISOString() })
         .eq('id', sessionId);
+
+      // Record usage after successful chat interaction
+      await recordChatUsage();
 
       // Reload sessions to update order
       loadSessions();
@@ -347,6 +357,23 @@ const DreamChat = () => {
             </Select>
           </div>
         </div>
+
+        {/* Subscription Notice for Non-Subscribers */}
+        {!isAppCreator && !hasUsedFeature('analysis') && (
+          <div className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <MessageCircle className="h-4 w-4 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-900 mb-1">Free Trial Available</h3>
+                <p className="text-xs text-blue-700">
+                  This is your first time using AI Dream Chat. You can try it for free once, then upgrade for unlimited access.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Messages Area - Takes remaining space and scrollable */}
@@ -359,6 +386,17 @@ const DreamChat = () => {
                 Ask questions about your dreams and get insights from your chosen expert.
                 Your dreams from the journal will provide context for personalized interpretations.
               </p>
+              {!isAppCreator && hasUsedFeature('analysis') && (
+                <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center justify-center gap-2 text-amber-800">
+                    <Lock className="h-4 w-4" />
+                    <span className="text-sm font-medium">Premium Feature</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-1">
+                    Upgrade your subscription to continue using AI Dream Chat
+                  </p>
+                </div>
+              )}
             </div>
           ) : (
             messages.map((message) => (
@@ -400,10 +438,13 @@ const DreamChat = () => {
               onChange={(e) => setInput(e.target.value)}
               placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={isLoading || isReadOnly}
+              disabled={isLoading || isReadOnly || isChecking}
             />
-            <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
-              <Send className="h-4 w-4" />
+            <Button 
+              onClick={handleSendMessage} 
+              disabled={isLoading || !input.trim() || isReadOnly || isChecking}
+            >
+              {isChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>
         </div>
