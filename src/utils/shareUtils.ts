@@ -1,15 +1,16 @@
 
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
 import { Share } from "@capacitor/share";
+import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
 import { saveAs } from "file-saver";
 
 /**
- * Converts an HTML element to a PNG blob
+ * Converts an HTML element to a PNG base64 string using html-to-image
  */
-export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | null> => {
+export const elementToPngBase64 = async (element: HTMLElement): Promise<string | null> => {
   try {
-    console.log("Starting HTML to Canvas conversion");
+    console.log("Starting HTML to Image conversion with html-to-image");
     
     // Process any images in the element first
     const images = Array.from(element.querySelectorAll('img'));
@@ -32,39 +33,72 @@ export const elementToPngBlob = async (element: HTMLElement): Promise<Blob | nul
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
-    console.log("Generating canvas from HTML element");
+    console.log("Generating PNG base64 from HTML element");
     
-    // Generate canvas with settings optimized for PNG output
-    const canvas = await html2canvas(element, { 
-      scale: 2.0,
-      useCORS: true,
-      allowTaint: true,
-      logging: false,
+    // Generate PNG base64 using html-to-image
+    const dataUrl = await toPng(element, {
+      quality: 0.92,
+      pixelRatio: 2.0,
       backgroundColor: null,
-      imageTimeout: 15000,
+      cacheBust: true,
     });
     
-    console.log("Canvas generated successfully");
-    
-    // Convert directly to PNG blob
-    return new Promise<Blob | null>((resolve) => {
-      canvas.toBlob((blob) => {
-        console.log("PNG blob created:", blob ? `${Math.round(blob.size / 1024)}KB` : "failed");
-        resolve(blob);
-      }, "image/png", 0.92);
-    });
+    console.log("PNG base64 generated successfully");
+    return dataUrl;
   } catch (error) {
-    console.error("Error converting element to PNG:", error);
+    console.error("Error converting element to PNG base64:", error);
     return null;
   }
 };
 
 /**
- * Downloads a PNG blob as a file
+ * Extracts base64 data from data URL (removes data:image/png;base64, prefix)
  */
-export const downloadPngBlob = (blob: Blob, fileName: string): void => {
+export const extractBase64FromDataUrl = (dataUrl: string): string => {
+  const base64Prefix = "data:image/png;base64,";
+  if (dataUrl.startsWith(base64Prefix)) {
+    return dataUrl.substring(base64Prefix.length);
+  }
+  return dataUrl;
+};
+
+/**
+ * Saves base64 PNG data to filesystem using Capacitor Filesystem
+ */
+export const saveBase64ToFile = async (base64Data: string, fileName: string): Promise<string | null> => {
+  try {
+    console.log("Saving base64 data to filesystem:", fileName);
+    
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64Data,
+      directory: Directory.Cache,
+      encoding: Encoding.UTF8
+    });
+    
+    console.log("File saved successfully:", result.uri);
+    return result.uri;
+  } catch (error) {
+    console.error("Error saving file to filesystem:", error);
+    return null;
+  }
+};
+
+/**
+ * Downloads a base64 PNG as a file (web fallback)
+ */
+export const downloadBase64Png = (base64Data: string, fileName: string): void => {
   try {
     console.log("Starting PNG download process");
+    
+    // Convert base64 to blob
+    const binaryString = atob(base64Data);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'image/png' });
+    
     saveAs(blob, fileName);
     console.log("PNG download process completed");
   } catch (error) {
@@ -82,47 +116,53 @@ export const shareDream = async (
   text: string
 ): Promise<boolean> => {
   try {
-    console.log("Starting dream share process");
+    console.log("Starting dream share process with html-to-image");
 
-    // Generate PNG blob from the element
-    const pngBlob = await elementToPngBlob(element);
-    if (!pngBlob) {
+    // Generate PNG base64 from the element
+    const dataUrl = await elementToPngBase64(element);
+    if (!dataUrl) {
       throw new Error("Failed to generate share image");
     }
 
+    // Extract base64 data without prefix
+    const base64Data = extractBase64FromDataUrl(dataUrl);
+    
     if (Capacitor.isNativePlatform()) {
-      console.log("Using native sharing with PNG blob");
+      console.log("Using native sharing with Filesystem and Share");
       
-      // Create a temporary object URL for the blob
-      const imageUrl = URL.createObjectURL(pngBlob);
+      // Generate dynamic filename with timestamp
+      const timestamp = Date.now();
+      const fileName = `dreamcard_${timestamp}.png`;
       
       try {
+        // Save file to device filesystem
+        const fileUri = await saveBase64ToFile(base64Data, fileName);
+        
+        if (!fileUri) {
+          throw new Error("Failed to save file to filesystem");
+        }
+        
+        // Share the saved file using native share sheet
         await Share.share({
           title: title,
           text: text,
-          url: imageUrl,
+          url: fileUri,
           dialogTitle: 'Share Your Dream',
         });
 
-        console.log("Native share with PNG completed");
-        
-        // Clean up the object URL
-        setTimeout(() => URL.revokeObjectURL(imageUrl), 1000);
-        
+        console.log("Native share with filesystem completed");
         return true;
       } catch (shareError) {
         console.error("Native share failed:", shareError);
-        // Clean up on error
-        URL.revokeObjectURL(imageUrl);
         // Fall back to download
-        downloadPngBlob(pngBlob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+        downloadBase64Png(base64Data, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
         return true;
       }
     }
 
     // Fallback for web: download the PNG directly
     console.log("Using web fallback for sharing - downloading PNG");
-    downloadPngBlob(pngBlob, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
+    downloadBase64Png(base64Data, `${title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`);
     return true;
   } catch (error) {
     console.error("Error sharing dream:", error);
