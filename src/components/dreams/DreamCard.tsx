@@ -98,7 +98,7 @@ const DreamCard = ({
       }`}
       onClick={handleCardClick}
     >
-      <CardHeader className={isJournalView ? "pb-1 p-3" : "pb-3"}>
+      <CardHeader className={isJournalView ? "pb-2 p-4" : "pb-3"}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             {(showUserInfo || showUser) && (
@@ -108,7 +108,7 @@ const DreamCard = ({
               />
             )}
             <h3 className={`font-semibold leading-tight ${
-              isJournalView ? 'text-sm mb-1' : 'text-lg'
+              isJournalView ? 'text-base mb-1' : 'text-lg'
             }`}>{dream.title}</h3>
             <p className={`text-muted-foreground ${
               isJournalView ? 'text-xs' : 'text-sm mt-1'
@@ -117,33 +117,22 @@ const DreamCard = ({
             </p>
           </div>
           
-          {/* Top right badges and actions */}
-          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-            {/* Public badge - show in top right */}
-            {showSharedBadge && (dream.is_public || dream.isPublic) && (
-              <Badge 
-                variant="outline" 
-                className={`${isJournalView ? 'text-xs px-2 py-0.5' : 'text-xs'} bg-green-50 text-green-700 border-green-200`}
-              >
-                Public
-              </Badge>
-            )}
-            
-            {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
-            {!isJournalView && currentUser && currentUser.id !== dream.user_id && (
+          {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
+          {!isJournalView && currentUser && currentUser.id !== dream.user_id && (
+            <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
               <FlagButton
                 contentType="dream"
                 contentId={dream.id}
                 contentOwnerId={dream.user_id}
                 size="sm"
               />
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </CardHeader>
       
-      <CardContent className={isJournalView ? "pt-0 p-3" : "pt-0"}>
-        <p className={`line-clamp-2 mb-2 ${
+      <CardContent className={isJournalView ? "pt-0 p-4" : "pt-0"}>
+        <p className={`line-clamp-2 mb-3 ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>{dream.content}</p>
         
@@ -153,7 +142,7 @@ const DreamCard = ({
               src={dream.generatedImage} 
               alt="Dream visualization" 
               className={`w-full object-cover rounded-md ${
-                isJournalView ? 'h-20' : 'h-32'
+                isJournalView ? 'h-24' : 'h-32'
               }`}
             />
           </div>
@@ -180,8 +169,12 @@ const DreamCard = ({
           </div>
         )}
 
+        {showSharedBadge && (dream.is_public || dream.isPublic) && (
+          <Badge variant="outline" className={isJournalView ? "mb-2 text-xs" : "mb-3"}>Public</Badge>
+        )}
+
         {showActions && (
-          <div className={`flex gap-1 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
+          <div className={`flex gap-2 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
             {onEdit && (
               <Button variant="outline" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onEdit)}>
                 Edit
@@ -203,7 +196,7 @@ const DreamCard = ({
         <div className={`flex items-center justify-between text-muted-foreground ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             {/* Display-only like counter - visible to ALL users */}
             <div className="flex items-center gap-1">
               <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />

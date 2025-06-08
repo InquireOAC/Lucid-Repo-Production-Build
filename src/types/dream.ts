@@ -1,3 +1,4 @@
+
 export interface DreamEntry {
   id: string;
   date: string;
@@ -19,9 +20,9 @@ export interface DreamEntry {
   likeCount?: number;
   comment_count?: number;
   commentCount?: number;
-  view_count?: number;
+  view_count?: number; // Added missing property
   liked?: boolean;
-  created_at?: string;
+  created_at?: string; // Added missing property
   profiles?: {
     username?: string;
     display_name?: string;
@@ -32,11 +33,6 @@ export interface DreamEntry {
   audioUrl?: string;
   audio_url?: string;
   image_dataurl?: string;
-  // Therapy analysis fields
-  jungian_analysis?: string;
-  shamanic_analysis?: string;
-  cbt_analysis?: string;
-  favorite_therapy_mode?: string;
 }
 
 export interface DreamTag {

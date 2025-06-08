@@ -1,48 +1,91 @@
 
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/sonner";
+import { BrowserRouter, Routes, Route, HashRouter } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import MainLayout from "@/layouts/MainLayout";
-import Index from "@/pages/Index";
-import Journal from "@/pages/Journal";
-import LucidRepoContainer from "@/pages/LucidRepoContainer";
-import Auth from "@/pages/Auth";
-import Profile from "@/pages/Profile";
-import TherapyMode from "@/pages/TherapyMode";
-import TherapyAnalysis from "@/pages/TherapyAnalysis";
-import NotFound from "@/pages/NotFound";
-import "@/App.css";
+import NotFound from "./pages/NotFound";
+import Auth from "./pages/Auth";
+import MainLayout from "./layouts/MainLayout";
+import Journal from "./pages/Journal";
+import LucidRepo from "./pages/LucidRepo";
+import Profile from "./pages/Profile";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
+import { initializeNotifications } from "./utils/notificationUtils";
+import OnboardingFlow from "./components/onboarding/OnboardingFlow";
+import { useOnboarding } from "./hooks/useOnboarding";
 
 const queryClient = new QueryClient();
 
-function App() {
-  const handleRefresh = () => {
-    // Refresh the query client cache
-    queryClient.invalidateQueries();
-  };
+const AppContent = () => {
+  const { hasSeenOnboarding, isLoading } = useOnboarding();
 
+  useEffect(() => {
+    const setupStatusBar = async () => {
+      if (Capacitor.isPluginAvailable('StatusBar')) {
+        try {
+          // Set status bar to be opaque with dark text
+          await StatusBar.setOverlaysWebView({ overlay: false });
+          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setBackgroundColor({ color: '#1E1A2B' });
+        } catch (error) {
+          console.error('Error configuring status bar:', error);
+        }
+      }
+    };
+    
+    setupStatusBar();
+    
+    // Initialize notifications
+    initializeNotifications().catch(console.error);
+  }, []);
+
+  // Show loading state while checking onboarding status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#1E1A2B] flex items-center justify-center">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  // Show onboarding if user hasn't seen it
+  if (!hasSeenOnboarding) {
+    return <OnboardingFlow />;
+  }
+
+  // Show main app
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route path="/" element={<MainLayout />}>
+        <Route index element={<Journal />} />
+        <Route path="/lucidrepo" element={<LucidRepo />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/:userId" element={<Profile />} />
+      </Route>
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <MainLayout onRefresh={handleRefresh}>
-            <Routes>
-              <Route path="/" element={<Navigate to="/journal" replace />} />
-              <Route path="/journal" element={<Journal />} />
-              <Route path="/lucid-repo" element={<LucidRepoContainer />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/profile/:username?" element={<Profile />} />
-              <Route path="/therapy" element={<TherapyMode />} />
-              <Route path="/therapy/:dreamId" element={<TherapyAnalysis />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </MainLayout>
-        </Router>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <HashRouter>
+            <AppContent />
+          </HashRouter>
+        </TooltipProvider>
       </AuthProvider>
-      <Toaster />
     </QueryClientProvider>
   );
-}
+};
 
 export default App;
