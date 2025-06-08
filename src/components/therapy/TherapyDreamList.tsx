@@ -2,7 +2,6 @@
 import React from "react";
 import { DreamEntry } from "@/types/dream";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Calendar, Moon, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -22,7 +21,12 @@ const TherapyDreamList = ({ dreams }: TherapyDreamListProps) => {
         <p className="text-muted-foreground mb-4">
           Start by adding some dreams to your journal to explore them through therapy mode.
         </p>
-        <Button onClick={() => navigate("/journal")}>Go to Journal</Button>
+        <button 
+          onClick={() => navigate("/journal")}
+          className="px-4 py-2 bg-dream-purple text-white rounded-md hover:bg-dream-purple/90"
+        >
+          Go to Journal
+        </button>
       </Card>
     );
   }
@@ -30,7 +34,11 @@ const TherapyDreamList = ({ dreams }: TherapyDreamListProps) => {
   return (
     <div className="space-y-4">
       {dreams.map((dream) => (
-        <Card key={dream.id} className="p-6 hover:shadow-md transition-shadow">
+        <Card 
+          key={dream.id} 
+          className="p-6 hover:shadow-md transition-shadow cursor-pointer"
+          onClick={() => navigate(`/therapy/${dream.id}`)}
+        >
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-medium mb-2">{dream.title}</h3>
@@ -61,7 +69,7 @@ const TherapyDreamList = ({ dreams }: TherapyDreamListProps) => {
               </div>
 
               {dream.tags && dream.tags.length > 0 && (
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-muted-foreground" />
                   <div className="flex flex-wrap gap-1">
                     {dream.tags.slice(0, 3).map((tag, index) => (
@@ -81,13 +89,6 @@ const TherapyDreamList = ({ dreams }: TherapyDreamListProps) => {
                 </div>
               )}
             </div>
-
-            <Button 
-              onClick={() => navigate(`/therapy/${dream.id}`)}
-              className="ml-4"
-            >
-              Analyze Dream
-            </Button>
           </div>
         </Card>
       ))}
