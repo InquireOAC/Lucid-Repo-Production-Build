@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Loader2, Save, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -290,111 +291,117 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-4">
-          <Button 
-            onClick={() => setViewMode('savedChats')} 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Chats
-          </Button>
-          <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2">AI Dream Chat</h1>
-          <div className="flex gap-2">
-            {messages.length > 0 && !isReadOnly && (
-              <Button 
-                onClick={saveCurrentSession} 
-                variant="outline" 
-                size="sm"
-                disabled={isSaving}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {isSaving ? 'Saving...' : 'Save Chat'}
-              </Button>
-            )}
-            {isReadOnly && (
-              <Button onClick={handleNewChat} variant="outline" size="sm">
-                New Chat
-              </Button>
-            )}
+    <div className="h-screen bg-background flex flex-col">
+      <div className="flex-shrink-0 p-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <Button 
+              onClick={() => setViewMode('savedChats')} 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Chats
+            </Button>
+            <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2">AI Dream Chat</h1>
+            <div className="flex gap-2">
+              {messages.length > 0 && !isReadOnly && (
+                <Button 
+                  onClick={saveCurrentSession} 
+                  variant="outline" 
+                  size="sm"
+                  disabled={isSaving}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isSaving ? 'Saving...' : 'Save Chat'}
+                </Button>
+              )}
+              {isReadOnly && (
+                <Button onClick={handleNewChat} variant="outline" size="sm">
+                  New Chat
+                </Button>
+              )}
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="bg-card rounded-lg border">
-          {/* Expert Selection */}
-          <div className="p-4 border-b">
-            <label className="block text-sm font-medium mb-2">Choose Your Dream Expert:</label>
-            <Select value={expertType} onValueChange={handleExpertChange} disabled={isReadOnly}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="jungian">Jungian Analyst</SelectItem>
-                <SelectItem value="shamanic">Shamanic Guide</SelectItem>
-                <SelectItem value="cbt">CBT Therapist</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      <div className="flex-1 flex flex-col pb-16 px-4">
+        <div className="max-w-4xl mx-auto w-full flex flex-col h-full">
+          <div className="bg-card rounded-lg border flex flex-col h-full">
+            {/* Expert Selection */}
+            <div className="flex-shrink-0 p-4 border-b">
+              <label className="block text-sm font-medium mb-2">Choose Your Dream Expert:</label>
+              <Select value={expertType} onValueChange={handleExpertChange} disabled={isReadOnly}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="jungian">Jungian Analyst</SelectItem>
+                  <SelectItem value="shamanic">Shamanic Guide</SelectItem>
+                  <SelectItem value="cbt">CBT Therapist</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* Messages Area */}
-          <div className="h-96 overflow-y-auto p-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-muted-foreground">
-                <p className="mb-2">Welcome to AI Dream Chat!</p>
-                <p className="text-sm">
-                  Ask questions about your dreams and get insights from your chosen expert.
-                  Your dreams from the journal will provide context for personalized interpretations.
-                </p>
-              </div>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
+            {/* Messages Area - This will take all available space */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+              {messages.length === 0 ? (
+                <div className="text-center text-muted-foreground">
+                  <p className="mb-2">Welcome to AI Dream Chat!</p>
+                  <p className="text-sm">
+                    Ask questions about your dreams and get insights from your chosen expert.
+                    Your dreams from the journal will provide context for personalized interpretations.
+                  </p>
+                </div>
+              ) : (
+                messages.map((message) => (
                   <div
-                    className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                      message.sender === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    }`}
+                    key={message.id}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <p className="text-sm">{message.content}</p>
-                    <span className="text-xs opacity-70">
-                      {new Date(message.timestamp).toLocaleTimeString()}
-                    </span>
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        message.sender === 'user'
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted'
+                      }`}
+                    >
+                      <p className="text-sm">{message.content}</p>
+                      <span className="text-xs opacity-70">
+                        {new Date(message.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+              {isLoading && (
+                <div className="flex justify-start">
+                  <div className="bg-muted px-4 py-2 rounded-lg flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm">AI is typing...</span>
                   </div>
                 </div>
-              ))
-            )}
-            {isLoading && (
-              <div className="flex justify-start">
-                <div className="bg-muted px-4 py-2 rounded-lg flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm">AI is typing...</span>
-                </div>
-              </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* Input Area */}
-          <div className="p-4 border-t">
-            <div className="flex gap-2">
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
-                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                disabled={isLoading || isReadOnly}
-              />
-              <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
-                <Send className="h-4 w-4" />
-              </Button>
+            {/* Input Area */}
+            <div className="flex-shrink-0 p-4 border-t">
+              <div className="flex gap-2">
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder={isReadOnly ? "This is a saved session (read-only)" : "Ask about your dreams..."}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  disabled={isLoading || isReadOnly}
+                />
+                <Button onClick={handleSendMessage} disabled={isLoading || !input.trim() || isReadOnly}>
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
