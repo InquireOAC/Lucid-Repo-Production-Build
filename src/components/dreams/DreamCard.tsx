@@ -117,17 +117,28 @@ const DreamCard = ({
             </p>
           </div>
           
-          {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
-          {!isJournalView && currentUser && currentUser.id !== dream.user_id && (
-            <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
+          {/* Top right badges and actions */}
+          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+            {/* Public badge - show in top right */}
+            {showSharedBadge && (dream.is_public || dream.isPublic) && (
+              <Badge 
+                variant="outline" 
+                className={`${isJournalView ? 'text-xs px-2 py-0.5' : 'text-xs'} bg-green-50 text-green-700 border-green-200`}
+              >
+                Public
+              </Badge>
+            )}
+            
+            {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
+            {!isJournalView && currentUser && currentUser.id !== dream.user_id && (
               <FlagButton
                 contentType="dream"
                 contentId={dream.id}
                 contentOwnerId={dream.user_id}
                 size="sm"
               />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </CardHeader>
       
@@ -167,10 +178,6 @@ const DreamCard = ({
               </Badge>
             )}
           </div>
-        )}
-
-        {showSharedBadge && (dream.is_public || dream.isPublic) && (
-          <Badge variant="outline" className={isJournalView ? "mb-2 text-xs" : "mb-3"}>Public</Badge>
         )}
 
         {showActions && (
