@@ -26,10 +26,7 @@ const TherapyMode = () => {
           <Sparkles className="h-6 w-6 text-dream-purple" />
         </div>
         <h1 className="text-3xl font-bold mb-2">Therapy Mode</h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Explore your dreams through different psychological perspectives. 
-          Get insights from Jungian analysis, shamanic wisdom, and cognitive behavioral therapy.
-        </p>
+        <p className="text-muted-foreground max-w-2xl mx-auto">Get insights from Jungian analysis, shamanic wisdom, and cognitive behavioral therapy.</p>
       </div>
 
       <TherapyDreamList dreams={entries} />
