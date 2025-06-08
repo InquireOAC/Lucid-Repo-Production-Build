@@ -236,25 +236,6 @@ const DreamChat = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-2xl font-bold">AI Dream Chat</h1>
-          <div className="flex gap-2">
-            <Button onClick={handleNewChat} variant="outline" size="sm">
-              New Chat
-            </Button>
-            {sessions.length > 0 && (
-              <Select onValueChange={handleLoadSession}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Load Previous Session" />
-                </SelectTrigger>
-                <SelectContent>
-                  {sessions.map(session => (
-                    <SelectItem key={session.id} value={session.id}>
-                      {session.title} - {new Date(session.created_at).toLocaleDateString()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          </div>
         </div>
 
         <div className="bg-card rounded-lg border">
