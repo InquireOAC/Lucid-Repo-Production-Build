@@ -21,3 +21,6 @@ verify_jwt = true
 
 [functions.upload-openai-image]
 verify_jwt = false
+
+[functions.dream-chat]
+verify_jwt = true
