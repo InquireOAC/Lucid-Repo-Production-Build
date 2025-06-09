@@ -33,17 +33,17 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
       await new Promise(resolve => setTimeout(resolve, 2000));
     }
     
-    console.log("Generating PNG base64 from HTML element");
+    console.log("Generating high-resolution PNG base64 from HTML element");
     
-    // Generate PNG base64 using html-to-image
+    // Generate PNG base64 using html-to-image with doubled pixel ratio for higher resolution
     const dataUrl = await toPng(element, {
-      quality: 0.92,
-      pixelRatio: 2.0,
+      quality: 0.95,
+      pixelRatio: 4.0, // Doubled from 2.0 to 4.0 for higher resolution
       backgroundColor: null,
       cacheBust: true,
     });
     
-    console.log("PNG base64 generated successfully");
+    console.log("High-resolution PNG base64 generated successfully");
     return dataUrl;
   } catch (error) {
     console.error("Error converting element to PNG base64:", error);
