@@ -162,43 +162,36 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Full-size preview of the share card - DOUBLED RESOLUTION */}
+            {/* Full-size preview of the share card */}
             <div 
               ref={previewCardRef}
               className="w-full mx-auto"
-              style={{ 
-                aspectRatio: '9/16',
-                width: '1428px',
-                height: '2540px',
-                transform: 'scale(0.2)',
-                transformOrigin: 'top left',
-                overflow: 'visible'
-              }}
+              style={{ aspectRatio: '9/16' }}
             >
               <div 
                 className="w-full h-full overflow-hidden"
                 style={{
-                  padding: '160px', 
+                  padding: '16px', 
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
                   background: 'linear-gradient(to bottom, #6344A5, #8976BF)',
-                  borderRadius: '48px'
+                  borderRadius: '12px'
                 }}
               >
                 {/* App Name at the top */}
-                <div className="flex items-center justify-center mb-12">
-                  <h1 className="font-bold text-white tracking-tight" style={{ fontSize: '96px' }}>
+                <div className="flex items-center justify-center mb-3">
+                  <h1 className="text-base font-bold text-white tracking-tight">
                     Lucid Repo
                   </h1>
                 </div>
                 
                 {/* Title & Date */}
-                <div className="mb-12">
-                  <h2 className="font-bold leading-tight text-white text-left line-clamp-2" style={{ fontSize: '128px' }}>
+                <div className="mb-3">
+                  <h2 className="text-lg font-bold leading-tight text-white text-left line-clamp-2">
                     {normalizedDream.title}
                   </h2>
-                  <p className="text-white/50 mt-4 text-left" style={{ fontSize: '48px' }}>
+                  <p className="text-xs text-white/50 mt-1 text-left">
                     {normalizedDream.date 
                       ? new Intl.DateTimeFormat('en-US', { 
                           year: 'numeric', 
@@ -210,8 +203,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 </div>
                 
                 {/* Dream Story */}
-                <div className="mb-12 bg-white/20 rounded-3xl" style={{ padding: '60px' }}>
-                  <p className="leading-normal text-white text-left line-clamp-6" style={{ fontSize: '64px' }}>
+                <div className="mb-3 bg-white/20 p-3 rounded-lg">
+                  <p className="text-sm leading-normal text-white text-left line-clamp-6">
                     {normalizedDream.content.length > 200 
                       ? normalizedDream.content.substring(0, 200) + "..." 
                       : normalizedDream.content}
@@ -220,9 +213,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 
                 {/* Dream Analysis */}
                 {normalizedDream.analysis && (
-                  <div className="mb-12">
-                    <div className="border-l-8 border-purple-300" style={{ paddingLeft: '40px' }}>
-                      <p className="italic text-white/90 text-left line-clamp-3" style={{ fontSize: '56px' }}>
+                  <div className="mb-3">
+                    <div className="border-l-2 border-purple-300 pl-2">
+                      <p className="text-xs italic text-white/90 text-left line-clamp-3">
                         {normalizedDream.analysis.length > 120 
                           ? normalizedDream.analysis.substring(0, 120) + "..." 
                           : normalizedDream.analysis}
@@ -231,16 +224,16 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Dream Visualization - with 512px height for doubled resolution */}
+                {/* Dream Visualization - with 256px height */}
                 {normalizedDream.generatedImage && (
-                  <div className="mb-12 flex items-center justify-center">
-                    <div className="w-full overflow-hidden shadow-lg relative bg-[#8976BF]" style={{ height: '512px', borderRadius: '32px' }}>
+                  <div className="mb-3 flex items-center justify-center">
+                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]" style={{ height: '256px' }}>
                       <img 
                         src={normalizedDream.generatedImage}
                         alt="Dream Visualization"
                         className="w-full h-full object-contain"
                         style={{ 
-                          borderRadius: '32px',
+                          borderRadius: '8px',
                           backgroundColor: '#8976BF'
                         }}
                         crossOrigin="anonymous"
@@ -254,8 +247,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   <img
                     src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
                     alt="Lucid Repo Logo"
-                    className="object-contain"
-                    style={{ height: '120px', width: 'auto' }}
+                    className="h-6 w-auto object-contain"
                   />
                 </div>
               </div>
