@@ -1,4 +1,3 @@
-
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -178,7 +177,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* --- Footer with uploaded logo image, no background or extra styling --- */}
+        {/* --- Footer with uploaded logo image - increased by 25px --- */}
         <div
           style={{
             position: 'absolute',
@@ -200,7 +199,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
-              width: '800px',
+              width: '825px', // Increased from 800px by 25px
               maxWidth: '90%',
               height: 'auto',
               objectFit: 'contain',

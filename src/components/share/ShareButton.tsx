@@ -242,12 +242,13 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Footer with logo */}
+                {/* Footer with logo - increased by 25px */}
                 <div className="flex justify-center items-center mt-auto">
                   <img
                     src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
                     alt="Lucid Repo Logo"
-                    className="h-6 w-auto object-contain"
+                    className="object-contain"
+                    style={{ height: '49px', width: 'auto' }}
                   />
                 </div>
               </div>
