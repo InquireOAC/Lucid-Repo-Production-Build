@@ -224,10 +224,10 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Dream Visualization - full view without cropping */}
+                {/* Dream Visualization - with 256px height */}
                 {normalizedDream.generatedImage && (
                   <div className="mb-3 flex items-center justify-center">
-                    <div className="w-full h-32 overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]">
+                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]" style={{ height: '256px' }}>
                       <img 
                         src={normalizedDream.generatedImage}
                         alt="Dream Visualization"
