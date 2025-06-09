@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
@@ -6,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Share, Save } from "lucide-react";
 import { toast } from "sonner";
-import { elementToPngBase64, extractBase64FromDataUrl, downloadBase64Png } from "@/utils/shareUtils";
+import { elementToPngBase64, extractBase64FromDataUrl } from "@/utils/shareUtils";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share as CapacitorShare } from "@capacitor/share";
 
 interface ShareButtonProps {
   dream: DreamEntry;
@@ -65,18 +67,61 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     setIsSaving(true);
     
     try {
+      console.log("Starting save process for mobile...");
+      
       // Generate PNG from the preview card
       const dataUrl = await elementToPngBase64(previewCardRef.current);
       if (!dataUrl) {
         throw new Error("Failed to generate image");
       }
 
-      // Extract base64 and download
+      // Extract base64 and create filename
       const base64Data = extractBase64FromDataUrl(dataUrl);
       const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`;
       
-      downloadBase64Png(base64Data, filename);
-      toast.success("Share card saved!");
+      if (Capacitor.isNativePlatform()) {
+        console.log("Using native sharing capabilities...");
+        
+        // Save file to device filesystem first
+        const savedFile = await Filesystem.writeFile({
+          path: filename,
+          data: base64Data,
+          directory: Directory.Cache
+        });
+        
+        console.log("File saved to cache:", savedFile.uri);
+        
+        // Use native share sheet to share the image
+        await CapacitorShare.share({
+          title: normalizedDream.title,
+          text: `Check out my dream from Lucid Repo: ${normalizedDream.title}`,
+          url: savedFile.uri,
+          dialogTitle: 'Share Your Dream Card'
+        });
+        
+        toast.success("Share card ready to share!");
+      } else {
+        // Fallback for web - download the file
+        console.log("Using web fallback - downloading file");
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'image/png' });
+        
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        toast.success("Share card downloaded!");
+      }
       
       // Close dialog after successful save
       setTimeout(() => {
