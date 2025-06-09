@@ -1,4 +1,5 @@
 
+
 import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
@@ -202,8 +203,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </p>
                 </div>
                 
-                {/* Dream Story */}
-                <div className="mb-3 bg-white/20 p-3 rounded-lg flex-1">
+                {/* Dream Story - remove flex-1 to only take needed space */}
+                <div className="mb-3 bg-white/20 p-3 rounded-lg">
                   <p className="text-sm leading-normal text-white text-left line-clamp-6">
                     {normalizedDream.content.length > 200 
                       ? normalizedDream.content.substring(0, 200) + "..." 
@@ -231,7 +232,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                       <img 
                         src={normalizedDream.generatedImage}
                         alt="Dream Visualization"
-                        className="w-full h-16 object-cover"
+                        className="w-full h-20 object-cover"
                         style={{ 
                           borderRadius: '8px',
                           backgroundColor: '#8976BF'
@@ -273,3 +274,4 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 };
 
 export default ShareButton;
+
