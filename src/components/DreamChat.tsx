@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SavedChats from './SavedChats';
 import { useChatFeatureAccess } from '@/hooks/useChatFeatureAccess';
+
 interface Message {
   id: string;
   sender: 'user' | 'ai';
@@ -310,7 +311,7 @@ const DreamChat = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="jungian">Jungian Analyst</SelectItem>
-                <SelectItem value="shamanic">Shamanic Guide</SelectItem>
+                <SelectItem value="shamanic">Spiritual Guide</SelectItem>
                 <SelectItem value="cbt">CBT Therapist</SelectItem>
               </SelectContent>
             </Select>
@@ -380,4 +381,5 @@ const DreamChat = () => {
       </div>
     </div>;
 };
+
 export default DreamChat;
