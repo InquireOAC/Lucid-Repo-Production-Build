@@ -1,5 +1,3 @@
-
-
 import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
@@ -225,14 +223,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Dream Visualization */}
+                {/* Dream Visualization - full view without cropping */}
                 {normalizedDream.generatedImage && (
-                  <div className="mb-3 flex items-center justify-center">
-                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]">
+                  <div className="mb-3 flex items-center justify-center flex-1">
+                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF] h-full">
                       <img 
                         src={normalizedDream.generatedImage}
                         alt="Dream Visualization"
-                        className="w-full h-20 object-cover"
+                        className="w-full h-full object-contain"
                         style={{ 
                           borderRadius: '8px',
                           backgroundColor: '#8976BF'
@@ -274,4 +272,3 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 };
 
 export default ShareButton;
-
