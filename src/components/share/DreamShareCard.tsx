@@ -1,3 +1,4 @@
+
 import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
@@ -101,6 +102,11 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   // Log the image URL for debugging
   console.log("Dream image in share card:", dreamImageUrl);
 
+  // Generate the dream link - use username from profiles if available, otherwise use user_id
+  const dreamLink = dream.profiles?.username 
+    ? `https://d388978b-fa85-4ea2-8121-266d2b9c0dc7.lovableproject.com/profile/${dream.profiles.username}/dream/${dream.id}`
+    : `https://d388978b-fa85-4ea2-8121-266d2b9c0dc7.lovableproject.com/profile/${dream.user_id}/dream/${dream.id}`;
+
   return (
     <div 
       className="fixed left-[-9999px] top-[-9999px] opacity-0 pointer-events-none"
@@ -176,6 +182,21 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             </div>
           </div>
         )}
+        
+        {/* Dream Link Section */}
+        <div className="mb-[40px] bg-white/10 p-6 rounded-2xl">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-[20px] text-white/90 mb-2">View this dream:</p>
+              <p className="text-[24px] text-white font-mono break-all">
+                {dreamLink}
+              </p>
+            </div>
+            <div className="ml-6 bg-white p-4 rounded-xl">
+              <QrCode size={80} className="text-purple-600" />
+            </div>
+          </div>
+        </div>
         
         {/* --- Footer with uploaded logo image - increased by 25px --- */}
         <div

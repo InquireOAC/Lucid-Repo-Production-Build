@@ -4,7 +4,7 @@ import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Share, Save } from "lucide-react";
+import { Share, Save, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { elementToPngBase64, extractBase64FromDataUrl } from "@/utils/shareUtils";
 import { Capacitor } from "@capacitor/core";
@@ -141,6 +141,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     return null;
   }
 
+  // Generate the dream link - use username from profiles if available, otherwise use user_id
+  const dreamLink = normalizedDream.profiles?.username 
+    ? `https://d388978b-fa85-4ea2-8121-266d2b9c0dc7.lovableproject.com/profile/${normalizedDream.profiles.username}/dream/${normalizedDream.id}`
+    : `https://d388978b-fa85-4ea2-8121-266d2b9c0dc7.lovableproject.com/profile/${normalizedDream.user_id}/dream/${normalizedDream.id}`;
+
   return (
     <>
       <Button 
@@ -241,6 +246,21 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     </div>
                   </div>
                 )}
+                
+                {/* Dream Link Section */}
+                <div className="mb-3 bg-white/10 p-3 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-white/90 mb-1">View this dream:</p>
+                      <p className="text-xs text-white font-mono truncate">
+                        {dreamLink}
+                      </p>
+                    </div>
+                    <div className="ml-2 bg-white p-2 rounded-md flex-shrink-0">
+                      <QrCode size={24} className="text-purple-600" />
+                    </div>
+                  </div>
+                </div>
                 
                 {/* Footer with logo - increased by 25px */}
                 <div className="flex justify-center items-center mt-auto">
