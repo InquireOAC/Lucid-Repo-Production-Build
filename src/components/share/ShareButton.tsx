@@ -3,8 +3,10 @@ import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
 import { Button } from "@/components/ui/button";
-import { Share } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Share, Save } from "lucide-react";
 import { toast } from "sonner";
+import { elementToPngBase64, extractBase64FromDataUrl, downloadBase64Png } from "@/utils/shareUtils";
 
 interface ShareButtonProps {
   dream: DreamEntry;
@@ -20,7 +22,10 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   className = ""
 }) => {
   const [isSharing, setIsSharing] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
+  const previewCardRef = useRef<HTMLDivElement>(null);
 
   // Enhanced normalization to ensure image is available
   const normalizedDream = {
@@ -40,36 +45,49 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const handleShareClick = async () => {
     if (isSharing) return;
 
-    // Force a small delay to ensure all data is loaded
     setIsSharing(true);
     
-    // Add a small delay to ensure the component is fully rendered
-    setTimeout(async () => {
-      try {
-        // Trigger the share process via the ref
-        if (shareCardRef.current) {
-          const success = await shareCardRef.current.shareDream();
-          if (!success) {
-            toast.error("Couldn't prepare dream for sharing");
-          }
-        } else {
-          toast.error("Share component not initialized properly");
-        }
-      } catch (error) {
-        console.error("Share error:", error);
-        toast.error("Failed to share dream");
-      } finally {
-        setIsSharing(false);
-      }
-    }, 500);
+    try {
+      // Show the dialog immediately
+      setShowShareDialog(true);
+      toast.success("Share card generated!");
+    } catch (error) {
+      console.error("Share error:", error);
+      toast.error("Failed to generate share card");
+    } finally {
+      setIsSharing(false);
+    }
+  };
 
-    // Reset sharing state after a timeout if something goes wrong
-    setTimeout(() => {
-      if (isSharing) {
-        setIsSharing(false);
-        toast.error("Share process timed out. Please try again.");
+  const handleSaveCard = async () => {
+    if (!previewCardRef.current || isSaving) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Generate PNG from the preview card
+      const dataUrl = await elementToPngBase64(previewCardRef.current);
+      if (!dataUrl) {
+        throw new Error("Failed to generate image");
       }
-    }, 20000);
+
+      // Extract base64 and download
+      const base64Data = extractBase64FromDataUrl(dataUrl);
+      const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`;
+      
+      downloadBase64Png(base64Data, filename);
+      toast.success("Share card saved!");
+      
+      // Close dialog after successful save
+      setTimeout(() => {
+        setShowShareDialog(false);
+      }, 500);
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save share card");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Validate required fields
@@ -87,11 +105,127 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         className={`flex items-center justify-center gap-2 ${className}`}
       >
         <Share size={18} />
-        <span>{isSharing ? "Sharing..." : "Share"}</span>
+        <span>{isSharing ? "Generating..." : "Share"}</span>
       </Button>
       
-      {/* The hidden share card component (mounted all the time but invisible) */}
-      <DreamShareCard ref={shareCardRef} dream={normalizedDream} onShareStart={() => setIsSharing(true)} onShareComplete={() => setIsSharing(false)} />
+      {/* Share card preview dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Share Your Dream</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Preview of the share card */}
+            <div 
+              ref={previewCardRef}
+              className="w-full max-w-[300px] mx-auto"
+              style={{
+                aspectRatio: '9/16',
+                transform: 'scale(0.7)',
+                transformOrigin: 'top center'
+              }}
+            >
+              <div 
+                className="w-[300px] h-[533px] overflow-hidden"
+                style={{
+                  padding: '20px', 
+                  display: 'flex',
+                  flexDirection: 'column',
+                  position: 'relative',
+                  background: 'linear-gradient(to bottom, #6344A5, #8976BF)',
+                  borderRadius: '12px'
+                }}
+              >
+                {/* App Name at the top */}
+                <div className="flex items-center justify-center mb-4">
+                  <h1 className="text-lg font-bold text-white tracking-tight">
+                    Lucid Repo
+                  </h1>
+                </div>
+                
+                {/* Title & Date */}
+                <div className="mb-4">
+                  <h2 className="text-xl font-bold leading-tight text-white text-left line-clamp-2">
+                    {normalizedDream.title}
+                  </h2>
+                  <p className="text-xs text-white/50 mt-1 text-left">
+                    {normalizedDream.date 
+                      ? new Intl.DateTimeFormat('en-US', { 
+                          year: 'numeric', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        }).format(new Date(normalizedDream.date))
+                      : "Unknown Date"}
+                  </p>
+                </div>
+                
+                {/* Dream Story */}
+                <div className="mb-4 bg-white/20 p-3 rounded-lg flex-1">
+                  <p className="text-sm leading-normal text-white text-left line-clamp-6">
+                    {normalizedDream.content.length > 200 
+                      ? normalizedDream.content.substring(0, 200) + "..." 
+                      : normalizedDream.content}
+                  </p>
+                </div>
+                
+                {/* Dream Analysis */}
+                {normalizedDream.analysis && (
+                  <div className="mb-4">
+                    <div className="border-l-2 border-purple-300 pl-2">
+                      <p className="text-xs italic text-white/90 text-left line-clamp-3">
+                        {normalizedDream.analysis.length > 120 
+                          ? normalizedDream.analysis.substring(0, 120) + "..." 
+                          : normalizedDream.analysis}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Dream Visualization */}
+                {normalizedDream.generatedImage && (
+                  <div className="mb-4 flex items-center justify-center">
+                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]">
+                      <img 
+                        src={normalizedDream.generatedImage}
+                        alt="Dream Visualization"
+                        className="w-full h-20 object-cover"
+                        style={{ 
+                          borderRadius: '8px',
+                          backgroundColor: '#8976BF'
+                        }}
+                        crossOrigin="anonymous"
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Footer with logo */}
+                <div className="flex justify-center items-center mt-auto">
+                  <img
+                    src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
+                    alt="Lucid Repo Logo"
+                    className="h-8 w-auto object-contain"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Save button */}
+            <Button 
+              onClick={handleSaveCard}
+              disabled={isSaving}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <Save size={18} />
+              <span>{isSaving ? "Saving..." : "Save"}</span>
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* The hidden share card component for fallback */}
+      <DreamShareCard ref={shareCardRef} dream={normalizedDream} />
     </>
   );
 };
