@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { DreamEntry } from "@/types/dream";
 import DreamShareCard, { DreamShareCardRef } from "./DreamShareCard";
@@ -155,26 +156,22 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       
       {/* Share card preview dialog */}
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Share Your Dream</DialogTitle>
+        <DialogContent className="max-w-sm max-h-[95vh] overflow-y-auto p-2">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-center">Share Your Dream</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Preview of the share card */}
+            {/* Full-size preview of the share card */}
             <div 
               ref={previewCardRef}
-              className="w-full max-w-[300px] mx-auto"
-              style={{
-                aspectRatio: '9/16',
-                transform: 'scale(0.7)',
-                transformOrigin: 'top center'
-              }}
+              className="w-full mx-auto"
+              style={{ aspectRatio: '9/16' }}
             >
               <div 
-                className="w-[300px] h-[533px] overflow-hidden"
+                className="w-full h-full overflow-hidden"
                 style={{
-                  padding: '20px', 
+                  padding: '16px', 
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
@@ -183,15 +180,15 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 }}
               >
                 {/* App Name at the top */}
-                <div className="flex items-center justify-center mb-4">
-                  <h1 className="text-lg font-bold text-white tracking-tight">
+                <div className="flex items-center justify-center mb-3">
+                  <h1 className="text-base font-bold text-white tracking-tight">
                     Lucid Repo
                   </h1>
                 </div>
                 
                 {/* Title & Date */}
-                <div className="mb-4">
-                  <h2 className="text-xl font-bold leading-tight text-white text-left line-clamp-2">
+                <div className="mb-3">
+                  <h2 className="text-lg font-bold leading-tight text-white text-left line-clamp-2">
                     {normalizedDream.title}
                   </h2>
                   <p className="text-xs text-white/50 mt-1 text-left">
@@ -206,7 +203,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 </div>
                 
                 {/* Dream Story */}
-                <div className="mb-4 bg-white/20 p-3 rounded-lg flex-1">
+                <div className="mb-3 bg-white/20 p-3 rounded-lg flex-1">
                   <p className="text-sm leading-normal text-white text-left line-clamp-6">
                     {normalizedDream.content.length > 200 
                       ? normalizedDream.content.substring(0, 200) + "..." 
@@ -216,7 +213,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 
                 {/* Dream Analysis */}
                 {normalizedDream.analysis && (
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <div className="border-l-2 border-purple-300 pl-2">
                       <p className="text-xs italic text-white/90 text-left line-clamp-3">
                         {normalizedDream.analysis.length > 120 
@@ -229,12 +226,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 
                 {/* Dream Visualization */}
                 {normalizedDream.generatedImage && (
-                  <div className="mb-4 flex items-center justify-center">
+                  <div className="mb-3 flex items-center justify-center">
                     <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]">
                       <img 
                         src={normalizedDream.generatedImage}
                         alt="Dream Visualization"
-                        className="w-full h-20 object-cover"
+                        className="w-full h-16 object-cover"
                         style={{ 
                           borderRadius: '8px',
                           backgroundColor: '#8976BF'
@@ -250,7 +247,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   <img
                     src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
                     alt="Lucid Repo Logo"
-                    className="h-8 w-auto object-contain"
+                    className="h-6 w-auto object-contain"
                   />
                 </div>
               </div>
