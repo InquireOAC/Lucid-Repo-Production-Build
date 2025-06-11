@@ -223,7 +223,7 @@ export const useNativeSubscription = () => {
       toast.dismiss('restore-loading');
       
       // Check if any active entitlements were restored
-      const activeEntitlements = Object.keys(customerInfo.entitlements.active || {});
+      const activeEntitlements = Object.keys(customerInfo.entitlements?.active || {});
       
       if (activeEntitlements.length > 0) {
         toast.success('Purchases restored successfully!', {
