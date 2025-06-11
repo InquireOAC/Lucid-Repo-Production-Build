@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, Brain } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
+import AIContextDialog from "./AIContextDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -19,6 +20,7 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [showAIContext, setShowAIContext] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -33,6 +35,20 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
           </DialogHeader>
           
           <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">AI Features</h4>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setShowAIContext(true)}
+              >
+                <Brain className="h-4 w-4 mr-2" />
+                AI Context
+              </Button>
+            </div>
+
+            <Separator />
+
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Community</h4>
               <Button
@@ -116,6 +132,11 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
       <DeleteAccountDialog
         open={showDeleteAccount}
         onOpenChange={setShowDeleteAccount}
+      />
+
+      <AIContextDialog
+        open={showAIContext}
+        onOpenChange={setShowAIContext}
       />
     </>
   );
