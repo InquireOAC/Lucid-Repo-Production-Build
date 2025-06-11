@@ -62,10 +62,6 @@ const ProfileHeader = ({
         <p className="text-sm text-muted-foreground max-w-md mb-4">{profile.bio}</p>
       )}
 
-      <div className="text-sm text-muted-foreground mb-4">
-        {dreamCount} dreams shared
-      </div>
-
       <ProfileHeaderActions
         isOwnProfile={isOwnProfile}
         isFollowing={isFollowing}
