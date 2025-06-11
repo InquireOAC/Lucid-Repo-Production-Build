@@ -51,12 +51,12 @@ export const useImageGeneration = ({
 
       console.log("=== STARTING IMAGE GENERATION PROCESS ===");
 
-      // 1. Get image prompt from analyze-dream
-      console.log("Step 1: Getting image prompt...");
-      const generatedPromptText = await getImagePrompt(dreamContent);
+      // 1. Get image prompt from analyze-dream with user context
+      console.log("Step 1: Getting image prompt with AI context...");
+      const generatedPromptText = await getImagePrompt(dreamContent, user.id);
       if (!generatedPromptText) throw new Error("No image prompt was generated");
       setImagePrompt(generatedPromptText);
-      console.log("Image prompt generated:", generatedPromptText);
+      console.log("Personalized image prompt generated:", generatedPromptText);
 
       // 2. Generate image from prompt via edge function
       console.log("Step 2: Generating image from AI...");

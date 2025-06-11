@@ -5,17 +5,117 @@ import { toast } from "sonner";
 
 export function useDreamImageAI() {
   /**
-   * Analyze dream content and get an image prompt
+   * Get user's AI context for personalized image generation
    */
-  const getImagePrompt = useCallback(async (dreamContent: string) => {
+  const getUserAIContext = useCallback(async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('ai_context')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching AI context:', error);
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching AI context:', error);
+      return null;
+    }
+  }, []);
+
+  /**
+   * Build personalized prompt based on user's AI context
+   */
+  const buildPersonalizedPrompt = useCallback((basePrompt: string, aiContext: any) => {
+    if (!aiContext) return basePrompt;
+
+    let personalizedPrompt = basePrompt;
+
+    // Add appearance details if available
+    const appearanceDetails = [];
+    
+    if (aiContext.hair_color) {
+      appearanceDetails.push(`${aiContext.hair_color} hair`);
+    }
+    
+    if (aiContext.hair_style) {
+      appearanceDetails.push(`${aiContext.hair_style} hairstyle`);
+    }
+    
+    if (aiContext.skin_tone) {
+      appearanceDetails.push(`${aiContext.skin_tone} skin tone`);
+    }
+    
+    if (aiContext.eye_color) {
+      appearanceDetails.push(`${aiContext.eye_color} eyes`);
+    }
+    
+    if (aiContext.height) {
+      appearanceDetails.push(`${aiContext.height} build`);
+    }
+
+    if (aiContext.clothing_style) {
+      appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
+    }
+
+    // Add person description if we have appearance details
+    if (appearanceDetails.length > 0) {
+      const personDescription = `featuring a person with ${appearanceDetails.join(', ')}`;
+      personalizedPrompt = `${basePrompt}. ${personDescription}`;
+    }
+
+    // Add age context if available
+    if (aiContext.age_range) {
+      const ageContext = aiContext.age_range === 'child' ? 'young child' :
+                         aiContext.age_range === 'teen' ? 'teenager' :
+                         aiContext.age_range === 'young_adult' ? 'young adult' :
+                         aiContext.age_range === 'adult' ? 'adult' :
+                         aiContext.age_range === 'middle_aged' ? 'middle-aged person' :
+                         aiContext.age_range === 'elder' ? 'elderly person' : '';
+      
+      if (ageContext) {
+        personalizedPrompt = personalizedPrompt.replace('person', ageContext);
+      }
+    }
+
+    // Add aesthetic preferences if available
+    if (aiContext.aesthetic_preferences && aiContext.aesthetic_preferences.length > 0) {
+      const stylePreferences = aiContext.aesthetic_preferences.join(', ');
+      personalizedPrompt += `. Render in ${stylePreferences} artistic style`;
+    }
+
+    return personalizedPrompt;
+  }, []);
+
+  /**
+   * Analyze dream content and get an image prompt with AI context
+   */
+  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string) => {
+    // First get the base prompt from the analyze-dream function
     const result = await supabase.functions.invoke("analyze-dream", {
       body: { dreamContent, task: "create_image_prompt" },
     });
+    
     if (result.error) {
       throw new Error(result.error.message || "Failed to generate image prompt");
     }
-    return result.data?.analysis || "";
-  }, []);
+
+    const basePrompt = result.data?.analysis || "";
+
+    // If we have a user ID, try to get their AI context and personalize the prompt
+    if (userId) {
+      const aiContext = await getUserAIContext(userId);
+      if (aiContext) {
+        return buildPersonalizedPrompt(basePrompt, aiContext);
+      }
+    }
+
+    return basePrompt;
+  }, [getUserAIContext, buildPersonalizedPrompt]);
 
   /**
    * Generate a dream image from prompt via edge function
@@ -34,5 +134,5 @@ export function useDreamImageAI() {
     );
   }, []);
 
-  return { getImagePrompt, generateDreamImageFromAI };
+  return { getImagePrompt, generateDreamImageFromAI, getUserAIContext, buildPersonalizedPrompt };
 }
