@@ -217,13 +217,13 @@ export const useNativeSubscription = () => {
       toast.loading('Restoring purchases...', { id: 'restore-loading' });
       
       console.log('Restoring purchases...');
-      const customerInfo = await Purchases.restorePurchases();
-      console.log('Restore result:', customerInfo);
+      const restoreResult = await Purchases.restorePurchases();
+      console.log('Restore result:', restoreResult);
       
       toast.dismiss('restore-loading');
       
       // Check if any active entitlements were restored
-      const activeEntitlements = Object.keys(customerInfo.entitlements?.active || {});
+      const activeEntitlements = Object.keys(restoreResult.customerInfo.entitlements?.active || {});
       
       if (activeEntitlements.length > 0) {
         toast.success('Purchases restored successfully!', {
