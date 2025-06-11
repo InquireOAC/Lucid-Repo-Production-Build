@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +27,6 @@ interface AIContextData {
   height?: string;
   build?: string;
   clothing_style?: string;
-  voice_tone?: string;
   aesthetic_preferences?: string[];
 }
 
@@ -301,21 +298,6 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                   placeholder="e.g., casual, business, alternative"
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Voice/Tone */}
-          <div className="space-y-4">
-            <h3 className="font-semibold">Voice & Tone</h3>
-            <div>
-              <Label htmlFor="voice_tone">Personality/Tone</Label>
-              <Textarea
-                id="voice_tone"
-                value={contextData.voice_tone || ''}
-                onChange={(e) => setContextData(prev => ({ ...prev, voice_tone: e.target.value }))}
-                placeholder="e.g., calm and thoughtful, humorous and energetic, analytical and precise"
-                rows={3}
-              />
             </div>
           </div>
 
