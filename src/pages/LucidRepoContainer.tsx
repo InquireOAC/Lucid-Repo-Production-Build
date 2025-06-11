@@ -11,11 +11,12 @@ import { useDreams } from "@/hooks/useDreams";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLikes } from "@/hooks/useLikes";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
+import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
+
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
+
 const LucidRepoContainer = () => {
-  const {
-    user
-  } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
@@ -24,12 +25,11 @@ const LucidRepoContainer = () => {
 
   // Track which dreams have already had their view count updated
   const [viewCountUpdated, setViewCountUpdated] = useState<Set<string>>(new Set());
+  const { isUserBlocked } = useBlockedUsers();
+  
   const {
-    isUserBlocked
-  } = useBlockedUsers();
-  const {
-    dreams,
-    isLoading,
+    dreams: allDreams,
+    isLoading: allDreamsLoading,
     sortBy,
     setSortBy,
     activeTab,
@@ -37,6 +37,13 @@ const LucidRepoContainer = () => {
     handleUpdateDream,
     fetchPublicDreams
   } = useDreams(refreshLikedDreams);
+
+  // Get dreams from users the current user follows
+  const { dreams: followingDreams, isLoading: followingLoading } = useFeedPublicDreams(user);
+
+  // Determine which dreams to show based on active tab
+  const dreams = activeTab === "following" ? followingDreams : allDreams;
+  const isLoading = activeTab === "following" ? followingLoading : allDreamsLoading;
 
   // Centralized state for dreams, to ensure `useLikes` can sync state
   const [dreamsState, setDreamsState] = useState<DreamEntry[]>([]);
@@ -77,44 +84,54 @@ const LucidRepoContainer = () => {
   }
 
   // useLikes hook to keep liked state in sync and handle like logic
-  const {
-    handleLike
-  } = useLikes(user, dreamsState, setDreamsState, refreshLikedDreams);
+  const { handleLike } = useLikes(user, dreamsState, setDreamsState, refreshLikedDreams);
 
   // Fetch globally visible dream tags for the repo page
-  const {
-    tags: publicTags,
-    isLoading: tagsLoading
-  } = usePublicDreamTags();
+  const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
 
   // Only allow tags in the allowed list
   const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
+
   useEffect(() => {
-    fetchPublicDreams();
+    // Initialize with "following" tab if user is logged in, otherwise "recent"
+    if (user && activeTab === "popular") {
+      setActiveTab("following");
+    } else if (!user && activeTab === "following") {
+      setActiveTab("recent");
+    }
+    
+    if (activeTab === "recent") {
+      fetchPublicDreams();
+    }
     // Only fetch on initial load - no automatic refresh interval
-  }, []);
+  }, [user, activeTab]);
 
   // Refresh data when tab changes (background refresh)
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
     // Refresh in background when switching tabs
-    setTimeout(fetchPublicDreams, 100);
+    if (newTab === "recent") {
+      setTimeout(fetchPublicDreams, 100);
+    }
   };
+
   const handleOpenDream = (dream: DreamEntry) => {
-    setSelectedDream({
-      ...dream
-    });
+    setSelectedDream({ ...dream });
   };
+
   const handleCloseDream = () => {
     setSelectedDream(null);
     // Don't refresh here - the view count and like updates should already be in dreamsState
   };
+
   const handleNavigateToProfile = (username: string | undefined) => {
     if (username) navigate(`/profile/${username}`);
   };
+
   const handleTagClick = (tagId: string) => {
     setActiveTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
   };
+
   const handleClearTags = () => setActiveTags([]);
 
   // Handler for updating view count when opening dream
@@ -146,13 +163,12 @@ const LucidRepoContainer = () => {
       if (updatedDream) {
         // Update the selected dream if it's the one being liked
         if (selectedDream && selectedDream.id === dreamId) {
-          setSelectedDream({
-            ...updatedDream
-          });
+          setSelectedDream({ ...updatedDream });
         }
       }
     }
   };
+
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
     const dreamToUpdate = dreamsState.find(d => d.id === id);
     if (!dreamToUpdate) {
@@ -176,10 +192,10 @@ const LucidRepoContainer = () => {
 
   // Filter dreams based on search query and tags and blocked users
   const normalizedDreams = dreamsState.filter(dream => !isUserBlocked(dream.user_id)) // Filter out blocked users
-  .map(dream => ({
-    ...dream,
-    tags: Array.isArray(dream.tags) ? dream.tags : []
-  }));
+    .map(dream => ({
+      ...dream,
+      tags: Array.isArray(dream.tags) ? dream.tags : []
+    }));
 
   // Tag filtering: Only show dreams where at least one dream.tags[] (ID string) matches activeTags[]
   const filteredDreams = normalizedDreams.filter(dream => {
@@ -196,13 +212,49 @@ const LucidRepoContainer = () => {
   });
 
   // ---- MAIN UI ----
-  return <div className="container mx-auto px-4 py-6 max-w-4xl">
+  return (
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
       <h1 className="text-2xl font-bold mb-6 gradient-text text-center">Lucid Repo</h1>
-      <LucidRepoHeader searchQuery={searchQuery} setSearchQuery={setSearchQuery} activeTab={activeTab} setActiveTab={handleTabChange} sortBy={sortBy} setSortBy={setSortBy} handleSearch={(e: React.FormEvent) => e.preventDefault()} tags={filteredDreamTags} activeTags={activeTags} onTagClick={handleTagClick} onClearTags={handleClearTags} />
-      <LucidRepoDreamList isLoading={isLoading || tagsLoading} filteredDreams={filteredDreams} dreamTags={filteredDreamTags} onLike={() => {}} // Pass empty function since likes should only work from modal
-    onOpenDream={handleOpenDream} onUserClick={handleNavigateToProfile} onTagClick={handleTagClick} searchQuery={searchQuery} currentUser={user} />
-      {selectedDream && <DreamDetailWrapper selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream} tags={filteredDreamTags} onClose={handleCloseDream} onUpdate={handleDreamUpdate} isAuthenticated={!!user} onLike={() => handleDreamLike(selectedDream.id)} onViewCountUpdate={handleViewCountUpdate} viewCountUpdated={viewCountUpdated} setViewCountUpdated={setViewCountUpdated} />}
+      <LucidRepoHeader 
+        searchQuery={searchQuery} 
+        setSearchQuery={setSearchQuery} 
+        activeTab={activeTab} 
+        setActiveTab={handleTabChange} 
+        sortBy={sortBy} 
+        setSortBy={setSortBy} 
+        handleSearch={(e: React.FormEvent) => e.preventDefault()} 
+        tags={filteredDreamTags} 
+        activeTags={activeTags} 
+        onTagClick={handleTagClick} 
+        onClearTags={handleClearTags} 
+      />
+      <LucidRepoDreamList 
+        isLoading={isLoading || tagsLoading} 
+        filteredDreams={filteredDreams} 
+        dreamTags={filteredDreamTags} 
+        onLike={() => {}} // Pass empty function since likes should only work from modal
+        onOpenDream={handleOpenDream} 
+        onUserClick={handleNavigateToProfile} 
+        onTagClick={handleTagClick} 
+        searchQuery={searchQuery} 
+        currentUser={user} 
+      />
+      {selectedDream && (
+        <DreamDetailWrapper 
+          selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream} 
+          tags={filteredDreamTags} 
+          onClose={handleCloseDream} 
+          onUpdate={handleDreamUpdate} 
+          isAuthenticated={!!user} 
+          onLike={() => handleDreamLike(selectedDream.id)} 
+          onViewCountUpdate={handleViewCountUpdate} 
+          viewCountUpdated={viewCountUpdated} 
+          setViewCountUpdated={setViewCountUpdated} 
+        />
+      )}
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
-    </div>;
+    </div>
+  );
 };
+
 export default LucidRepoContainer;

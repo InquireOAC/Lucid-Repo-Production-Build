@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
@@ -56,10 +57,10 @@ const LucidRepoHeader = ({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
         <TabsList>
-          <TabsTrigger value="popular">Popular</TabsTrigger>
+          <TabsTrigger value="following">Following</TabsTrigger>
           <TabsTrigger value="recent">Recent</TabsTrigger>
         </TabsList>
-        <TabsContent value="popular"></TabsContent>
+        <TabsContent value="following"></TabsContent>
         <TabsContent value="recent"></TabsContent>
       </Tabs>
 
