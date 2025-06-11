@@ -250,14 +250,17 @@ const DreamEntryForm = ({
             />
           </div>
           
-          <Input
-            type="date"
-            name="date"
-            value={formData.date}
-            onChange={handleChange}
-            className="dream-input"
-            required
-          />
+          <div className="space-y-2">
+            <Label>Date</Label>
+            <Input
+              type="date"
+              name="date"
+              value={formData.date}
+              onChange={handleChange}
+              className="dream-input w-fit max-w-48"
+              required
+            />
+          </div>
         </div>
 
         {/* Dream Tags */}
