@@ -7,7 +7,8 @@ import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
 import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
-import JournalTabs from "@/components/journal/JournalTabs";
+import DreamsList from "@/components/journal/DreamsList";
+import EmptyJournal from "@/components/journal/EmptyJournal";
 import { DreamEntry } from "@/types/dream";
 
 const Journal = () => {
@@ -36,8 +37,6 @@ const Journal = () => {
     syncDreamsFromDb,
   } = useDreamJournal();
 
-  const [activeTab, setActiveTab] = useState("all");
-
   // Memoize the sync function to prevent infinite loops
   const memoizedSyncDreams = useCallback(() => {
     if (user) {
@@ -49,15 +48,6 @@ const Journal = () => {
   useEffect(() => {
     memoizedSyncDreams();
   }, [user]); // Remove syncDreamsFromDb from dependencies
-
-  // Refresh data when tab changes (background refresh)
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    // Refresh in background when switching tabs
-    if (user) {
-      setTimeout(memoizedSyncDreams, 100);
-    }
-  };
 
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
@@ -126,19 +116,21 @@ const Journal = () => {
         onClearTags={() => setActiveTagIds([])}
       />
 
-      <JournalTabs
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-        allEntries={entries}
-        filteredDreams={filteredDreams}
-        tags={tags}
-        onSelectDream={setSelectedDream}
-        onEditDream={handleOpenEditDialog}
-        onTogglePublic={handleTogglePublic}
-        onDeleteDream={(dreamId) => setDreamToDelete(dreamId)}
-        onTagClickInList={handleTagClick}
-        onAddDream={() => setIsAddingDream(true)}
-      />
+      <div className="mb-6">
+        {entries.length === 0 ? (
+          <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
+        ) : (
+          <DreamsList
+            dreams={filteredDreams}
+            tags={tags}
+            onSelect={setSelectedDream}
+            onEdit={handleOpenEditDialog}
+            onTogglePublic={handleTogglePublic}
+            onDelete={(dreamId) => setDreamToDelete(dreamId)}
+            onTagClick={handleTagClick}
+          />
+        )}
+      </div>
 
       <AddDreamDialog
         isOpen={isAddingDream}
