@@ -58,6 +58,63 @@ export type Database = {
           },
         ]
       }
+      ai_context: {
+        Row: {
+          aesthetic_preferences: string[] | null
+          age_range: string | null
+          build: string | null
+          clothing_style: string | null
+          created_at: string
+          eye_color: string | null
+          hair_color: string | null
+          hair_style: string | null
+          height: string | null
+          id: string
+          name: string | null
+          photo_url: string | null
+          pronouns: string | null
+          skin_tone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          aesthetic_preferences?: string[] | null
+          age_range?: string | null
+          build?: string | null
+          clothing_style?: string | null
+          created_at?: string
+          eye_color?: string | null
+          hair_color?: string | null
+          hair_style?: string | null
+          height?: string | null
+          id?: string
+          name?: string | null
+          photo_url?: string | null
+          pronouns?: string | null
+          skin_tone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          aesthetic_preferences?: string[] | null
+          age_range?: string | null
+          build?: string | null
+          clothing_style?: string | null
+          created_at?: string
+          eye_color?: string | null
+          hair_color?: string | null
+          hair_style?: string | null
+          height?: string | null
+          id?: string
+          name?: string | null
+          photo_url?: string | null
+          pronouns?: string | null
+          skin_tone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       blocked_users: {
         Row: {
           blocked_user_id: string
