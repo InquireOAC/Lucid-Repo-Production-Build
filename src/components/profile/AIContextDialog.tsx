@@ -132,11 +132,11 @@ const AIContextDialog = ({
       if (error) {
         throw error;
       }
-      toast.success('AI context saved successfully!');
+      toast.success('Dream Avatar saved successfully!');
       onOpenChange(false);
     } catch (error: any) {
-      console.error('Error saving AI context:', error);
-      toast.error(`Failed to save AI context: ${error.message}`);
+      console.error('Error saving Dream Avatar:', error);
+      toast.error(`Failed to save Dream Avatar: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
@@ -277,7 +277,7 @@ const AIContextDialog = ({
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save AI Context'}
+              {isLoading ? 'Saving...' : 'Save Avatar'}
             </Button>
           </div>
         </div>
