@@ -11,10 +11,10 @@ const APPLE_SHARED_SECRET = Deno.env.get('APPLE_SHARED_SECRET') || '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
-// Product ID mapping
+// Product ID mapping - Updated to match expected price IDs
 const PRODUCT_MAPPING = {
-  'com.lucidrepo.basic.monthly': 'price_basic',
-  'com.lucidrepo.premium.monthly': 'price_premium'
+  'com.lucidrepo.limited.monthly': 'price_basic',
+  'com.lucidrepo.unlimited.monthly': 'price_premium'
 };
 
 serve(async (req) => {
@@ -44,7 +44,7 @@ serve(async (req) => {
       throw new Error('Missing receipt data or product ID');
     }
 
-    console.log(`Verifying purchase for product: ${productId}`);
+    console.log(`Verifying purchase for product: ${productId}, user: ${user.id}`);
 
     // Verify receipt with Apple
     const verificationResult = await verifyWithApple(receiptData);
@@ -53,35 +53,50 @@ serve(async (req) => {
       throw new Error('Invalid receipt');
     }
 
+    console.log('Apple receipt verification successful');
+
     // Map Apple product ID to our internal price ID
     const priceId = PRODUCT_MAPPING[productId as keyof typeof PRODUCT_MAPPING];
     if (!priceId) {
-      throw new Error('Unknown product ID');
+      console.error('Unknown product ID:', productId);
+      throw new Error(`Unknown product ID: ${productId}`);
     }
+
+    console.log(`Mapped product ${productId} to price_id: ${priceId}`);
 
     // Create or update customer record
     let customerId;
-    const { data: customerData } = await supabase
+    const { data: existingCustomer } = await supabase
       .from('stripe_customers')
       .select('customer_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (customerData?.customer_id) {
-      customerId = customerData.customer_id;
+    if (existingCustomer?.customer_id) {
+      customerId = existingCustomer.customer_id;
+      console.log('Using existing customer ID:', customerId);
     } else {
       // Create a new customer record for iOS purchases
-      const iosCustomerId = `ios_${user.id}`;
-      await supabase
+      customerId = `ios_${user.id}`;
+      const { error: customerError } = await supabase
         .from('stripe_customers')
         .insert({
           user_id: user.id,
-          customer_id: iosCustomerId,
+          customer_id: customerId,
           email: user.email,
           created_at: new Date().toISOString()
         });
-      customerId = iosCustomerId;
+      
+      if (customerError) {
+        console.error('Error creating customer:', customerError);
+        throw customerError;
+      }
+      console.log('Created new customer ID:', customerId);
     }
+
+    // Calculate period dates (30 days from now)
+    const now = Math.floor(Date.now() / 1000);
+    const periodEnd = now + (30 * 24 * 60 * 60); // 30 days from now
 
     // Create or update subscription record
     const subscriptionData = {
@@ -89,28 +104,49 @@ serve(async (req) => {
       user_id: user.id,
       subscription_id: `ios_${transactionId}`,
       price_id: priceId,
-      current_period_start: Math.floor(Date.now() / 1000),
-      current_period_end: Math.floor((Date.now() + 30 * 24 * 60 * 60 * 1000) / 1000), // 30 days from now
+      current_period_start: now,
+      current_period_end: periodEnd,
       cancel_at_period_end: false,
-      status: 'active',
+      status: 'active' as const,
       updated_at: new Date().toISOString(),
       dream_analyses_used: 0,
       image_generations_used: 0
     };
 
+    console.log('Inserting/updating subscription:', subscriptionData);
+
+    // First, deactivate any existing subscriptions for this customer
+    const { error: deactivateError } = await supabase
+      .from('stripe_subscriptions')
+      .update({ 
+        status: 'canceled' as const,
+        updated_at: new Date().toISOString()
+      })
+      .eq('customer_id', customerId)
+      .eq('status', 'active');
+
+    if (deactivateError) {
+      console.error('Error deactivating existing subscriptions:', deactivateError);
+    }
+
+    // Insert the new subscription
     const { error: subscriptionError } = await supabase
       .from('stripe_subscriptions')
-      .upsert(subscriptionData, { onConflict: 'customer_id' });
+      .insert(subscriptionData);
 
     if (subscriptionError) {
-      console.error('Error updating subscription:', subscriptionError);
+      console.error('Error creating subscription:', subscriptionError);
       throw subscriptionError;
     }
 
-    console.log('iOS purchase verified and subscription updated successfully');
+    console.log('iOS purchase verified and subscription created successfully');
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ 
+        success: true, 
+        subscription: subscriptionData,
+        message: 'Subscription activated successfully'
+      }),
       { 
         headers: { 
           ...corsHeaders,
@@ -122,7 +158,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error verifying iOS purchase:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: 'Failed to verify iOS purchase and activate subscription'
+      }),
       { 
         headers: { 
           ...corsHeaders,
@@ -150,9 +189,11 @@ async function verifyWithApple(receiptData: string): Promise<{ valid: boolean; d
     });
 
     let result = await response.json();
+    console.log('Apple production verification result:', result.status);
 
     // If status is 21007, receipt is from sandbox, try sandbox endpoint
     if (result.status === 21007) {
+      console.log('Trying sandbox verification...');
       response = await fetch('https://sandbox.itunes.apple.com/verifyReceipt', {
         method: 'POST',
         headers: {
@@ -166,13 +207,14 @@ async function verifyWithApple(receiptData: string): Promise<{ valid: boolean; d
       });
 
       result = await response.json();
+      console.log('Apple sandbox verification result:', result.status);
     }
 
     // Status 0 means valid receipt
     if (result.status === 0) {
       return { valid: true, data: result };
     } else {
-      console.error('Apple receipt verification failed:', result);
+      console.error('Apple receipt verification failed with status:', result.status);
       return { valid: false };
     }
   } catch (error) {

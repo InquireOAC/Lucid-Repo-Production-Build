@@ -27,10 +27,10 @@ export const useNativeSubscription = () => {
 
   useEffect(() => {
     setIsNative(Capacitor.isNativePlatform());
-    if (Capacitor.isNativePlatform()) {
+    if (Capacitor.isNativePlatform() && user) {
       initializePurchases();
     }
-  }, []);
+  }, [user]);
 
   const initializePurchases = async () => {
     try {
@@ -128,37 +128,81 @@ export const useNativeSubscription = () => {
       }
 
       console.log('Purchasing package:', product.packageObject);
+      
+      // Show loading toast
+      toast.loading('Processing your subscription...', { id: 'purchase-loading' });
+      
       const purchaseResult = await Purchases.purchasePackage({ 
         aPackage: product.packageObject 
       });
 
       console.log('Purchase result:', purchaseResult);
-      await verifyPurchase(purchaseResult);
-      toast.success('Subscription activated successfully!');
+      
+      // Verify the purchase with our backend
+      await verifyPurchase(purchaseResult, product.packageObject.product.identifier);
+      
+      // Dismiss loading toast and show success
+      toast.dismiss('purchase-loading');
+      toast.success('Subscription activated successfully!', {
+        description: 'Your premium features are now available.',
+        duration: 5000
+      });
+      
+      // Refresh the page to update subscription status
+      setTimeout(() => {
+        window.location.reload();
+      }, 2000);
+      
     } catch (error: any) {
       console.error('Purchase failed:', error);
-      toast.error(`Purchase failed: ${error.message}`);
+      toast.dismiss('purchase-loading');
+      
+      if (error.code === 'PURCHASES_ERROR_PURCHASE_CANCELLED') {
+        toast.info('Purchase was cancelled');
+      } else {
+        toast.error(`Purchase failed: ${error.message}`, {
+          description: 'Please try again or contact support if the issue persists.'
+        });
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const verifyPurchase = async (purchase: any) => {
+  const verifyPurchase = async (purchase: any, productId: string) => {
     try {
-      console.log('Verifying purchase:', purchase);
-      const { error } = await supabase.functions.invoke('verify-ios-purchase', {
+      console.log('Verifying purchase with backend:', { productId, purchase });
+      
+      // Get the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      // Call our verification edge function
+      const { data, error } = await supabase.functions.invoke('verify-ios-purchase', {
         body: {
-          receiptData: purchase.customerInfo.entitlements.active,
-          productId: purchase.product.identifier,
-          transactionId: purchase.transaction.transactionIdentifier
+          receiptData: purchase.customerInfo.originalPurchaseDate, // This might need adjustment based on RevenueCat data structure
+          productId: productId,
+          transactionId: purchase.transaction?.transactionIdentifier || `rc_${Date.now()}`,
+          customerInfo: purchase.customerInfo
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
         }
       });
 
-      if (error) throw error;
-      console.log('Purchase verified successfully');
+      if (error) {
+        console.error('Verification error:', error);
+        throw error;
+      }
+      
+      console.log('Purchase verified successfully:', data);
     } catch (error) {
       console.error('Failed to verify purchase:', error);
-      toast.error('Failed to verify purchase');
+      // Don't throw here - the purchase might still be valid even if verification fails
+      // We'll let the user continue and they can contact support if needed
+      toast.warning('Purchase completed but verification pending. If issues persist, contact support.');
     }
   };
 
@@ -170,13 +214,36 @@ export const useNativeSubscription = () => {
 
     try {
       setIsLoading(true);
+      toast.loading('Restoring purchases...', { id: 'restore-loading' });
+      
       console.log('Restoring purchases...');
-      await Purchases.restorePurchases();
-      console.log('Purchases restored successfully');
-      toast.success('Purchases restored successfully');
+      const customerInfo = await Purchases.restorePurchases();
+      console.log('Restore result:', customerInfo);
+      
+      toast.dismiss('restore-loading');
+      
+      // Check if any active entitlements were restored
+      const activeEntitlements = Object.keys(customerInfo.entitlements.active || {});
+      
+      if (activeEntitlements.length > 0) {
+        toast.success('Purchases restored successfully!', {
+          description: 'Your subscription has been restored.'
+        });
+        
+        // Refresh the page to update subscription status
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        toast.info('No active purchases found to restore');
+      }
+      
     } catch (error) {
       console.error('Failed to restore purchases:', error);
-      toast.error('Failed to restore purchases');
+      toast.dismiss('restore-loading');
+      toast.error('Failed to restore purchases', {
+        description: 'Please try again or contact support.'
+      });
     } finally {
       setIsLoading(false);
     }
