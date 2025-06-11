@@ -9,12 +9,10 @@ import { Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
 interface AIContextDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
 interface AIContextData {
   name?: string;
   pronouns?: string;
@@ -29,39 +27,34 @@ interface AIContextData {
   clothing_style?: string;
   aesthetic_preferences?: string[];
 }
-
-const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
-  const { user } = useAuth();
+const AIContextDialog = ({
+  open,
+  onOpenChange
+}: AIContextDialogProps) => {
+  const {
+    user
+  } = useAuth();
   const [contextData, setContextData] = useState<AIContextData>({
     aesthetic_preferences: []
   });
   const [isLoading, setIsLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-
-  const aestheticOptions = [
-    "Surreal", "Painterly", "Realistic", "Anime", "Vaporwave", 
-    "Cyberpunk", "Fantasy", "Minimalist", "Dark Academia", "Cottagecore"
-  ];
-
+  const aestheticOptions = ["Surreal", "Painterly", "Realistic", "Anime", "Vaporwave", "Cyberpunk", "Fantasy", "Minimalist", "Dark Academia", "Cottagecore"];
   useEffect(() => {
     if (open && user) {
       loadAIContext();
     }
   }, [open, user]);
-
   const loadAIContext = async () => {
     try {
-      const { data, error } = await supabase
-        .from('ai_context')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
-
+      const {
+        data,
+        error
+      } = await supabase.from('ai_context').select('*').eq('user_id', user?.id).maybeSingle();
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading AI context:', error);
         return;
       }
-
       if (data) {
         setContextData({
           ...data,
@@ -72,7 +65,6 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
       console.error('Error loading AI context:', error);
     }
   };
-
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -83,47 +75,36 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
       setPhotoFile(file);
     }
   };
-
   const uploadPhoto = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       const filePath = `ai-context-photos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('dream-images')
-        .upload(filePath, file);
-
+      const {
+        error: uploadError
+      } = await supabase.storage.from('dream-images').upload(filePath, file);
       if (uploadError) {
         throw uploadError;
       }
-
-      const { data } = supabase.storage
-        .from('dream-images')
-        .getPublicUrl(filePath);
-
+      const {
+        data
+      } = supabase.storage.from('dream-images').getPublicUrl(filePath);
       return data.publicUrl;
     } catch (error) {
       console.error('Error uploading photo:', error);
       return null;
     }
   };
-
   const handleAestheticToggle = (aesthetic: string) => {
     const current = contextData.aesthetic_preferences || [];
-    const updated = current.includes(aesthetic)
-      ? current.filter(a => a !== aesthetic)
-      : [...current, aesthetic];
-    
+    const updated = current.includes(aesthetic) ? current.filter(a => a !== aesthetic) : [...current, aesthetic];
     setContextData(prev => ({
       ...prev,
       aesthetic_preferences: updated
     }));
   };
-
   const handleSave = async () => {
     if (!user) return;
-
     setIsLoading(true);
     try {
       let photoUrl = contextData.photo_url;
@@ -137,22 +118,20 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
           return;
         }
       }
-
       const dataToSave = {
         ...contextData,
         photo_url: photoUrl,
         user_id: user.id,
         updated_at: new Date().toISOString()
       };
-
-      const { error } = await supabase
-        .from('ai_context')
-        .upsert(dataToSave, { onConflict: 'user_id' });
-
+      const {
+        error
+      } = await supabase.from('ai_context').upsert(dataToSave, {
+        onConflict: 'user_id'
+      });
       if (error) {
         throw error;
       }
-
       toast.success('AI context saved successfully!');
       onOpenChange(false);
     } catch (error: any) {
@@ -162,12 +141,10 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
       setIsLoading(false);
     }
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>AI Context for Dream Images</DialogTitle>
+          <DialogTitle>Your Dream Avatar</DialogTitle>
           <p className="text-sm text-muted-foreground">
             Help AI generate dream images that better represent you
           </p>
@@ -180,28 +157,24 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="name">Name or Nickname</Label>
-                <Input
-                  id="name"
-                  value={contextData.name || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="How you'd like to be referred to"
-                />
+                <Input id="name" value={contextData.name || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                name: e.target.value
+              }))} placeholder="How you'd like to be referred to" />
               </div>
               <div>
                 <Label htmlFor="pronouns">Pronouns</Label>
-                <Input
-                  id="pronouns"
-                  value={contextData.pronouns || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, pronouns: e.target.value }))}
-                  placeholder="e.g., they/them, she/her, he/him"
-                />
+                <Input id="pronouns" value={contextData.pronouns || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                pronouns: e.target.value
+              }))} placeholder="e.g., they/them, she/her, he/him" />
               </div>
               <div>
                 <Label htmlFor="age_range">Age Range</Label>
-                <Select
-                  value={contextData.age_range || ''}
-                  onValueChange={(value) => setContextData(prev => ({ ...prev, age_range: value }))}
-                >
+                <Select value={contextData.age_range || ''} onValueChange={value => setContextData(prev => ({
+                ...prev,
+                age_range: value
+              }))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select age range" />
                   </SelectTrigger>
@@ -233,12 +206,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                       {photoFile ? photoFile.name : 'Upload photo (max 5MB)'}
                     </span>
                   </div>
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                  />
+                  <input type="file" className="hidden" accept="image/*" onChange={handlePhotoUpload} />
                 </label>
               </div>
             </div>
@@ -246,57 +214,45 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="hair_color">Hair Color</Label>
-                <Input
-                  id="hair_color"
-                  value={contextData.hair_color || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, hair_color: e.target.value }))}
-                  placeholder="e.g., brown, blonde, black"
-                />
+                <Input id="hair_color" value={contextData.hair_color || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                hair_color: e.target.value
+              }))} placeholder="e.g., brown, blonde, black" />
               </div>
               <div>
                 <Label htmlFor="hair_style">Hair Style</Label>
-                <Input
-                  id="hair_style"
-                  value={contextData.hair_style || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, hair_style: e.target.value }))}
-                  placeholder="e.g., long, short, curly, straight"
-                />
+                <Input id="hair_style" value={contextData.hair_style || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                hair_style: e.target.value
+              }))} placeholder="e.g., long, short, curly, straight" />
               </div>
               <div>
                 <Label htmlFor="skin_tone">Skin Tone</Label>
-                <Input
-                  id="skin_tone"
-                  value={contextData.skin_tone || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, skin_tone: e.target.value }))}
-                  placeholder="e.g., fair, medium, dark"
-                />
+                <Input id="skin_tone" value={contextData.skin_tone || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                skin_tone: e.target.value
+              }))} placeholder="e.g., fair, medium, dark" />
               </div>
               <div>
                 <Label htmlFor="eye_color">Eye Color</Label>
-                <Input
-                  id="eye_color"
-                  value={contextData.eye_color || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, eye_color: e.target.value }))}
-                  placeholder="e.g., brown, blue, green"
-                />
+                <Input id="eye_color" value={contextData.eye_color || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                eye_color: e.target.value
+              }))} placeholder="e.g., brown, blue, green" />
               </div>
               <div>
                 <Label htmlFor="height">Height & Build</Label>
-                <Input
-                  id="height"
-                  value={contextData.height || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, height: e.target.value }))}
-                  placeholder="e.g., tall and slim, average height"
-                />
+                <Input id="height" value={contextData.height || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                height: e.target.value
+              }))} placeholder="e.g., tall and slim, average height" />
               </div>
               <div>
                 <Label htmlFor="clothing_style">Typical Clothing Style</Label>
-                <Input
-                  id="clothing_style"
-                  value={contextData.clothing_style || ''}
-                  onChange={(e) => setContextData(prev => ({ ...prev, clothing_style: e.target.value }))}
-                  placeholder="e.g., casual, business, alternative"
-                />
+                <Input id="clothing_style" value={contextData.clothing_style || ''} onChange={e => setContextData(prev => ({
+                ...prev,
+                clothing_style: e.target.value
+              }))} placeholder="e.g., casual, business, alternative" />
               </div>
             </div>
           </div>
@@ -308,19 +264,10 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
               Select visual styles you prefer for your dream images
             </p>
             <div className="flex flex-wrap gap-2">
-              {aestheticOptions.map((aesthetic) => (
-                <Badge
-                  key={aesthetic}
-                  variant={contextData.aesthetic_preferences?.includes(aesthetic) ? "default" : "outline"}
-                  className="cursor-pointer"
-                  onClick={() => handleAestheticToggle(aesthetic)}
-                >
+              {aestheticOptions.map(aesthetic => <Badge key={aesthetic} variant={contextData.aesthetic_preferences?.includes(aesthetic) ? "default" : "outline"} className="cursor-pointer" onClick={() => handleAestheticToggle(aesthetic)}>
                   {aesthetic}
-                  {contextData.aesthetic_preferences?.includes(aesthetic) && (
-                    <X className="h-3 w-3 ml-1" />
-                  )}
-                </Badge>
-              ))}
+                  {contextData.aesthetic_preferences?.includes(aesthetic) && <X className="h-3 w-3 ml-1" />}
+                </Badge>)}
             </div>
           </div>
 
@@ -335,8 +282,6 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default AIContextDialog;
