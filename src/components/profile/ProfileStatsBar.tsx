@@ -17,10 +17,6 @@ const ProfileStatsBar = ({
   onFollowingClick
 }: ProfileStatsBarProps) => (
   <div className="flex items-center justify-center gap-4 mt-4">
-    <div className="text-center">
-      <p className="font-bold">{dreamCount}</p>
-      <p className="text-xs text-muted-foreground">Dreams</p>
-    </div>
     <button
       className="text-center cursor-pointer"
       onClick={onFollowersClick}
