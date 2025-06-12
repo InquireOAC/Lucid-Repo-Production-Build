@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, Brain, Link } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 import AIContextDialog from "./AIContextDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
+
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -55,8 +56,8 @@ const SettingsDialog = ({
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Dream Avatar</h4>
               <Button variant="ghost" className="w-full justify-start" onClick={() => setShowAIContext(true)}>
-                <Brain className="h-4 w-4 mr-2" />
-                AI Context
+                <User className="h-4 w-4 mr-2" />
+                Edit Avatar
               </Button>
             </div>
 
