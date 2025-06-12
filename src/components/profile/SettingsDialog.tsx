@@ -8,7 +8,6 @@ import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 import AIContextDialog from "./AIContextDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
-
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -18,11 +17,10 @@ interface SettingsDialogProps {
   setSocialLinks?: (v: any) => void;
   handleUpdateSocialLinks?: () => void;
 }
-
-const SettingsDialog = ({ 
-  open, 
-  onOpenChange, 
-  onSignOut, 
+const SettingsDialog = ({
+  open,
+  onOpenChange,
+  onSignOut,
   onNotificationsClick,
   socialLinks,
   setSocialLinks,
@@ -33,13 +31,10 @@ const SettingsDialog = ({
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showAIContext, setShowAIContext] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
-
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
-
-  return (
-    <>
+  return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -49,11 +44,7 @@ const SettingsDialog = ({
           <div className="space-y-4">
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setShowSocialLinks(true)}
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>
                 <Link className="h-4 w-4 mr-2" />
                 Social Links
               </Button>
@@ -62,12 +53,8 @@ const SettingsDialog = ({
             <Separator />
 
             <div className="space-y-2">
-              <h4 className="font-medium text-sm text-muted-foreground">AI Features</h4>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setShowAIContext(true)}
-              >
+              <h4 className="font-medium text-sm text-muted-foreground">Dream Avatar</h4>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => setShowAIContext(true)}>
                 <Brain className="h-4 w-4 mr-2" />
                 AI Context
               </Button>
@@ -77,19 +64,11 @@ const SettingsDialog = ({
 
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Community</h4>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setShowGuidelines(true)}
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={() => setShowGuidelines(true)}>
                 <Shield className="h-4 w-4 mr-2" />
                 Community Guidelines
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setShowBlockedUsers(true)}
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={() => setShowBlockedUsers(true)}>
                 <UserMinus className="h-4 w-4 mr-2" />
                 Blocked Users
               </Button>
@@ -99,19 +78,11 @@ const SettingsDialog = ({
 
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Legal</h4>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleExternalLink('https://www.lucidrepo.com/privacy-policy-1')}
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={() => handleExternalLink('https://www.lucidrepo.com/privacy-policy-1')}>
                 <FileText className="h-4 w-4 mr-2" />
                 Privacy Policy
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
-              >
+              <Button variant="ghost" className="w-full justify-start" onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}>
                 <Scale className="h-4 w-4 mr-2" />
                 Terms of Service
               </Button>
@@ -121,22 +92,14 @@ const SettingsDialog = ({
 
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700"
-                onClick={() => {
-                  onSignOut();
-                  onOpenChange(false);
-                }}
-              >
+              <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700" onClick={() => {
+              onSignOut();
+              onOpenChange(false);
+            }}>
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={() => setShowDeleteAccount(true)}
-              >
+              <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowDeleteAccount(true)}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Account
               </Button>
@@ -145,37 +108,15 @@ const SettingsDialog = ({
         </DialogContent>
       </Dialog>
 
-      <CommunityGuidelinesDialog
-        open={showGuidelines}
-        onOpenChange={setShowGuidelines}
-      />
+      <CommunityGuidelinesDialog open={showGuidelines} onOpenChange={setShowGuidelines} />
 
-      <BlockedUsersDialog
-        open={showBlockedUsers}
-        onOpenChange={setShowBlockedUsers}
-      />
+      <BlockedUsersDialog open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
 
-      <DeleteAccountDialog
-        open={showDeleteAccount}
-        onOpenChange={setShowDeleteAccount}
-      />
+      <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
 
-      <AIContextDialog
-        open={showAIContext}
-        onOpenChange={setShowAIContext}
-      />
+      <AIContextDialog open={showAIContext} onOpenChange={setShowAIContext} />
 
-      {socialLinks && setSocialLinks && handleUpdateSocialLinks && (
-        <SocialLinksDialog
-          isOpen={showSocialLinks}
-          onOpenChange={setShowSocialLinks}
-          socialLinks={socialLinks}
-          setSocialLinks={setSocialLinks}
-          handleUpdateSocialLinks={handleUpdateSocialLinks}
-        />
-      )}
-    </>
-  );
+      {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
+    </>;
 };
-
 export default SettingsDialog;
