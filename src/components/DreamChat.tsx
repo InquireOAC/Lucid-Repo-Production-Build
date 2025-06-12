@@ -8,7 +8,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import SavedChats from './SavedChats';
 import { useChatFeatureAccess } from '@/hooks/useChatFeatureAccess';
-
 interface Message {
   id: string;
   sender: 'user' | 'ai';
@@ -319,7 +318,7 @@ const DreamChat = () => {
         </div>
 
         {/* Subscription Notice for Non-Subscribers */}
-        {!isAppCreator && !hasUsedFeature('analysis') && <div className="mt-4 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4">
+        {!isAppCreator && !hasUsedFeature('analysis') && <div className="mt-4 bg-gradient-to-r from-white-50 to-purple-50 border border-purple-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                 <MessageCircle className="h-4 w-4 text-blue-600" />
@@ -381,5 +380,4 @@ const DreamChat = () => {
       </div>
     </div>;
 };
-
 export default DreamChat;
