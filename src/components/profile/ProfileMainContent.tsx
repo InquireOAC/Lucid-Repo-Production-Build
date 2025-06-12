@@ -128,6 +128,7 @@ const ProfileMainContent = ({
           setShowFollowing(true);
           onFollowingClick();
         }}
+        onSocialLinksEdit={() => setIsSocialLinksOpen(true)}
       />
 
       <ProfileTabs

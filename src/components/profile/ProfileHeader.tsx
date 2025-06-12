@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileHeaderActions from "./ProfileHeaderActions";
+import ProfileSocialLinks from "./ProfileSocialLinks";
 
 interface ProfileHeaderProps {
   profile: any;
@@ -20,6 +21,7 @@ interface ProfileHeaderProps {
   onStartConversation: () => void;
   onFollowersClick: () => void;
   onFollowingClick: () => void;
+  onSocialLinksEdit: () => void;
 }
 
 const ProfileHeader = ({
@@ -36,7 +38,8 @@ const ProfileHeader = ({
   onFollowClick,
   onStartConversation,
   onFollowersClick,
-  onFollowingClick
+  onFollowingClick,
+  onSocialLinksEdit
 }: ProfileHeaderProps) => {
   return (
     <div className="flex flex-col items-center text-center mb-8">
@@ -61,6 +64,12 @@ const ProfileHeader = ({
       {profile?.bio && (
         <p className="text-sm text-muted-foreground max-w-md mb-4">{profile.bio}</p>
       )}
+
+      <ProfileSocialLinks
+        socialLinks={profile?.social_links}
+        isOwnProfile={isOwnProfile}
+        onEdit={onSocialLinksEdit}
+      />
 
       <ProfileHeaderActions
         isOwnProfile={isOwnProfile}
