@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
+import { Capacitor } from '@capacitor/core';
+import { Purchases } from '@revenuecat/purchases-capacitor';
 
 type FeatureType = 'analysis' | 'image';
 
@@ -13,6 +15,7 @@ export const useFeatureUsage = () => {
     image: false
   });
   const [isChecking, setIsChecking] = useState(false);
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
 
   // Load usage state from localStorage on component mount
   useEffect(() => {
@@ -21,8 +24,32 @@ export const useFeatureUsage = () => {
       if (savedUsage) {
         setUsageState(JSON.parse(savedUsage));
       }
+      
+      // Check RevenueCat subscription status on native platforms
+      if (Capacitor.isNativePlatform()) {
+        checkRevenueCatSubscription();
+      }
     }
   }, [user]);
+
+  const checkRevenueCatSubscription = async () => {
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      console.log('RevenueCat customer info:', customerInfo);
+      
+      // Check if user has any active entitlements
+      const activeEntitlements = customerInfo.entitlements.active;
+      const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
+      
+      console.log('Active entitlements:', activeEntitlements);
+      console.log('Has active subscription:', hasActiveEntitlement);
+      
+      setHasActiveSubscription(hasActiveEntitlement);
+    } catch (error) {
+      console.error('Error checking RevenueCat subscription:', error);
+      setHasActiveSubscription(false);
+    }
+  };
 
   const hasUsedFeature = (featureType: FeatureType): boolean => {
     if (!user) return false;
@@ -63,6 +90,25 @@ export const useFeatureUsage = () => {
         return true;
       }
       
+      // On native platforms, check RevenueCat first
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const customerInfo = await Purchases.getCustomerInfo();
+          const activeEntitlements = customerInfo.entitlements.active;
+          
+          // Check for specific entitlements based on feature type
+          const hasBasicEntitlement = activeEntitlements['basic'] && activeEntitlements['basic'].isActive;
+          const hasPremiumEntitlement = activeEntitlements['premium'] && activeEntitlements['premium'].isActive;
+          
+          if (hasBasicEntitlement || hasPremiumEntitlement) {
+            console.log(`User has active subscription for ${featureType}, allowing access`);
+            return true;
+          }
+        } catch (error) {
+          console.error('Error checking RevenueCat entitlements:', error);
+        }
+      }
+      
       // Check if user has already used their free trial
       const hasUsed = hasUsedFeature(featureType);
       
@@ -72,7 +118,7 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // User has used their free trial, check for subscription access
+      // User has used their free trial, check for web subscription access
       const hasAccess = await checkFeatureAccess(featureType);
       
       if (!hasAccess) {
@@ -114,6 +160,7 @@ export const useFeatureUsage = () => {
     markFeatureAsUsed,
     canUseFeature,
     recordFeatureUsage,
-    isChecking
+    isChecking,
+    hasActiveSubscription
   };
 };

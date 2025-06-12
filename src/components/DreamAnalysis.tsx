@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,10 +24,16 @@ const DreamAnalysis = ({
   disabled = false
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
+  const { hasUsedFeature, markFeatureAsUsed, canUseFeature, hasActiveSubscription } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
+
+  const isAppCreator = user?.email === "inquireoac@gmail.com";
+  const hasUsedFreeTrial = hasUsedFeature('analysis');
+  
+  // Determine if feature is enabled based on subscription status
+  const isFeatureEnabled = isAppCreator || !hasUsedFreeTrial || hasActiveSubscription;
 
   const generateAnalysis = async () => {
     if (!user || disabled) return;
@@ -38,15 +44,10 @@ const DreamAnalysis = ({
     }
 
     try {
-      // Special case for app creator - bypass the feature usage check
-      const isAppCreator = user.email === "inquireoac@gmail.com";
-      
-      // Check if user can use the feature (free trial, subscription, or is app creator)
-      const canUse = isAppCreator || await canUseFeature('analysis');
+      // Check if user can use the feature (includes RevenueCat check)
+      const canUse = await canUseFeature('analysis');
       
       if (!canUse) {
-        // User has used their free trial and doesn't have a subscription
-        showSubscriptionPrompt('analysis');
         return;
       }
       
@@ -71,7 +72,7 @@ const DreamAnalysis = ({
         onAnalysisComplete(data.analysis);
         
         // If this was a free trial use and not the app creator, mark the feature as used
-        if (!isAppCreator && !hasUsedFeature('analysis')) {
+        if (!isAppCreator && !hasUsedFreeTrial) {
           markFeatureAsUsed('analysis');
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
@@ -101,6 +102,7 @@ const DreamAnalysis = ({
           <CardTitle className="flex items-center text-lg">
             <Sparkles className="h-5 w-5 mr-2 text-dream-purple" />
             Dream Analysis
+            {!isFeatureEnabled && <Lock className="h-4 w-4 ml-2 text-muted-foreground" />}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -108,18 +110,28 @@ const DreamAnalysis = ({
             <p className="text-sm text-muted-foreground">
               {disabled 
                 ? "Only the dream owner can analyze this dream."
-                : hasUsedFeature('analysis') && user?.email !== "inquireoac@gmail.com"
+                : !isFeatureEnabled
                   ? "You've used your free analysis. Subscribe to analyze more dreams."
                   : "Generate an AI-powered analysis of your dream's symbolism and meaning. (Free trial available)"
               }
             </p>
-            {!disabled && (
+            {!disabled && isFeatureEnabled && (
               <Button
                 onClick={generateAnalysis}
                 className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
               >
                 <Sparkles className="h-4 w-4 mr-2" /> 
-                {hasUsedFeature('analysis') && user?.email !== "inquireoac@gmail.com" ? "Subscribe to Analyze" : "Analyze Dream"}
+                Analyze Dream
+              </Button>
+            )}
+            {!disabled && !isFeatureEnabled && (
+              <Button
+                onClick={() => showSubscriptionPrompt('analysis')}
+                variant="outline"
+                className="border-dream-purple text-dream-purple hover:bg-dream-purple hover:text-white"
+              >
+                <Lock className="h-4 w-4 mr-2" /> 
+                Subscribe to Analyze
               </Button>
             )}
           </div>
@@ -153,7 +165,7 @@ const DreamAnalysis = ({
               placeholder="Dream analysis will appear here..."
               disabled={disabled}
             />
-            {!disabled && (
+            {!disabled && isFeatureEnabled && (
               <div className="flex justify-end">
                 <Button
                   variant="outline"

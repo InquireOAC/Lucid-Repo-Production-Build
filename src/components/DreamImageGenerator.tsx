@@ -12,6 +12,7 @@ import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
 import ImageDisplay from "@/components/dreams/ImageDisplay";
 import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 
@@ -32,6 +33,7 @@ const DreamImageGenerator = ({
   disabled = false,
   dreamId,
 }: DreamImageGeneratorProps) => {
+  const { hasActiveSubscription } = useFeatureUsage();
   const {
     imagePrompt,
     setImagePrompt,
@@ -83,6 +85,7 @@ const DreamImageGenerator = ({
             disabled={disabled}
             hasUsedFeature={hasUsedFeature("image")}
             isAppCreator={isAppCreator}
+            hasActiveSubscription={hasActiveSubscription}
             onGenerate={generateImage}
           />
           
