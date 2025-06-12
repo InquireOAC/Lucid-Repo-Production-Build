@@ -1,17 +1,15 @@
-
 import React from "react";
 import { Calendar, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import DailyQuote from "./DailyQuote";
-
 interface JournalHeaderProps {
   onAddDream: () => void;
 }
-
-const JournalHeader = ({ onAddDream }: JournalHeaderProps) => {
-  return (
-    <>
+const JournalHeader = ({
+  onAddDream
+}: JournalHeaderProps) => {
+  return <>
       <header className="mb-6">
         <DailyQuote />
       </header>
@@ -23,16 +21,11 @@ const JournalHeader = ({ onAddDream }: JournalHeaderProps) => {
             {format(new Date(), "EEEE, MMMM d, yyyy")}
           </span>
         </div>
-        <Button 
-          onClick={onAddDream} 
-          className="bg-gradient-to-r from-dream-lavender to-dream-purple hover:opacity-90 flex items-center gap-2"
-        >
+        <Button onClick={onAddDream} className="bg-gradient-to-r from-dream-lavender to-dream-purple hover:opacity-90 flex items-center gap-1">
           <Pencil size={16} />
           <span>Record Dream</span>
         </Button>
       </div>
-    </>
-  );
+    </>;
 };
-
 export default JournalHeader;
