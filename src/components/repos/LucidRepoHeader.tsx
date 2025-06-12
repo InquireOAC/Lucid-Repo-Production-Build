@@ -37,8 +37,8 @@ const LucidRepoHeader = ({
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
         <TabsList className="bg-dream-purple">
-          <TabsTrigger value="following">Following</TabsTrigger>
-          <TabsTrigger value="recent">Recent</TabsTrigger>
+          <TabsTrigger value="following" className="text-zinc-50">Following</TabsTrigger>
+          <TabsTrigger value="recent" className="text-stone-50">Recent</TabsTrigger>
         </TabsList>
         <TabsContent value="following"></TabsContent>
         <TabsContent value="recent"></TabsContent>
