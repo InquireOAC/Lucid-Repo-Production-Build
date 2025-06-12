@@ -55,7 +55,7 @@ const SavedChatCard = ({
     }
   };
   return <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/20 group bg-purple-200" onClick={() => onOpenSession(session)}>
-      <CardContent className="p-6 rounded-lg bg-violet-900">
+      <CardContent className="p-6 rounded-lg bg-violet-950">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             {/* Header with expert type and timestamp */}
