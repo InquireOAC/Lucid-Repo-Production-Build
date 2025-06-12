@@ -92,6 +92,28 @@ export function useDreamImageAI() {
   }, []);
 
   /**
+   * Remove character references from prompt when AI context is disabled
+   */
+  const removeCharacterFromPrompt = useCallback((prompt: string) => {
+    // Remove common character-related phrases and replace with environment focus
+    let cleanedPrompt = prompt
+      .replace(/\bi\s+am\s+/gi, 'the scene shows ')
+      .replace(/\bi\s+see\s+/gi, 'there are ')
+      .replace(/\bmy\s+/gi, 'the ')
+      .replace(/\bme\s+/gi, 'the environment ')
+      .replace(/\bmyself\s+/gi, 'the scene ')
+      .replace(/\bwith\s+me\b/gi, 'in the scene')
+      .replace(/\bbeside\s+me\b/gi, 'in the scene')
+      .replace(/\bnear\s+me\b/gi, 'in the area')
+      .replace(/\baround\s+me\b/gi, 'throughout the scene');
+
+    // Add emphasis on no people/characters
+    cleanedPrompt += '. Focus on the environment and scenery without any people or characters in the image';
+
+    return cleanedPrompt;
+  }, []);
+
+  /**
    * Analyze dream content and get an image prompt with optional AI context
    */
   const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true) => {
@@ -106,6 +128,11 @@ export function useDreamImageAI() {
 
     const basePrompt = result.data?.analysis || "";
 
+    // If useAIContext is false, remove character references from the prompt
+    if (!useAIContext) {
+      return removeCharacterFromPrompt(basePrompt);
+    }
+
     // If we have a user ID and should use AI context, try to get their AI context and personalize the prompt
     if (userId && useAIContext) {
       const aiContext = await getUserAIContext(userId);
@@ -115,7 +142,7 @@ export function useDreamImageAI() {
     }
 
     return basePrompt;
-  }, [getUserAIContext, buildPersonalizedPrompt]);
+  }, [getUserAIContext, buildPersonalizedPrompt, removeCharacterFromPrompt]);
 
   /**
    * Generate a dream image from prompt via edge function
