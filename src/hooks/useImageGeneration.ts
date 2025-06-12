@@ -29,7 +29,8 @@ export const useImageGeneration = ({
   const generateImage = useCallback(async (
     setImagePrompt: (prompt: string) => void,
     setGeneratedImage: (url: string) => void,
-    uploadImage: (url: string, dreamId: string) => Promise<string | null>
+    uploadImage: (url: string, dreamId: string) => Promise<string | null>,
+    useAIContext: boolean = true
   ) => {
     if (!user || disabled) return;
     setGeneratedImage("");
@@ -50,13 +51,14 @@ export const useImageGeneration = ({
       }
 
       console.log("=== STARTING IMAGE GENERATION PROCESS ===");
+      console.log("Using AI Context:", useAIContext);
 
-      // 1. Get image prompt from analyze-dream with user context
-      console.log("Step 1: Getting image prompt with AI context...");
-      const generatedPromptText = await getImagePrompt(dreamContent, user.id);
+      // 1. Get image prompt from analyze-dream with optional user context
+      console.log("Step 1: Getting image prompt...");
+      const generatedPromptText = await getImagePrompt(dreamContent, user.id, useAIContext);
       if (!generatedPromptText) throw new Error("No image prompt was generated");
       setImagePrompt(generatedPromptText);
-      console.log("Personalized image prompt generated:", generatedPromptText);
+      console.log("Image prompt generated:", generatedPromptText);
 
       // 2. Generate image from prompt via edge function
       console.log("Step 2: Generating image from AI...");

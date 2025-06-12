@@ -3,6 +3,8 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, ImagePlus, Download } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
@@ -41,6 +43,8 @@ const DreamImageGenerator = ({
     generateImage,
     isAppCreator,
     hasUsedFeature,
+    useAIContext,
+    setUseAIContext,
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
@@ -122,6 +126,21 @@ const DreamImageGenerator = ({
                 </Button>
               </div>
             )}
+            
+            {/* AI Context Toggle */}
+            {!disabled && (
+              <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/30 rounded-lg">
+                <Switch
+                  id="use-ai-context"
+                  checked={useAIContext}
+                  onCheckedChange={setUseAIContext}
+                />
+                <Label htmlFor="use-ai-context" className="text-sm cursor-pointer">
+                  Use my avatar appearance in images
+                </Label>
+              </div>
+            )}
+            
             {(generatedImage || isGenerating || imagePrompt) && (
               <ImagePromptInput
                 imagePrompt={imagePrompt}

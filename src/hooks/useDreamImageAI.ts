@@ -92,9 +92,9 @@ export function useDreamImageAI() {
   }, []);
 
   /**
-   * Analyze dream content and get an image prompt with AI context
+   * Analyze dream content and get an image prompt with optional AI context
    */
-  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string) => {
+  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true) => {
     // First get the base prompt from the analyze-dream function
     const result = await supabase.functions.invoke("analyze-dream", {
       body: { dreamContent, task: "create_image_prompt" },
@@ -106,8 +106,8 @@ export function useDreamImageAI() {
 
     const basePrompt = result.data?.analysis || "";
 
-    // If we have a user ID, try to get their AI context and personalize the prompt
-    if (userId) {
+    // If we have a user ID and should use AI context, try to get their AI context and personalize the prompt
+    if (userId && useAIContext) {
       const aiContext = await getUserAIContext(userId);
       if (aiContext) {
         return buildPersonalizedPrompt(basePrompt, aiContext);
