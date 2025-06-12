@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
+import { Capacitor } from '@capacitor/core';
+import { Purchases } from '@revenuecat/purchases-capacitor';
 
 type FeatureType = 'analysis' | 'image';
 
@@ -52,6 +54,22 @@ export const useFeatureUsage = () => {
     localStorage.setItem(`feature_usage_${user.id}`, JSON.stringify(newUsageState));
   };
 
+  // Check RevenueCat entitlements for iOS users
+  const checkRevenueCatAccess = async (): Promise<boolean> => {
+    if (!Capacitor.isNativePlatform()) return false;
+    
+    try {
+      const customerInfo = await Purchases.getCustomerInfo();
+      const activeEntitlements = customerInfo.entitlements.active;
+      
+      // Check if user has any active entitlements
+      return Object.keys(activeEntitlements).length > 0;
+    } catch (error) {
+      console.error('Error checking RevenueCat entitlements:', error);
+      return false;
+    }
+  };
+
   // Function to check if user can use the feature (free trial or subscription)
   const canUseFeature = async (featureType: FeatureType): Promise<boolean> => {
     try {
@@ -73,6 +91,16 @@ export const useFeatureUsage = () => {
       }
       
       // User has used their free trial, check for subscription access
+      // First check RevenueCat for iOS users
+      if (Capacitor.isNativePlatform()) {
+        const hasRevenueCatAccess = await checkRevenueCatAccess();
+        if (hasRevenueCatAccess) {
+          console.log('User has active RevenueCat subscription');
+          return true;
+        }
+      }
+      
+      // Fallback to Supabase subscription check
       const hasAccess = await checkFeatureAccess(featureType);
       
       if (!hasAccess) {

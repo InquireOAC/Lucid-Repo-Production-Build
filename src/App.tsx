@@ -18,11 +18,15 @@ import { Capacitor } from "@capacitor/core";
 import { initializeNotifications } from "./utils/notificationUtils";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow";
 import { useOnboarding } from "./hooks/useOnboarding";
+import { useSubscriptionSync } from "./hooks/useSubscriptionSync";
 
 const queryClient = new QueryClient();
 
 const AppContent = () => {
   const { hasSeenOnboarding, isLoading } = useOnboarding();
+  
+  // Initialize subscription sync
+  useSubscriptionSync();
 
   useEffect(() => {
     const setupStatusBar = async () => {
