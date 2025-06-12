@@ -337,11 +337,8 @@ const DreamChat = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? <div className="text-center text-muted-foreground">
-              <p className="mb-2">Welcome to your Dream Consultant</p>
-              <p className="text-sm">
-                Ask questions about your dreams and get insights from your chosen expert.
-                Your dreams from the journal will provide context for personalized interpretations.
-              </p>
+              <p className="mb-2 text-gray-50">Welcome to your Dream Consultant</p>
+              <p className="text-sm">Ask questions about your dreams and get insights from your chosen expert. Your dreams from the journal will provide context for interpretations.</p>
               {!isAppCreator && hasUsedFeature('analysis') && <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
                   <div className="flex items-center justify-center gap-2 text-amber-800">
                     <Lock className="h-4 w-4" />
