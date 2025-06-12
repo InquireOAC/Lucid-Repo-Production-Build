@@ -320,12 +320,12 @@ const DreamChat = () => {
         {/* Subscription Notice for Non-Subscribers */}
         {!isAppCreator && !hasUsedFeature('analysis') && <div className="mt-4 bg-gradient-to-r from-white-50 to-purple-50 border border-white-200 rounded-lg p-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <MessageCircle className="h-4 w-4 text-blue-600" />
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-50">
+                <MessageCircle className="h-4 w-4 text-purple-600" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-blue-900 mb-1">Free Trial Available</h3>
-                <p className="text-xs text-blue-700">
+                <h3 className="text-sm font-medium mb-1 text-gray-300">Free Trial Available</h3>
+                <p className="text-xs text-gray-50">
                   This is your first time using AI Dream Chat. You can try it for free once, then upgrade for unlimited access.
                 </p>
               </div>
