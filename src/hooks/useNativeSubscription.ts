@@ -148,7 +148,7 @@ export const useNativeSubscription = () => {
         duration: 5000
       });
       
-      // Dispatch a custom event to notify other parts of the app
+      // Trigger a custom event to refresh subscription status throughout the app
       window.dispatchEvent(new CustomEvent('subscription-updated'));
       
       // Refresh the page to update subscription status
@@ -226,14 +226,14 @@ export const useNativeSubscription = () => {
       toast.dismiss('restore-loading');
       
       // Check if any active entitlements were restored
-      const activeEntitlements = Object.keys(restoreResult.customerInfo.entitlements.active || {});
+      const activeEntitlements = Object.keys(restoreResult.customerInfo.entitlements?.active || {});
       
       if (activeEntitlements.length > 0) {
         toast.success('Purchases restored successfully!', {
           description: 'Your subscription has been restored.'
         });
         
-        // Dispatch a custom event to notify other parts of the app
+        // Trigger subscription update event
         window.dispatchEvent(new CustomEvent('subscription-updated'));
         
         // Refresh the page to update subscription status
