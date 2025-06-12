@@ -30,9 +30,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
             <p className="font-medium truncate">
               {conversation.display_name || conversation.username}
             </p>
-            <p className="text-xs text-muted-foreground truncate">
-              Tap to view conversation
-            </p>
+            <p className="text-xs text-muted-foreground truncate">Tap to view</p>
           </div>
         </div>)}
     </div>;
