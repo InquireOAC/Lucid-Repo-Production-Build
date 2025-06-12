@@ -1,14 +1,7 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from "@/components/ui/select";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 // TagFilter import intentionally remains commented out
 
 interface LucidRepoHeaderProps {
@@ -24,7 +17,6 @@ interface LucidRepoHeaderProps {
   onTagClick: (tagId: string) => void;
   onClearTags: () => void;
 }
-
 const LucidRepoHeader = ({
   searchQuery,
   setSearchQuery,
@@ -36,27 +28,15 @@ const LucidRepoHeader = ({
   tags,
   activeTags,
   onTagClick,
-  onClearTags,
+  onClearTags
 }: LucidRepoHeaderProps) => {
-  return (
-    <div className="mb-6">
-      <form
-        onSubmit={handleSearch}
-        className="flex items-center space-x-2 mb-4"
-        autoComplete="off"
-      >
-        <Input
-          aria-label="Search dreams"
-          type="text"
-          className="max-w-xs"
-          placeholder="Search dreams..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+  return <div className="mb-6">
+      <form onSubmit={handleSearch} className="flex items-center space-x-2 mb-4" autoComplete="off">
+        <Input aria-label="Search dreams" type="text" className="max-w-xs" placeholder="Search dreams..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
       </form>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
-        <TabsList>
+        <TabsList className="bg-dream-purple">
           <TabsTrigger value="following">Following</TabsTrigger>
           <TabsTrigger value="recent">Recent</TabsTrigger>
         </TabsList>
@@ -66,8 +46,6 @@ const LucidRepoHeader = ({
 
       {/* Tag filter intentionally hidden */}
       {/* <TagFilter ... /> */}
-    </div>
-  );
+    </div>;
 };
-
 export default LucidRepoHeader;
