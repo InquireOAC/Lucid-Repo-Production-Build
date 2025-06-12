@@ -1,26 +1,38 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, Brain } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, Brain, Link } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 import AIContextDialog from "./AIContextDialog";
+import SocialLinksDialog from "./SocialLinksDialog";
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSignOut: () => void;
   onNotificationsClick?: () => void;
+  socialLinks?: any;
+  setSocialLinks?: (v: any) => void;
+  handleUpdateSocialLinks?: () => void;
 }
 
-const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }: SettingsDialogProps) => {
+const SettingsDialog = ({ 
+  open, 
+  onOpenChange, 
+  onSignOut, 
+  onNotificationsClick,
+  socialLinks,
+  setSocialLinks,
+  handleUpdateSocialLinks
+}: SettingsDialogProps) => {
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showAIContext, setShowAIContext] = useState(false);
+  const [showSocialLinks, setShowSocialLinks] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -35,6 +47,20 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
           </DialogHeader>
           
           <div className="space-y-4">
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
+              <Button
+                variant="ghost"
+                className="w-full justify-start"
+                onClick={() => setShowSocialLinks(true)}
+              >
+                <Link className="h-4 w-4 mr-2" />
+                Social Links
+              </Button>
+            </div>
+
+            <Separator />
+
             <div className="space-y-2">
               <h4 className="font-medium text-sm text-muted-foreground">AI Features</h4>
               <Button
@@ -138,6 +164,16 @@ const SettingsDialog = ({ open, onOpenChange, onSignOut, onNotificationsClick }:
         open={showAIContext}
         onOpenChange={setShowAIContext}
       />
+
+      {socialLinks && setSocialLinks && handleUpdateSocialLinks && (
+        <SocialLinksDialog
+          isOpen={showSocialLinks}
+          onOpenChange={setShowSocialLinks}
+          socialLinks={socialLinks}
+          setSocialLinks={setSocialLinks}
+          handleUpdateSocialLinks={handleUpdateSocialLinks}
+        />
+      )}
     </>
   );
 };

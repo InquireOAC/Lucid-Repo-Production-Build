@@ -1,4 +1,3 @@
-
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -112,6 +111,9 @@ const ProfileDialogs = ({
       onNotificationsClick={() => {
         setIsSettingsOpen(false);
       }}
+      socialLinks={socialLinks}
+      setSocialLinks={setSocialLinks}
+      handleUpdateSocialLinks={handleUpdateSocialLinks}
     />
     <MessagesDialog
       isOpen={isMessagesOpen}
