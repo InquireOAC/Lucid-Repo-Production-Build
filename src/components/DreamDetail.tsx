@@ -137,51 +137,53 @@ const DreamDetail = ({
   return (
     <>
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="w-[95vw] max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
           <DialogHeader>
-            <DialogTitle className="text-xl gradient-text pr-8">{dream.title}</DialogTitle>
+            <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
           </DialogHeader>
           
-          <DreamDetailContent
-            content={dream.content}
-            formattedDate={formattedDate || ""}
-            dreamTags={mappedTags}
-            generatedImage={dream.generatedImage || dream.image_url || null}
-            analysis={dream.analysis}
-            showFlagButton={isPublic && user && !isOwner}
-            dreamId={dream.id}
-            contentOwnerId={dream.user_id}
-          />
-          
-          {audioUrl && (
-            <div className="mt-4">
-              <audio src={audioUrl} controls className="w-full" />
-            </div>
-          )}
-
-          <div className="flex justify-between items-center mt-4">
-            <div className="flex gap-2">
-              <ShareButton dream={dream} />
-              <CopyLinkButton dream={dream} />
-            </div>
-            <DreamDetailActions
-              isAuthenticated={isAuthenticated}
-              isPublic={isPublic}
-              onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
-              onLike={onLike}
-              liked={dream.liked}
+          <div className="w-full overflow-hidden">
+            <DreamDetailContent
+              content={dream.content}
+              formattedDate={formattedDate || ""}
+              dreamTags={mappedTags}
+              generatedImage={dream.generatedImage || dream.image_url || null}
+              analysis={dream.analysis}
+              showFlagButton={isPublic && user && !isOwner}
+              dreamId={dream.id}
+              contentOwnerId={dream.user_id}
             />
-          </div>
+            
+            {audioUrl && (
+              <div className="mt-4 w-full">
+                <audio src={audioUrl} controls className="w-full max-w-full" />
+              </div>
+            )}
 
-          {/* Comments */}
-          {isPublic && (
-            <div className="mt-0">
-              <DreamComments 
-                dreamId={dream.id} 
-                onCommentCountChange={handleCommentCountChange}
+            <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
+              <div className="flex gap-2 flex-shrink-0">
+                <ShareButton dream={dream} />
+                <CopyLinkButton dream={dream} />
+              </div>
+              <DreamDetailActions
+                isAuthenticated={isAuthenticated}
+                isPublic={isPublic}
+                onTogglePublic={isOwner && onUpdate ? handleTogglePublic : undefined}
+                onLike={onLike}
+                liked={dream.liked}
               />
             </div>
-          )}
+
+            {/* Comments */}
+            {isPublic && (
+              <div className="mt-0 w-full overflow-hidden">
+                <DreamComments 
+                  dreamId={dream.id} 
+                  onCommentCountChange={handleCommentCountChange}
+                />
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
       
@@ -200,7 +202,7 @@ const DreamDetail = ({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </Dialog>
     </>
   );
 };
