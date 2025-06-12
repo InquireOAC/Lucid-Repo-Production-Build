@@ -34,7 +34,11 @@ export const useFeatureUsage = () => {
 
   const checkRevenueCatSubscription = async () => {
     try {
-      const customerInfo = await Purchases.getCustomerInfo();
+      const result = await Purchases.getCustomerInfo();
+      console.log('RevenueCat result:', result);
+      
+      // Access customerInfo from the result object
+      const customerInfo = result.customerInfo;
       console.log('RevenueCat customer info:', customerInfo);
       
       // Check if user has any active entitlements
@@ -93,7 +97,8 @@ export const useFeatureUsage = () => {
       // On native platforms, check RevenueCat first
       if (Capacitor.isNativePlatform()) {
         try {
-          const customerInfo = await Purchases.getCustomerInfo();
+          const result = await Purchases.getCustomerInfo();
+          const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
           
           // Check for specific entitlements based on feature type
