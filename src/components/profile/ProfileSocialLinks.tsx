@@ -14,48 +14,58 @@ const ProfileSocialLinks = ({
   isOwnProfile,
   onEdit
 }: ProfileSocialLinksProps) => {
-  if (!socialLinks) return null;
+  // Show the component if user has any social links OR if it's their own profile (so they can add links)
+  const hasLinks = socialLinks && (
+    socialLinks.twitter || 
+    socialLinks.instagram || 
+    socialLinks.facebook || 
+    socialLinks.website
+  );
+
+  if (!hasLinks && !isOwnProfile) {
+    return null;
+  }
 
   return (
-    <div className="flex items-center justify-center gap-2 mt-2">
-      {socialLinks.twitter && (
+    <div className="flex items-center justify-center gap-3 mt-2 mb-2">
+      {socialLinks?.twitter && (
         <a 
           href={`https://twitter.com/${socialLinks.twitter}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-blue-400 hover:text-blue-500"
+          className="text-blue-400 hover:text-blue-500 transition-colors"
         >
-          <Twitter size={16} />
+          <Twitter size={20} />
         </a>
       )}
-      {socialLinks.instagram && (
+      {socialLinks?.instagram && (
         <a 
           href={`https://instagram.com/${socialLinks.instagram}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-pink-500 hover:text-pink-600"
+          className="text-pink-500 hover:text-pink-600 transition-colors"
         >
-          <Instagram size={16} />
+          <Instagram size={20} />
         </a>
       )}
-      {socialLinks.facebook && (
+      {socialLinks?.facebook && (
         <a 
           href={`https://facebook.com/${socialLinks.facebook}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-blue-600 hover:text-blue-700"
+          className="text-blue-600 hover:text-blue-700 transition-colors"
         >
-          <Facebook size={16} />
+          <Facebook size={20} />
         </a>
       )}
-      {socialLinks.website && (
+      {socialLinks?.website && (
         <a 
-          href={socialLinks.website} 
+          href={socialLinks.website.startsWith('http') ? socialLinks.website : `https://${socialLinks.website}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-gray-600 hover:text-gray-800"
+          className="text-muted-foreground hover:text-foreground transition-colors"
         >
-          <Globe size={16} />
+          <Globe size={20} />
         </a>
       )}
       {isOwnProfile && (
@@ -63,10 +73,10 @@ const ProfileSocialLinks = ({
           variant="ghost" 
           size="sm" 
           onClick={onEdit} 
-          className="h-6 text-xs px-2 ml-2"
+          className="h-8 text-xs px-3 ml-2"
         >
-          <Edit size={10} className="mr-1" /> 
-          Edit
+          <Edit size={12} className="mr-1" /> 
+          {hasLinks ? 'Edit' : 'Add Links'}
         </Button>
       )}
     </div>
