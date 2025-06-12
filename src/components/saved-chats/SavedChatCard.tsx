@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Clock, User, MessageCircle, Trash2 } from 'lucide-react';
+import { Clock, MessageCircle, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -60,7 +60,7 @@ const SavedChatCard = ({ session, onOpenSession, onDeleteSession, deletingId }: 
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/20 group"
+      className="cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/20 group bg-purple-200"
       onClick={() => onOpenSession(session)}
     >
       <CardContent className="p-6">
@@ -72,10 +72,9 @@ const SavedChatCard = ({ session, onOpenSession, onDeleteSession, deletingId }: 
                 variant="outline" 
                 className={`font-medium ${getExpertColor(session.expert_type)}`}
               >
-                <User className="h-3 w-3 mr-1" />
                 {formatExpertType(session.expert_type)}
               </Badge>
-              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="flex items-center text-xs text-white">
                 <Clock className="h-3 w-3 mr-1" />
                 {new Date(session.created_at).toLocaleDateString('en-US', {
                   month: 'short',
@@ -91,18 +90,18 @@ const SavedChatCard = ({ session, onOpenSession, onDeleteSession, deletingId }: 
 
             {/* Preview of first message */}
             <div className="mb-3">
-              <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+              <p className="text-sm text-white line-clamp-2 leading-relaxed">
                 {getFirstMessage(session.messages)}
               </p>
             </div>
 
             {/* Message count */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center text-xs text-muted-foreground">
+              <div className="flex items-center text-xs text-white">
                 <MessageCircle className="h-3 w-3 mr-1" />
                 {session.messages.length} {session.messages.length === 1 ? 'message' : 'messages'}
               </div>
-              <span className="text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 Click to continue →
               </span>
             </div>
@@ -117,7 +116,7 @@ const SavedChatCard = ({ session, onOpenSession, onDeleteSession, deletingId }: 
                   variant="ghost"
                   size="sm"
                   disabled={deletingId === session.id}
-                  className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
+                  className="text-white hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
