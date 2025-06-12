@@ -85,6 +85,21 @@ const DreamImageGenerator = ({
             isAppCreator={isAppCreator}
             onGenerate={generateImage}
           />
+          
+          {/* AI Context Toggle - now visible in initial state */}
+          {!disabled && (
+            <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/30 rounded-lg">
+              <Switch
+                id="use-ai-context-initial"
+                checked={useAIContext}
+                onCheckedChange={setUseAIContext}
+              />
+              <Label htmlFor="use-ai-context-initial" className="text-sm cursor-pointer">
+                Use my avatar appearance in images
+              </Label>
+            </div>
+          )}
+          
           <ImageDisplay
             imageUrl=""
             imageDataUrl=""
