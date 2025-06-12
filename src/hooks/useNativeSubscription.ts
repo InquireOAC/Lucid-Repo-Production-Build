@@ -148,6 +148,9 @@ export const useNativeSubscription = () => {
         duration: 5000
       });
       
+      // Trigger a custom event to refresh subscription status throughout the app
+      window.dispatchEvent(new CustomEvent('subscription-updated'));
+      
       // Refresh the page to update subscription status
       setTimeout(() => {
         window.location.reload();
@@ -229,6 +232,9 @@ export const useNativeSubscription = () => {
         toast.success('Purchases restored successfully!', {
           description: 'Your subscription has been restored.'
         });
+        
+        // Trigger subscription update event
+        window.dispatchEvent(new CustomEvent('subscription-updated'));
         
         // Refresh the page to update subscription status
         setTimeout(() => {
