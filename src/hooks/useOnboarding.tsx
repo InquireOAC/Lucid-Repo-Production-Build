@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Preferences } from "@capacitor/preferences";
+import { Capacitor } from "@capacitor/core";
 
 export const useOnboarding = () => {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
@@ -8,9 +9,26 @@ export const useOnboarding = () => {
 
   const checkOnboardingStatus = useCallback(async () => {
     try {
-      const result = await Preferences.get({ key: 'hasSeenOnboarding' });
-      const hasSeenIt = result.value === 'true';
-      console.log('Onboarding status checked:', hasSeenIt);
+      let hasSeenIt = false;
+      
+      // Try Capacitor Preferences first (for native platforms)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const result = await Preferences.get({ key: 'hasSeenOnboarding' });
+          hasSeenIt = result.value === 'true';
+          console.log('Onboarding status checked (Capacitor):', hasSeenIt);
+        } catch (error) {
+          console.log('Capacitor Preferences not available, falling back to localStorage');
+          // Fall back to localStorage if Capacitor Preferences fails
+          hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
+          console.log('Onboarding status checked (localStorage fallback):', hasSeenIt);
+        }
+      } else {
+        // Use localStorage for web
+        hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
+        console.log('Onboarding status checked (localStorage):', hasSeenIt);
+      }
+      
       setHasSeenOnboarding(hasSeenIt);
     } catch (error) {
       console.error('Error checking onboarding status:', error);

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Preferences } from "@capacitor/preferences";
+import { Capacitor } from "@capacitor/core";
 
 interface OnboardingFlowProps {
   onComplete: () => void;
@@ -34,11 +35,27 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   const handleStart = async () => {
     try {
-      // Set the persistent flag to indicate onboarding has been completed
-      await Preferences.set({
-        key: 'hasSeenOnboarding',
-        value: 'true'
-      });
+      console.log('Setting onboarding completion flag...');
+      
+      // Try to set using Capacitor Preferences first (for native platforms)
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Preferences.set({
+            key: 'hasSeenOnboarding',
+            value: 'true'
+          });
+          console.log('Onboarding flag set successfully using Capacitor Preferences');
+        } catch (error) {
+          console.log('Capacitor Preferences failed, using localStorage fallback:', error);
+          // Fall back to localStorage if Capacitor Preferences fails
+          localStorage.setItem('hasSeenOnboarding', 'true');
+          console.log('Onboarding flag set successfully using localStorage fallback');
+        }
+      } else {
+        // Use localStorage for web
+        localStorage.setItem('hasSeenOnboarding', 'true');
+        console.log('Onboarding flag set successfully using localStorage');
+      }
 
       console.log('Onboarding completed, calling onComplete callback');
       // Call the callback to trigger re-render of the main app
