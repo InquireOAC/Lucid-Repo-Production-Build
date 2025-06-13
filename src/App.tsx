@@ -30,7 +30,7 @@ const AppContent = () => {
         try {
           // Set status bar to be opaque with dark text
           await StatusBar.setOverlaysWebView({ overlay: false });
-          await StatusBar.setStyle({ style: Style.Dark });
+          await StatusBar.setStyle({ style: Style.Light });
           await StatusBar.setBackgroundColor({ color: '#1E1A2B' });
         } catch (error) {
           console.error('Error configuring status bar:', error);
