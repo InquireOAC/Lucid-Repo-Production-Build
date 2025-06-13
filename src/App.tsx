@@ -22,7 +22,7 @@ import { useOnboarding } from "./hooks/useOnboarding";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  const { hasSeenOnboarding, isLoading } = useOnboarding();
+  const { hasSeenOnboarding, isLoading, refreshOnboardingStatus } = useOnboarding();
 
   useEffect(() => {
     const setupStatusBar = async () => {
@@ -55,7 +55,7 @@ const AppContent = () => {
 
   // Show onboarding if user hasn't seen it
   if (!hasSeenOnboarding) {
-    return <OnboardingFlow />;
+    return <OnboardingFlow onComplete={refreshOnboardingStatus} />;
   }
 
   // Show main app

@@ -1,10 +1,13 @@
 
-
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Preferences } from "@capacitor/preferences";
 
-const OnboardingFlow = () => {
+interface OnboardingFlowProps {
+  onComplete: () => void;
+}
+
+const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const screens = [{
     image: "/lovable-uploads/0b968cd8-c33c-4ad9-a5c0-cdc574165296.png",
@@ -37,14 +40,13 @@ const OnboardingFlow = () => {
         value: 'true'
       });
 
-      // Navigate to the Journal page using window.location
-      window.location.href = '/';
-      window.location.reload();
+      console.log('Onboarding completed, calling onComplete callback');
+      // Call the callback to trigger re-render of the main app
+      onComplete();
     } catch (error) {
       console.error('Error setting onboarding preference:', error);
-      // Still navigate even if storage fails
-      window.location.href = '/';
-      window.location.reload();
+      // Still call onComplete even if storage fails
+      onComplete();
     }
   };
 
@@ -68,4 +70,3 @@ const OnboardingFlow = () => {
 };
 
 export default OnboardingFlow;
-
