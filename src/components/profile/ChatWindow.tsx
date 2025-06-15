@@ -1,6 +1,5 @@
 
 import React, { useRef, useEffect } from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send } from "lucide-react";
@@ -41,14 +40,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         <Button variant="ghost" size="sm" onClick={onBack}>
           Back
         </Button>
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={selectedConversation.avatar_url} />
-          <AvatarFallback className="bg-dream-purple/20">
-            {selectedConversation.username
-              ? selectedConversation.username[0].toUpperCase()
-              : "U"}
-          </AvatarFallback>
-        </Avatar>
         <span className="font-medium">
           {selectedConversation.display_name || selectedConversation.username}
         </span>
