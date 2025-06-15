@@ -71,7 +71,7 @@ export const useNativeSubscription = () => {
           productId = 'price_basic';
           features = [
             'Unlimited Dream Analysis',
-            '10 Dream Art Generations',
+            '25 Dream Art Generations',
             'Priority Support'
           ];
         } else if (isPremium) {
@@ -107,6 +107,42 @@ export const useNativeSubscription = () => {
     }
   };
 
+  const syncSubscriptionWithSupabase = async () => {
+    try {
+      console.log('Syncing subscription with Supabase...');
+      
+      const result = await Purchases.getCustomerInfo();
+      const customerInfo = result.customerInfo;
+      
+      // Get the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error('No valid session found');
+      }
+
+      // Call our sync function
+      const { data, error } = await supabase.functions.invoke('sync-revenuecat-subscription', {
+        body: {
+          customerInfo: customerInfo
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+
+      if (error) {
+        console.error('Sync error:', error);
+        throw error;
+      }
+      
+      console.log('Subscription synced successfully:', data);
+    } catch (error) {
+      console.error('Failed to sync subscription:', error);
+      // Don't throw here - the purchase might still be valid
+      toast.warning('Purchase completed but sync pending. Restart the app if features don\'t appear immediately.');
+    }
+  };
+
   const purchaseSubscription = async (productId: string) => {
     if (!user) {
       toast.error('Please sign in to purchase a subscription');
@@ -138,8 +174,8 @@ export const useNativeSubscription = () => {
 
       console.log('Purchase result:', purchaseResult);
       
-      // Verify the purchase with our backend
-      await verifyPurchase(purchaseResult, product.packageObject.product.identifier);
+      // Sync the subscription with Supabase
+      await syncSubscriptionWithSupabase();
       
       // Dismiss loading toast and show success
       toast.dismiss('purchase-loading');
@@ -169,43 +205,6 @@ export const useNativeSubscription = () => {
     }
   };
 
-  const verifyPurchase = async (purchase: any, productId: string) => {
-    try {
-      console.log('Verifying purchase with backend:', { productId, purchase });
-      
-      // Get the auth token
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error('No valid session found');
-      }
-
-      // Call our verification edge function
-      const { data, error } = await supabase.functions.invoke('verify-ios-purchase', {
-        body: {
-          receiptData: purchase.customerInfo.originalPurchaseDate, // This might need adjustment based on RevenueCat data structure
-          productId: productId,
-          transactionId: purchase.transaction?.transactionIdentifier || `rc_${Date.now()}`,
-          customerInfo: purchase.customerInfo
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
-      });
-
-      if (error) {
-        console.error('Verification error:', error);
-        throw error;
-      }
-      
-      console.log('Purchase verified successfully:', data);
-    } catch (error) {
-      console.error('Failed to verify purchase:', error);
-      // Don't throw here - the purchase might still be valid even if verification fails
-      // We'll let the user continue and they can contact support if needed
-      toast.warning('Purchase completed but verification pending. If issues persist, contact support.');
-    }
-  };
-
   const restorePurchases = async () => {
     if (!Capacitor.isNativePlatform()) {
       toast.error('Restore purchases is only available on mobile devices');
@@ -219,6 +218,9 @@ export const useNativeSubscription = () => {
       console.log('Restoring purchases...');
       const restoreResult = await Purchases.restorePurchases();
       console.log('Restore result:', restoreResult);
+      
+      // Sync with Supabase after restore
+      await syncSubscriptionWithSupabase();
       
       toast.dismiss('restore-loading');
       

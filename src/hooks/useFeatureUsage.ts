@@ -25,32 +25,65 @@ export const useFeatureUsage = () => {
         setUsageState(JSON.parse(savedUsage));
       }
       
-      // Check RevenueCat subscription status on native platforms
-      if (Capacitor.isNativePlatform()) {
-        checkRevenueCatSubscription();
-      }
+      // Check subscription status
+      checkSubscriptionStatus();
     }
   }, [user]);
 
-  const checkRevenueCatSubscription = async () => {
+  const checkSubscriptionStatus = async () => {
     try {
-      const result = await Purchases.getCustomerInfo();
-      console.log('RevenueCat result:', result);
-      
-      // Access customerInfo from the result object
-      const customerInfo = result.customerInfo;
-      console.log('RevenueCat customer info:', customerInfo);
-      
-      // Check if user has any active entitlements
-      const activeEntitlements = customerInfo.entitlements.active;
-      const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
-      
-      console.log('Active entitlements:', activeEntitlements);
-      console.log('Has active subscription:', hasActiveEntitlement);
-      
-      setHasActiveSubscription(hasActiveEntitlement);
+      if (!user) return;
+
+      // Check Supabase for active subscription first
+      const { data: directSubscription } = await supabase
+        .from('stripe_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (directSubscription) {
+        console.log('Found active subscription in Supabase');
+        setHasActiveSubscription(true);
+        return;
+      }
+
+      // Check Stripe customer subscription
+      const { data: customerData } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (customerData?.customer_id) {
+        const { data: subscription } = await supabase
+          .from('stripe_subscriptions')
+          .select('status')
+          .eq('customer_id', customerData.customer_id)
+          .eq('status', 'active')
+          .maybeSingle();
+
+        if (subscription) {
+          console.log('Found active Stripe subscription');
+          setHasActiveSubscription(true);
+          return;
+        }
+      }
+
+      // Check RevenueCat on native platforms as final fallback
+      if (Capacitor.isNativePlatform()) {
+        const result = await Purchases.getCustomerInfo();
+        const customerInfo = result.customerInfo;
+        const activeEntitlements = customerInfo.entitlements.active;
+        const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
+        
+        console.log('RevenueCat active entitlements:', activeEntitlements);
+        setHasActiveSubscription(hasActiveEntitlement);
+      } else {
+        setHasActiveSubscription(false);
+      }
     } catch (error) {
-      console.error('Error checking RevenueCat subscription:', error);
+      console.error('Error checking subscription status:', error);
       setHasActiveSubscription(false);
     }
   };
@@ -94,24 +127,12 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // On native platforms, check RevenueCat first
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const result = await Purchases.getCustomerInfo();
-          const customerInfo = result.customerInfo;
-          const activeEntitlements = customerInfo.entitlements.active;
-          
-          // Check for specific entitlements based on feature type
-          const hasBasicEntitlement = activeEntitlements['basic'] && activeEntitlements['basic'].isActive;
-          const hasPremiumEntitlement = activeEntitlements['premium'] && activeEntitlements['premium'].isActive;
-          
-          if (hasBasicEntitlement || hasPremiumEntitlement) {
-            console.log(`User has active subscription for ${featureType}, allowing access`);
-            return true;
-          }
-        } catch (error) {
-          console.error('Error checking RevenueCat entitlements:', error);
-        }
+      // Check if user has an active subscription first
+      const hasSubscription = await checkFeatureAccess(featureType);
+      
+      if (hasSubscription) {
+        console.log(`User has active subscription for ${featureType}, allowing access`);
+        return true;
       }
       
       // Check if user has already used their free trial
@@ -123,15 +144,9 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // User has used their free trial, check for web subscription access
-      const hasAccess = await checkFeatureAccess(featureType);
-      
-      if (!hasAccess) {
-        showSubscriptionPrompt(featureType);
-        return false;
-      }
-      
-      return true;
+      // User has used their free trial and no active subscription
+      showSubscriptionPrompt(featureType);
+      return false;
     } catch (error) {
       console.error('Error checking feature usage:', error);
       return false;

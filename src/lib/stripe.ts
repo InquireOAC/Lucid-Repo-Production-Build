@@ -20,7 +20,20 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
       return true;
     }
     
-    // Get the customer ID associated with this user
+    // Check for active subscription by user_id first (covers RevenueCat/iOS purchases)
+    const { data: directSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (directSubscription) {
+      console.log('Found direct subscription for user:', directSubscription);
+      return checkCreditsForSubscription(directSubscription, featureType);
+    }
+    
+    // Fallback: Get the customer ID associated with this user (for Stripe subscriptions)
     const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -33,22 +46,7 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
     }
     
     if (!customerData?.customer_id) {
-      console.log('No customer found for user - checking for any active subscription');
-      
-      // Also check if there might be any active subscription for this user
-      // (in case the customer record is missing but subscription exists)
-      const { data: directSubscription } = await supabase
-        .from('stripe_subscriptions')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-      
-      if (directSubscription) {
-        console.log('Found direct subscription for user:', directSubscription);
-        return checkCreditsForSubscription(directSubscription, featureType);
-      }
-      
+      console.log('No customer found for user');
       return false;
     }
     
@@ -92,6 +90,29 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
 
 // Helper function to check credits for a subscription object
 const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' | 'image'): boolean => {
+  // Check for RevenueCat subscriptions
+  if (subscription.subscription_id?.startsWith('ios_') || 
+      subscription.price_id === 'com.lucidrepo.limited.monthly' ||
+      subscription.price_id === 'com.lucidrepo.unlimited.monthly') {
+    
+    if (featureType === 'analysis') {
+      // Analysis is unlimited for all active subscriptions
+      return true;
+    } else if (featureType === 'image') {
+      const imageUsed = subscription.image_generations_used || 0;
+      
+      if (subscription.price_id === 'com.lucidrepo.unlimited.monthly') {
+        return imageUsed < 1000; // Premium: 1000 images
+      } else if (subscription.price_id === 'com.lucidrepo.limited.monthly') {
+        return imageUsed < 25; // Basic: 25 images
+      } else {
+        // Default for iOS subscriptions without clear price_id
+        return imageUsed < 1000;
+      }
+    }
+  }
+  
+  // Check for Stripe subscriptions
   const isBasic = subscription.price_id === 'price_basic';
   const isPremium = subscription.price_id === 'price_premium';
   
@@ -99,17 +120,12 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
     return false;
   }
   
-  // Get credit limits
-  const analysisLimit = isPremium ? 999999 : (isBasic ? 999999 : 0);
-  const imageLimit = isPremium ? 999999 : (isBasic ? 10 : 0);
-  
-  // Get used credits
-  const analysisUsed = subscription.dream_analyses_used || 0;
-  const imageUsed = subscription.image_generations_used || 0;
-  
   if (featureType === 'analysis') {
-    return analysisUsed < analysisLimit;
+    // Analysis is unlimited for all active subscriptions
+    return true;
   } else if (featureType === 'image') {
+    const imageUsed = subscription.image_generations_used || 0;
+    const imageLimit = isPremium ? 1000 : (isBasic ? 25 : 0);
     return imageUsed < imageLimit;
   }
   
@@ -129,7 +145,19 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       return true;
     }
     
-    // Get the customer ID associated with this user
+    // Check for direct subscription first (RevenueCat/iOS)
+    const { data: directSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('customer_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (directSubscription?.customer_id) {
+      return incrementUsageForCustomer(directSubscription.customer_id, featureType);
+    }
+    
+    // Fallback: Get the customer ID associated with this user (Stripe)
     const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -137,18 +165,6 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       .maybeSingle();
     
     if (customerError || !customerData?.customer_id) {
-      // Try to find subscription by user_id directly (for iOS purchases)
-      const { data: subscription } = await supabase
-        .from('stripe_subscriptions')
-        .select('customer_id')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-      
-      if (subscription?.customer_id) {
-        return incrementUsageForCustomer(subscription.customer_id, featureType);
-      }
-      
       console.error('No customer or subscription found for user');
       return false;
     }
@@ -165,18 +181,20 @@ const incrementUsageForCustomer = async (customerId: string, featureType: 'analy
   try {
     console.log(`Incrementing ${featureType} usage for customer: ${customerId}`);
     
-    // Increment usage for this feature
-    const { error: usageError } = await supabase.rpc(
-      'increment_subscription_usage',
-      { 
-        customer_id: customerId,
-        credit_type: featureType
+    // Only increment image usage since analysis is unlimited
+    if (featureType === 'image') {
+      const { error: usageError } = await supabase.rpc(
+        'increment_subscription_usage',
+        { 
+          customer_id: customerId,
+          credit_type: featureType
+        }
+      );
+      
+      if (usageError) {
+        console.error('Failed to increment usage:', usageError);
+        return false;
       }
-    );
-    
-    if (usageError) {
-      console.error('Failed to increment usage:', usageError);
-      return false;
     }
     
     return true;
@@ -214,7 +232,7 @@ export const hasActiveSubscription = async (): Promise<boolean> => {
       return true;
     }
     
-    // Check for active subscription by user_id first (covers iOS purchases)
+    // Check for active subscription by user_id first (covers RevenueCat/iOS purchases)
     const { data: directSubscription } = await supabase
       .from('stripe_subscriptions')
       .select('status')
