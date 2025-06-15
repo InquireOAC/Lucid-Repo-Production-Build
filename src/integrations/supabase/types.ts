@@ -220,6 +220,33 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_transactions: {
+        Row: {
+          created_at: string
+          credits_granted: number
+          id: string
+          source: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          credits_granted: number
+          id?: string
+          source?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          credits_granted?: number
+          id?: string
+          source?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_chat_messages: {
         Row: {
           content: string
@@ -631,6 +658,7 @@ export type Database = {
       profiles: {
         Row: {
           age: number | null
+          available_credits: number
           avatar_color: string | null
           avatar_symbol: string | null
           avatar_url: string | null
@@ -646,6 +674,7 @@ export type Database = {
         }
         Insert: {
           age?: number | null
+          available_credits?: number
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
@@ -661,6 +690,7 @@ export type Database = {
         }
         Update: {
           age?: number | null
+          available_credits?: number
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
