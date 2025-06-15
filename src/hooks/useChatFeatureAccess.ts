@@ -1,12 +1,12 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureUsage } from './useFeatureUsage';
 import { showSubscriptionPrompt } from '@/lib/stripe';
 
 export const useChatFeatureAccess = () => {
   const { user } = useAuth();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
+  const { hasUsedFeature, canUseFeature, recordFeatureUsage, hasActiveSubscription } = useFeatureUsage();
   const [isChecking, setIsChecking] = useState(false);
 
   const isAppCreator = user?.email === "inquireoac@gmail.com";
@@ -18,10 +18,17 @@ export const useChatFeatureAccess = () => {
       
       // Special case for app creator - always return true
       if (isAppCreator) {
+        console.log('App creator detected, allowing chat access');
         return true;
       }
       
-      // Check if user has already used their free trial for analysis (chat uses analysis quota)
+      // Check if user has an active subscription first
+      if (hasActiveSubscription) {
+        console.log('User has active subscription, allowing unlimited chat access');
+        return true;
+      }
+      
+      // Check if user has already used their free trial for analysis/chat
       const hasUsed = hasUsedFeature('analysis');
       
       if (!hasUsed) {
@@ -30,15 +37,10 @@ export const useChatFeatureAccess = () => {
         return true;
       }
       
-      // User has used their free trial, check for subscription access
-      const hasAccess = await canUseFeature('analysis');
-      
-      if (!hasAccess) {
-        showSubscriptionPrompt('analysis');
-        return false;
-      }
-      
-      return true;
+      // User has used their free trial and no active subscription
+      console.log('User has used free trial for chat and has no subscription');
+      showSubscriptionPrompt('analysis');
+      return false;
     } catch (error) {
       console.error('Error checking chat feature access:', error);
       return false;
@@ -51,14 +53,22 @@ export const useChatFeatureAccess = () => {
     try {
       if (!user || isAppCreator) return true;
       
-      // For first-time usage, just mark it locally
-      if (!hasUsedFeature('analysis')) {
-        markFeatureAsUsed('analysis');
+      // If user has active subscription, don't record usage (unlimited)
+      if (hasActiveSubscription) {
+        console.log('User has subscription, not recording chat usage (unlimited)');
         return true;
       }
       
-      // For subsequent usage, the subscription system will handle it
-      return true;
+      // For first-time usage, mark it locally as used
+      if (!hasUsedFeature('analysis')) {
+        console.log('Recording first-time chat usage (free trial)');
+        await recordFeatureUsage('analysis');
+        return true;
+      }
+      
+      // If they've used their trial and no subscription, they shouldn't reach here
+      console.log('User has no subscription and already used trial');
+      return false;
     } catch (error) {
       console.error('Error recording chat usage:', error);
       return false;
@@ -70,6 +80,7 @@ export const useChatFeatureAccess = () => {
     recordChatUsage,
     isChecking,
     isAppCreator,
+    hasActiveSubscription,
     hasUsedFeature: (feature: 'analysis' | 'image') => hasUsedFeature(feature),
   };
 };
