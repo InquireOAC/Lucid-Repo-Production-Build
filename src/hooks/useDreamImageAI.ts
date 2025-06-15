@@ -28,64 +28,80 @@ export function useDreamImageAI() {
   }, []);
 
   /**
-   * Build personalized prompt based on user's AI context
+   * Build personalized prompt based on user's AI context and selected style
    */
-  const buildPersonalizedPrompt = useCallback((basePrompt: string, aiContext: any) => {
-    if (!aiContext) return basePrompt;
-
+  const buildPersonalizedPrompt = useCallback((basePrompt: string, aiContext: any, imageStyle?: string) => {
     let personalizedPrompt = basePrompt;
 
-    // Add appearance details if available
-    const appearanceDetails = [];
-    
-    if (aiContext.hair_color) {
-      appearanceDetails.push(`${aiContext.hair_color} hair`);
-    }
-    
-    if (aiContext.hair_style) {
-      appearanceDetails.push(`${aiContext.hair_style} hairstyle`);
-    }
-    
-    if (aiContext.skin_tone) {
-      appearanceDetails.push(`${aiContext.skin_tone} skin tone`);
-    }
-    
-    if (aiContext.eye_color) {
-      appearanceDetails.push(`${aiContext.eye_color} eyes`);
-    }
-    
-    if (aiContext.height) {
-      appearanceDetails.push(`${aiContext.height} build`);
-    }
-
-    if (aiContext.clothing_style) {
-      appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
-    }
-
-    // Add person description if we have appearance details
-    if (appearanceDetails.length > 0) {
-      const personDescription = `featuring a person with ${appearanceDetails.join(', ')}`;
-      personalizedPrompt = `${basePrompt}. ${personDescription}`;
-    }
-
-    // Add age context if available
-    if (aiContext.age_range) {
-      const ageContext = aiContext.age_range === 'child' ? 'young child' :
-                         aiContext.age_range === 'teen' ? 'teenager' :
-                         aiContext.age_range === 'young_adult' ? 'young adult' :
-                         aiContext.age_range === 'adult' ? 'adult' :
-                         aiContext.age_range === 'middle_aged' ? 'middle-aged person' :
-                         aiContext.age_range === 'elder' ? 'elderly person' : '';
+    if (aiContext) {
+      // Add appearance details if available
+      const appearanceDetails = [];
       
-      if (ageContext) {
-        personalizedPrompt = personalizedPrompt.replace('person', ageContext);
+      if (aiContext.hair_color) {
+        appearanceDetails.push(`${aiContext.hair_color} hair`);
+      }
+      
+      if (aiContext.hair_style) {
+        appearanceDetails.push(`${aiContext.hair_style} hairstyle`);
+      }
+      
+      if (aiContext.skin_tone) {
+        appearanceDetails.push(`${aiContext.skin_tone} skin tone`);
+      }
+      
+      if (aiContext.eye_color) {
+        appearanceDetails.push(`${aiContext.eye_color} eyes`);
+      }
+      
+      if (aiContext.height) {
+        appearanceDetails.push(`${aiContext.height} build`);
+      }
+
+      if (aiContext.clothing_style) {
+        appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
+      }
+
+      // Add person description if we have appearance details
+      if (appearanceDetails.length > 0) {
+        const personDescription = `featuring a person with ${appearanceDetails.join(', ')}`;
+        personalizedPrompt = `${basePrompt}. ${personDescription}`;
+      }
+
+      // Add age context if available
+      if (aiContext.age_range) {
+        const ageContext = aiContext.age_range === 'child' ? 'young child' :
+                           aiContext.age_range === 'teen' ? 'teenager' :
+                           aiContext.age_range === 'young_adult' ? 'young adult' :
+                           aiContext.age_range === 'adult' ? 'adult' :
+                           aiContext.age_range === 'middle_aged' ? 'middle-aged person' :
+                           aiContext.age_range === 'elder' ? 'elderly person' : '';
+        
+        if (ageContext) {
+          personalizedPrompt = personalizedPrompt.replace('person', ageContext);
+        }
       }
     }
 
-    // Add aesthetic preferences if available
-    if (aiContext.aesthetic_preferences && aiContext.aesthetic_preferences.length > 0) {
-      const stylePreferences = aiContext.aesthetic_preferences.join(', ');
-      personalizedPrompt += `. Render in ${stylePreferences} artistic style`;
+    // Add selected image style to the prompt
+    if (imageStyle && imageStyle !== 'surreal') {
+      const styleMap: { [key: string]: string } = {
+        realistic: 'photorealistic',
+        abstract: 'abstract art',
+        impressionist: 'impressionist painting',
+        fantasy: 'fantasy art',
+        minimalist: 'minimalist',
+        vintage: 'vintage photography',
+        cyberpunk: 'cyberpunk',
+        watercolor: 'watercolor painting',
+        oil_painting: 'oil painting',
+        digital_art: 'digital art',
+        sketch: 'pencil sketch',
+      };
+      
+      const styleDescription = styleMap[imageStyle] || imageStyle;
+      personalizedPrompt += `. Render in ${styleDescription} artistic style`;
+    } else if (!imageStyle || imageStyle === 'surreal') {
+      personalizedPrompt += '. Render in surreal artistic style';
     }
 
     return personalizedPrompt;
@@ -94,7 +110,7 @@ export function useDreamImageAI() {
   /**
    * Remove character references from prompt when AI context is disabled
    */
-  const removeCharacterFromPrompt = useCallback((prompt: string) => {
+  const removeCharacterFromPrompt = useCallback((prompt: string, imageStyle?: string) => {
     // Remove common character-related phrases and replace with environment focus
     let cleanedPrompt = prompt
       .replace(/\bi\s+am\s+/gi, 'the scene shows ')
@@ -110,13 +126,35 @@ export function useDreamImageAI() {
     // Add emphasis on no people/characters
     cleanedPrompt += '. Focus on the environment and scenery without any people or characters in the image';
 
+    // Add selected image style to the prompt
+    if (imageStyle && imageStyle !== 'surreal') {
+      const styleMap: { [key: string]: string } = {
+        realistic: 'photorealistic',
+        abstract: 'abstract art',
+        impressionist: 'impressionist painting',
+        fantasy: 'fantasy art',
+        minimalist: 'minimalist',
+        vintage: 'vintage photography',
+        cyberpunk: 'cyberpunk',
+        watercolor: 'watercolor painting',
+        oil_painting: 'oil painting',
+        digital_art: 'digital art',
+        sketch: 'pencil sketch',
+      };
+      
+      const styleDescription = styleMap[imageStyle] || imageStyle;
+      cleanedPrompt += `. Render in ${styleDescription} artistic style`;
+    } else {
+      cleanedPrompt += '. Render in surreal artistic style';
+    }
+
     return cleanedPrompt;
   }, []);
 
   /**
-   * Analyze dream content and get an image prompt with optional AI context
+   * Analyze dream content and get an image prompt with optional AI context and style
    */
-  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true) => {
+  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true, imageStyle?: string) => {
     // First get the base prompt from the analyze-dream function
     const result = await supabase.functions.invoke("analyze-dream", {
       body: { dreamContent, task: "create_image_prompt" },
@@ -130,18 +168,17 @@ export function useDreamImageAI() {
 
     // If useAIContext is false, remove character references from the prompt
     if (!useAIContext) {
-      return removeCharacterFromPrompt(basePrompt);
+      return removeCharacterFromPrompt(basePrompt, imageStyle);
     }
 
     // If we have a user ID and should use AI context, try to get their AI context and personalize the prompt
     if (userId && useAIContext) {
       const aiContext = await getUserAIContext(userId);
-      if (aiContext) {
-        return buildPersonalizedPrompt(basePrompt, aiContext);
-      }
+      return buildPersonalizedPrompt(basePrompt, aiContext, imageStyle);
     }
 
-    return basePrompt;
+    // If no AI context, just add style to base prompt
+    return buildPersonalizedPrompt(basePrompt, null, imageStyle);
   }, [getUserAIContext, buildPersonalizedPrompt, removeCharacterFromPrompt]);
 
   /**

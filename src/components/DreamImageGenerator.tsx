@@ -2,9 +2,16 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, ImagePlus, Download } from "lucide-react";
+import { Sparkles, ImagePlus, Download, Palette } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 
 import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
@@ -47,6 +54,8 @@ const DreamImageGenerator = ({
     hasUsedFeature,
     useAIContext,
     setUseAIContext,
+    imageStyle,
+    setImageStyle,
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
@@ -70,6 +79,21 @@ const DreamImageGenerator = ({
       // Error handling is now done in shareOrSaveImage utility
     }
   };
+
+  const styleOptions = [
+    { value: "surreal", label: "Surreal" },
+    { value: "realistic", label: "Realistic" },
+    { value: "abstract", label: "Abstract" },
+    { value: "impressionist", label: "Impressionist" },
+    { value: "fantasy", label: "Fantasy" },
+    { value: "minimalist", label: "Minimalist" },
+    { value: "vintage", label: "Vintage" },
+    { value: "cyberpunk", label: "Cyberpunk" },
+    { value: "watercolor", label: "Watercolor" },
+    { value: "oil_painting", label: "Oil Painting" },
+    { value: "digital_art", label: "Digital Art" },
+    { value: "sketch", label: "Sketch" },
+  ];
 
   if (showInfo && !isGenerating) {
     return (
@@ -100,6 +124,28 @@ const DreamImageGenerator = ({
               <Label htmlFor="use-ai-context-initial" className="text-sm cursor-pointer">
                 Use my avatar appearance in images
               </Label>
+            </div>
+          )}
+
+          {/* Image Style Selection */}
+          {!disabled && (
+            <div className="space-y-2 mb-4">
+              <Label className="flex items-center gap-2">
+                <Palette className="h-4 w-4" />
+                Image Style
+              </Label>
+              <Select value={imageStyle} onValueChange={setImageStyle}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Choose art style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {styleOptions.map((style) => (
+                    <SelectItem key={style.value} value={style.value}>
+                      {style.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           
@@ -156,6 +202,28 @@ const DreamImageGenerator = ({
                 <Label htmlFor="use-ai-context" className="text-sm cursor-pointer">
                   Use my avatar appearance in images
                 </Label>
+              </div>
+            )}
+
+            {/* Image Style Selection */}
+            {!disabled && (
+              <div className="space-y-2 mb-4">
+                <Label className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Image Style
+                </Label>
+                <Select value={imageStyle} onValueChange={setImageStyle}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose art style" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {styleOptions.map((style) => (
+                      <SelectItem key={style.value} value={style.value}>
+                        {style.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
             

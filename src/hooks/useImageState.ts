@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface UseImageStateProps {
   existingPrompt: string;
@@ -11,8 +11,23 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
   const [generatedImage, setGeneratedImage] = useState(existingImage);
   const [imageError, setImageError] = useState(false);
   const [useAIContext, setUseAIContext] = useState(true);
-  
-  const showInfo = !imagePrompt && !generatedImage;
+  const [imageStyle, setImageStyle] = useState("surreal");
+
+  // Determine if we should show the initial prompt or the full interface
+  const showInfo = !existingPrompt && !existingImage;
+
+  // Update states when existing values change
+  useEffect(() => {
+    if (existingPrompt !== imagePrompt) {
+      setImagePrompt(existingPrompt);
+    }
+  }, [existingPrompt]);
+
+  useEffect(() => {
+    if (existingImage !== generatedImage) {
+      setGeneratedImage(existingImage);
+    }
+  }, [existingImage]);
 
   return {
     imagePrompt,
@@ -24,5 +39,7 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
     showInfo,
     useAIContext,
     setUseAIContext,
+    imageStyle,
+    setImageStyle,
   };
 };

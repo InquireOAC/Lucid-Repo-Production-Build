@@ -32,6 +32,8 @@ export const useDreamImageGeneration = ({
     showInfo,
     useAIContext,
     setUseAIContext,
+    imageStyle,
+    setImageStyle,
   } = useImageState({ existingPrompt, existingImage });
 
   const {
@@ -47,7 +49,7 @@ export const useDreamImageGeneration = ({
   });
 
   const generateImage = () => {
-    generateImageCore(setImagePrompt, setGeneratedImage, uploadImage, useAIContext);
+    generateImageCore(setImagePrompt, setGeneratedImage, uploadImage, useAIContext, imageStyle);
   };
 
   return {
@@ -63,5 +65,7 @@ export const useDreamImageGeneration = ({
     hasUsedFeature,
     useAIContext,
     setUseAIContext,
+    imageStyle,
+    setImageStyle,
   };
 };
