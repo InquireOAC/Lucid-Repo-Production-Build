@@ -34,10 +34,10 @@ interface CreditGrantConfig {
 }
 
 const CREDIT_GRANTS: CreditGrantConfig = {
-  'basic.monthly': 25,
-  'premium.monthly': 1000,
-  'basic': 25,      // fallback without period
-  'premium': 1000   // fallback without period
+  'com.lucidrepo.limited.monthly': 25,
+  'com.lucidrepo.unlimited.monthly': 1000,
+  'limited': 25,      // fallback without .monthly
+  'unlimited': 1000   // fallback without .monthly
 };
 
 serve(async (req) => {
@@ -114,9 +114,9 @@ serve(async (req) => {
     if (payload.entitlements) {
       // Check active entitlements
       for (const [key, entitlement] of Object.entries(payload.entitlements)) {
-        if (CREDIT_GRANTS[key]) {
-          creditsToGrant = CREDIT_GRANTS[key];
-          entitlementKey = key;
+        if (CREDIT_GRANTS[entitlement.product_identifier]) {
+          creditsToGrant = CREDIT_GRANTS[entitlement.product_identifier];
+          entitlementKey = entitlement.product_identifier;
           break;
         }
       }
@@ -124,12 +124,17 @@ serve(async (req) => {
 
     // Fallback: check product_id if no entitlement match
     if (creditsToGrant === 0 && payload.product_id) {
-      // Try to match product_id with our credit grants
-      for (const [key, credits] of Object.entries(CREDIT_GRANTS)) {
-        if (payload.product_id.toLowerCase().includes(key.split('.')[0])) {
-          creditsToGrant = credits;
-          entitlementKey = payload.product_id;
-          break;
+      if (CREDIT_GRANTS[payload.product_id]) {
+        creditsToGrant = CREDIT_GRANTS[payload.product_id];
+        entitlementKey = payload.product_id;
+      } else {
+        // Try to match partial product names for fallback
+        for (const [key, credits] of Object.entries(CREDIT_GRANTS)) {
+          if (payload.product_id.toLowerCase().includes(key.toLowerCase())) {
+            creditsToGrant = credits;
+            entitlementKey = payload.product_id;
+            break;
+          }
         }
       }
     }
