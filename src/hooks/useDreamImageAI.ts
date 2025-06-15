@@ -1,4 +1,3 @@
-
 import { useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -108,23 +107,53 @@ export function useDreamImageAI() {
   }, []);
 
   /**
-   * Remove character references from prompt when AI context is disabled
+   * Check if the dream content naturally contains characters/people
    */
-  const removeCharacterFromPrompt = useCallback((prompt: string, imageStyle?: string) => {
-    // Remove common character-related phrases and replace with environment focus
-    let cleanedPrompt = prompt
-      .replace(/\bi\s+am\s+/gi, 'the scene shows ')
-      .replace(/\bi\s+see\s+/gi, 'there are ')
-      .replace(/\bmy\s+/gi, 'the ')
-      .replace(/\bme\s+/gi, 'the environment ')
-      .replace(/\bmyself\s+/gi, 'the scene ')
-      .replace(/\bwith\s+me\b/gi, 'in the scene')
-      .replace(/\bbeside\s+me\b/gi, 'in the scene')
-      .replace(/\bnear\s+me\b/gi, 'in the area')
-      .replace(/\baround\s+me\b/gi, 'throughout the scene');
+  const dreamContainsCharacters = useCallback((dreamContent: string) => {
+    const characterKeywords = [
+      'person', 'people', 'man', 'woman', 'boy', 'girl', 'child', 'children',
+      'friend', 'family', 'mother', 'father', 'sister', 'brother', 'parent',
+      'stranger', 'crowd', 'group', 'someone', 'everybody', 'anyone',
+      'he', 'she', 'they', 'him', 'her', 'them', 'his', 'hers', 'their',
+      'character', 'figure', 'individual', 'human', 'being'
+    ];
+    
+    const lowerContent = dreamContent.toLowerCase();
+    return characterKeywords.some(keyword => lowerContent.includes(keyword));
+  }, []);
 
-    // Add emphasis on no people/characters
-    cleanedPrompt += '. Focus on the environment and scenery without any people or characters in the image';
+  /**
+   * Clean prompt for non-personalized generation while preserving natural characters
+   */
+  const cleanPromptForNonPersonalized = useCallback((prompt: string, dreamContent: string, imageStyle?: string) => {
+    const hasCharacters = dreamContainsCharacters(dreamContent);
+    
+    let cleanedPrompt = prompt;
+    
+    if (!hasCharacters) {
+      // Only remove character references if the dream doesn't naturally contain them
+      cleanedPrompt = prompt
+        .replace(/\bi\s+am\s+/gi, 'the scene shows ')
+        .replace(/\bi\s+see\s+/gi, 'there are ')
+        .replace(/\bmy\s+/gi, 'the ')
+        .replace(/\bme\s+/gi, 'the environment ')
+        .replace(/\bmyself\s+/gi, 'the scene ')
+        .replace(/\bwith\s+me\b/gi, 'in the scene')
+        .replace(/\bbeside\s+me\b/gi, 'in the scene')
+        .replace(/\bnear\s+me\b/gi, 'in the area')
+        .replace(/\baround\s+me\b/gi, 'throughout the scene');
+
+      // Add emphasis on environment focus when no characters are present
+      cleanedPrompt += '. Focus on the environment and scenery without any people or characters in the image';
+    } else {
+      // If dream has characters, just replace personal pronouns but keep character references
+      cleanedPrompt = prompt
+        .replace(/\bi\s+am\s+/gi, 'there is ')
+        .replace(/\bi\s+see\s+/gi, 'the scene shows ')
+        .replace(/\bmy\s+/gi, 'the ')
+        .replace(/\bme\s+/gi, 'a person ')
+        .replace(/\bmyself\s+/gi, 'a person ');
+    }
 
     // Add selected image style to the prompt
     if (imageStyle && imageStyle !== 'surreal') {
@@ -149,7 +178,7 @@ export function useDreamImageAI() {
     }
 
     return cleanedPrompt;
-  }, []);
+  }, [dreamContainsCharacters]);
 
   /**
    * Analyze dream content and get an image prompt with optional AI context and style
@@ -166,9 +195,9 @@ export function useDreamImageAI() {
 
     const basePrompt = result.data?.analysis || "";
 
-    // If useAIContext is false, remove character references from the prompt
+    // If useAIContext is false, clean the prompt intelligently
     if (!useAIContext) {
-      return removeCharacterFromPrompt(basePrompt, imageStyle);
+      return cleanPromptForNonPersonalized(basePrompt, dreamContent, imageStyle);
     }
 
     // If we have a user ID and should use AI context, try to get their AI context and personalize the prompt
@@ -179,7 +208,7 @@ export function useDreamImageAI() {
 
     // If no AI context, just add style to base prompt
     return buildPersonalizedPrompt(basePrompt, null, imageStyle);
-  }, [getUserAIContext, buildPersonalizedPrompt, removeCharacterFromPrompt]);
+  }, [getUserAIContext, buildPersonalizedPrompt, cleanPromptForNonPersonalized]);
 
   /**
    * Generate a dream image from prompt via edge function
