@@ -21,12 +21,16 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
     }
     
     // Check for active subscription by user_id first (covers RevenueCat/iOS purchases)
-    const { data: directSubscription } = await supabase
+    const { data: directSubscription, error: directError } = await supabase
       .from('stripe_subscriptions')
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
+    
+    if (directError) {
+      console.error('Error checking direct subscription:', directError);
+    }
     
     if (directSubscription) {
       console.log('Found direct subscription for user:', directSubscription);
@@ -52,7 +56,7 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
     
     console.log('Found customer ID:', customerData.customer_id);
     
-    // Check if the user has enough credits
+    // Check if the user has enough credits using the RPC function
     const { data: hasAccess, error: accessError } = await supabase.rpc(
       'check_subscription_credits',
       { 
@@ -62,7 +66,7 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
     );
     
     if (accessError) {
-      console.error('Credit check error:', accessError);
+      console.error('Credit check RPC error:', accessError);
       
       // Fallback: Check subscription directly if RPC fails
       const { data: subscription } = await supabase
@@ -90,10 +94,14 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
 
 // Helper function to check credits for a subscription object
 const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' | 'image'): boolean => {
+  console.log('Checking credits for subscription:', subscription.price_id, 'Feature:', featureType);
+  
   // Check for RevenueCat subscriptions
   if (subscription.subscription_id?.startsWith('ios_') || 
       subscription.price_id === 'com.lucidrepo.limited.monthly' ||
       subscription.price_id === 'com.lucidrepo.unlimited.monthly') {
+    
+    console.log('RevenueCat subscription detected');
     
     if (featureType === 'analysis') {
       // Analysis is unlimited for all active subscriptions
@@ -102,12 +110,18 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
       const imageUsed = subscription.image_generations_used || 0;
       
       if (subscription.price_id === 'com.lucidrepo.unlimited.monthly') {
-        return imageUsed < 1000; // Premium: 1000 images
+        const hasCredits = imageUsed < 1000; // Premium: 1000 images
+        console.log(`Premium RevenueCat: ${imageUsed}/1000 images used, access: ${hasCredits}`);
+        return hasCredits;
       } else if (subscription.price_id === 'com.lucidrepo.limited.monthly') {
-        return imageUsed < 25; // Basic: 25 images
+        const hasCredits = imageUsed < 25; // Basic: 25 images
+        console.log(`Basic RevenueCat: ${imageUsed}/25 images used, access: ${hasCredits}`);
+        return hasCredits;
       } else {
         // Default for iOS subscriptions without clear price_id
-        return imageUsed < 1000;
+        const hasCredits = imageUsed < 1000;
+        console.log(`Default iOS subscription: ${imageUsed}/1000 images used, access: ${hasCredits}`);
+        return hasCredits;
       }
     }
   }
@@ -116,7 +130,10 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
   const isBasic = subscription.price_id === 'price_basic';
   const isPremium = subscription.price_id === 'price_premium';
   
+  console.log('Stripe subscription detected - Basic:', isBasic, 'Premium:', isPremium);
+  
   if (!isBasic && !isPremium) {
+    console.log('Unknown price_id for Stripe subscription:', subscription.price_id);
     return false;
   }
   
@@ -126,7 +143,9 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
   } else if (featureType === 'image') {
     const imageUsed = subscription.image_generations_used || 0;
     const imageLimit = isPremium ? 1000 : (isBasic ? 25 : 0);
-    return imageUsed < imageLimit;
+    const hasCredits = imageUsed < imageLimit;
+    console.log(`Stripe ${isPremium ? 'Premium' : 'Basic'}: ${imageUsed}/${imageLimit} images used, access: ${hasCredits}`);
+    return hasCredits;
   }
   
   return false;
@@ -135,9 +154,14 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
 // Increment usage for a specific feature
 export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): Promise<boolean> => {
   try {
+    console.log(`Incrementing usage for feature: ${featureType}`);
+    
     // First, check if the user is logged in
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
+    if (!user) {
+      console.log('No user logged in for usage increment');
+      return false;
+    }
     
     // Special case for admin users
     if (user.email === "inquireoac@gmail.com") {
@@ -154,6 +178,7 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       .maybeSingle();
     
     if (directSubscription?.customer_id) {
+      console.log('Found direct subscription, incrementing usage');
       return incrementUsageForCustomer(directSubscription.customer_id, featureType);
     }
     
@@ -165,10 +190,11 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       .maybeSingle();
     
     if (customerError || !customerData?.customer_id) {
-      console.error('No customer or subscription found for user');
+      console.error('No customer or subscription found for user:', customerError);
       return false;
     }
     
+    console.log('Found customer ID for usage increment:', customerData.customer_id);
     return incrementUsageForCustomer(customerData.customer_id, featureType);
   } catch (error) {
     console.error('Error incrementing feature usage:', error);
@@ -192,9 +218,13 @@ const incrementUsageForCustomer = async (customerId: string, featureType: 'analy
       );
       
       if (usageError) {
-        console.error('Failed to increment usage:', usageError);
+        console.error('Failed to increment usage via RPC:', usageError);
         return false;
       }
+      
+      console.log('Successfully incremented image usage');
+    } else {
+      console.log('Analysis usage not incremented (unlimited)');
     }
     
     return true;
@@ -241,6 +271,7 @@ export const hasActiveSubscription = async (): Promise<boolean> => {
       .maybeSingle();
     
     if (directSubscription) {
+      console.log('Found active direct subscription');
       return true;
     }
     

@@ -34,7 +34,9 @@ export const useFeatureUsage = () => {
     try {
       if (!user) return;
 
-      // Check Supabase for active subscription first
+      console.log('Checking subscription status for user:', user.id);
+
+      // First check for direct subscription by user_id (covers iOS/RevenueCat purchases)
       const { data: directSubscription } = await supabase
         .from('stripe_subscriptions')
         .select('status')
@@ -43,7 +45,7 @@ export const useFeatureUsage = () => {
         .maybeSingle();
 
       if (directSubscription) {
-        console.log('Found active subscription in Supabase');
+        console.log('Found active direct subscription (RevenueCat/iOS)');
         setHasActiveSubscription(true);
         return;
       }
@@ -72,16 +74,22 @@ export const useFeatureUsage = () => {
 
       // Check RevenueCat on native platforms as final fallback
       if (Capacitor.isNativePlatform()) {
-        const result = await Purchases.getCustomerInfo();
-        const customerInfo = result.customerInfo;
-        const activeEntitlements = customerInfo.entitlements.active;
-        const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
-        
-        console.log('RevenueCat active entitlements:', activeEntitlements);
-        setHasActiveSubscription(hasActiveEntitlement);
-      } else {
-        setHasActiveSubscription(false);
+        try {
+          const result = await Purchases.getCustomerInfo();
+          const customerInfo = result.customerInfo;
+          const activeEntitlements = customerInfo.entitlements.active;
+          const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
+          
+          console.log('RevenueCat active entitlements:', activeEntitlements);
+          setHasActiveSubscription(hasActiveEntitlement);
+          return;
+        } catch (revenueCatError) {
+          console.error('RevenueCat check failed:', revenueCatError);
+        }
       }
+
+      console.log('No active subscription found');
+      setHasActiveSubscription(false);
     } catch (error) {
       console.error('Error checking subscription status:', error);
       setHasActiveSubscription(false);
@@ -124,10 +132,11 @@ export const useFeatureUsage = () => {
       
       // Special case for app creator - always return true
       if (user.email === "inquireoac@gmail.com") {
+        console.log('App creator detected, allowing feature access');
         return true;
       }
       
-      // Check if user has an active subscription first
+      // Check if user has an active subscription first using the stripe lib function
       const hasSubscription = await checkFeatureAccess(featureType);
       
       if (hasSubscription) {
@@ -145,6 +154,7 @@ export const useFeatureUsage = () => {
       }
       
       // User has used their free trial and no active subscription
+      console.log(`User has used free trial for ${featureType} and has no subscription`);
       showSubscriptionPrompt(featureType);
       return false;
     } catch (error) {
@@ -160,13 +170,21 @@ export const useFeatureUsage = () => {
     try {
       if (!user) return false;
       
+      // Special case for app creator - don't record usage
+      if (user.email === "inquireoac@gmail.com") {
+        console.log('App creator detected, not recording usage');
+        return true;
+      }
+      
       // For first-time usage, just mark it locally
       if (!hasUsedFeature(featureType)) {
+        console.log(`Marking ${featureType} as used locally (free trial)`);
         markFeatureAsUsed(featureType);
         return true;
       }
       
       // For subsequent usage, increment in database if they have a subscription
+      console.log(`Recording ${featureType} usage in database`);
       const success = await incrementFeatureUsage(featureType);
       return success;
     } catch (error) {

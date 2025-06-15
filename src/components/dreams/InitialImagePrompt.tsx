@@ -22,6 +22,14 @@ const InitialImagePrompt = ({
   // Determine if feature is enabled based on subscription status
   const isFeatureEnabled = isAppCreator || !hasUsedFeature || hasActiveSubscription;
 
+  console.log('InitialImagePrompt - Feature check:', {
+    disabled,
+    hasUsedFeature,
+    isAppCreator,
+    hasActiveSubscription,
+    isFeatureEnabled
+  });
+
   return (
     <div className="text-center space-y-4 py-2">
       <p className="text-sm text-muted-foreground">

@@ -24,7 +24,7 @@ const DreamAnalysis = ({
   disabled = false
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature, hasActiveSubscription } = useFeatureUsage();
+  const { hasUsedFeature, canUseFeature, recordFeatureUsage, hasActiveSubscription } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
@@ -44,16 +44,21 @@ const DreamAnalysis = ({
     }
 
     try {
-      // Check if user can use the feature (includes RevenueCat check)
+      console.log('Starting dream analysis generation...');
+      
+      // Check if user can use the feature (includes subscription and credit check)
       const canUse = await canUseFeature('analysis');
       
       if (!canUse) {
+        console.log('User cannot use analysis feature');
         return;
       }
       
       setIsGenerating(true);
       setShowInfo(false);
 
+      console.log('Calling analyze-dream function...');
+      
       // Call directly to the analyze-dream function
       const { data, error } = await supabase.functions.invoke('analyze-dream', {
         body: { 
@@ -68,12 +73,16 @@ const DreamAnalysis = ({
       }
       
       if (data?.analysis) {
+        console.log('Analysis generated successfully');
         setAnalysis(data.analysis);
         onAnalysisComplete(data.analysis);
         
-        // If this was a free trial use and not the app creator, mark the feature as used
+        // Record the feature usage (this handles both free trial and subscription usage)
+        const usageRecorded = await recordFeatureUsage('analysis');
+        console.log('Analysis usage recorded:', usageRecorded);
+        
+        // Show appropriate success message
         if (!isAppCreator && !hasUsedFreeTrial) {
-          markFeatureAsUsed('analysis');
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
             action: {
@@ -88,8 +97,8 @@ const DreamAnalysis = ({
         throw new Error('No analysis data returned');
       }
     } catch (error: any) {
+      console.error('Analysis generation failed:', error);
       toast.error(`Analysis failed: ${error.message}`);
-      console.error('Analysis error details:', error);
     } finally {
       setIsGenerating(false);
     }
