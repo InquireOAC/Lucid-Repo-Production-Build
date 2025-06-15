@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -128,11 +129,11 @@ const ProfileContent = () => {
 
   // Refresh subscription data when subscription dialog opens
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const { subscription, isLoading: subscriptionLoading, fetchSubscription } = useSubscription(user);
+  const { subscription: currentSubscription, isLoading: subscriptionLoading, fetchSubscription: refreshSubscription } = useSubscription(user);
   const handleSubscriptionDialogOpen = (open: boolean) => {
     setSubscriptionDialogOpen(open);
     if (open && user) {
-      fetchSubscription();
+      refreshSubscription();
     }
   };
 
@@ -207,7 +208,7 @@ const ProfileContent = () => {
       <SubscriptionDialog
         isOpen={subscriptionDialogOpen}
         onOpenChange={handleSubscriptionDialogOpen}
-        subscription={subscription}
+        subscription={currentSubscription}
       />
     </div>
   );
