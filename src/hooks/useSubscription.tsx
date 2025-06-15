@@ -119,6 +119,10 @@ export function useSubscription(user: any) {
     // Analysis is unlimited for all active subscriptions
     const analysisTotal = 999999;
 
+    // Calculate remaining credits
+    const imageUsed = subscriptionData.image_generations_used || 0;
+    const imageRemaining = Math.max(0, imageTotal - imageUsed);
+
     return {
       plan: planName,
       status: subscriptionData.status,
@@ -128,10 +132,12 @@ export function useSubscription(user: any) {
       analysisCredits: {
         used: subscriptionData.dream_analyses_used || 0,
         total: analysisTotal,
+        remaining: analysisTotal, // Always unlimited
       },
       imageCredits: {
-        used: subscriptionData.image_generations_used || 0,
+        used: imageUsed,
         total: imageTotal,
+        remaining: imageRemaining,
       },
       cancelAtPeriodEnd: subscriptionData.cancel_at_period_end || false,
       // Include subscription type for debugging

@@ -18,10 +18,12 @@ interface SubscriptionDialogProps {
     analysisCredits: {
       used: number;
       total: number;
+      remaining: number;
     };
     imageCredits: {
       used: number;
       total: number;
+      remaining: number;
     };
   };
 }
@@ -71,20 +73,28 @@ const SubscriptionDialog = ({
                     </div>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <h4 className="text-sm font-semibold">Monthly Credits Left</h4>
-                  <CreditDisplay
-                    icon={<Sparkles className="w-4 h-4 text-dream-purple" />}
-                    label="Dream Analysis"
-                    used={subscription.analysisCredits.used}
-                    total={subscription.analysisCredits.total}
-                  />
-                  <CreditDisplay
-                    icon={<ImageIcon className="w-4 h-4 text-dream-lavender" />}
-                    label="Image Generation"
-                    used={subscription.imageCredits.used}
-                    total={subscription.imageCredits.total}
-                  />
+                
+                {/* Credits Overview Section */}
+                <div className="bg-gradient-to-br from-dream-purple/5 to-dream-lavender/5 rounded-lg p-4 border border-dream-purple/20">
+                  <h4 className="text-lg font-semibold mb-3 text-center">Your Credits</h4>
+                  <div className="space-y-3">
+                    <CreditDisplay
+                      icon={<Sparkles className="w-5 h-5 text-dream-purple" />}
+                      label="Dream Analysis"
+                      used={subscription.analysisCredits.used}
+                      total={subscription.analysisCredits.total}
+                      remaining={subscription.analysisCredits.remaining}
+                      isUnlimited={true}
+                    />
+                    <CreditDisplay
+                      icon={<ImageIcon className="w-5 h-5 text-dream-lavender" />}
+                      label="Image Generation"
+                      used={subscription.imageCredits.used}
+                      total={subscription.imageCredits.total}
+                      remaining={subscription.imageCredits.remaining}
+                      isUnlimited={false}
+                    />
+                  </div>
                 </div>
               </>
             )}
@@ -102,21 +112,59 @@ const SubscriptionDialog = ({
   );
 };
 
-const CreditDisplay = ({ icon, label, used, total }: { icon: React.ReactNode; label: string; used: number; total: number }) => (
-  <div className="space-y-1">
-    <div className="flex justify-between items-center text-sm">
-      <span className="flex gap-1 items-center">{icon}<span>{label}</span></span>
-      <span className="text-xs">
-        {total === 999999 ? "Unlimited" : `${used} / ${total}`}
-      </span>
-    </div>
-    {total !== 999999 && (
-      <div className="w-full bg-secondary rounded-full h-1">
-        <div
-          className="h-1 bg-dream-purple rounded-full"
-          style={{ width: `${Math.min(100, (used / total) * 100)}%` }}
-        />
+const CreditDisplay = ({ 
+  icon, 
+  label, 
+  used, 
+  total, 
+  remaining, 
+  isUnlimited 
+}: { 
+  icon: React.ReactNode; 
+  label: string; 
+  used: number; 
+  total: number; 
+  remaining: number;
+  isUnlimited: boolean;
+}) => (
+  <div className="space-y-2 p-3 bg-white/50 rounded-md">
+    <div className="flex justify-between items-center">
+      <span className="flex gap-2 items-center font-medium">{icon}<span>{label}</span></span>
+      <div className="text-right">
+        {isUnlimited ? (
+          <span className="text-sm font-semibold text-dream-purple">Unlimited</span>
+        ) : (
+          <>
+            <span className="text-lg font-bold text-dream-purple">{remaining}</span>
+            <span className="text-xs text-muted-foreground ml-1">remaining</span>
+          </>
+        )}
       </div>
+    </div>
+    
+    {!isUnlimited && (
+      <>
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>Used: {used}</span>
+          <span>Total: {total}</span>
+        </div>
+        <div className="w-full bg-secondary rounded-full h-2">
+          <div
+            className="h-2 bg-gradient-to-r from-dream-purple to-dream-lavender rounded-full transition-all duration-300"
+            style={{ width: `${Math.min(100, (used / total) * 100)}%` }}
+          />
+        </div>
+        {remaining <= 5 && remaining > 0 && (
+          <div className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+            ⚠️ Only {remaining} credits remaining
+          </div>
+        )}
+        {remaining === 0 && (
+          <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+            🚫 No credits remaining
+          </div>
+        )}
+      </>
     )}
   </div>
 );
