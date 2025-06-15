@@ -33,9 +33,11 @@ interface CreditGrantConfig {
   [key: string]: number;
 }
 
-const CREDIT_GRANTS: CreditGrantConfig = {
-  'com.lucidrepo.limited.monthly': 25,
-  'com.lucidrepo.unlimited.monthly': 1000,
+// Credits are used ONLY for image generation
+// Analysis is unlimited for all subscribers
+const IMAGE_GENERATION_CREDITS: CreditGrantConfig = {
+  'com.lucidrepo.limited.monthly': 25,     // Basic: 25 image generations
+  'com.lucidrepo.unlimited.monthly': 1000, // Premium: 1000 image generations
   'limited': 25,      // fallback without .monthly
   'unlimited': 1000   // fallback without .monthly
 };
@@ -107,15 +109,15 @@ serve(async (req) => {
       );
     }
 
-    // Determine credits to grant based on entitlements
+    // Determine credits to grant based on entitlements (for image generation only)
     let creditsToGrant = 0;
     let entitlementKey = '';
 
     if (payload.entitlements) {
       // Check active entitlements
       for (const [key, entitlement] of Object.entries(payload.entitlements)) {
-        if (CREDIT_GRANTS[entitlement.product_identifier]) {
-          creditsToGrant = CREDIT_GRANTS[entitlement.product_identifier];
+        if (IMAGE_GENERATION_CREDITS[entitlement.product_identifier]) {
+          creditsToGrant = IMAGE_GENERATION_CREDITS[entitlement.product_identifier];
           entitlementKey = entitlement.product_identifier;
           break;
         }
@@ -124,12 +126,12 @@ serve(async (req) => {
 
     // Fallback: check product_id if no entitlement match
     if (creditsToGrant === 0 && payload.product_id) {
-      if (CREDIT_GRANTS[payload.product_id]) {
-        creditsToGrant = CREDIT_GRANTS[payload.product_id];
+      if (IMAGE_GENERATION_CREDITS[payload.product_id]) {
+        creditsToGrant = IMAGE_GENERATION_CREDITS[payload.product_id];
         entitlementKey = payload.product_id;
       } else {
         // Try to match partial product names for fallback
-        for (const [key, credits] of Object.entries(CREDIT_GRANTS)) {
+        for (const [key, credits] of Object.entries(IMAGE_GENERATION_CREDITS)) {
           if (payload.product_id.toLowerCase().includes(key.toLowerCase())) {
             creditsToGrant = credits;
             entitlementKey = payload.product_id;
@@ -153,13 +155,13 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Granting ${creditsToGrant} credits for entitlement: ${entitlementKey}`);
+    console.log(`Granting ${creditsToGrant} image generation credits for entitlement: ${entitlementKey}`);
 
     // Start transaction to update credits and insert transaction record
     const { error: transactionError } = await supabase.rpc('process_credit_grant', {
       p_user_id: userId,
       p_credits_granted: creditsToGrant,
-      p_source: 'RevenueCat webhook',
+      p_source: 'RevenueCat webhook - Image generation credits',
       p_entitlement: entitlementKey
     });
 
@@ -173,7 +175,7 @@ serve(async (req) => {
         .insert({
           user_id: userId,
           credits_granted: creditsToGrant,
-          source: 'RevenueCat webhook',
+          source: 'RevenueCat webhook - Image generation credits',
           timestamp: new Date().toISOString()
         });
 
@@ -207,14 +209,15 @@ serve(async (req) => {
       }
     }
 
-    console.log(`Successfully granted ${creditsToGrant} credits to user ${userId}`);
+    console.log(`Successfully granted ${creditsToGrant} image generation credits to user ${userId}`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Granted ${creditsToGrant} credits to user ${userId}`,
+        message: `Granted ${creditsToGrant} image generation credits to user ${userId}`,
         creditsGranted: creditsToGrant,
-        entitlement: entitlementKey
+        entitlement: entitlementKey,
+        note: 'Dream analysis is unlimited for all subscribers'
       }),
       { 
         status: 200, 
