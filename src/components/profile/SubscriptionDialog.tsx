@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -34,14 +35,12 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
   if (!subscription) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>No Active Subscription</DialogTitle>
+            <DialogTitle>Choose Your Plan</DialogTitle>
           </DialogHeader>
           <div className="p-4">
-            <p className="text-muted-foreground">
-              You don't currently have an active subscription.
-            </p>
+            <StripeSubscriptionManager />
           </div>
         </DialogContent>
       </Dialog>
