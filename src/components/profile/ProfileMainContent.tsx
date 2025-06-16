@@ -1,4 +1,3 @@
-
 import React from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
@@ -30,7 +29,6 @@ interface ProfileMainContentProps {
   isMessagesOpen: boolean;
   isSubscriptionOpen: boolean;
   isNotificationsOpen: boolean;
-  setIsNotificationsOpen: (open: boolean) => void;
   displayName: string;
   setDisplayName: (value: string) => void;
   username: string;
@@ -82,7 +80,6 @@ const ProfileMainContent = ({
   isMessagesOpen,
   isSubscriptionOpen,
   isNotificationsOpen,
-  setIsNotificationsOpen,
   displayName,
   setDisplayName,
   username,
@@ -153,7 +150,6 @@ const ProfileMainContent = ({
         isSubscriptionOpen={isSubscriptionOpen}
         setIsSubscriptionOpen={setIsSubscriptionOpen}
         isNotificationsOpen={isNotificationsOpen}
-        setIsNotificationsOpen={setIsNotificationsOpen}
         displayName={displayName}
         setDisplayName={setDisplayName}
         username={username}
