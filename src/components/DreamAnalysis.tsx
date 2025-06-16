@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 
 interface DreamAnalysisProps {
@@ -24,7 +25,8 @@ const DreamAnalysis = ({
   disabled = false
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
-  const { hasUsedFeature, canUseFeature, recordFeatureUsage, hasActiveSubscription } = useFeatureUsage();
+  const { subscription, isLoading: subscriptionLoading } = useSubscriptionContext();
+  const { hasUsedFeature, canUseFeature, recordFeatureUsage } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
@@ -32,8 +34,21 @@ const DreamAnalysis = ({
   const isAppCreator = user?.email === "inquireoac@gmail.com";
   const hasUsedFreeTrial = hasUsedFeature('analysis');
   
+  // Check if user has active subscription from subscription context
+  const hasActiveSubscription = subscription?.status === 'active';
+  
   // Determine if feature is enabled based on subscription status
   const isFeatureEnabled = isAppCreator || !hasUsedFreeTrial || hasActiveSubscription;
+
+  console.log('DreamAnalysis - Feature check:', {
+    disabled,
+    hasUsedFreeTrial,
+    isAppCreator,
+    hasActiveSubscription,
+    subscriptionStatus: subscription?.status,
+    isFeatureEnabled,
+    subscriptionLoading
+  });
 
   const generateAnalysis = async () => {
     if (!user || disabled) return;
@@ -82,7 +97,7 @@ const DreamAnalysis = ({
         console.log('Analysis usage recorded:', usageRecorded);
         
         // Show appropriate success message
-        if (!isAppCreator && !hasUsedFreeTrial) {
+        if (!isAppCreator && !hasUsedFreeTrial && !hasActiveSubscription) {
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
             action: {
@@ -103,6 +118,27 @@ const DreamAnalysis = ({
       setIsGenerating(false);
     }
   };
+
+  // Show loading state while subscription is being checked
+  if (subscriptionLoading && !subscription) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-lg">
+            <Sparkles className="h-5 w-5 mr-2 text-dream-purple" />
+            Dream Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center space-y-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              Checking subscription status...
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (showInfo && !analysis && !isGenerating) {
     return (
