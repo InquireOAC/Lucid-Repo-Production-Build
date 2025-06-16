@@ -207,7 +207,6 @@ const ProfileContent = () => {
       <SubscriptionDialog
         isOpen={subscriptionDialogOpen}
         onOpenChange={handleSubscriptionDialogOpen}
-        subscription={currentSubscription}
       />
     </div>
   );
