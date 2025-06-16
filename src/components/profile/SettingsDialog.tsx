@@ -1,13 +1,15 @@
+
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 import AIContextDialog from "./AIContextDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
+import NotificationsDialog from "./NotificationsDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -18,6 +20,7 @@ interface SettingsDialogProps {
   setSocialLinks?: (v: any) => void;
   handleUpdateSocialLinks?: () => void;
 }
+
 const SettingsDialog = ({
   open,
   onOpenChange,
@@ -32,9 +35,12 @@ const SettingsDialog = ({
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [showAIContext, setShowAIContext] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
+
   return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-md">
@@ -48,6 +54,16 @@ const SettingsDialog = ({
               <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>
                 <Link className="h-4 w-4 mr-2" />
                 Social Links
+              </Button>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-muted-foreground">Notifications</h4>
+              <Button variant="ghost" className="w-full justify-start" onClick={() => setShowNotifications(true)}>
+                <Bell className="h-4 w-4 mr-2" />
+                Push Notifications
               </Button>
             </div>
 
@@ -117,7 +133,10 @@ const SettingsDialog = ({
 
       <AIContextDialog open={showAIContext} onOpenChange={setShowAIContext} />
 
+      <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
+
       {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
     </>;
 };
+
 export default SettingsDialog;
