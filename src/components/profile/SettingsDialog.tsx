@@ -44,13 +44,13 @@ const SettingsDialog = ({
 
   return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-2">
+        <DialogContent className="max-w-md h-[85vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle>Settings</DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 px-6 pb-6">
-            <div className="space-y-4">
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-6 pb-6 space-y-4">
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>
