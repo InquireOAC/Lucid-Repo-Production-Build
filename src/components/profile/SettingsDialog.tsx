@@ -44,12 +44,12 @@ const SettingsDialog = ({
 
   return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-          <DialogHeader>
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-2">
             <DialogTitle>Settings</DialogTitle>
           </DialogHeader>
           
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 px-6 pb-6">
             <div className="space-y-4">
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
@@ -109,7 +109,7 @@ const SettingsDialog = ({
 
               <Separator />
 
-              <div className="space-y-2">
+              <div className="space-y-2 pb-4">
                 <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
                 <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700" onClick={() => {
                 onSignOut();
