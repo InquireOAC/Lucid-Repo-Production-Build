@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, MessageCircle } from "lucide-react";
@@ -29,7 +28,7 @@ const MainLayout = () => {
         {/* Removed pb-safe-bottom so the tab bar always reaches the very bottom */}
         <div className="flex justify-around items-center h-16 pb-0">
           <NavTab to="/" icon={<Book />} label="Journal" />
-          <NavTab to="/lucidrepo" icon={<Moon />} label="Lucid Repo" />
+          <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/chat" icon={<MessageCircle />} label="AI Chat" />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
