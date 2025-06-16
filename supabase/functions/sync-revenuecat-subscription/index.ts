@@ -80,30 +80,74 @@ serve(async (req) => {
       const purchaseDate = new Date(entitlement.purchaseDate);
       const expirationDate = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
       
-      // Upsert subscription record
-      const { error: upsertError } = await supabase
-        .from('stripe_subscriptions')
-        .upsert({
-          user_id: user.id,
-          customer_id: `revenuecat_${user.id}`,
-          subscription_id: subscriptionId,
-          price_id: priceId,
-          status: 'active',
-          current_period_start: Math.floor(purchaseDate.getTime() / 1000),
-          current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60), // Default to 30 days if no expiration
-          cancel_at_period_end: false,
-          dream_analyses_used: 0,
-          image_generations_used: 0,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
+      // First, check if the customer record exists, if not create one
+      const { data: existingCustomer } = await supabase
+        .from('stripe_customers')
+        .select('customer_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
 
-      if (upsertError) {
-        console.error('Error upserting subscription:', upsertError);
+      let customerId;
+      if (existingCustomer?.customer_id) {
+        customerId = existingCustomer.customer_id;
+      } else {
+        // Create customer record
+        customerId = `revenuecat_${user.id}`;
+        const { error: customerError } = await supabase
+          .from('stripe_customers')
+          .insert({
+            user_id: user.id,
+            customer_id: customerId,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+
+        if (customerError) {
+          console.error('Error creating customer:', customerError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create customer record' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+
+      // Cancel any existing active subscriptions for this user
+      const { error: cancelError } = await supabase
+        .from('stripe_subscriptions')
+        .update({ 
+          status: 'canceled',
+          updated_at: new Date().toISOString()
+        })
+        .eq('customer_id', customerId)
+        .eq('status', 'active');
+
+      if (cancelError) {
+        console.error('Error canceling existing subscriptions:', cancelError);
+      }
+
+      // Insert new subscription record
+      const subscriptionData = {
+        customer_id: customerId,
+        subscription_id: subscriptionId,
+        price_id: priceId,
+        status: 'active' as const,
+        current_period_start: Math.floor(purchaseDate.getTime() / 1000),
+        current_period_end: expirationDate ? Math.floor(expirationDate.getTime() / 1000) : Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60),
+        cancel_at_period_end: false,
+        dream_analyses_used: 0,
+        image_generations_used: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const { error: insertError } = await supabase
+        .from('stripe_subscriptions')
+        .insert(subscriptionData);
+
+      if (insertError) {
+        console.error('Error inserting subscription:', insertError);
         return new Response(
-          JSON.stringify({ error: 'Failed to sync subscription' }),
+          JSON.stringify({ error: 'Failed to create subscription record' }),
           { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -127,7 +171,6 @@ serve(async (req) => {
           status: 'canceled',
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', user.id)
         .like('subscription_id', 'ios_%');
 
       if (updateError) {

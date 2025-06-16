@@ -3,8 +3,8 @@ import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
 import SettingsDialog from "./SettingsDialog";
 import MessagesDialog from "./MessagesDialog";
-import SubscriptionDialog from "./SubscriptionDialog";
-import EnhancedNotificationsDialog from "./EnhancedNotificationsDialog";
+import { SubscriptionDialog } from "./SubscriptionDialog";
+import NotificationsDialog from "./NotificationsDialog";
 
 interface ProfileDialogsProps {
   isEditProfileOpen: boolean;
@@ -124,9 +124,8 @@ const ProfileDialogs = ({
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}
       onOpenChange={setIsSubscriptionOpen}
-      subscription={subscription}
     />
-    <EnhancedNotificationsDialog
+    <NotificationsDialog
       isOpen={isNotificationsOpen}
       onOpenChange={() => {}}
     />

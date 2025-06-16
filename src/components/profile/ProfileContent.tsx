@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +9,7 @@ import ProfileStateGuard from "./ProfileStateGuard";
 import { computeProfileTargets } from "./computeProfileTargets";
 import { useProfileDialogStates } from "./ProfileDialogStates";
 import { useSubscription } from "@/hooks/useSubscription";
-import SubscriptionDialog from "./SubscriptionDialog";
+import { SubscriptionDialog } from "./SubscriptionDialog";
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -208,7 +207,6 @@ const ProfileContent = () => {
       <SubscriptionDialog
         isOpen={subscriptionDialogOpen}
         onOpenChange={handleSubscriptionDialogOpen}
-        subscription={currentSubscription}
       />
     </div>
   );

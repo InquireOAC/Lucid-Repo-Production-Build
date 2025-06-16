@@ -11,6 +11,7 @@ interface UseImageGenerationProps {
   dreamId?: string;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
   disabled?: boolean;
+  onSubscriptionRefresh?: () => void;
 }
 
 export const useImageGeneration = ({
@@ -18,13 +19,14 @@ export const useImageGeneration = ({
   dreamId = "preview",
   onImageGenerated,
   disabled = false,
+  onSubscriptionRefresh,
 }: UseImageGenerationProps) => {
   const { user } = useAuth();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature } = useFeatureUsage();
+  const { hasUsedFeature, markFeatureAsUsed, canUseFeature, recordFeatureUsage } = useFeatureUsage();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const isAppCreator = user?.email === "inqu********@gmail.com";
+  const isAppCreator = user?.email === "inquireoac@gmail.com";
 
   const generateImage = useCallback(async (
     setImagePrompt: (prompt: string) => void,
@@ -72,7 +74,22 @@ export const useImageGeneration = ({
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
 
-      // 4. Try to upload image to Supabase in background (non-blocking)
+      // 4. Record feature usage and refresh subscription data
+      if (!isAppCreator) {
+        if (!hasUsedFeature("image")) {
+          markFeatureAsUsed("image");
+        } else {
+          // Record usage in database for subscription users
+          await recordFeatureUsage("image");
+        }
+        
+        // Refresh subscription data to update credits display
+        if (onSubscriptionRefresh) {
+          onSubscriptionRefresh();
+        }
+      }
+
+      // 5. Try to upload image to Supabase in background (non-blocking)
       console.log("Step 3: Attempting background upload to Supabase...");
       
       try {
@@ -96,9 +113,6 @@ export const useImageGeneration = ({
         console.warn("Background upload failed:", uploadError);
         toast.success("Image generated! Note: Could not save permanently to cloud.");
       }
-
-      // Mark feature as used only after successful generation
-      if (!isAppCreator && !hasUsedFeature("image")) markFeatureAsUsed("image");
       
     } catch (error: any) {
       console.error("=== IMAGE GENERATION FAILED ===");
@@ -116,7 +130,9 @@ export const useImageGeneration = ({
     canUseFeature,
     markFeatureAsUsed,
     hasUsedFeature,
+    recordFeatureUsage,
     onImageGenerated,
+    onSubscriptionRefresh,
     getImagePrompt,
     generateDreamImageFromAI,
   ]);
