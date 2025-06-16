@@ -6,34 +6,19 @@ import { Crown, CreditCard, Sparkles, ImageIcon } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
 import NativeSubscriptionManager from "./NativeSubscriptionManager";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  subscription?: {
-    plan: string;
-    status: string;
-    currentPeriodEnd: string;
-    cancelAtPeriodEnd?: boolean;
-    analysisCredits: {
-      used: number;
-      total: number;
-      remaining: number;
-    };
-    imageCredits: {
-      used: number;
-      total: number;
-      remaining: number;
-    };
-  };
 }
 
 const SubscriptionDialog = ({
   isOpen,
-  onOpenChange,
-  subscription
+  onOpenChange
 }: SubscriptionDialogProps) => {
   const isNative = Capacitor.isNativePlatform();
+  const { subscription } = useSubscriptionContext();
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
