@@ -2,7 +2,6 @@
 import { useReliableImageUpload } from "./useReliableImageUpload";
 import { useImageGeneration } from "./useImageGeneration";
 import { useImageState } from "./useImageState";
-import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 
 interface UseDreamImageGenerationProps {
   dreamContent: string;
@@ -22,7 +21,6 @@ export const useDreamImageGeneration = ({
   dreamId = "preview",
 }: UseDreamImageGenerationProps) => {
   const { uploadImage } = useReliableImageUpload();
-  const { refreshSubscription } = useSubscriptionContext();
   
   const {
     imagePrompt,
@@ -48,7 +46,6 @@ export const useDreamImageGeneration = ({
     dreamId,
     onImageGenerated,
     disabled,
-    onSubscriptionRefresh: refreshSubscription,
   });
 
   const generateImage = () => {

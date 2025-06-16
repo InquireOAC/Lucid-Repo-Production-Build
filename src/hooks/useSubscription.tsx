@@ -151,19 +151,11 @@ export function useSubscription(user: any) {
     }
   }, [user, fetchSubscription]);
 
-  // Refresh function that can be called externally
-  const refreshSubscription = useCallback(() => {
-    if (user) {
-      fetchSubscription();
-    }
-  }, [user, fetchSubscription]);
-
   return {
     subscription,
     isLoading,
     isError,
     errorMessage,
-    fetchSubscription,
-    refreshSubscription
+    fetchSubscription
   };
 }

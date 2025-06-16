@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -42,7 +41,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     handleUpdateProfile, handleUpdateSocialLinks
   } = useProfileEditing(user);
   const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdentifier);
-  const { subscription, fetchSubscription, refreshSubscription } = useSubscription(user);
+  const { subscription, fetchSubscription } = useSubscription(user);
   const { conversations, fetchConversations, handleStartConversation } = useConversations(user);
   
   useEffect(() => {
@@ -158,7 +157,6 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     checkIfFollowing,
     handleFollow,
     fetchSubscription,
-    refreshSubscription,
     handleUpdateProfile,
     handleUpdateSocialLinks,
     handleStartConversation,

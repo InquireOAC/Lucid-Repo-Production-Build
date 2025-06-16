@@ -20,17 +20,55 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
       return true;
     }
     
-    // First check for active subscription by customer_id (covers all subscription types)
-    const { data: customerData } = await supabase
+    // Check for active subscription by user_id first (covers RevenueCat/iOS purchases)
+    const { data: directSubscription, error: directError } = await supabase
+      .from('stripe_subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (directError) {
+      console.error('Error checking direct subscription:', directError);
+    }
+    
+    if (directSubscription) {
+      console.log('Found direct subscription for user:', directSubscription);
+      return checkCreditsForSubscription(directSubscription, featureType);
+    }
+    
+    // Fallback: Get the customer ID associated with this user (for Stripe subscriptions)
+    const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
       .eq('user_id', user.id)
       .maybeSingle();
     
-    if (customerData?.customer_id) {
-      console.log('Found customer ID:', customerData.customer_id);
+    if (customerError) {
+      console.error('Customer lookup error:', customerError);
+      return false;
+    }
+    
+    if (!customerData?.customer_id) {
+      console.log('No customer found for user');
+      return false;
+    }
+    
+    console.log('Found customer ID:', customerData.customer_id);
+    
+    // Check if the user has enough credits using the RPC function
+    const { data: hasAccess, error: accessError } = await supabase.rpc(
+      'check_subscription_credits',
+      { 
+        customer_id: customerData.customer_id,
+        credit_type: featureType
+      }
+    );
+    
+    if (accessError) {
+      console.error('Credit check RPC error:', accessError);
       
-      // Check for active subscription
+      // Fallback: Check subscription directly if RPC fails
       const { data: subscription } = await supabase
         .from('stripe_subscriptions')
         .select('*')
@@ -39,13 +77,15 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
         .maybeSingle();
       
       if (subscription) {
-        console.log('Found active subscription:', subscription);
+        console.log('Using fallback subscription check');
         return checkCreditsForSubscription(subscription, featureType);
       }
+      
+      return false;
     }
     
-    console.log('No active subscription found for user');
-    return false;
+    console.log(`Access for ${featureType}: ${hasAccess}`);
+    return !!hasAccess;
   } catch (error) {
     console.error('Error checking feature access:', error);
     return false;
@@ -129,15 +169,28 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       return true;
     }
     
-    // Get customer record
-    const { data: customerData } = await supabase
+    // Check for direct subscription first (RevenueCat/iOS)
+    const { data: directSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('customer_id')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (directSubscription?.customer_id) {
+      console.log('Found direct subscription, incrementing usage');
+      return incrementUsageForCustomer(directSubscription.customer_id, featureType);
+    }
+    
+    // Fallback: Get the customer ID associated with this user (Stripe)
+    const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
       .eq('user_id', user.id)
       .maybeSingle();
     
-    if (!customerData?.customer_id) {
-      console.error('No customer found for user');
+    if (customerError || !customerData?.customer_id) {
+      console.error('No customer or subscription found for user:', customerError);
       return false;
     }
     
@@ -209,24 +262,41 @@ export const hasActiveSubscription = async (): Promise<boolean> => {
       return true;
     }
     
-    // Check for customer record and active subscription
-    const { data: customerData } = await supabase
+    // Check for active subscription by user_id first (covers RevenueCat/iOS purchases)
+    const { data: directSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (directSubscription) {
+      console.log('Found active direct subscription');
+      return true;
+    }
+    
+    // Fallback to customer-based lookup for Stripe subscriptions
+    const { data: customerData, error: customerError } = await supabase
       .from('stripe_customers')
       .select('customer_id')
       .eq('user_id', user.id)
       .maybeSingle();
     
-    if (!customerData?.customer_id) {
+    if (customerError || !customerData?.customer_id) {
       return false;
     }
     
     // Check if the user has an active subscription
-    const { data: subscriptionData } = await supabase
+    const { data: subscriptionData, error: subscriptionError } = await supabase
       .from('stripe_subscriptions')
       .select('status')
       .eq('customer_id', customerData.customer_id)
       .eq('status', 'active')
       .maybeSingle();
+    
+    if (subscriptionError) {
+      return false;
+    }
     
     return !!subscriptionData;
   } catch (error) {
