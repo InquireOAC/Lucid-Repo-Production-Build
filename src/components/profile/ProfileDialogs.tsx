@@ -1,4 +1,3 @@
-
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -125,7 +124,6 @@ const ProfileDialogs = ({
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}
       onOpenChange={setIsSubscriptionOpen}
-      subscription={subscription}
     />
     <NotificationsDialog
       isOpen={isNotificationsOpen}
