@@ -56,6 +56,7 @@ interface ProfileMainContentProps {
   setShowFollowing: (show: boolean) => void;
   selectedConversationUser?: any;
   setSelectedConversationUser?: (user: any) => void;
+  fetchConversations?: () => void;
 }
 
 const ProfileMainContent = ({
@@ -109,6 +110,7 @@ const ProfileMainContent = ({
   setShowFollowing,
   selectedConversationUser,
   setSelectedConversationUser,
+  fetchConversations,
 }: ProfileMainContentProps) => {
   return (
     <>
@@ -181,6 +183,7 @@ const ProfileMainContent = ({
         setShowFollowing={setShowFollowing}
         selectedConversationUser={selectedConversationUser}
         setSelectedConversationUser={setSelectedConversationUser}
+        fetchConversations={fetchConversations}
       />
 
       {/* Followers Modal */}

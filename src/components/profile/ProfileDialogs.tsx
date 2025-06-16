@@ -1,3 +1,4 @@
+
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -44,6 +45,7 @@ interface ProfileDialogsProps {
   setShowFollowing: (show: boolean) => void;
   selectedConversationUser?: any;
   setSelectedConversationUser?: (user: any) => void;
+  fetchConversations?: () => void;
 }
 
 const ProfileDialogs = ({
@@ -83,7 +85,8 @@ const ProfileDialogs = ({
   showFollowing,
   setShowFollowing,
   selectedConversationUser,
-  setSelectedConversationUser
+  setSelectedConversationUser,
+  fetchConversations
 }: ProfileDialogsProps) => (
   <>
     <EditProfileDialog
@@ -125,7 +128,7 @@ const ProfileDialogs = ({
       conversations={conversations}
       selectedConversationUser={selectedConversationUser}
       setSelectedConversationUser={setSelectedConversationUser}
-      fetchConversations={() => {}}
+      fetchConversations={fetchConversations}
     />
     <SubscriptionDialog
       isOpen={isSubscriptionOpen}

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +11,7 @@ import { useProfileDialogStates } from "./ProfileDialogStates";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import { useDirectConversation } from "@/hooks/useDirectConversation";
+import { useConversations } from "@/hooks/useConversations";
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -75,6 +75,9 @@ const ProfileContent = () => {
     handleStartConversation,
     handleSignOut,
   } = useProfileData(user, profile, effectiveIdentifier);
+
+  // Get conversations fetch function from useConversations hook
+  const { fetchConversations } = useConversations(user);
 
   // Get the UUID of the viewed profile for conversation handling
   const viewedProfileUuid = extractProfileUuid(viewedProfile);
@@ -239,6 +242,7 @@ const ProfileContent = () => {
           setShowFollowing={setShowFollowing}
           selectedConversationUser={selectedConversationUser}
           setSelectedConversationUser={setSelectedConversationUser}
+          fetchConversations={fetchConversations}
         />
       </ProfileStateGuard>
       <SubscriptionDialog
