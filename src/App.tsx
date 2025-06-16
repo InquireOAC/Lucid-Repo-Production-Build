@@ -1,7 +1,9 @@
+
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from "@/components/theme-provider"
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import Index from './pages/Index';
 import Journal from './pages/Journal';
@@ -12,13 +14,13 @@ import Chat from './pages/Chat';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
-import { QueryClient } from 'react-query';
-
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+
+const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClient>
+    <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SubscriptionProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -40,7 +42,7 @@ function App() {
           </ThemeProvider>
         </SubscriptionProvider>
       </AuthProvider>
-    </QueryClient>
+    </QueryClientProvider>
   );
 }
 
