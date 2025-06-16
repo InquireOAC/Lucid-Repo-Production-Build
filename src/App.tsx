@@ -16,6 +16,8 @@ import Profile from "./pages/Profile";
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
 import { initializeNotifications } from "./utils/notificationUtils";
+import { initializeEnhancedNotifications } from "./utils/enhancedNotificationUtils";
+import { pushNotificationService } from "./services/pushNotificationService";
 import OnboardingFlow from "./components/onboarding/OnboardingFlow";
 import { useOnboarding } from "./hooks/useOnboarding";
 
@@ -25,10 +27,10 @@ const AppContent = () => {
   const { hasSeenOnboarding, isLoading, refreshOnboardingStatus } = useOnboarding();
 
   useEffect(() => {
-    const setupStatusBar = async () => {
+    const setupApp = async () => {
+      // Setup status bar
       if (Capacitor.isPluginAvailable('StatusBar')) {
         try {
-          // Set status bar to be opaque with dark text
           await StatusBar.setOverlaysWebView({ overlay: false });
           await StatusBar.setStyle({ style: Style.Light });
           await StatusBar.setBackgroundColor({ color: '#1E1A2B' });
@@ -36,15 +38,22 @@ const AppContent = () => {
           console.error('Error configuring status bar:', error);
         }
       }
+      
+      // Initialize both notification systems
+      try {
+        await initializeNotifications();
+        await initializeEnhancedNotifications();
+        
+        // Initialize push notifications service (will be connected to user when they log in)
+        await pushNotificationService.initialize();
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
     };
     
-    setupStatusBar();
-    
-    // Initialize notifications
-    initializeNotifications().catch(console.error);
+    setupApp();
   }, []);
 
-  // Show loading state while checking onboarding status
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#1E1A2B] flex items-center justify-center">
@@ -53,12 +62,10 @@ const AppContent = () => {
     );
   }
 
-  // Show onboarding if user hasn't seen it
   if (!hasSeenOnboarding) {
     return <OnboardingFlow onComplete={refreshOnboardingStatus} />;
   }
 
-  // Show main app
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />

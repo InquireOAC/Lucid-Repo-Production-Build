@@ -247,6 +247,36 @@ export type Database = {
         }
         Relationships: []
       }
+      device_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          platform: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          platform?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_chat_messages: {
         Row: {
           content: string
@@ -654,6 +684,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notification_preferences: {
+        Row: {
+          comment_notifications_enabled: boolean
+          created_at: string
+          daily_reminder_enabled: boolean
+          daily_reminder_time: string
+          id: string
+          message_notifications_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_notifications_enabled?: boolean
+          created_at?: string
+          daily_reminder_enabled?: boolean
+          daily_reminder_time?: string
+          id?: string
+          message_notifications_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_notifications_enabled?: boolean
+          created_at?: string
+          daily_reminder_enabled?: boolean
+          daily_reminder_time?: string
+          id?: string
+          message_notifications_enabled?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
