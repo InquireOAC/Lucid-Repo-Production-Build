@@ -1,3 +1,4 @@
+
 import React from "react";
 import EditProfileDialog from "./EditProfileDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
@@ -18,6 +19,7 @@ interface ProfileDialogsProps {
   isSubscriptionOpen: boolean;
   setIsSubscriptionOpen: (v: boolean) => void;
   isNotificationsOpen: boolean;
+  setIsNotificationsOpen: (v: boolean) => void;
   displayName: string;
   setDisplayName: (v: string) => void;
   username: string;
@@ -56,6 +58,7 @@ const ProfileDialogs = ({
   isSubscriptionOpen,
   setIsSubscriptionOpen,
   isNotificationsOpen,
+  setIsNotificationsOpen,
   displayName,
   setDisplayName,
   username,
@@ -110,6 +113,7 @@ const ProfileDialogs = ({
       onSignOut={handleSignOut}
       onNotificationsClick={() => {
         setIsSettingsOpen(false);
+        setIsNotificationsOpen(true);
       }}
       socialLinks={socialLinks}
       setSocialLinks={setSocialLinks}
@@ -128,7 +132,7 @@ const ProfileDialogs = ({
     />
     <EnhancedNotificationsDialog
       isOpen={isNotificationsOpen}
-      onOpenChange={() => {}}
+      onOpenChange={setIsNotificationsOpen}
     />
   </>
 );

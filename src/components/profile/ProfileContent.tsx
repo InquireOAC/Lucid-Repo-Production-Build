@@ -179,6 +179,7 @@ const ProfileContent = () => {
           isMessagesOpen={isMessagesOpen}
           isSubscriptionOpen={isSubscriptionOpen}
           isNotificationsOpen={isNotificationsOpen}
+          setIsNotificationsOpen={setIsNotificationsOpen}
           displayName={displayName}
           setDisplayName={setDisplayName}
           username={currentUsername}
