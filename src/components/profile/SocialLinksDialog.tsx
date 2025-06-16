@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Twitter, Instagram, Facebook, Globe } from "lucide-react";
+import { X, Instagram, Facebook, Globe } from "lucide-react";
 
 interface SocialLinks {
   twitter: string;
@@ -37,8 +37,8 @@ const SocialLinksDialog = ({
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label htmlFor="twitter" className="flex items-center gap-2">
-              <Twitter size={16} className="text-blue-400" />
-              Twitter Username
+              <X size={16} className="text-white" />
+              X (Twitter) Username
             </Label>
             <Input
               id="twitter"

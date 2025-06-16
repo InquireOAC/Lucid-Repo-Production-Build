@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Twitter, Instagram, Facebook, Globe, Edit } from "lucide-react";
+import { X, Instagram, Facebook, Globe, Edit } from "lucide-react";
 
 interface ProfileSocialLinksProps {
   socialLinks?: any;
@@ -33,9 +33,9 @@ const ProfileSocialLinks = ({
           href={`https://twitter.com/${socialLinks.twitter}`} 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="text-blue-400 hover:text-blue-500 transition-colors"
+          className="text-white hover:text-gray-300 transition-colors"
         >
-          <Twitter size={20} />
+          <X size={20} />
         </a>
       )}
       {socialLinks?.instagram && (
