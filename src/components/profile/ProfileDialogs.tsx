@@ -42,6 +42,8 @@ interface ProfileDialogsProps {
   setShowFollowers: (show: boolean) => void;
   showFollowing: boolean;
   setShowFollowing: (show: boolean) => void;
+  selectedConversationUser?: any;
+  setSelectedConversationUser?: (user: any) => void;
 }
 
 const ProfileDialogs = ({
@@ -79,7 +81,9 @@ const ProfileDialogs = ({
   showFollowers,
   setShowFollowers,
   showFollowing,
-  setShowFollowing
+  setShowFollowing,
+  selectedConversationUser,
+  setSelectedConversationUser
 }: ProfileDialogsProps) => (
   <>
     <EditProfileDialog
@@ -119,6 +123,8 @@ const ProfileDialogs = ({
       isOpen={isMessagesOpen}
       onOpenChange={setIsMessagesOpen}
       conversations={conversations}
+      selectedConversationUser={selectedConversationUser}
+      setSelectedConversationUser={setSelectedConversationUser}
       fetchConversations={() => {}}
     />
     <SubscriptionDialog

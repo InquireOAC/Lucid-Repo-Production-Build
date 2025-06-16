@@ -1,3 +1,4 @@
+
 import React from "react";
 import ProfileHeader from "./ProfileHeader";
 import ProfileTabs from "./ProfileTabs";
@@ -53,6 +54,8 @@ interface ProfileMainContentProps {
   setShowFollowers: (show: boolean) => void;
   showFollowing: boolean;
   setShowFollowing: (show: boolean) => void;
+  selectedConversationUser?: any;
+  setSelectedConversationUser?: (user: any) => void;
 }
 
 const ProfileMainContent = ({
@@ -104,6 +107,8 @@ const ProfileMainContent = ({
   setShowFollowers,
   showFollowing,
   setShowFollowing,
+  selectedConversationUser,
+  setSelectedConversationUser,
 }: ProfileMainContentProps) => {
   return (
     <>
@@ -115,7 +120,7 @@ const ProfileMainContent = ({
         followingCount={followingCount}
         isFollowing={isFollowing}
         onEditProfileClick={() => setIsEditProfileOpen(true)}
-        onMessageClick={() => setIsMessagesOpen(true)}
+        onMessageClick={handleStartConversation}
         onSettingsClick={() => setIsSettingsOpen(true)}
         onSubscriptionClick={() => setIsSubscriptionOpen(true)}
         onFollowClick={handleFollow}
@@ -174,6 +179,8 @@ const ProfileMainContent = ({
         setShowFollowers={setShowFollowers}
         showFollowing={showFollowing}
         setShowFollowing={setShowFollowing}
+        selectedConversationUser={selectedConversationUser}
+        setSelectedConversationUser={setSelectedConversationUser}
       />
 
       {/* Followers Modal */}

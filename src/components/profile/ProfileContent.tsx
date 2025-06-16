@@ -11,6 +11,7 @@ import { computeProfileTargets } from "./computeProfileTargets";
 import { useProfileDialogStates } from "./ProfileDialogStates";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionDialog } from "./SubscriptionDialog";
+import { useDirectConversation } from "@/hooks/useDirectConversation";
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -75,6 +76,32 @@ const ProfileContent = () => {
     handleSignOut,
   } = useProfileData(user, profile, effectiveIdentifier);
 
+  // Get the UUID of the viewed profile for conversation handling
+  const viewedProfileUuid = extractProfileUuid(viewedProfile);
+  
+  // Direct conversation hook for messaging other users
+  const { openChatWithUser, loading: conversationLoading } = useDirectConversation(
+    user?.id, 
+    viewedProfileUuid
+  );
+
+  // State for selected conversation user when opening messages dialog
+  const [selectedConversationUser, setSelectedConversationUser] = useState<any>(null);
+
+  // Enhanced message handler for starting conversations with other users
+  const handleMessageClick = () => {
+    if (isOwnProfile) {
+      // If it's own profile, just open the messages dialog to see all conversations
+      setIsMessagesOpen(true);
+    } else if (viewedProfile) {
+      // If viewing another user's profile, start a conversation with them
+      openChatWithUser((user) => {
+        setSelectedConversationUser(user);
+        setIsMessagesOpen(true);
+      });
+    }
+  };
+
   // Ensure switching profiles in the UI triggers correct fetch
   useEffect(() => {
     if (!user) {
@@ -118,9 +145,6 @@ const ProfileContent = () => {
   const { publicDreams, likedDreams, refreshDreams } = useProfileDreams(user, profileIdForHooks);
   const { followers, following, fetchFollowers, fetchFollowing, followersCount: followersCountHook, followingCount: followingCountHook } = useProfileFollowers(profileIdForHooks);
 
-  // Correct: Get "uuid" for the profile currently displayed, for follow logic
-  const viewedProfileUuid = extractProfileUuid(viewedProfile);
-
   // Refresh dreams when switching to valid hooks
   useEffect(() => {
     if (profileIdForHooks) {
@@ -136,6 +160,14 @@ const ProfileContent = () => {
     setSubscriptionDialogOpen(open);
     if (open && user) {
       refreshSubscription();
+    }
+  };
+
+  // Reset selected conversation user when messages dialog closes
+  const handleMessagesDialogChange = (open: boolean) => {
+    setIsMessagesOpen(open);
+    if (!open) {
+      setSelectedConversationUser(null);
     }
   };
 
@@ -158,12 +190,12 @@ const ProfileContent = () => {
           followingCount={followingCountHook}
           isFollowing={isFollowing}
           setIsEditProfileOpen={setIsEditProfileOpen}
-          setIsMessagesOpen={setIsMessagesOpen}
+          setIsMessagesOpen={handleMessagesDialogChange}
           setIsSettingsOpen={setIsSettingsOpen}
           setIsSocialLinksOpen={setIsSocialLinksOpen}
           setIsSubscriptionOpen={setIsSubscriptionOpen}
           handleFollow={handleFollow}
-          handleStartConversation={handleStartConversation}
+          handleStartConversation={handleMessageClick}
           onFollowersClick={() => {
             setShowFollowers(true);
             fetchFollowers();
@@ -205,6 +237,8 @@ const ProfileContent = () => {
           setShowFollowers={setShowFollowers}
           showFollowing={showFollowing}
           setShowFollowing={setShowFollowing}
+          selectedConversationUser={selectedConversationUser}
+          setSelectedConversationUser={setSelectedConversationUser}
         />
       </ProfileStateGuard>
       <SubscriptionDialog
