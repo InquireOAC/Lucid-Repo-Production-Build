@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,7 +24,9 @@ const ProfileContent = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const effectiveIdentifier = username || userId;
+  
+  // Use userId or username, whichever is provided in the URL
+  const effectiveIdentifier = userId || username;
 
   // State for loading profile
   const [loadingProfile, setLoadingProfile] = useState(false);
