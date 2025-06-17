@@ -29,25 +29,41 @@ export function useLucidRepoDreamState(user: any, refreshLikedDreams: () => void
   useEffect(() => {
     if (dreams.length > 0) {
       setDreamsState(prevState => {
+        // Normalize the dreams to ensure consistent like count fields
+        const normalizedDreams = dreams.map(dream => ({
+          ...dream,
+          // Ensure both like_count and likeCount are set and consistent
+          like_count: dream.like_count || dream.likeCount || 0,
+          likeCount: dream.like_count || dream.likeCount || 0,
+          // Initialize liked state as false if not set (will be updated by useLikes)
+          liked: dream.liked || false
+        }));
+
         // If we have existing state with local updates, preserve those
-        if (prevState.length === dreams.length) {
+        if (prevState.length === normalizedDreams.length) {
           return prevState.map(prevDream => {
-            const newDream = dreams.find(d => d.id === prevDream.id);
+            const newDream = normalizedDreams.find(d => d.id === prevDream.id);
             if (newDream) {
               // Keep the higher like count (in case we've updated them locally)
+              const maxLikeCount = Math.max(
+                prevDream.like_count || 0, 
+                prevDream.likeCount || 0,
+                newDream.like_count || 0, 
+                newDream.likeCount || 0
+              );
               return {
                 ...newDream,
-                like_count: Math.max(prevDream.like_count || 0, newDream.like_count || 0),
-                likeCount: Math.max(prevDream.likeCount || 0, newDream.likeCount || 0),
-                // Also preserve the liked state if it was updated locally
+                like_count: maxLikeCount,
+                likeCount: maxLikeCount,
+                // Preserve the liked state if it was updated locally
                 liked: prevDream.liked !== undefined ? prevDream.liked : newDream.liked
               };
             }
             return prevDream;
           });
         }
-        // If dreams length changed, use new data
-        return dreams;
+        // If dreams length changed, use normalized data
+        return normalizedDreams;
       });
     } else if (dreams.length === 0) {
       setDreamsState([]);

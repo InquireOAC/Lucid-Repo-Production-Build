@@ -44,6 +44,7 @@ const LucidRepoContainer = () => {
     handleCloseDream,
     handleNavigateToProfile,
     handleDreamLike,
+    handleDreamLikeFromCard,
     handleDreamUpdate
   } = useLucidRepoDreamActions(
     user,
@@ -117,7 +118,7 @@ const LucidRepoContainer = () => {
         isLoading={isLoading || tagsLoading} 
         filteredDreams={filteredDreams} 
         dreamTags={filteredDreamTags} 
-        onLike={() => {}} // Pass empty function since likes should only work from modal
+        onLike={handleDreamLikeFromCard} 
         onOpenDream={handleOpenDream} 
         onUserClick={handleNavigateToProfile} 
         onTagClick={handleTagClick} 

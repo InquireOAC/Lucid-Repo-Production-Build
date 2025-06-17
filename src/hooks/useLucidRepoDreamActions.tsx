@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +38,7 @@ export function useLucidRepoDreamActions(
       setAuthDialogOpen(true);
       return;
     }
+    
     const success = await handleLike(dreamId);
     if (success) {
       // Find the updated dream with the new like count
@@ -44,10 +46,25 @@ export function useLucidRepoDreamActions(
       if (updatedDream) {
         // Update the selected dream if it's the one being liked
         if (selectedDream && selectedDream.id === dreamId) {
-          setSelectedDream({ ...updatedDream });
+          setSelectedDream({ 
+            ...updatedDream,
+            // Ensure both like count fields are consistent
+            like_count: updatedDream.like_count,
+            likeCount: updatedDream.like_count
+          });
         }
       }
     }
+  };
+
+  // Handler for liking dreams from the card list (not modal)
+  const handleDreamLikeFromCard = async (dreamId: string) => {
+    if (!user) {
+      setAuthDialogOpen(true);
+      return;
+    }
+    
+    await handleLike(dreamId);
   };
 
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
@@ -79,6 +96,7 @@ export function useLucidRepoDreamActions(
     handleCloseDream,
     handleNavigateToProfile,
     handleDreamLike,
+    handleDreamLikeFromCard,
     handleDreamUpdate
   };
 }
