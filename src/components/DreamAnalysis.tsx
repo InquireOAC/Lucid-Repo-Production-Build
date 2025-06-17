@@ -26,7 +26,7 @@ const DreamAnalysis = ({
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
   const { subscription, isLoading: subscriptionLoading } = useSubscriptionContext();
-  const { hasUsedFeature, canUseFeature, recordFeatureUsage } = useFeatureUsage();
+  const { hasUsedFeature, recordFeatureUsage } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
@@ -38,6 +38,7 @@ const DreamAnalysis = ({
   const hasActiveSubscription = subscription?.status === 'active';
   
   // Determine if feature is enabled based on subscription status
+  // User can use feature if: they're app creator, haven't used free trial yet, or have active subscription
   const isFeatureEnabled = isAppCreator || !hasUsedFreeTrial || hasActiveSubscription;
 
   console.log('DreamAnalysis - Feature check:', {
@@ -58,16 +59,15 @@ const DreamAnalysis = ({
       return;
     }
 
+    // Check if user can use the feature before proceeding
+    if (!isFeatureEnabled) {
+      console.log('User cannot use analysis feature - showing subscription prompt');
+      showSubscriptionPrompt('analysis');
+      return;
+    }
+
     try {
       console.log('Starting dream analysis generation...');
-      
-      // Check if user can use the feature (includes subscription and credit check)
-      const canUse = await canUseFeature('analysis');
-      
-      if (!canUse) {
-        console.log('User cannot use analysis feature');
-        return;
-      }
       
       setIsGenerating(true);
       setShowInfo(false);
@@ -92,7 +92,7 @@ const DreamAnalysis = ({
         setAnalysis(data.analysis);
         onAnalysisComplete(data.analysis);
         
-        // Record the feature usage (this handles both free trial and subscription usage)
+        // Record the feature usage only after successful generation
         const usageRecorded = await recordFeatureUsage('analysis');
         console.log('Analysis usage recorded:', usageRecorded);
         
