@@ -16,6 +16,7 @@ const LucidRepoContainer = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // For profile liked dreams refresh (noop since this is repo)
   function refreshLikedDreams() {
@@ -69,20 +70,20 @@ const LucidRepoContainer = () => {
   const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
 
   useEffect(() => {
-    // Initialize with "following" tab if user is logged in, otherwise "recent"
-    // But don't override if user has already selected a tab
-    if (user && activeTab === "recent") {
-      setActiveTab("following");
-    } else if (!user && activeTab === "following") {
-      setActiveTab("recent");
+    // Only run initialization logic once
+    if (!hasInitialized) {
+      // Initialize with "following" tab if user is logged in, otherwise "recent"
+      if (user && activeTab === "recent") {
+        setActiveTab("following");
+      }
+      setHasInitialized(true);
     }
     
     // Fetch data for any tab that needs public dreams
     if (activeTab === "recent" || activeTab === "popular") {
       fetchPublicDreams();
     }
-    // Only fetch on initial load - no automatic refresh interval
-  }, [user, activeTab]);
+  }, [user, activeTab, hasInitialized]);
 
   // Refresh data when tab changes (background refresh)
   const handleTabChange = (newTab: string) => {
