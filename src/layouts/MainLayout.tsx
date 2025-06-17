@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, MessageCircle } from "lucide-react";
@@ -45,7 +46,11 @@ interface NavTabProps {
 
 const NavTab = ({ to, icon, label }: NavTabProps) => {
   const location = useLocation();
-  const isActive = location.pathname === to;
+  
+  // Special handling for journal route - both "/" and "/journal" should be active
+  const isActive = to === "/" 
+    ? (location.pathname === "/" || location.pathname === "/journal")
+    : location.pathname === to;
   
   return (
     <NavLink 
