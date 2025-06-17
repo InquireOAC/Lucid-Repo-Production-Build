@@ -111,10 +111,10 @@ const DreamDetailContent = ({
             {isLikeAnimating && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <Heart 
-                  className="h-16 w-16 text-red-500 fill-red-500"
+                  className="h-16 w-16 text-red-500 fill-red-500 animate-pulse"
                   style={{ 
-                    animation: 'heartPulse 0.6s ease-out',
-                    transform: 'scale(1.5)'
+                    transform: 'scale(1.5)',
+                    animation: 'heartPulse 0.6s ease-out'
                   }}
                 />
               </div>
@@ -131,7 +131,7 @@ const DreamDetailContent = ({
         </div>
       )}
 
-      <style jsx>{`
+      <style>{`
         @keyframes heartPulse {
           0% {
             transform: scale(1);
