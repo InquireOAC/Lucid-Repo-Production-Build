@@ -202,17 +202,16 @@ const DreamCard = ({
             <span>{dream.likeCount || dream.like_count || 0}</span>
           </div>
           
-          {onComment && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
-              onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
-            >
-              <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
-              {dream.commentCount || dream.comment_count || 0}
-            </Button>
-          )}
+          {/* Comment counter - clickable to open comments */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
+            onClick={(e) => handleButtonClick(e, () => onComment?.(dream.id))}
+          >
+            <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            {dream.commentCount || dream.comment_count || 0}
+          </Button>
           
           {onShare && (
             <Button

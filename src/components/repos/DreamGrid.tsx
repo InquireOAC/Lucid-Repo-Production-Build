@@ -22,6 +22,21 @@ const DreamGrid = ({
   onTagClick,
   currentUser,
 }: DreamGridProps) => {
+  const handleCommentClick = (dreamId: string) => {
+    // Find the dream and open it directly to comments section
+    const dream = dreams.find(d => d.id === dreamId);
+    if (dream) {
+      onOpenDream(dream);
+      // Scroll to comments section after a small delay to ensure modal is open
+      setTimeout(() => {
+        const commentsSection = document.querySelector('[data-comments-section]');
+        if (commentsSection) {
+          commentsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {dreams.map((dream) => {
@@ -48,6 +63,7 @@ const DreamGrid = ({
             dream={normalizedDream}
             tags={tags}
             onLike={() => onLike(normalizedDream.id)}
+            onComment={handleCommentClick}
             showUser={true}
             onCardClick={() => onOpenDream(normalizedDream)}
             onUserClick={() => onUserClick(username)}

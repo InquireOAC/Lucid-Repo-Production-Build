@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,7 +127,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-comments-section>
       <h3 className="font-medium text-lg">Comments</h3>
 
       {isLoading ? (
