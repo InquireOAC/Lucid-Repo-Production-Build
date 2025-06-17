@@ -75,9 +75,9 @@ const DreamGrid = ({
   
   // Handle dream update
   const handleUpdateDream = async (id: string, updates: any) => {
-    // Only the profile owner can trigger an update, otherwise return without toast
+    // Only the profile owner can trigger an update, otherwise return silently
     if (!isOwnProfile) {
-      return; // <-- Don't show toast or do anything if not own profile
+      return; // <-- Return silently without showing any toast
     }
     try {
       // Update the dream in Supabase
