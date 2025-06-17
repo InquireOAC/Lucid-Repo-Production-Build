@@ -57,10 +57,9 @@ const LucidRepoContainer = () => {
           return prevState.map(prevDream => {
             const newDream = dreams.find(d => d.id === prevDream.id);
             if (newDream) {
-              // Keep the higher view count and like count (in case we've updated them locally)
+              // Keep the higher like count (in case we've updated them locally)
               return {
                 ...newDream,
-                view_count: Math.max(prevDream.view_count || 0, newDream.view_count || 0),
                 like_count: Math.max(prevDream.like_count || 0, newDream.like_count || 0),
                 likeCount: Math.max(prevDream.likeCount || 0, newDream.likeCount || 0),
                 // Also preserve the liked state if it was updated locally
@@ -121,7 +120,6 @@ const LucidRepoContainer = () => {
 
   const handleCloseDream = () => {
     setSelectedDream(null);
-    // Don't refresh here - the view count and like updates should already be in dreamsState
   };
 
   const handleNavigateToProfile = (username: string | undefined) => {
@@ -133,22 +131,6 @@ const LucidRepoContainer = () => {
   };
 
   const handleClearTags = () => setActiveTags([]);
-
-  // Handler for updating view count when opening dream
-  const handleViewCountUpdate = (dreamId: string) => {
-    setDreamsState(prevDreams => prevDreams.map(dream => dream.id === dreamId ? {
-      ...dream,
-      view_count: (dream.view_count || 0) + 1
-    } : dream));
-
-    // Also update the selectedDream if it's the one being updated
-    if (selectedDream && selectedDream.id === dreamId) {
-      setSelectedDream(prevDream => ({
-        ...prevDream!,
-        view_count: (prevDream?.view_count || 0) + 1
-      }));
-    }
-  };
 
   // The MAIN handler: when liking a dream from modal, update state
   const handleDreamLike = async (dreamId: string) => {
@@ -247,9 +229,6 @@ const LucidRepoContainer = () => {
           onUpdate={handleDreamUpdate} 
           isAuthenticated={!!user} 
           onLike={() => handleDreamLike(selectedDream.id)} 
-          onViewCountUpdate={handleViewCountUpdate} 
-          viewCountUpdated={viewCountUpdated} 
-          setViewCountUpdated={setViewCountUpdated} 
         />
       )}
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
