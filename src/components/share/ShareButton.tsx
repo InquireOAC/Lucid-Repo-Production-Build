@@ -27,6 +27,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const [isSharing, setIsSharing] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
   const previewCardRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +50,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     if (isSharing) return;
 
     setIsSharing(true);
+    setImageLoaded(false);
     
     try {
       // Show the dialog immediately
@@ -62,6 +64,28 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     }
   };
 
+  const waitForImageLoad = (): Promise<void> => {
+    return new Promise((resolve) => {
+      if (!normalizedDream.generatedImage) {
+        resolve();
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => {
+        console.log("Preview image loaded successfully");
+        setImageLoaded(true);
+        resolve();
+      };
+      img.onerror = () => {
+        console.log("Preview image failed to load");
+        setImageLoaded(true);
+        resolve();
+      };
+      img.src = normalizedDream.generatedImage;
+    });
+  };
+
   const handleSaveCard = async () => {
     if (!previewCardRef.current || isSaving) return;
     
@@ -69,6 +93,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     
     try {
       console.log("Starting save process for mobile...");
+      
+      // Wait for image to load before generating PNG
+      if (!imageLoaded) {
+        console.log("Waiting for image to load...");
+        await waitForImageLoad();
+        // Give a bit more time for the image to render in the DOM
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
       
       // Generate PNG from the preview card
       const dataUrl = await elementToPngBase64(previewCardRef.current);
@@ -224,7 +256,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Dream Visualization - with 256px height */}
+                {/* Dream Visualization - with proper image loading */}
                 {normalizedDream.generatedImage && (
                   <div className="mb-3 flex items-center justify-center">
                     <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]" style={{ height: '256px' }}>
@@ -237,6 +269,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                           backgroundColor: '#8976BF'
                         }}
                         crossOrigin="anonymous"
+                        onLoad={() => {
+                          console.log("Preview image loaded");
+                          setImageLoaded(true);
+                        }}
+                        onError={(e) => {
+                          console.error("Preview image failed to load:", e);
+                          setImageLoaded(true);
+                        }}
                       />
                     </div>
                   </div>
