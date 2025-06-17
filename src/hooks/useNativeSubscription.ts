@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
 import { Purchases, PurchasesOfferings, PurchasesPackage } from '@revenuecat/purchases-capacitor';
 
 const PRODUCT_IDS = {
@@ -21,6 +22,7 @@ interface NativeProduct {
 
 export const useNativeSubscription = () => {
   const { user } = useAuth();
+  const { refreshSubscription } = useSubscriptionContext();
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<NativeProduct[]>([]);
   const [isNative, setIsNative] = useState(false);
@@ -136,6 +138,11 @@ export const useNativeSubscription = () => {
       }
       
       console.log('Subscription synced successfully:', data);
+      
+      // Refresh the subscription context immediately after syncing
+      console.log('Refreshing subscription context...');
+      refreshSubscription();
+      
     } catch (error) {
       console.error('Failed to sync subscription:', error);
       // Don't throw here - the purchase might still be valid
@@ -174,7 +181,7 @@ export const useNativeSubscription = () => {
 
       console.log('Purchase result:', purchaseResult);
       
-      // Sync the subscription with Supabase
+      // Sync the subscription with Supabase (this will also refresh the context)
       await syncSubscriptionWithSupabase();
       
       // Dismiss loading toast and show success
@@ -184,10 +191,7 @@ export const useNativeSubscription = () => {
         duration: 5000
       });
       
-      // Refresh the page to update subscription status
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
+      console.log('Purchase completed successfully - subscription context should be updated');
       
     } catch (error: any) {
       console.error('Purchase failed:', error);
@@ -219,7 +223,7 @@ export const useNativeSubscription = () => {
       const restoreResult = await Purchases.restorePurchases();
       console.log('Restore result:', restoreResult);
       
-      // Sync with Supabase after restore
+      // Sync with Supabase after restore (this will also refresh the context)
       await syncSubscriptionWithSupabase();
       
       toast.dismiss('restore-loading');
@@ -232,10 +236,7 @@ export const useNativeSubscription = () => {
           description: 'Your subscription has been restored.'
         });
         
-        // Refresh the page to update subscription status
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        console.log('Purchases restored successfully - subscription context should be updated');
       } else {
         toast.info('No active purchases found to restore');
       }
