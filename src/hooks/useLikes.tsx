@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,7 +85,7 @@ export function useLikes(
         .eq("dream_id", dreamId);
       const newLikeCount = count || 0;
 
-      // Update like_count field in dream_entries
+      // Update like_count field in dream_entries table
       await supabase
         .from("dream_entries")
         .update({ like_count: newLikeCount })

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
@@ -60,23 +61,54 @@ export function useDreams(refreshLikedDreams?: () => void) {
 
       console.log("Fetched public dreams:", data.length);
 
-      // Transform data to match our DreamEntry type
-      const transformedDreams = data.map((dream: any) => ({
-        ...dream,
-        isPublic: dream.is_public,
-        likeCount: dream.like_count || 0,
-        commentCount: dream.comment_count || 0,
-        userId: dream.user_id,
-        profiles: dream.profiles,
-        // pass down avatar
-        avatarSymbol: dream.profiles?.avatar_symbol || null,
-        avatarColor: dream.profiles?.avatar_color || null,
-        // Ensure image URLs are properly normalized
-        generatedImage: dream.generatedImage || dream.image_url || null,
-        image_url: dream.image_url || dream.generatedImage || null,
-      }));
+      // For each dream, get the actual like count and comment count from the database
+      const dreamsWithCounts = await Promise.all(
+        data.map(async (dream: any) => {
+          // Get actual like count
+          const { count: likeCount } = await supabase
+            .from("dream_likes")
+            .select("id", { count: "exact", head: true })
+            .eq("dream_id", dream.id);
+
+          // Get actual comment count
+          const { count: commentCount } = await supabase
+            .from("dream_comments")
+            .select("id", { count: "exact", head: true })
+            .eq("dream_id", dream.id);
+
+          // Check if current user has liked this dream
+          let userLiked = false;
+          if (user) {
+            const { data: likeData } = await supabase
+              .from("dream_likes")
+              .select("id")
+              .eq("dream_id", dream.id)
+              .eq("user_id", user.id)
+              .maybeSingle();
+            userLiked = !!likeData;
+          }
+
+          return {
+            ...dream,
+            isPublic: dream.is_public,
+            likeCount: likeCount || 0,
+            like_count: likeCount || 0,
+            commentCount: commentCount || 0,
+            comment_count: commentCount || 0,
+            liked: userLiked,
+            userId: dream.user_id,
+            profiles: dream.profiles,
+            // pass down avatar
+            avatarSymbol: dream.profiles?.avatar_symbol || null,
+            avatarColor: dream.profiles?.avatar_color || null,
+            // Ensure image URLs are properly normalized
+            generatedImage: dream.generatedImage || dream.image_url || null,
+            image_url: dream.image_url || dream.generatedImage || null,
+          };
+        })
+      );
       
-      setDreams(transformedDreams);
+      setDreams(dreamsWithCounts);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
       toast.error("Failed to fetch dreams");

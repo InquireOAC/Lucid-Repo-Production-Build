@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,7 +54,15 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       if (error) throw error;
 
       setComments(data || []);
-      onCommentCountChange((data?.length || 0));
+      
+      // Update the comment count in the dream_entries table
+      const commentCount = data?.length || 0;
+      await supabase
+        .from("dream_entries")
+        .update({ comment_count: commentCount })
+        .eq("id", dreamId);
+      
+      onCommentCountChange(commentCount);
     } catch (error) {
       console.error("Error fetching comments:", error);
       onCommentCountChange(0);
@@ -88,7 +97,16 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
 
       setComments([...comments, data]);
       setNewComment("");
-      fetchComments();
+      
+      // Update comment count in dream_entries table
+      const newCommentCount = comments.length + 1;
+      await supabase
+        .from("dream_entries")
+        .update({ comment_count: newCommentCount })
+        .eq("id", dreamId);
+      
+      onCommentCountChange(newCommentCount);
+      
     } catch (error: any) {
       toast.error("Failed to post comment: " + (error?.message || "Unknown error"));
     } finally {
@@ -110,8 +128,17 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       if (error) throw error;
 
       // Update local state
-      setComments(comments.filter(comment => comment.id !== commentId));
-      onCommentCountChange(comments.length - 1);
+      const updatedComments = comments.filter(comment => comment.id !== commentId);
+      setComments(updatedComments);
+      
+      // Update comment count in dream_entries table
+      const newCommentCount = updatedComments.length;
+      await supabase
+        .from("dream_entries")
+        .update({ comment_count: newCommentCount })
+        .eq("id", dreamId);
+      
+      onCommentCountChange(newCommentCount);
       toast.success("Comment deleted");
     } catch (error: any) {
       toast.error("Failed to delete comment: " + (error?.message || "Unknown error"));
