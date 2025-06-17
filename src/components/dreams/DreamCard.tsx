@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,8 @@ const DreamCard = ({
   onDelete
 }: DreamCardProps) => {
   const { isUserBlocked } = useBlockedUsers();
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const lastTapRef = useRef<number>(0);
   
   // Don't render if the dream's author is blocked
   if (isUserBlocked(dream.user_id)) {
@@ -84,6 +86,24 @@ const DreamCard = ({
     action();
   };
 
+  // Handle double tap to like
+  const handleDoubleTap = (e: React.MouseEvent) => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+    
+    if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+      // Double tap detected
+      e.stopPropagation();
+      if (currentUser && onLike) {
+        onLike(dream.id);
+        setIsLikeAnimating(true);
+        setTimeout(() => setIsLikeAnimating(false), 600);
+      }
+    }
+    
+    lastTapRef.current = now;
+  };
+
   // Use created_at if available, otherwise fall back to date
   const dateToFormat = dream.created_at || dream.date;
   const formattedDate = formatDistanceToNow(new Date(dateToFormat)) + " ago";
@@ -97,6 +117,8 @@ const DreamCard = ({
         isJournalView ? 'h-fit' : ''
       }`}
       onClick={handleCardClick}
+      onMouseDown={handleDoubleTap}
+      onTouchStart={handleDoubleTap}
     >
       <CardHeader className={isJournalView ? "pb-2 p-4" : "pb-3"}>
         <div className="flex items-start justify-between">
@@ -137,14 +159,26 @@ const DreamCard = ({
         }`}>{dream.content}</p>
         
         {dream.generatedImage && (
-          <div className={isJournalView ? "mb-2" : "mb-3"}>
+          <div className={isJournalView ? "mb-2 relative" : "mb-3 relative"}>
             <img 
               src={dream.generatedImage} 
               alt="Dream visualization" 
               className={`w-full object-cover rounded-md ${
-                isJournalView ? 'h-24' : 'h-32'
+                isJournalView ? 'h-24' : 'h-48'
               }`}
             />
+            {/* Like animation overlay */}
+            {isLikeAnimating && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Heart 
+                  className="h-16 w-16 text-red-500 fill-red-500 animate-pulse" 
+                  style={{ 
+                    animation: 'heartPulse 0.6s ease-out',
+                    transform: 'scale(1.5)'
+                  }}
+                />
+              </div>
+            )}
           </div>
         )}
         
@@ -227,6 +261,23 @@ const DreamCard = ({
           )}
         </div>
       </CardContent>
+      
+      <style jsx>{`
+        @keyframes heartPulse {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.8);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </Card>
   );
 };
