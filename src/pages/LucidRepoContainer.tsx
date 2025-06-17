@@ -70,12 +70,14 @@ const LucidRepoContainer = () => {
 
   useEffect(() => {
     // Initialize with "following" tab if user is logged in, otherwise "recent"
-    if (user && activeTab === "popular") {
+    // But don't override if user has already selected a tab
+    if (user && activeTab === "recent") {
       setActiveTab("following");
     } else if (!user && activeTab === "following") {
       setActiveTab("recent");
     }
     
+    // Fetch data for any tab that needs public dreams
     if (activeTab === "recent" || activeTab === "popular") {
       fetchPublicDreams();
     }
