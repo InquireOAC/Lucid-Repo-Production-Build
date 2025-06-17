@@ -47,12 +47,21 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     try {
       const { data, error } = await supabase
         .from("dream_comments")
-        .select("*, profiles:user_id(username, display_name, avatar_symbol, avatar_color)")
+        .select(`
+          *, 
+          profiles:user_id(
+            username, 
+            display_name, 
+            avatar_symbol, 
+            avatar_color
+          )
+        `)
         .eq("dream_id", dreamId)
         .order("created_at", { ascending: true });
 
       if (error) throw error;
 
+      console.log("Fetched comments with profiles:", data);
       setComments(data || []);
       
       // Update the comment count in the dream_entries table
@@ -90,7 +99,15 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             content: newComment.trim(),
           },
         ])
-        .select("*, profiles:user_id(username, display_name, avatar_symbol, avatar_color)")
+        .select(`
+          *, 
+          profiles:user_id(
+            username, 
+            display_name, 
+            avatar_symbol, 
+            avatar_color
+          )
+        `)
         .single();
 
       if (error) throw error;
@@ -164,11 +181,20 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
       ) : comments.length > 0 ? (
         <div className="space-y-4">
           {comments.map((comment) => {
-            // Use SymbolAvatar and fallback logic
+            // Use profile data with proper fallbacks
             const profile = comment.profiles;
-            const displayName = profile?.display_name ?? profile?.username ?? "";
-            const fallbackLetter = displayName?.[0]?.toUpperCase() ?? "U";
             const username = profile?.username;
+            const displayName = profile?.display_name;
+            
+            // Determine what name to show - prefer username, then display_name
+            let nameToShow = "Anonymous";
+            if (username && username.trim() !== "" && username !== "Anonymous User") {
+              nameToShow = username;
+            } else if (displayName && displayName.trim() !== "") {
+              nameToShow = displayName;
+            }
+            
+            const fallbackLetter = nameToShow.charAt(0).toUpperCase();
             const isOwnComment = user?.id === comment.user_id;
             
             return (
@@ -191,7 +217,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
                       className="font-medium text-sm cursor-pointer hover:underline"
                       onClick={() => handleUserClick(username)}
                     >
-                      {displayName || "Anonymous"}
+                      {nameToShow}
                     </p>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(comment.created_at), "MMM d, h:mm a")}
