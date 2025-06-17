@@ -76,9 +76,27 @@ const DreamGrid = ({
     }
   };
   
-  // Handle dream update - only for own profile
+  // Handle dream update - only for own profile and only for meaningful edits
   const handleUpdateDream = async (id: string, updates: any) => {
     if (!isOwnProfile) return; // Safety check
+    
+    // Only proceed with database updates for meaningful changes (not just count updates)
+    const meaningfulFields = ['title', 'content', 'tags', 'mood', 'lucid', 'analysis', 'generatedImage', 'imagePrompt', 'is_public', 'isPublic'];
+    const hasMeaningfulChanges = Object.keys(updates).some(key => meaningfulFields.includes(key));
+    
+    if (!hasMeaningfulChanges) {
+      // Just update local state for passive updates like comment counts
+      const dreamIndex = dreams.findIndex(dream => dream.id === id);
+      if (dreamIndex !== -1) {
+        dreams[dreamIndex] = { ...dreams[dreamIndex], ...updates };
+      }
+      
+      // Update selected dream if it's the one being viewed
+      if (selectedDream && selectedDream.id === id) {
+        setSelectedDream({ ...selectedDream, ...updates });
+      }
+      return;
+    }
     
     try {
       // Update the dream in Supabase
