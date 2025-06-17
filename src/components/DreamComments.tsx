@@ -1,8 +1,9 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Trash2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
   const [newComment, setNewComment] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComments();
@@ -95,6 +97,30 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
     }
   };
 
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) return;
+    
+    setDeletingCommentId(commentId);
+    try {
+      const { error } = await supabase
+        .from("dream_comments")
+        .delete()
+        .eq("id", commentId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      // Update local state
+      setComments(comments.filter(comment => comment.id !== commentId));
+      onCommentCountChange(comments.length - 1);
+      toast.success("Comment deleted");
+    } catch (error: any) {
+      toast.error("Failed to delete comment: " + (error?.message || "Unknown error"));
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
+
   const handleUserClick = (username?: string) => {
     if (username && username.trim() !== "" && username !== "Anonymous User") {
       navigate(`/profile/${username}`);
@@ -117,6 +143,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
             const displayName = profile?.display_name ?? profile?.username ?? "";
             const fallbackLetter = displayName?.[0]?.toUpperCase() ?? "U";
             const username = profile?.username;
+            const isOwnComment = user?.id === comment.user_id;
             
             return (
               <div key={comment.id} className="flex gap-3">
@@ -132,7 +159,7 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
                     className="h-8 w-8"
                   />
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="flex gap-2 items-baseline">
                     <p 
                       className="font-medium text-sm cursor-pointer hover:underline"
@@ -143,6 +170,21 @@ const DreamComments = ({ dreamId, onCommentCountChange }: DreamCommentsProps) =>
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(comment.created_at), "MMM d, h:mm a")}
                     </span>
+                    {isOwnComment && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteComment(comment.id)}
+                        disabled={deletingCommentId === comment.id}
+                        className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        {deletingCommentId === comment.id ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                   <p className="mt-1 text-sm">{comment.content}</p>
                 </div>
