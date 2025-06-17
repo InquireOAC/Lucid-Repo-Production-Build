@@ -36,7 +36,25 @@ export const useFeatureUsage = () => {
 
       console.log('Checking subscription status for user:', user.id);
 
-      // First check for direct subscription by user_id (covers iOS/RevenueCat purchases)
+      // On native platforms, prioritize RevenueCat
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const result = await Purchases.getCustomerInfo();
+          const customerInfo = result.customerInfo;
+          const activeEntitlements = customerInfo.entitlements.active;
+          const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
+          
+          console.log('RevenueCat active entitlements:', activeEntitlements);
+          if (hasActiveEntitlement) {
+            setHasActiveSubscription(true);
+            return;
+          }
+        } catch (revenueCatError) {
+          console.error('RevenueCat check failed:', revenueCatError);
+        }
+      }
+
+      // Check for direct subscription by user_id (covers iOS/RevenueCat purchases synced to Supabase)
       const { data: directSubscription } = await supabase
         .from('stripe_subscriptions')
         .select('status')
@@ -50,41 +68,27 @@ export const useFeatureUsage = () => {
         return;
       }
 
-      // Check Stripe customer subscription
-      const { data: customerData } = await supabase
-        .from('stripe_customers')
-        .select('customer_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (customerData?.customer_id) {
-        const { data: subscription } = await supabase
-          .from('stripe_subscriptions')
-          .select('status')
-          .eq('customer_id', customerData.customer_id)
-          .eq('status', 'active')
+      // Check Stripe customer subscription (web only)
+      if (!Capacitor.isNativePlatform()) {
+        const { data: customerData } = await supabase
+          .from('stripe_customers')
+          .select('customer_id')
+          .eq('user_id', user.id)
           .maybeSingle();
 
-        if (subscription) {
-          console.log('Found active Stripe subscription');
-          setHasActiveSubscription(true);
-          return;
-        }
-      }
+        if (customerData?.customer_id) {
+          const { data: subscription } = await supabase
+            .from('stripe_subscriptions')
+            .select('status')
+            .eq('customer_id', customerData.customer_id)
+            .eq('status', 'active')
+            .maybeSingle();
 
-      // Check RevenueCat on native platforms as final fallback
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const result = await Purchases.getCustomerInfo();
-          const customerInfo = result.customerInfo;
-          const activeEntitlements = customerInfo.entitlements.active;
-          const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
-          
-          console.log('RevenueCat active entitlements:', activeEntitlements);
-          setHasActiveSubscription(hasActiveEntitlement);
-          return;
-        } catch (revenueCatError) {
-          console.error('RevenueCat check failed:', revenueCatError);
+          if (subscription) {
+            console.log('Found active Stripe subscription');
+            setHasActiveSubscription(true);
+            return;
+          }
         }
       }
 
@@ -136,10 +140,10 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // Check if user has an active subscription first using the stripe lib function
-      const hasSubscription = await checkFeatureAccess(featureType);
+      // Check if user has an active subscription
+      await checkSubscriptionStatus();
       
-      if (hasSubscription) {
+      if (hasActiveSubscription) {
         console.log(`User has active subscription for ${featureType}, allowing access`);
         return true;
       }
@@ -155,7 +159,15 @@ export const useFeatureUsage = () => {
       
       // User has used their free trial and no active subscription
       console.log(`User has used free trial for ${featureType} and has no subscription`);
-      showSubscriptionPrompt(featureType);
+      
+      // On native platforms, don't show Stripe subscription prompt
+      if (Capacitor.isNativePlatform()) {
+        console.log('Native platform: User needs to subscribe through the app');
+        return false;
+      } else {
+        showSubscriptionPrompt(featureType);
+      }
+      
       return false;
     } catch (error) {
       console.error('Error checking feature usage:', error);

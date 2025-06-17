@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 
@@ -18,7 +18,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const value = {
     subscription,
     isLoading,
-    refreshSubscription
+    refreshSubscription: () => {
+      console.log('Refreshing subscription from context...');
+      refreshSubscription();
+    }
   };
 
   return (

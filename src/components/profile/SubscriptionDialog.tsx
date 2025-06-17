@@ -6,6 +6,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { Capacitor } from "@capacitor/core";
+import NativeSubscriptionManager from "./NativeSubscriptionManager";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
 interface SubscriptionDialogProps {
@@ -18,6 +20,7 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
   onOpenChange,
 }) => {
   const { subscription, isLoading } = useSubscriptionContext();
+  const isNativePlatform = Capacitor.isNativePlatform();
 
   if (isLoading) {
     return (
@@ -40,7 +43,11 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
             <DialogTitle>Choose Your Plan</DialogTitle>
           </DialogHeader>
           <div className="p-4">
-            <StripeSubscriptionManager />
+            {isNativePlatform ? (
+              <NativeSubscriptionManager />
+            ) : (
+              <StripeSubscriptionManager />
+            )}
           </div>
         </DialogContent>
       </Dialog>
@@ -107,6 +114,14 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
           {subscription.subscriptionType && (
             <div className="text-xs text-muted-foreground text-center">
               Subscription Type: {subscription.subscriptionType}
+            </div>
+          )}
+
+          {isNativePlatform && (
+            <div className="pt-4 border-t">
+              <p className="text-xs text-muted-foreground text-center">
+                Manage your subscription through the App Store settings
+              </p>
             </div>
           )}
         </div>
