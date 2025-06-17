@@ -1,7 +1,8 @@
 
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { DreamTag } from "@/types/dream";
+import { Heart } from "lucide-react";
 import FlagButton from "@/components/moderation/FlagButton";
 
 interface DreamDetailContentProps {
@@ -13,6 +14,8 @@ interface DreamDetailContentProps {
   showFlagButton?: boolean;
   dreamId?: string;
   contentOwnerId?: string;
+  onLike?: () => void;
+  currentUser?: any;
 }
 
 const DreamDetailContent = ({
@@ -23,8 +26,39 @@ const DreamDetailContent = ({
   analysis,
   showFlagButton,
   dreamId,
-  contentOwnerId
+  contentOwnerId,
+  onLike,
+  currentUser
 }: DreamDetailContentProps) => {
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const lastTapRef = useRef<number>(0);
+
+  // Handle double tap to like on image
+  const handleImageDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
+    const now = Date.now();
+    const timeSinceLastTap = now - lastTapRef.current;
+    
+    if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+      // Double tap detected
+      e.stopPropagation();
+      if (currentUser && onLike) {
+        onLike();
+        setIsLikeAnimating(true);
+        setTimeout(() => setIsLikeAnimating(false), 600);
+      }
+    }
+    
+    lastTapRef.current = now;
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    handleImageDoubleTap(e);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    handleImageDoubleTap(e);
+  };
+
   return (
     <div className="space-y-4 mt-2">
       {/* Date with Flag Button */}
@@ -58,15 +92,34 @@ const DreamDetailContent = ({
         </div>
       )}
 
-      {/* Dream Image */}
+      {/* Dream Image with double tap to like */}
       {generatedImage && (
         <div className="mt-4">
           <h3 className="text-sm font-medium mb-2">Dream Visualization</h3>
-          <img 
-            src={generatedImage} 
-            alt="Dream visualization" 
-            className="rounded-md w-full h-auto"
-          />
+          <div 
+            className="relative cursor-pointer select-none"
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+          >
+            <img 
+              src={generatedImage} 
+              alt="Dream visualization" 
+              className="rounded-md w-full h-auto"
+            />
+            
+            {/* Like animation overlay */}
+            {isLikeAnimating && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <Heart 
+                  className="h-16 w-16 text-red-500 fill-red-500"
+                  style={{ 
+                    animation: 'heartPulse 0.6s ease-out',
+                    transform: 'scale(1.5)'
+                  }}
+                />
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -77,6 +130,23 @@ const DreamDetailContent = ({
           <div className="text-sm text-muted-foreground">{analysis}</div>
         </div>
       )}
+
+      <style jsx>{`
+        @keyframes heartPulse {
+          0% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(1.8);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+        }
+      `}</style>
     </div>
   );
 };

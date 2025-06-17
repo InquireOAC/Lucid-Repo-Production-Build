@@ -152,6 +152,8 @@ const DreamDetail = ({
               showFlagButton={isPublic && user && !isOwner}
               dreamId={dream.id}
               contentOwnerId={dream.user_id}
+              onLike={onLike}
+              currentUser={user}
             />
             
             {audioUrl && (
