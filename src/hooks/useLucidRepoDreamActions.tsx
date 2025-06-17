@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useNavigate } from "react-router-dom";
@@ -16,16 +15,23 @@ export function useLucidRepoDreamActions(
   const navigate = useNavigate();
   const [selectedDream, setSelectedDream] = useState<DreamEntry | null>(null);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
+  const [savedScrollPosition, setSavedScrollPosition] = useState<number>(0);
 
   // useLikes hook to keep liked state in sync and handle like logic
   const { handleLike } = useLikes(user, dreamsState, setDreamsState, refreshLikedDreams);
 
   const handleOpenDream = (dream: DreamEntry) => {
+    // Save current scroll position
+    setSavedScrollPosition(window.scrollY);
     setSelectedDream({ ...dream });
   };
 
   const handleCloseDream = () => {
     setSelectedDream(null);
+    // Restore scroll position after a brief delay to ensure modal is closed
+    setTimeout(() => {
+      window.scrollTo(0, savedScrollPosition);
+    }, 100);
   };
 
   const handleNavigateToProfile = (username: string | undefined) => {
