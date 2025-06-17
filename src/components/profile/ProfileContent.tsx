@@ -1,255 +1,110 @@
-import React, { useEffect, useState, useMemo } from "react";
-import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
-import { useProfileData } from "@/hooks/useProfileData";
-import { useProfileDreams } from "@/hooks/useProfileDreams";
-import { useProfileFollowers } from "@/hooks/useProfileFollowers";
-import ProfileMainContent from "./ProfileMainContent";
-import ProfileStateGuard from "./ProfileStateGuard";
-import { computeProfileTargets } from "./computeProfileTargets";
-import { useProfileDialogStates } from "./ProfileDialogStates";
-import { useSubscription } from "@/hooks/useSubscription";
-import { SubscriptionDialog } from "./SubscriptionDialog";
-import { useDirectConversation } from "@/hooks/useDirectConversation";
-import { useConversations } from "@/hooks/useConversations";
 
-// helper to extract uuid safely
-function extractProfileUuid(profileObj: any): string | undefined {
-  if (!profileObj) return undefined;
-  // 'id' field is always uuid for profiles table
-  return profileObj.id;
-}
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useSearchParams } from "react-router-dom";
+import SubscriptionManager from "./SubscriptionManager";
+import ProfileStats from "./ProfileStats";
+import ProfileDreams from "./ProfileDreams";
+import ProfileLikedDreams from "./ProfileLikedDreams";
 
 const ProfileContent = () => {
-  const { userId, username } = useParams<{ userId?: string; username?: string }>();
-  const { user, profile } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  // Use userId or username, whichever is provided in the URL
-  const effectiveIdentifier = userId || username;
+  const { user } = useAuth();
+  const { subscription, isLoading } = useSubscriptionContext();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(() => {
+    return searchParams.get('tab') || 'dreams';
+  });
 
-  // State for loading profile
-  const [loadingProfile, setLoadingProfile] = useState(false);
-
-  // Modal/dialog state hooks
-  const {
-    isEditProfileOpen, setIsEditProfileOpen,
-    isSettingsOpen, setIsSettingsOpen,
-    isMessagesOpen, setIsMessagesOpen,
-    isSocialLinksOpen, setIsSocialLinksOpen,
-    isSubscriptionOpen, setIsSubscriptionOpen,
-    isNotificationsOpen, setIsNotificationsOpen,
-    showFollowers, setShowFollowers,
-    showFollowing, setShowFollowing
-  } = useProfileDialogStates();
-
-  // Custom profile data (returns .viewedProfile)
-  const {
-    isOwnProfile,
-    viewedProfile,
-    isFollowing,
-    displayName,
-    setDisplayName,
-    username: currentUsername,
-    setUsername,
-    bio,
-    setBio,
-    avatarSymbol,
-    setAvatarSymbol,
-    avatarColor,
-    setAvatarColor,
-    socialLinks,
-    setSocialLinks,
-    dreamCount,
-    followersCount,
-    followingCount,
-    conversations,
-    subscription,
-    fetchUserProfile,
-    checkIfFollowing,
-    handleFollow,
-    fetchSubscription,
-    handleUpdateProfile,
-    handleUpdateSocialLinks,
-    handleStartConversation,
-    handleSignOut,
-  } = useProfileData(user, profile, effectiveIdentifier);
-
-  // Get conversations fetch function from useConversations hook
-  const { fetchConversations } = useConversations(user);
-
-  // Get the UUID of the viewed profile for conversation handling
-  const viewedProfileUuid = extractProfileUuid(viewedProfile);
-  
-  // Direct conversation hook for messaging other users
-  const { openChatWithUser, loading: conversationLoading } = useDirectConversation(
-    user?.id, 
-    viewedProfileUuid
-  );
-
-  // State for selected conversation user when opening messages dialog
-  const [selectedConversationUser, setSelectedConversationUser] = useState<any>(null);
-
-  // Enhanced message handler for starting conversations with other users
-  const handleMessageClick = () => {
-    if (isOwnProfile) {
-      // If it's own profile, just open the messages dialog to see all conversations
-      setIsMessagesOpen(true);
-    } else if (viewedProfile) {
-      // If viewing another user's profile, start a conversation with them
-      openChatWithUser((user) => {
-        setSelectedConversationUser(user);
-        setIsMessagesOpen(true);
-      });
-    }
-  };
-
-  // Ensure switching profiles in the UI triggers correct fetch
+  // Update active tab when URL search params change
   useEffect(() => {
-    if (!user) {
-      navigate("/auth");
-      return;
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveTab(tab);
     }
-    if (
-      effectiveIdentifier &&
-      effectiveIdentifier !== user.id &&
-      effectiveIdentifier !== profile?.username
-    ) {
-      setLoadingProfile(true);
-      fetchUserProfile(effectiveIdentifier).finally(() => setLoadingProfile(false));
-      checkIfFollowing(effectiveIdentifier);
-    }
-  }, [user, profile, effectiveIdentifier]);
+  }, [searchParams]);
 
-  useEffect(() => { if (user) fetchSubscription(); }, [user]);
+  if (!user) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-center text-muted-foreground">
+              Please sign in to view your profile.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  // Refresh data when navigating to profile (background refresh)
-  useEffect(() => {
-    if (location.pathname.includes('/profile') && user) {
-      const timer = setTimeout(() => {
-        if (effectiveIdentifier) {
-          fetchUserProfile(effectiveIdentifier);
-        } else {
-          fetchUserProfile(user.id);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname, user, effectiveIdentifier]);
-
-  // Use memo to guard against hook execution with an invalid ID
-  const { profileToShow, profileIdForHooks } = useMemo(
-    () => computeProfileTargets({ user, profile, viewedProfile, isOwnProfile, effectiveIdentifier }),
-    [user, profile, viewedProfile, isOwnProfile, effectiveIdentifier]
-  );
-
-  // Profile hooks for dreams and followers -- only runs when profileId is valid
-  const { publicDreams, likedDreams, refreshDreams } = useProfileDreams(user, profileIdForHooks);
-  const { followers, following, fetchFollowers, fetchFollowing, followersCount: followersCountHook, followingCount: followingCountHook } = useProfileFollowers(profileIdForHooks);
-
-  // Refresh dreams when switching to valid hooks
-  useEffect(() => {
-    if (profileIdForHooks) {
-      const timer = setTimeout(() => { refreshDreams?.(); }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [profileIdForHooks, isOwnProfile, effectiveIdentifier, user]);
-
-  // Refresh subscription data when subscription dialog opens
-  const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const { subscription: currentSubscription, isLoading: subscriptionLoading, fetchSubscription: refreshSubscription } = useSubscription(user);
-  const handleSubscriptionDialogOpen = (open: boolean) => {
-    setSubscriptionDialogOpen(open);
-    if (open && user) {
-      refreshSubscription();
-    }
-  };
-
-  // Reset selected conversation user when messages dialog closes
-  const handleMessagesDialogChange = (open: boolean) => {
-    setIsMessagesOpen(open);
-    if (!open) {
-      setSelectedConversationUser(null);
-    }
-  };
-
-  // -------------- Render guarded states and main content -----------------
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <ProfileStateGuard
-        loading={loadingProfile}
-        effectiveIdentifier={effectiveIdentifier}
-        user={user}
-        profile={profile}
-        isOwnProfile={isOwnProfile}
-        viewedProfile={viewedProfile}
-      >
-        <ProfileMainContent
-          profileToShow={profileToShow}
-          isOwnProfile={isOwnProfile}
-          dreamCount={dreamCount}
-          followersCount={followersCountHook}
-          followingCount={followingCountHook}
-          isFollowing={isFollowing}
-          setIsEditProfileOpen={setIsEditProfileOpen}
-          setIsMessagesOpen={handleMessagesDialogChange}
-          setIsSettingsOpen={setIsSettingsOpen}
-          setIsSocialLinksOpen={setIsSocialLinksOpen}
-          setIsSubscriptionOpen={setIsSubscriptionOpen}
-          handleFollow={handleFollow}
-          handleStartConversation={handleMessageClick}
-          onFollowersClick={() => {
-            setShowFollowers(true);
-            fetchFollowers();
-          }}
-          onFollowingClick={() => {
-            setShowFollowing(true);
-            fetchFollowing();
-          }}
-          publicDreams={publicDreams}
-          likedDreams={likedDreams}
-          refreshDreams={refreshDreams}
-          isEditProfileOpen={isEditProfileOpen}
-          isSocialLinksOpen={isSocialLinksOpen}
-          isSettingsOpen={isSettingsOpen}
-          isMessagesOpen={isMessagesOpen}
-          isSubscriptionOpen={isSubscriptionOpen}
-          isNotificationsOpen={isNotificationsOpen}
-          setIsNotificationsOpen={setIsNotificationsOpen}
-          displayName={displayName}
-          setDisplayName={setDisplayName}
-          username={currentUsername}
-          setUsername={setUsername}
-          bio={bio}
-          setBio={setBio}
-          avatarSymbol={avatarSymbol}
-          setAvatarSymbol={setAvatarSymbol}
-          avatarColor={avatarColor}
-          setAvatarColor={setAvatarColor}
-          handleUpdateProfile={handleUpdateProfile}
-          userId={user?.id}
-          socialLinks={socialLinks}
-          setSocialLinks={setSocialLinks}
-          handleUpdateSocialLinks={handleUpdateSocialLinks}
-          handleSignOut={handleSignOut}
-          conversations={conversations}
-          subscription={subscription}
-          followers={followers}
-          following={following}
-          showFollowers={showFollowers}
-          setShowFollowers={setShowFollowers}
-          showFollowing={showFollowing}
-          setShowFollowing={setShowFollowing}
-          selectedConversationUser={selectedConversationUser}
-          setSelectedConversationUser={setSelectedConversationUser}
-          fetchConversations={fetchConversations}
-        />
-      </ProfileStateGuard>
-      <SubscriptionDialog
-        isOpen={subscriptionDialogOpen}
-        onOpenChange={handleSubscriptionDialogOpen}
-      />
+    <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Profile</h1>
+        <p className="text-muted-foreground">Manage your account and dreams</p>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="dreams">My Dreams</TabsTrigger>
+          <TabsTrigger value="liked">Liked Dreams</TabsTrigger>
+          <TabsTrigger value="stats">Statistics</TabsTrigger>
+          <TabsTrigger value="subscription">
+            Subscription
+            {subscription && (
+              <Badge variant="secondary" className="ml-2 text-xs">
+                {subscription.plan}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dreams">
+          <ProfileDreams />
+        </TabsContent>
+
+        <TabsContent value="liked">
+          <ProfileLikedDreams />
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <ProfileStats />
+        </TabsContent>
+
+        <TabsContent value="subscription">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                Subscription Management
+                {subscription && (
+                  <Badge variant={subscription.status === 'active' ? 'default' : 'secondary'}>
+                    {subscription.status}
+                  </Badge>
+                )}
+              </CardTitle>
+              <CardDescription>
+                {subscription 
+                  ? `Manage your ${subscription.plan} subscription`
+                  : "Subscribe to unlock premium features"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-dream-purple"></div>
+                </div>
+              ) : (
+                <SubscriptionManager currentPlan={subscription?.plan} />
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

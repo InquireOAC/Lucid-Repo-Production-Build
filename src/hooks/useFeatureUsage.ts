@@ -2,9 +2,9 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
 import { Capacitor } from '@capacitor/core';
 import { Purchases } from '@revenuecat/purchases-capacitor';
+import { toast } from 'sonner';
 
 type FeatureType = 'analysis' | 'image';
 
@@ -36,7 +36,7 @@ export const useFeatureUsage = () => {
 
       console.log('Checking subscription status for user:', user.id);
 
-      // First check for direct subscription by user_id (covers iOS/RevenueCat purchases)
+      // First check for RevenueCat/iOS subscription by user_id
       const { data: directSubscription } = await supabase
         .from('stripe_subscriptions')
         .select('status')
@@ -45,34 +45,12 @@ export const useFeatureUsage = () => {
         .maybeSingle();
 
       if (directSubscription) {
-        console.log('Found active direct subscription (RevenueCat/iOS)');
+        console.log('Found active RevenueCat subscription');
         setHasActiveSubscription(true);
         return;
       }
 
-      // Check Stripe customer subscription
-      const { data: customerData } = await supabase
-        .from('stripe_customers')
-        .select('customer_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (customerData?.customer_id) {
-        const { data: subscription } = await supabase
-          .from('stripe_subscriptions')
-          .select('status')
-          .eq('customer_id', customerData.customer_id)
-          .eq('status', 'active')
-          .maybeSingle();
-
-        if (subscription) {
-          console.log('Found active Stripe subscription');
-          setHasActiveSubscription(true);
-          return;
-        }
-      }
-
-      // Check RevenueCat on native platforms as final fallback
+      // Check RevenueCat on native platforms
       if (Capacitor.isNativePlatform()) {
         try {
           const result = await Purchases.getCustomerInfo();
@@ -136,11 +114,9 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // Check if user has an active subscription first using the stripe lib function
-      const hasSubscription = await checkFeatureAccess(featureType);
-      
-      if (hasSubscription) {
-        console.log(`User has active subscription for ${featureType}, allowing access`);
+      // Check if user has an active subscription (RevenueCat only)
+      if (hasActiveSubscription) {
+        console.log(`User has active RevenueCat subscription for ${featureType}, allowing access`);
         return true;
       }
       
@@ -183,13 +159,38 @@ export const useFeatureUsage = () => {
         return true;
       }
       
-      // For subsequent usage, increment in database if they have a subscription
-      console.log(`Recording ${featureType} usage in database`);
-      const success = await incrementFeatureUsage(featureType);
-      return success;
+      // For subsequent usage, check if they have active subscription
+      if (hasActiveSubscription) {
+        console.log(`User has active subscription, allowing ${featureType} usage`);
+        return true;
+      }
+      
+      // No subscription and already used free trial
+      showSubscriptionPrompt(featureType);
+      return false;
     } catch (error) {
       console.error('Error recording feature usage:', error);
       return false;
+    }
+  };
+
+  const showSubscriptionPrompt = (featureType: FeatureType) => {
+    const feature = featureType === 'analysis' ? 'dream analysis' : 'image generation';
+    
+    if (Capacitor.isNativePlatform()) {
+      toast.error(`Premium feature limit reached`, {
+        description: `You've used your free ${feature} trial. Subscribe to continue using this feature.`,
+        action: {
+          label: 'Subscribe',
+          onClick: () => window.location.href = '/profile?tab=subscription'
+        },
+        duration: 5000
+      });
+    } else {
+      toast.error(`Premium feature limit reached`, {
+        description: `You've used your free ${feature} trial. Download our mobile app to subscribe and continue.`,
+        duration: 5000
+      });
     }
   };
 
