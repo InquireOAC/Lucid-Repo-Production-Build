@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Moon, Heart, Globe } from "lucide-react";
@@ -41,8 +42,10 @@ const DreamGrid = ({
 }: DreamGridProps) => {
   const [selectedDream, setSelectedDream] = useState<any>(null);
   
-  // Handle dream deletion
+  // Handle dream deletion - only for own profile
   const handleDeleteDream = async (id: string) => {
+    if (!isOwnProfile) return; // Safety check
+    
     try {
       // Delete the dream from Supabase
       const { error } = await supabase
@@ -73,12 +76,9 @@ const DreamGrid = ({
     }
   };
   
-  // Handle dream update - only allow updates for own profile dreams
+  // Handle dream update - only for own profile
   const handleUpdateDream = async (id: string, updates: any) => {
-    // Only allow updates if this is the user's own profile
-    if (!isOwnProfile) {
-      return; // Return silently without any operation or toast
-    }
+    if (!isOwnProfile) return; // Safety check
     
     try {
       // Update the dream in Supabase
