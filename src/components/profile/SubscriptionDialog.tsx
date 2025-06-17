@@ -6,7 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import SubscriptionManager from "./SubscriptionManager";
+import StripeSubscriptionManager from "./StripeSubscriptionManager";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -37,10 +37,10 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Subscribe to Premium</DialogTitle>
+            <DialogTitle>Choose Your Plan</DialogTitle>
           </DialogHeader>
           <div className="p-4">
-            <SubscriptionManager />
+            <StripeSubscriptionManager />
           </div>
         </DialogContent>
       </Dialog>
