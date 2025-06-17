@@ -38,7 +38,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
   const fetchPublicDreams = async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching public dreams with sort:", sortBy);
+      console.log("Fetching public dreams with sort:", sortBy, "tab:", activeTab);
       
       let query = supabase
         .from("dream_entries")
@@ -47,7 +47,11 @@ export function useDreams(refreshLikedDreams?: () => void) {
         )
         .eq("is_public", true);
 
-      if (sortBy === "newest") {
+      // Apply sorting based on activeTab and sortBy
+      if (activeTab === "popular") {
+        // For popular, sort by engagement (like_count + comment_count) descending
+        query = query.order("like_count", { ascending: false });
+      } else if (sortBy === "newest") {
         query = query.order("created_at", { ascending: false });
       } else if (sortBy === "oldest") {
         query = query.order("created_at", { ascending: true });
@@ -107,6 +111,15 @@ export function useDreams(refreshLikedDreams?: () => void) {
           };
         })
       );
+      
+      // If popular tab, sort by engagement after getting actual counts
+      if (activeTab === "popular") {
+        dreamsWithCounts.sort((a, b) => {
+          const aEngagement = (a.like_count || 0) + (a.comment_count || 0);
+          const bEngagement = (b.like_count || 0) + (b.comment_count || 0);
+          return bEngagement - aEngagement;
+        });
+      }
       
       setDreams(dreamsWithCounts);
     } catch (error) {

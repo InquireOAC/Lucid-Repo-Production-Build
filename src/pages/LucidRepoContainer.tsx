@@ -76,7 +76,7 @@ const LucidRepoContainer = () => {
       setActiveTab("recent");
     }
     
-    if (activeTab === "recent") {
+    if (activeTab === "recent" || activeTab === "popular") {
       fetchPublicDreams();
     }
     // Only fetch on initial load - no automatic refresh interval
@@ -86,7 +86,7 @@ const LucidRepoContainer = () => {
   const handleTabChange = (newTab: string) => {
     setActiveTab(newTab);
     // Refresh in background when switching tabs
-    if (newTab === "recent") {
+    if (newTab === "recent" || newTab === "popular") {
       setTimeout(fetchPublicDreams, 100);
     }
   };
