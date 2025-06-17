@@ -3,7 +3,7 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2, Eye } from "lucide-react";
+import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { formatDistanceToNow } from "date-fns";
 import DreamCardUser from "./DreamCardUser";
@@ -193,46 +193,38 @@ const DreamCard = ({
           </div>
         )}
         
-        <div className={`flex items-center justify-between text-muted-foreground ${
+        <div className={`flex items-center gap-4 text-muted-foreground ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>
-          <div className="flex items-center gap-4">
-            {/* Display-only like counter - visible to ALL users */}
-            <div className="flex items-center gap-1">
-              <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />
-              <span>{dream.likeCount || dream.like_count || 0}</span>
-            </div>
-            
-            {onComment && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
-                onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
-              >
-                <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                {dream.commentCount || dream.comment_count || 0}
-              </Button>
-            )}
-            
-            {onShare && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-auto p-1 hover:text-green-500 ${isJournalView ? 'text-xs' : ''}`}
-                onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}
-              >
-                <Share2 className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
-                Share
-              </Button>
-            )}
+          {/* Display-only like counter - visible to ALL users */}
+          <div className="flex items-center gap-1">
+            <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />
+            <span>{dream.likeCount || dream.like_count || 0}</span>
           </div>
           
-          {/* View counter - visible to ALL users */}
-          <div className="flex items-center">
-            <Eye className={`mr-1 ${isJournalView ? 'h-2 w-2' : 'h-3 w-3'}`} />
-            <span>{dream.view_count || 0}</span>
-          </div>
+          {onComment && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
+              onClick={(e) => handleButtonClick(e, () => onComment(dream.id))}
+            >
+              <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              {dream.commentCount || dream.comment_count || 0}
+            </Button>
+          )}
+          
+          {onShare && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-auto p-1 hover:text-green-500 ${isJournalView ? 'text-xs' : ''}`}
+              onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}
+            >
+              <Share2 className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              Share
+            </Button>
+          )}
         </div>
       </CardContent>
     </Card>

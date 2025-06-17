@@ -2,7 +2,6 @@
 import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamDetail from "@/components/DreamDetail";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface DreamDetailWrapperProps {
@@ -12,9 +11,6 @@ interface DreamDetailWrapperProps {
   onUpdate: (id: string, updates: Partial<DreamEntry>) => void;
   isAuthenticated: boolean;
   onLike?: (dreamId: string) => void;
-  onViewCountUpdate?: (dreamId: string) => void;
-  viewCountUpdated: Set<string>;
-  setViewCountUpdated: React.Dispatch<React.SetStateAction<Set<string>>>;
 }
 
 const DreamDetailWrapper = ({
@@ -24,9 +20,6 @@ const DreamDetailWrapper = ({
   onUpdate,
   isAuthenticated,
   onLike,
-  onViewCountUpdate,
-  viewCountUpdated,
-  setViewCountUpdated
 }: DreamDetailWrapperProps) => {
   if (!selectedDream) return null;
   
@@ -70,42 +63,6 @@ const DreamDetailWrapper = ({
       toast.error("Failed to update dream");
     }
   };
-
-  // Update view count when dream is opened - but only once per dream
-  React.useEffect(() => {
-    if (selectedDream && selectedDream.id && !viewCountUpdated.has(selectedDream.id)) {
-      const updateViewCount = async () => {
-        try {
-          // Get current view count to increment
-          const currentViewCount = selectedDream.view_count || 0;
-          
-          // Increment view count in database
-          const { error } = await supabase
-            .from("dream_entries")
-            .update({ 
-              view_count: currentViewCount + 1 
-            })
-            .eq("id", selectedDream.id);
-
-          if (error) {
-            console.error("Error updating view count:", error);
-          } else {
-            // Mark this dream as having its view count updated
-            setViewCountUpdated(prev => new Set(prev).add(selectedDream.id));
-            
-            // Update the local state through the callback
-            if (onViewCountUpdate) {
-              onViewCountUpdate(selectedDream.id);
-            }
-          }
-        } catch (error) {
-          console.error("Error updating view count:", error);
-        }
-      };
-
-      updateViewCount();
-    }
-  }, [selectedDream?.id, onViewCountUpdate, viewCountUpdated, setViewCountUpdated]);
 
   const handleLike = () => {
     if (onLike && selectedDream) {
