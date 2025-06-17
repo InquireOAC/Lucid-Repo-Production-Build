@@ -73,12 +73,13 @@ const DreamGrid = ({
     }
   };
   
-  // Handle dream update
+  // Handle dream update - only allow updates for own profile dreams
   const handleUpdateDream = async (id: string, updates: any) => {
-    // Only the profile owner can trigger an update, otherwise return silently
+    // Only allow updates if this is the user's own profile
     if (!isOwnProfile) {
-      return; // <-- Return silently without showing any toast
+      return; // Return silently without any operation or toast
     }
+    
     try {
       // Update the dream in Supabase
       const { error } = await supabase
@@ -142,7 +143,7 @@ const DreamGrid = ({
           dream={selectedDream}
           tags={[]} // Pass tags if available
           onClose={() => setSelectedDream(null)}
-          onUpdate={handleUpdateDream}
+          onUpdate={isOwnProfile ? handleUpdateDream : undefined}
           onDelete={isOwnProfile ? handleDeleteDream : undefined}
           isAuthenticated={true}
         />
