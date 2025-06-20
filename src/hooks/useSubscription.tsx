@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -68,8 +69,7 @@ export function useSubscription(user: any) {
             console.log("Found RevenueCat entitlement that needs syncing:", {
               entitlementKey,
               productIdentifier: entitlement.productIdentifier,
-              expirationDate: entitlement.expirationDate,
-              purchaseDate: entitlement.purchaseDate
+              expirationDate: entitlement.expirationDate
             });
             
             // Format RevenueCat subscription data temporarily
