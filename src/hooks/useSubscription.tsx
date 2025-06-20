@@ -19,29 +19,31 @@ export function useSubscription(user: any) {
       setErrorMessage(null);
       console.log("Fetching subscription data for user:", user.id);
       
-      // ALWAYS check Supabase first for user subscriptions (covers all cases)
-      console.log("Checking Supabase for user subscription...");
-      const { data: directSubscription, error: directError } = await supabase
+      // ALWAYS check Supabase first for user subscriptions - this covers ALL subscription types
+      console.log("Checking Supabase for any active subscription by user_id...");
+      const { data: userSubscription, error: userSubError } = await supabase
         .from('stripe_subscriptions')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
-      if (directError) {
-        console.error('Error fetching direct subscription:', directError);
+      if (userSubError) {
+        console.error('Error fetching user subscription:', userSubError);
       }
 
-      if (directSubscription) {
-        console.log("Found active subscription for user:", directSubscription);
-        setSubscription(formatSubscriptionData(directSubscription));
+      if (userSubscription) {
+        console.log("Found active subscription for user:", userSubscription);
+        setSubscription(formatSubscriptionData(userSubscription));
         return;
       }
 
-      // On native platforms, also check RevenueCat as a secondary source
+      console.log("No subscription found by user_id, checking other methods...");
+
+      // On native platforms, check RevenueCat and trigger sync if needed
       if (Capacitor.isNativePlatform()) {
         try {
-          console.log("No Supabase subscription found, checking RevenueCat...");
+          console.log("Checking RevenueCat for subscription...");
           const result = await Purchases.getCustomerInfo();
           const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
@@ -50,17 +52,24 @@ export function useSubscription(user: any) {
           console.log("Active entitlements:", activeEntitlements);
           
           if (Object.keys(activeEntitlements).length > 0) {
-            // User has active RevenueCat subscription but it's not in Supabase
+            // User has active RevenueCat subscription but it's not synced to Supabase
             const [entitlementKey, entitlement] = Object.entries(activeEntitlements)[0];
-            console.log("Found RevenueCat entitlement not in Supabase:", entitlementKey, entitlement);
+            console.log("Found RevenueCat entitlement that needs syncing:", entitlementKey, entitlement);
             
-            // Format RevenueCat subscription data
+            // Format RevenueCat subscription data temporarily
             const revenuecatSubscription = formatRevenueCatSubscription(entitlement, entitlementKey);
             setSubscription(revenuecatSubscription);
             
-            // Trigger sync to Supabase in background
-            console.log("Triggering background sync to Supabase...");
-            triggerBackgroundSync();
+            // Trigger immediate sync to Supabase
+            console.log("Triggering immediate sync to Supabase...");
+            await triggerImmediateSync();
+            
+            // Refresh after sync
+            setTimeout(() => {
+              console.log("Refreshing subscription data after sync...");
+              fetchSubscription();
+            }, 2000);
+            
             return;
           } else {
             console.log("No active RevenueCat entitlements found");
@@ -70,8 +79,9 @@ export function useSubscription(user: any) {
         }
       }
 
-      // Fallback: check by customer_id (for legacy Stripe subscriptions)
+      // Fallback: check by customer_id for legacy Stripe subscriptions
       if (!Capacitor.isNativePlatform()) {
+        console.log("Checking for legacy Stripe subscriptions by customer_id...");
         const { data: customerData, error: customerError } = await supabase
           .from('stripe_customers')
           .select('customer_id')
@@ -85,7 +95,6 @@ export function useSubscription(user: any) {
         if (customerData?.customer_id) {
           console.log(`Found customer ID: ${customerData.customer_id}`);
 
-          // Get the subscription details via customer_id
           const { data: subscriptionData, error: subscriptionError } = await supabase
             .from('stripe_subscriptions')
             .select('*')
@@ -94,21 +103,18 @@ export function useSubscription(user: any) {
             .maybeSingle();
 
           if (subscriptionError) {
-            console.error('Error fetching subscription:', subscriptionError);
-            setIsError(true);
-            setErrorMessage('Failed to retrieve subscription details');
-            return;
+            console.error('Error fetching subscription by customer_id:', subscriptionError);
           }
 
           if (subscriptionData) {
-            console.log("Subscription data found via customer_id:", subscriptionData);
+            console.log("Found subscription by customer_id:", subscriptionData);
             setSubscription(formatSubscriptionData(subscriptionData));
             return;
           }
         }
       }
 
-      console.log("No active subscription found");
+      console.log("No active subscription found anywhere");
       setSubscription(null);
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
@@ -120,11 +126,14 @@ export function useSubscription(user: any) {
     }
   }, [user]);
 
-  const triggerBackgroundSync = useCallback(async () => {
+  const triggerImmediateSync = useCallback(async () => {
     try {
-      console.log('Triggering background sync to Supabase...');
+      console.log('Triggering immediate sync to Supabase...');
       
-      if (!Capacitor.isNativePlatform()) return;
+      if (!Capacitor.isNativePlatform()) {
+        console.log('Not on native platform, skipping RevenueCat sync');
+        return;
+      }
       
       const result = await Purchases.getCustomerInfo();
       const customerInfo = result.customerInfo;
@@ -136,8 +145,8 @@ export function useSubscription(user: any) {
         return;
       }
 
-      // Call our sync function
-      await supabase.functions.invoke('sync-revenuecat-subscription', {
+      console.log('Calling sync function with customer info...');
+      const { data, error } = await supabase.functions.invoke('sync-revenuecat-subscription', {
         body: {
           customerInfo: customerInfo
         },
@@ -146,9 +155,16 @@ export function useSubscription(user: any) {
         }
       });
       
-      console.log('Background sync completed');
+      if (error) {
+        console.error('Sync function error:', error);
+        throw error;
+      }
+      
+      console.log('Immediate sync completed successfully:', data);
+      return true;
     } catch (error) {
-      console.error('Background sync failed:', error);
+      console.error('Immediate sync failed:', error);
+      return false;
     }
   }, []);
 

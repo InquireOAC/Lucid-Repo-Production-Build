@@ -5,7 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useSubscription } from "@/hooks/useSubscription";
+import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import NativeSubscriptionManager from "./NativeSubscriptionManager";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
@@ -19,8 +22,14 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
   isOpen,
   onOpenChange,
 }) => {
-  const { subscription, isLoading } = useSubscriptionContext();
+  const { user } = useAuth();
+  const { subscription, isLoading, refreshSubscription } = useSubscription(user);
   const isNativePlatform = Capacitor.isNativePlatform();
+
+  const handleRefresh = () => {
+    console.log('Manual refresh triggered from subscription dialog');
+    refreshSubscription();
+  };
 
   if (isLoading) {
     return (
@@ -41,6 +50,17 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Choose Your Plan</DialogTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                className="ml-auto"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
           </DialogHeader>
           <div className="p-4">
             {isNativePlatform ? (
@@ -63,6 +83,15 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Subscription Details</DialogTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            className="ml-auto"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </DialogHeader>
         
         <div className="space-y-6">

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,21 +35,21 @@ export const useFeatureUsage = () => {
 
       console.log('Checking subscription status for user:', user.id);
 
-      // ALWAYS check Supabase first - this ensures cross-device consistency
-      const { data: directSubscription } = await supabase
+      // ALWAYS check Supabase first by user_id - this ensures cross-device consistency
+      const { data: userSubscription } = await supabase
         .from('stripe_subscriptions')
         .select('status')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
-      if (directSubscription) {
-        console.log('Found active subscription in Supabase for user');
+      if (userSubscription) {
+        console.log('Found active subscription in Supabase for user by user_id');
         setHasActiveSubscription(true);
         return;
       }
 
-      // On native platforms, also check RevenueCat as fallback
+      // On native platforms, also check RevenueCat and sync if needed
       if (Capacitor.isNativePlatform()) {
         try {
           const result = await Purchases.getCustomerInfo();
@@ -60,7 +59,22 @@ export const useFeatureUsage = () => {
           
           console.log('RevenueCat active entitlements:', activeEntitlements);
           if (hasActiveEntitlement) {
-            console.log('Found active RevenueCat subscription');
+            console.log('Found active RevenueCat subscription, triggering sync...');
+            
+            // Try to sync immediately
+            try {
+              const { data: { session } } = await supabase.auth.getSession();
+              if (session?.access_token) {
+                await supabase.functions.invoke('sync-revenuecat-subscription', {
+                  body: { customerInfo: customerInfo },
+                  headers: { Authorization: `Bearer ${session.access_token}` }
+                });
+                console.log('RevenueCat subscription synced successfully');
+              }
+            } catch (syncError) {
+              console.error('Failed to sync RevenueCat subscription:', syncError);
+            }
+            
             setHasActiveSubscription(true);
             return;
           }
