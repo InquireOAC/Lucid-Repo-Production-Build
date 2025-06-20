@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
 import { Capacitor } from '@capacitor/core';
-import { Purchases } from '@revenuecat/purchases-capacitor';
+import { revenueCatManager } from '@/utils/revenueCatManager';
 
 type FeatureType = 'analysis' | 'image';
 
@@ -52,7 +52,8 @@ export const useFeatureUsage = () => {
       // On native platforms, also check RevenueCat and sync if needed
       if (Capacitor.isNativePlatform()) {
         try {
-          const result = await Purchases.getCustomerInfo();
+          await revenueCatManager.initialize(user.id);
+          const result = await revenueCatManager.getCustomerInfo();
           const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
           const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;

@@ -1,11 +1,11 @@
-
 import { useState, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSubscriptionContext } from '@/contexts/SubscriptionContext';
-import { Purchases, PurchasesOfferings, PurchasesPackage } from '@revenuecat/purchases-capacitor';
+import { PurchasesOfferings, PurchasesPackage } from '@revenuecat/purchases-capacitor';
+import { revenueCatManager } from '@/utils/revenueCatManager';
 
 const PRODUCT_IDS = {
   BASIC: 'com.lucidrepo.limited.monthly',
@@ -38,14 +38,10 @@ export const useNativeSubscription = () => {
     try {
       console.log('Initializing RevenueCat with user ID:', user?.id);
       
-      await Purchases.configure({
-        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
-        appUserID: user?.id || undefined
-      });
-
+      await revenueCatManager.initialize(user?.id);
       console.log('RevenueCat configured successfully');
 
-      const offerings: PurchasesOfferings = await Purchases.getOfferings();
+      const offerings: PurchasesOfferings = await revenueCatManager.getOfferings();
       console.log('RevenueCat offerings received:', offerings);
       
       const availablePackages = offerings.current?.availablePackages || [];
@@ -56,6 +52,8 @@ export const useNativeSubscription = () => {
         toast.error('No subscription packages available. Please check RevenueCat configuration.');
         return;
       }
+
+      // ... keep existing code (nativeProducts mapping and processing)
 
       const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
         console.log('Processing package:', pkg.product.identifier, pkg.product.priceString);
@@ -113,7 +111,7 @@ export const useNativeSubscription = () => {
     try {
       console.log(`Syncing subscription with Supabase (attempt ${retryCount + 1}/${maxRetries})...`);
       
-      const result = await Purchases.getCustomerInfo();
+      const result = await revenueCatManager.getCustomerInfo();
       const customerInfo = result.customerInfo;
       
       console.log('Customer info for sync:', customerInfo);
@@ -192,7 +190,7 @@ export const useNativeSubscription = () => {
       // Show loading toast
       toast.loading('Processing your subscription...', { id: 'purchase-loading' });
       
-      const purchaseResult = await Purchases.purchasePackage({ 
+      const purchaseResult = await revenueCatManager.purchasePackage({ 
         aPackage: product.packageObject 
       });
 
@@ -245,7 +243,7 @@ export const useNativeSubscription = () => {
       toast.loading('Restoring purchases...', { id: 'restore-loading' });
       
       console.log('Restoring purchases...');
-      const restoreResult = await Purchases.restorePurchases();
+      const restoreResult = await revenueCatManager.restorePurchases();
       console.log('Restore result:', restoreResult);
       
       // Sync with Supabase after restore with retry logic

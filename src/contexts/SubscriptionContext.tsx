@@ -2,8 +2,7 @@
 import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
-import { Capacitor } from '@capacitor/core';
-import { Purchases } from '@revenuecat/purchases-capacitor';
+import { revenueCatManager } from '@/utils/revenueCatManager';
 
 interface SubscriptionContextType {
   subscription: any;
@@ -20,7 +19,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   // Initialize RevenueCat when user is available
   useEffect(() => {
-    if (user && Capacitor.isNativePlatform()) {
+    if (user) {
       initializeRevenueCat();
     }
   }, [user]);
@@ -28,10 +27,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const initializeRevenueCat = async () => {
     try {
       console.log('Initializing RevenueCat for SubscriptionContext...');
-      await Purchases.configure({
-        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
-        appUserID: user?.id || undefined
-      });
+      await revenueCatManager.initialize(user?.id);
       console.log('RevenueCat initialized successfully in SubscriptionContext');
       
       // Immediately check for subscription updates after initialization
@@ -55,13 +51,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const forceRefreshSubscription = useCallback(async () => {
     console.log('Force refreshing subscription...');
     
-    if (user && Capacitor.isNativePlatform()) {
+    if (user) {
       try {
         // Re-initialize RevenueCat to ensure fresh data
-        await Purchases.configure({
-          apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
-          appUserID: user?.id || undefined
-        });
+        await revenueCatManager.initialize(user?.id);
         console.log('RevenueCat re-initialized for force refresh');
       } catch (error) {
         console.error('Failed to re-initialize RevenueCat during force refresh:', error);

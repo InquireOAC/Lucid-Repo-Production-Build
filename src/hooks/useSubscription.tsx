@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
-import { Purchases } from "@revenuecat/purchases-capacitor";
+import { revenueCatManager } from "@/utils/revenueCatManager";
 
 export function useSubscription(user: any) {
   const [subscription, setSubscription] = useState<any>(null);
@@ -45,13 +45,10 @@ export function useSubscription(user: any) {
       if (Capacitor.isNativePlatform()) {
         try {
           console.log("Initializing RevenueCat with user ID:", user.id);
-          await Purchases.configure({
-            apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
-            appUserID: user.id || undefined
-          });
+          await revenueCatManager.initialize(user.id);
           
           console.log("Checking RevenueCat for subscription...");
-          const result = await Purchases.getCustomerInfo();
+          const result = await revenueCatManager.getCustomerInfo();
           const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
           
@@ -189,7 +186,7 @@ export function useSubscription(user: any) {
         return false;
       }
       
-      const result = await Purchases.getCustomerInfo();
+      const result = await revenueCatManager.getCustomerInfo();
       const customerInfo = result.customerInfo;
       
       console.log('Syncing customer info:', {
