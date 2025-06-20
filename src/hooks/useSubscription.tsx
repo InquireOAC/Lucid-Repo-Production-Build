@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -92,6 +91,11 @@ export function useSubscription(user: any) {
           } else {
             console.log("No active RevenueCat entitlements found");
             console.log("All entitlements:", customerInfo.entitlements.all);
+            
+            // Check if subscription might have been transferred - look for any subscription records 
+            // that might be associated with this user's email or other identifiers
+            console.log("Checking for transferred subscriptions...");
+            await checkForTransferredSubscriptions();
           }
         } catch (revenueCatError) {
           console.error('RevenueCat check failed:', revenueCatError);
@@ -145,6 +149,36 @@ export function useSubscription(user: any) {
       setIsLoading(false);
     }
   }, [user]);
+
+  const checkForTransferredSubscriptions = useCallback(async () => {
+    try {
+      console.log('Checking for transferred subscriptions...');
+      
+      // Look for subscriptions that might belong to this user but under different user_ids
+      // This could happen due to RevenueCat transfers
+      const { data: possibleSubscriptions, error } = await supabase
+        .from('stripe_subscriptions')
+        .select('*')
+        .eq('status', 'active')
+        .like('customer_id', 'revenuecat_%');
+
+      if (error) {
+        console.error('Error checking for transferred subscriptions:', error);
+        return;
+      }
+
+      console.log('Found RevenueCat subscriptions:', possibleSubscriptions?.length || 0);
+      
+      // For now, just log this information. In a production app, you might want to
+      // implement more sophisticated matching logic based on email or other identifiers
+      if (possibleSubscriptions && possibleSubscriptions.length > 0) {
+        console.log('Existing RevenueCat subscriptions found, but none match current user ID');
+        console.log('This might indicate a transfer event that needs manual resolution');
+      }
+    } catch (error) {
+      console.error('Error in checkForTransferredSubscriptions:', error);
+    }
+  }, []);
 
   const triggerImmediateSync = useCallback(async () => {
     try {
