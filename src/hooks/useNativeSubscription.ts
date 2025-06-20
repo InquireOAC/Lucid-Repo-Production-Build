@@ -116,6 +116,8 @@ export const useNativeSubscription = () => {
       const result = await Purchases.getCustomerInfo();
       const customerInfo = result.customerInfo;
       
+      console.log('Customer info for sync:', customerInfo);
+      
       // Get the auth token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
@@ -139,9 +141,11 @@ export const useNativeSubscription = () => {
       
       console.log('Subscription synced successfully:', data);
       
-      // Refresh the subscription context immediately after syncing
-      console.log('Refreshing subscription context...');
-      refreshSubscription();
+      // Force refresh the subscription context after sync
+      setTimeout(() => {
+        console.log('Force refreshing subscription context after sync...');
+        refreshSubscription();
+      }, 1000);
       
     } catch (error) {
       console.error('Failed to sync subscription:', error);

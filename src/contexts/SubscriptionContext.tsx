@@ -1,7 +1,9 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
+import { Capacitor } from '@capacitor/core';
+import { Purchases } from '@revenuecat/purchases-capacitor';
 
 interface SubscriptionContextType {
   subscription: any;
@@ -14,6 +16,26 @@ const SubscriptionContext = createContext<SubscriptionContextType | undefined>(u
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const { subscription, isLoading, refreshSubscription } = useSubscription(user);
+
+  // Initialize RevenueCat when user is available
+  useEffect(() => {
+    if (user && Capacitor.isNativePlatform()) {
+      initializeRevenueCat();
+    }
+  }, [user]);
+
+  const initializeRevenueCat = async () => {
+    try {
+      console.log('Initializing RevenueCat for SubscriptionContext...');
+      await Purchases.configure({
+        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
+        appUserID: user?.id || undefined
+      });
+      console.log('RevenueCat initialized successfully in SubscriptionContext');
+    } catch (error) {
+      console.error('Failed to initialize RevenueCat in SubscriptionContext:', error);
+    }
+  };
 
   const value = {
     subscription,
