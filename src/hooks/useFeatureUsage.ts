@@ -36,7 +36,21 @@ export const useFeatureUsage = () => {
 
       console.log('Checking subscription status for user:', user.id);
 
-      // On native platforms, prioritize RevenueCat
+      // ALWAYS check Supabase first - this ensures cross-device consistency
+      const { data: directSubscription } = await supabase
+        .from('stripe_subscriptions')
+        .select('status')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (directSubscription) {
+        console.log('Found active subscription in Supabase for user');
+        setHasActiveSubscription(true);
+        return;
+      }
+
+      // On native platforms, also check RevenueCat as fallback
       if (Capacitor.isNativePlatform()) {
         try {
           const result = await Purchases.getCustomerInfo();
@@ -46,6 +60,7 @@ export const useFeatureUsage = () => {
           
           console.log('RevenueCat active entitlements:', activeEntitlements);
           if (hasActiveEntitlement) {
+            console.log('Found active RevenueCat subscription');
             setHasActiveSubscription(true);
             return;
           }
@@ -54,21 +69,7 @@ export const useFeatureUsage = () => {
         }
       }
 
-      // Check for direct subscription by user_id (covers iOS/RevenueCat purchases synced to Supabase)
-      const { data: directSubscription } = await supabase
-        .from('stripe_subscriptions')
-        .select('status')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .maybeSingle();
-
-      if (directSubscription) {
-        console.log('Found active direct subscription (RevenueCat/iOS)');
-        setHasActiveSubscription(true);
-        return;
-      }
-
-      // Check Stripe customer subscription (web only)
+      // Check legacy Stripe customer subscription (web only)
       if (!Capacitor.isNativePlatform()) {
         const { data: customerData } = await supabase
           .from('stripe_customers')

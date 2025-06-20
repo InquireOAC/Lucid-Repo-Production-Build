@@ -43,7 +43,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify the JWT token
+    // Verify the JWT token and get user
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     
     if (authError || !user) {
@@ -74,26 +74,23 @@ serve(async (req) => {
       let priceId = entitlement.productIdentifier;
       
       // Generate a subscription ID for RevenueCat subscriptions
-      const subscriptionId = `ios_${user.id}_${entitlement.productIdentifier}`;
+      const subscriptionId = `revenuecat_${user.id}_${entitlement.productIdentifier}`;
       
       // Calculate period timestamps
       const purchaseDate = new Date(entitlement.purchaseDate);
       const expirationDate = entitlement.expirationDate ? new Date(entitlement.expirationDate) : null;
       
-      // First, check if the customer record exists, if not create one
+      // First, ensure we have a customer record for this user
+      const customerId = `revenuecat_${user.id}`;
+      
+      // Check if customer record exists, if not create one
       const { data: existingCustomer } = await supabase
         .from('stripe_customers')
         .select('customer_id')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      let customerId;
-      if (existingCustomer?.customer_id) {
-        customerId = existingCustomer.customer_id;
-        console.log('Using existing customer ID:', customerId);
-      } else {
-        // Create customer record
-        customerId = `revenuecat_${user.id}`;
+      if (!existingCustomer) {
         const { error: customerError } = await supabase
           .from('stripe_customers')
           .insert({
@@ -111,6 +108,8 @@ serve(async (req) => {
           );
         }
         console.log('Created new customer ID:', customerId);
+      } else {
+        console.log('Using existing customer for user:', user.id);
       }
 
       // Cancel any existing active subscriptions for this user (to avoid duplicates)
@@ -127,10 +126,10 @@ serve(async (req) => {
         console.error('Error canceling existing subscriptions:', cancelError);
       }
 
-      // Insert new subscription record with user_id for direct lookup
+      // Insert new subscription record with both customer_id and user_id for maximum compatibility
       const subscriptionData = {
         customer_id: customerId,
-        user_id: user.id, // Direct reference for faster lookups
+        user_id: user.id, // This is crucial for cross-device access
         subscription_id: subscriptionId,
         price_id: priceId,
         status: 'active' as const,
@@ -163,7 +162,8 @@ serve(async (req) => {
           message: 'Subscription synced successfully',
           subscriptionId,
           priceId,
-          status: 'active'
+          status: 'active',
+          userId: user.id // Include user ID in response for verification
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -186,7 +186,8 @@ serve(async (req) => {
         JSON.stringify({ 
           success: true, 
           message: 'No active subscription found',
-          status: 'canceled'
+          status: 'canceled',
+          userId: user.id
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

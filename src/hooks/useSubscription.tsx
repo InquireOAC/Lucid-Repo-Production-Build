@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,36 +19,8 @@ export function useSubscription(user: any) {
       setErrorMessage(null);
       console.log("Fetching subscription data for user:", user.id);
       
-      // On native platforms, prioritize RevenueCat first
-      if (Capacitor.isNativePlatform()) {
-        try {
-          console.log("Checking RevenueCat subscription status...");
-          const result = await Purchases.getCustomerInfo();
-          const customerInfo = result.customerInfo;
-          const activeEntitlements = customerInfo.entitlements.active;
-          
-          console.log("RevenueCat customer info:", customerInfo);
-          console.log("Active entitlements:", activeEntitlements);
-          
-          if (Object.keys(activeEntitlements).length > 0) {
-            // User has active RevenueCat subscription
-            const [entitlementKey, entitlement] = Object.entries(activeEntitlements)[0];
-            console.log("Found active RevenueCat entitlement:", entitlementKey, entitlement);
-            
-            // Format RevenueCat subscription data
-            const revenuecatSubscription = formatRevenueCatSubscription(entitlement, entitlementKey);
-            setSubscription(revenuecatSubscription);
-            return;
-          } else {
-            console.log("No active RevenueCat entitlements found");
-          }
-        } catch (revenueCatError) {
-          console.error('RevenueCat check failed:', revenueCatError);
-          // Continue to Supabase check as fallback
-        }
-      }
-
-      // Check for direct subscription by user_id (covers synced RevenueCat purchases)
+      // ALWAYS check Supabase first for user subscriptions (covers all cases)
+      console.log("Checking Supabase for user subscription...");
       const { data: directSubscription, error: directError } = await supabase
         .from('stripe_subscriptions')
         .select('*')
@@ -62,12 +33,44 @@ export function useSubscription(user: any) {
       }
 
       if (directSubscription) {
-        console.log("Found direct subscription for user:", directSubscription);
+        console.log("Found active subscription for user:", directSubscription);
         setSubscription(formatSubscriptionData(directSubscription));
         return;
       }
 
-      // Fallback: get customer record and check subscription via customer_id (for Stripe)
+      // On native platforms, also check RevenueCat as a secondary source
+      if (Capacitor.isNativePlatform()) {
+        try {
+          console.log("No Supabase subscription found, checking RevenueCat...");
+          const result = await Purchases.getCustomerInfo();
+          const customerInfo = result.customerInfo;
+          const activeEntitlements = customerInfo.entitlements.active;
+          
+          console.log("RevenueCat customer info:", customerInfo);
+          console.log("Active entitlements:", activeEntitlements);
+          
+          if (Object.keys(activeEntitlements).length > 0) {
+            // User has active RevenueCat subscription but it's not in Supabase
+            const [entitlementKey, entitlement] = Object.entries(activeEntitlements)[0];
+            console.log("Found RevenueCat entitlement not in Supabase:", entitlementKey, entitlement);
+            
+            // Format RevenueCat subscription data
+            const revenuecatSubscription = formatRevenueCatSubscription(entitlement, entitlementKey);
+            setSubscription(revenuecatSubscription);
+            
+            // Trigger sync to Supabase in background
+            console.log("Triggering background sync to Supabase...");
+            triggerBackgroundSync();
+            return;
+          } else {
+            console.log("No active RevenueCat entitlements found");
+          }
+        } catch (revenueCatError) {
+          console.error('RevenueCat check failed:', revenueCatError);
+        }
+      }
+
+      // Fallback: check by customer_id (for legacy Stripe subscriptions)
       if (!Capacitor.isNativePlatform()) {
         const { data: customerData, error: customerError } = await supabase
           .from('stripe_customers')
@@ -116,6 +119,38 @@ export function useSubscription(user: any) {
       setIsLoading(false);
     }
   }, [user]);
+
+  const triggerBackgroundSync = useCallback(async () => {
+    try {
+      console.log('Triggering background sync to Supabase...');
+      
+      if (!Capacitor.isNativePlatform()) return;
+      
+      const result = await Purchases.getCustomerInfo();
+      const customerInfo = result.customerInfo;
+      
+      // Get the auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        console.log('No valid session found for sync');
+        return;
+      }
+
+      // Call our sync function
+      await supabase.functions.invoke('sync-revenuecat-subscription', {
+        body: {
+          customerInfo: customerInfo
+        },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
+      
+      console.log('Background sync completed');
+    } catch (error) {
+      console.error('Background sync failed:', error);
+    }
+  }, []);
 
   const formatRevenueCatSubscription = (entitlement: any, entitlementKey: string) => {
     console.log("Formatting RevenueCat subscription:", entitlement);
@@ -166,7 +201,7 @@ export function useSubscription(user: any) {
     let imageTotal: number;
     
     // Check for RevenueCat iOS subscriptions first
-    if (subscriptionData.subscription_id?.startsWith('ios_') || 
+    if (subscriptionData.subscription_id?.startsWith('revenuecat_') || 
         subscriptionData.price_id === 'com.lucidrepo.limited.monthly' ||
         subscriptionData.price_id === 'com.lucidrepo.unlimited.monthly') {
       
@@ -177,8 +212,8 @@ export function useSubscription(user: any) {
         planName = 'Basic';
         imageTotal = 25;
       } else {
-        // Fallback for iOS subscriptions without clear price_id
-        planName = 'Premium'; // Default to premium for iOS
+        // Fallback for RevenueCat subscriptions without clear price_id
+        planName = 'Premium'; // Default to premium for RevenueCat
         imageTotal = 1000;
       }
     } else if (subscriptionData.price_id === 'price_premium') {
@@ -217,7 +252,7 @@ export function useSubscription(user: any) {
       },
       cancelAtPeriodEnd: subscriptionData.cancel_at_period_end || false,
       // Include subscription type for debugging
-      subscriptionType: subscriptionData.subscription_id?.startsWith('ios_') ? 'RevenueCat' : 'Stripe'
+      subscriptionType: subscriptionData.subscription_id?.startsWith('revenuecat_') ? 'RevenueCat' : 'Stripe'
     };
   };
 
