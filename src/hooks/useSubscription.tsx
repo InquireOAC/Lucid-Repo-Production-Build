@@ -18,6 +18,7 @@ export function useSubscription(user: any) {
       setIsError(false);
       setErrorMessage(null);
       console.log("Fetching subscription data for user:", user.id);
+      console.log("User email:", user.email);
       
       // ALWAYS check Supabase first for user subscriptions - this covers ALL subscription types
       console.log("Checking Supabase for any active subscription by user_id...");
@@ -38,23 +39,38 @@ export function useSubscription(user: any) {
         return;
       }
 
-      console.log("No subscription found by user_id, checking other methods...");
+      console.log("No subscription found by user_id, checking RevenueCat...");
 
-      // On native platforms, check RevenueCat and trigger sync if needed
+      // On native platforms, check RevenueCat with detailed logging
       if (Capacitor.isNativePlatform()) {
         try {
+          console.log("Initializing RevenueCat with user ID:", user.id);
+          await Purchases.configure({
+            apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
+            appUserID: user.id || undefined
+          });
+          
           console.log("Checking RevenueCat for subscription...");
           const result = await Purchases.getCustomerInfo();
           const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
           
-          console.log("RevenueCat customer info:", customerInfo);
-          console.log("Active entitlements:", activeEntitlements);
+          console.log("RevenueCat customer info:", {
+            originalAppUserId: customerInfo.originalAppUserId,
+            originalPurchaseDate: customerInfo.originalPurchaseDate,
+            activeEntitlements: Object.keys(activeEntitlements),
+            allEntitlements: Object.keys(customerInfo.entitlements.all)
+          });
           
           if (Object.keys(activeEntitlements).length > 0) {
             // User has active RevenueCat subscription but it's not synced to Supabase
             const [entitlementKey, entitlement] = Object.entries(activeEntitlements)[0];
-            console.log("Found RevenueCat entitlement that needs syncing:", entitlementKey, entitlement);
+            console.log("Found RevenueCat entitlement that needs syncing:", {
+              entitlementKey,
+              productIdentifier: entitlement.productIdentifier,
+              expirationDate: entitlement.expirationDate,
+              purchaseDate: entitlement.purchaseDate
+            });
             
             // Format RevenueCat subscription data temporarily
             const revenuecatSubscription = formatRevenueCatSubscription(entitlement, entitlementKey);
@@ -62,20 +78,24 @@ export function useSubscription(user: any) {
             
             // Trigger immediate sync to Supabase
             console.log("Triggering immediate sync to Supabase...");
-            await triggerImmediateSync();
+            const syncSuccess = await triggerImmediateSync();
             
-            // Refresh after sync
-            setTimeout(() => {
-              console.log("Refreshing subscription data after sync...");
-              fetchSubscription();
-            }, 2000);
+            if (syncSuccess) {
+              // Refresh after successful sync
+              setTimeout(() => {
+                console.log("Refreshing subscription data after successful sync...");
+                fetchSubscription();
+              }, 2000);
+            }
             
             return;
           } else {
             console.log("No active RevenueCat entitlements found");
+            console.log("All entitlements:", customerInfo.entitlements.all);
           }
         } catch (revenueCatError) {
           console.error('RevenueCat check failed:', revenueCatError);
+          toast.error('Failed to check mobile subscription status');
         }
       }
 
@@ -132,17 +152,22 @@ export function useSubscription(user: any) {
       
       if (!Capacitor.isNativePlatform()) {
         console.log('Not on native platform, skipping RevenueCat sync');
-        return;
+        return false;
       }
       
       const result = await Purchases.getCustomerInfo();
       const customerInfo = result.customerInfo;
       
+      console.log('Syncing customer info:', {
+        originalAppUserId: customerInfo.originalAppUserId,
+        activeEntitlements: Object.keys(customerInfo.entitlements.active)
+      });
+      
       // Get the auth token
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) {
         console.log('No valid session found for sync');
-        return;
+        return false;
       }
 
       console.log('Calling sync function with customer info...');
@@ -157,7 +182,7 @@ export function useSubscription(user: any) {
       
       if (error) {
         console.error('Sync function error:', error);
-        throw error;
+        return false;
       }
       
       console.log('Immediate sync completed successfully:', data);

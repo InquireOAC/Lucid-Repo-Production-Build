@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import NativeSubscriptionManager from "./NativeSubscriptionManager";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
+import { DebugSubscriptionInfo } from "./DebugSubscriptionInfo";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -50,18 +50,20 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Choose Your Plan</DialogTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRefresh}
-                className="ml-auto"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-            </div>
           </DialogHeader>
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-sm text-muted-foreground">
+              {isNativePlatform ? 'Mobile App Store' : 'Web Subscription'}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
           <div className="p-4">
             {isNativePlatform ? (
               <NativeSubscriptionManager />
@@ -69,6 +71,7 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
               <StripeSubscriptionManager />
             )}
           </div>
+          <DebugSubscriptionInfo />
         </DialogContent>
       </Dialog>
     );
@@ -82,16 +85,17 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Subscription Details</DialogTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            className="ml-auto"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center justify-between">
+            <DialogTitle>Subscription Details</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefresh}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </DialogHeader>
         
         <div className="space-y-6">
