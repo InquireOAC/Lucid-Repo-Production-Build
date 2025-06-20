@@ -25,7 +25,7 @@ class RevenueCatManager {
       } else if (userId && userId !== this.currentUserId) {
         // Use logIn instead of reconfiguring to avoid transfers
         console.log('RevenueCat: Logging in user:', userId, 'from:', this.currentUserId);
-        await Purchases.logIn(userId);
+        await Purchases.logIn({ appUserID: userId });
         this.currentUserId = userId;
         console.log('RevenueCat: Successfully logged in user');
       }
