@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, MessageCircle } from "lucide-react";
@@ -11,11 +10,15 @@ const MainLayout = () => {
   const location = useLocation();
   
   React.useEffect(() => {
-    // Redirect to auth if not logged in (except for journal which works without auth)
-    if (!loading && !user && location.pathname !== "/") {
+    // Only redirect to auth for pages that require authentication
+    // Journal page should work without authentication
+    const publicRoutes = ["/", "/journal"];
+    const isPublicRoute = publicRoutes.includes(location.pathname);
+    
+    if (!loading && !user && !isPublicRoute) {
       navigate("/auth");
     }
-  }, [user, loading, location.pathname]);
+  }, [user, loading, location.pathname, navigate]);
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
