@@ -90,6 +90,7 @@ serve(async (req) => {
       let customerId;
       if (existingCustomer?.customer_id) {
         customerId = existingCustomer.customer_id;
+        console.log('Using existing customer ID:', customerId);
       } else {
         // Create customer record
         customerId = `revenuecat_${user.id}`;
@@ -109,25 +110,27 @@ serve(async (req) => {
             { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
+        console.log('Created new customer ID:', customerId);
       }
 
-      // Cancel any existing active subscriptions for this user
+      // Cancel any existing active subscriptions for this user (to avoid duplicates)
       const { error: cancelError } = await supabase
         .from('stripe_subscriptions')
         .update({ 
           status: 'canceled',
           updated_at: new Date().toISOString()
         })
-        .eq('customer_id', customerId)
+        .eq('user_id', user.id)
         .eq('status', 'active');
 
       if (cancelError) {
         console.error('Error canceling existing subscriptions:', cancelError);
       }
 
-      // Insert new subscription record
+      // Insert new subscription record with user_id for direct lookup
       const subscriptionData = {
         customer_id: customerId,
+        user_id: user.id, // Direct reference for faster lookups
         subscription_id: subscriptionId,
         price_id: priceId,
         status: 'active' as const,
@@ -159,19 +162,21 @@ serve(async (req) => {
           success: true, 
           message: 'Subscription synced successfully',
           subscriptionId,
-          priceId
+          priceId,
+          status: 'active'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else {
-      // No active subscription, mark as canceled if exists
+      // No active subscription, mark any existing ones as canceled
       const { error: updateError } = await supabase
         .from('stripe_subscriptions')
         .update({
           status: 'canceled',
           updated_at: new Date().toISOString()
         })
-        .like('subscription_id', 'ios_%');
+        .eq('user_id', user.id)
+        .eq('status', 'active');
 
       if (updateError) {
         console.error('Error updating subscription status:', updateError);
@@ -180,7 +185,8 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: 'No active subscription found'
+          message: 'No active subscription found',
+          status: 'canceled'
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -189,7 +195,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Sync subscription error:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
+      JSON.stringify({ error: 'Internal server error', details: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { Capacitor } from '@capacitor/core';
@@ -9,13 +9,14 @@ interface SubscriptionContextType {
   subscription: any;
   isLoading: boolean;
   refreshSubscription: () => void;
+  forceRefreshSubscription: () => void;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
-  const { subscription, isLoading, refreshSubscription } = useSubscription(user);
+  const { subscription, isLoading, refreshSubscription: baseRefreshSubscription } = useSubscription(user);
 
   // Initialize RevenueCat when user is available
   useEffect(() => {
@@ -32,18 +33,52 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         appUserID: user?.id || undefined
       });
       console.log('RevenueCat initialized successfully in SubscriptionContext');
+      
+      // Immediately check for subscription updates after initialization
+      setTimeout(() => {
+        console.log('Checking for subscription updates after RevenueCat initialization...');
+        baseRefreshSubscription();
+      }, 1000);
+      
     } catch (error) {
       console.error('Failed to initialize RevenueCat in SubscriptionContext:', error);
     }
   };
 
+  // Enhanced refresh function with forced update capability
+  const refreshSubscription = useCallback(() => {
+    console.log('Refreshing subscription from context...');
+    baseRefreshSubscription();
+  }, [baseRefreshSubscription]);
+
+  // Force refresh that also re-initializes RevenueCat if needed
+  const forceRefreshSubscription = useCallback(async () => {
+    console.log('Force refreshing subscription...');
+    
+    if (user && Capacitor.isNativePlatform()) {
+      try {
+        // Re-initialize RevenueCat to ensure fresh data
+        await Purchases.configure({
+          apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
+          appUserID: user?.id || undefined
+        });
+        console.log('RevenueCat re-initialized for force refresh');
+      } catch (error) {
+        console.error('Failed to re-initialize RevenueCat during force refresh:', error);
+      }
+    }
+    
+    // Wait a moment then refresh
+    setTimeout(() => {
+      baseRefreshSubscription();
+    }, 500);
+  }, [user, baseRefreshSubscription]);
+
   const value = {
     subscription,
     isLoading,
-    refreshSubscription: () => {
-      console.log('Refreshing subscription from context...');
-      refreshSubscription();
-    }
+    refreshSubscription,
+    forceRefreshSubscription
   };
 
   return (

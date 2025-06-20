@@ -63,7 +63,6 @@ export const useNativeSubscription = () => {
         const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
         const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
         
-        // If the product ID doesn't match our expected IDs, still create a product
         let productName = 'Unknown Plan';
         let productId = 'price_unknown';
         let features: string[] = [];
@@ -85,7 +84,6 @@ export const useNativeSubscription = () => {
             'Priority Support'
           ];
         } else {
-          // Handle unexpected product IDs by creating a generic product
           productName = pkg.product.title || pkg.product.identifier;
           productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
           features = ['All features included'];
@@ -109,9 +107,11 @@ export const useNativeSubscription = () => {
     }
   };
 
-  const syncSubscriptionWithSupabase = async () => {
+  const syncSubscriptionWithSupabase = async (retryCount = 0) => {
+    const maxRetries = 3;
+    
     try {
-      console.log('Syncing subscription with Supabase...');
+      console.log(`Syncing subscription with Supabase (attempt ${retryCount + 1}/${maxRetries})...`);
       
       const result = await Purchases.getCustomerInfo();
       const customerInfo = result.customerInfo;
@@ -124,7 +124,7 @@ export const useNativeSubscription = () => {
         throw new Error('No valid session found');
       }
 
-      // Call our sync function
+      // Call our sync function with enhanced error handling
       const { data, error } = await supabase.functions.invoke('sync-revenuecat-subscription', {
         body: {
           customerInfo: customerInfo
@@ -141,16 +141,29 @@ export const useNativeSubscription = () => {
       
       console.log('Subscription synced successfully:', data);
       
-      // Force refresh the subscription context after sync
+      // Immediate refresh of subscription context
+      refreshSubscription();
+      
+      // Additional refresh after a short delay to ensure propagation
       setTimeout(() => {
-        console.log('Force refreshing subscription context after sync...');
+        console.log('Secondary refresh of subscription context...');
         refreshSubscription();
-      }, 1000);
+      }, 2000);
+      
+      return true;
       
     } catch (error) {
-      console.error('Failed to sync subscription:', error);
-      // Don't throw here - the purchase might still be valid
-      toast.warning('Purchase completed but sync pending. Restart the app if features don\'t appear immediately.');
+      console.error(`Failed to sync subscription (attempt ${retryCount + 1}):`, error);
+      
+      if (retryCount < maxRetries - 1) {
+        console.log(`Retrying sync in ${(retryCount + 1) * 2} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, (retryCount + 1) * 2000));
+        return syncSubscriptionWithSupabase(retryCount + 1);
+      } else {
+        // Final attempt failed
+        toast.warning('Purchase completed but sync pending. Please restart the app if features don\'t appear immediately.');
+        return false;
+      }
     }
   };
 
@@ -185,15 +198,23 @@ export const useNativeSubscription = () => {
 
       console.log('Purchase result:', purchaseResult);
       
-      // Sync the subscription with Supabase (this will also refresh the context)
-      await syncSubscriptionWithSupabase();
+      // Sync the subscription with Supabase with retry logic
+      const syncSuccess = await syncSubscriptionWithSupabase();
       
       // Dismiss loading toast and show success
       toast.dismiss('purchase-loading');
-      toast.success('Subscription activated successfully!', {
-        description: 'Your premium features are now available.',
-        duration: 5000
-      });
+      
+      if (syncSuccess) {
+        toast.success('Subscription activated successfully!', {
+          description: 'Your premium features are now available.',
+          duration: 5000
+        });
+      } else {
+        toast.success('Purchase completed!', {
+          description: 'If features don\'t appear, please restart the app.',
+          duration: 5000
+        });
+      }
       
       console.log('Purchase completed successfully - subscription context should be updated');
       
@@ -227,8 +248,8 @@ export const useNativeSubscription = () => {
       const restoreResult = await Purchases.restorePurchases();
       console.log('Restore result:', restoreResult);
       
-      // Sync with Supabase after restore (this will also refresh the context)
-      await syncSubscriptionWithSupabase();
+      // Sync with Supabase after restore with retry logic
+      const syncSuccess = await syncSubscriptionWithSupabase();
       
       toast.dismiss('restore-loading');
       
@@ -236,9 +257,15 @@ export const useNativeSubscription = () => {
       const activeEntitlements = Object.keys(restoreResult.customerInfo.entitlements?.active || {});
       
       if (activeEntitlements.length > 0) {
-        toast.success('Purchases restored successfully!', {
-          description: 'Your subscription has been restored.'
-        });
+        if (syncSuccess) {
+          toast.success('Purchases restored successfully!', {
+            description: 'Your subscription has been restored.'
+          });
+        } else {
+          toast.success('Purchases found!', {
+            description: 'If features don\'t appear, please restart the app.'
+          });
+        }
         
         console.log('Purchases restored successfully - subscription context should be updated');
       } else {
