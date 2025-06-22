@@ -56,5 +56,10 @@
 	<string>UIStatusBarStyleDarkContent</string>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>We need permission to send you morning reminders to log your dreams.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>background-processing</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

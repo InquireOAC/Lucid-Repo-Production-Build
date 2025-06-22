@@ -77,7 +77,7 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
       notificationDate.setDate(notificationDate.getDate() + 1);
     }
     
-    // Schedule a daily repeating notification with proper configuration
+    // Schedule a single daily notification with iOS-optimized configuration
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -88,42 +88,62 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
             at: notificationDate,
             repeats: true,
             every: 'day',
-            // Add allowWhileIdle to ensure proper scheduling on Android
+            // iOS specific: ensure proper daily scheduling
             allowWhileIdle: true
           },
           sound: 'default',
           actionTypeId: 'OPEN_APP',
-          // Add these properties to prevent duplicate notifications
+          // iOS specific: prevent notification stacking
           autoCancel: true,
-          ongoing: false
+          ongoing: false,
+          // iOS specific: add thread identifier to group notifications
+          threadId: 'dream-reminder',
+          // iOS specific: set category for proper handling
+          attachments: [],
+          extra: {
+            scheduledFor: notificationDate.toISOString()
+          }
         }
       ]
     });
     
-    console.log('Notification scheduled for:', notificationDate);
-    console.log('Next notification will fire at:', notificationDate.toLocaleString());
+    console.log('iOS notification scheduled for:', notificationDate.toLocaleString());
+    console.log('Notification will repeat daily at:', settings.time);
     
-    // Log all pending notifications for debugging
+    // Verify the notification was scheduled correctly
     const pending = await LocalNotifications.getPending();
-    console.log('Pending notifications after scheduling:', pending.notifications);
+    console.log('Pending notifications count:', pending.notifications.length);
+    pending.notifications.forEach(notification => {
+      console.log('Scheduled notification:', {
+        id: notification.id,
+        title: notification.title,
+        schedule: notification.schedule
+      });
+    });
     
   } catch (error) {
-    console.error('Error scheduling notification:', error);
+    console.error('Error scheduling iOS notification:', error);
   }
 }
 
 // Cancel all scheduled notifications
 export async function cancelAllNotifications(): Promise<void> {
   try {
+    // Get all pending notifications
     const pendingNotifications = await LocalNotifications.getPending();
-    console.log('Canceling notifications:', pendingNotifications.notifications.length);
+    console.log('Canceling pending notifications:', pendingNotifications.notifications.length);
     
+    // Cancel all pending notifications
     if (pendingNotifications.notifications.length > 0) {
       await LocalNotifications.cancel({ notifications: pendingNotifications.notifications });
     }
     
-    // Also clear any delivered notifications to be safe
+    // Clear any delivered notifications from notification center
     await LocalNotifications.removeAllDeliveredNotifications();
+    
+    // Verify cancellation
+    const remainingNotifications = await LocalNotifications.getPending();
+    console.log('Remaining notifications after cancellation:', remainingNotifications.notifications.length);
     
   } catch (error) {
     console.error('Error canceling notifications:', error);
@@ -136,6 +156,7 @@ export async function initializeNotifications(): Promise<void> {
     const settings = await getNotificationSettings();
     
     if (settings.enabled) {
+      // Always reschedule on app startup to ensure correct timing
       await scheduleNotification(settings);
     }
   } catch (error) {
