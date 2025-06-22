@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,14 +56,16 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
             <div className="text-sm text-muted-foreground">
               {isNativePlatform ? 'Mobile App Store' : 'Web Subscription'}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            {isNativePlatform && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            )}
           </div>
           <div className="p-4">
             {isNativePlatform ? (
@@ -87,14 +90,16 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>Subscription Details</DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
+            {isNativePlatform && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            )}
           </div>
         </DialogHeader>
         
