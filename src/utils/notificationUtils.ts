@@ -1,6 +1,7 @@
 
 import { LocalNotifications, ScheduleOptions } from '@capacitor/local-notifications';
 import { Preferences } from '@capacitor/preferences';
+import { Capacitor } from '@capacitor/core';
 
 // Key for storing notification settings
 const NOTIFICATION_SETTINGS_KEY = 'dreamjournal_notification_settings';
@@ -77,7 +78,10 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
       notificationDate.setDate(notificationDate.getDate() + 1);
     }
     
-    // Schedule a single daily notification with proper configuration
+    // For iOS, schedule a single notification without repeats to avoid multiple notifications
+    // We'll reschedule after the notification is delivered
+    const isIOS = Capacitor.getPlatform() === 'ios';
+    
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -86,8 +90,8 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
           body: 'Remember to log your dream from last night!',
           schedule: {
             at: notificationDate,
-            repeats: true,
-            every: 'day',
+            repeats: !isIOS, // Only repeat on non-iOS platforms
+            every: isIOS ? undefined : 'day',
             allowWhileIdle: true
           },
           sound: 'default',
@@ -95,14 +99,21 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
           autoCancel: true,
           ongoing: false,
           extra: {
-            scheduledFor: notificationDate.toISOString()
+            scheduledFor: notificationDate.toISOString(),
+            isRecurring: true
           }
         }
       ]
     });
     
     console.log('Notification scheduled for:', notificationDate.toLocaleString());
-    console.log('Notification will repeat daily at:', settings.time);
+    console.log('Platform:', Capacitor.getPlatform());
+    console.log('Repeats enabled:', !isIOS);
+    
+    // Set up listener for iOS to reschedule after notification is delivered
+    if (isIOS) {
+      setupNotificationListener();
+    }
     
     // Verify the notification was scheduled correctly
     const pending = await LocalNotifications.getPending();
@@ -120,9 +131,81 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
   }
 }
 
+// Set up notification listener for iOS to reschedule after delivery
+function setupNotificationListener() {
+  // Remove any existing listeners first
+  LocalNotifications.removeAllListeners();
+  
+  // Listen for notification actions (when user taps notification)
+  LocalNotifications.addListener('localNotificationActionPerformed', async (notification) => {
+    console.log('Notification action performed:', notification);
+    if (notification.notification.extra?.isRecurring) {
+      await rescheduleForNextDay();
+    }
+  });
+  
+  // Listen for notification received (when notification is delivered)
+  LocalNotifications.addListener('localNotificationReceived', async (notification) => {
+    console.log('Notification received:', notification);
+    if (notification.extra?.isRecurring) {
+      // Wait a bit to ensure the notification is fully processed
+      setTimeout(() => {
+        rescheduleForNextDay();
+      }, 1000);
+    }
+  });
+}
+
+// Reschedule notification for the next day (iOS only)
+async function rescheduleForNextDay() {
+  try {
+    const settings = await getNotificationSettings();
+    if (settings.enabled) {
+      console.log('Rescheduling notification for next day');
+      
+      // Parse the time
+      const [hours, minutes] = settings.time.split(':').map(Number);
+      
+      // Schedule for tomorrow at the same time
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      tomorrowDate.setHours(hours, minutes, 0, 0);
+      
+      await LocalNotifications.schedule({
+        notifications: [
+          {
+            id: 1,
+            title: 'Dream Journal Reminder',
+            body: 'Remember to log your dream from last night!',
+            schedule: {
+              at: tomorrowDate,
+              allowWhileIdle: true
+            },
+            sound: 'default',
+            actionTypeId: 'OPEN_APP',
+            autoCancel: true,
+            ongoing: false,
+            extra: {
+              scheduledFor: tomorrowDate.toISOString(),
+              isRecurring: true
+            }
+          }
+        ]
+      });
+      
+      console.log('Notification rescheduled for:', tomorrowDate.toLocaleString());
+    }
+  } catch (error) {
+    console.error('Error rescheduling notification:', error);
+  }
+}
+
 // Cancel all scheduled notifications
 export async function cancelAllNotifications(): Promise<void> {
   try {
+    // Remove listeners first
+    LocalNotifications.removeAllListeners();
+    
     // Get all pending notifications
     const pendingNotifications = await LocalNotifications.getPending();
     console.log('Canceling pending notifications:', pendingNotifications.notifications.length);
