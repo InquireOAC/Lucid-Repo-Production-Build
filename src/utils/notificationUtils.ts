@@ -77,7 +77,7 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
       notificationDate.setDate(notificationDate.getDate() + 1);
     }
     
-    // Schedule a daily repeating notification
+    // Schedule a daily repeating notification with proper configuration
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -87,15 +87,26 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
           schedule: {
             at: notificationDate,
             repeats: true,
-            every: 'day'
+            every: 'day',
+            // Add allowWhileIdle to ensure proper scheduling on Android
+            allowWhileIdle: true
           },
           sound: 'default',
-          actionTypeId: 'OPEN_APP'
+          actionTypeId: 'OPEN_APP',
+          // Add these properties to prevent duplicate notifications
+          autoCancel: true,
+          ongoing: false
         }
       ]
     });
     
     console.log('Notification scheduled for:', notificationDate);
+    console.log('Next notification will fire at:', notificationDate.toLocaleString());
+    
+    // Log all pending notifications for debugging
+    const pending = await LocalNotifications.getPending();
+    console.log('Pending notifications after scheduling:', pending.notifications);
+    
   } catch (error) {
     console.error('Error scheduling notification:', error);
   }
@@ -105,10 +116,15 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
 export async function cancelAllNotifications(): Promise<void> {
   try {
     const pendingNotifications = await LocalNotifications.getPending();
+    console.log('Canceling notifications:', pendingNotifications.notifications.length);
     
     if (pendingNotifications.notifications.length > 0) {
       await LocalNotifications.cancel({ notifications: pendingNotifications.notifications });
     }
+    
+    // Also clear any delivered notifications to be safe
+    await LocalNotifications.removeAllDeliveredNotifications();
+    
   } catch (error) {
     console.error('Error canceling notifications:', error);
   }
