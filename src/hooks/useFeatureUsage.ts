@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,7 +36,7 @@ export const useFeatureUsage = () => {
 
       console.log('Checking subscription status for user:', user.id);
 
-      // ALWAYS check Supabase first by user_id - this ensures cross-device consistency
+      // PRIORITY 1: Check Supabase first by user_id - this ensures cross-device consistency
       const { data: userSubscription } = await supabase
         .from('stripe_subscriptions')
         .select('status')
@@ -84,7 +85,7 @@ export const useFeatureUsage = () => {
         }
       }
 
-      // Check legacy Stripe customer subscription (web only)
+      // FALLBACK: Check legacy Stripe customer subscription (web only)
       if (!Capacitor.isNativePlatform()) {
         const { data: customerData } = await supabase
           .from('stripe_customers')

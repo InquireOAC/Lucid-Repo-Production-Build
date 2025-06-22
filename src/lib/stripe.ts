@@ -20,7 +20,20 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
       return true;
     }
     
-    // First check for active subscription by customer_id (covers all subscription types)
+    // PRIORITY 1: Check for active subscription by user_id (covers ALL subscription types including RevenueCat)
+    const { data: userSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (userSubscription) {
+      console.log('Found active subscription by user_id:', userSubscription);
+      return checkCreditsForSubscription(userSubscription, featureType);
+    }
+    
+    // FALLBACK: Check by customer_id for legacy subscriptions
     const { data: customerData } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -39,7 +52,7 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
         .maybeSingle();
       
       if (subscription) {
-        console.log('Found active subscription:', subscription);
+        console.log('Found active subscription by customer_id:', subscription);
         return checkCreditsForSubscription(subscription, featureType);
       }
     }
@@ -57,7 +70,7 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
   console.log('Checking credits for subscription:', subscription.price_id, 'Feature:', featureType);
   
   // Check for RevenueCat subscriptions
-  if (subscription.subscription_id?.startsWith('ios_') || 
+  if (subscription.subscription_id?.startsWith('revenuecat_') || 
       subscription.price_id === 'com.lucidrepo.limited.monthly' ||
       subscription.price_id === 'com.lucidrepo.unlimited.monthly') {
     
@@ -129,7 +142,24 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       return true;
     }
     
-    // Get customer record
+    // PRIORITY 1: Try to increment by user_id first
+    console.log('Incrementing usage by user_id...');
+    const { error: directError } = await supabase.rpc(
+      'increment_subscription_usage_by_user',
+      { 
+        user_id_param: user.id,
+        credit_type: featureType
+      }
+    );
+    
+    if (!directError) {
+      console.log('Successfully incremented usage by user_id');
+      return true;
+    }
+    
+    console.log('Direct user_id increment failed, trying customer_id method...', directError);
+    
+    // FALLBACK: Get customer record and increment by customer_id
     const { data: customerData } = await supabase
       .from('stripe_customers')
       .select('customer_id')
@@ -209,7 +239,19 @@ export const hasActiveSubscription = async (): Promise<boolean> => {
       return true;
     }
     
-    // Check for customer record and active subscription
+    // PRIORITY 1: Check by user_id for active subscription (covers all types)
+    const { data: userSubscription } = await supabase
+      .from('stripe_subscriptions')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+    
+    if (userSubscription) {
+      return true;
+    }
+    
+    // FALLBACK: Check for customer record and active subscription by customer_id
     const { data: customerData } = await supabase
       .from('stripe_customers')
       .select('customer_id')
