@@ -12,7 +12,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import NativeSubscriptionManager from "./NativeSubscriptionManager";
 import StripeSubscriptionManager from "./StripeSubscriptionManager";
-import { DebugSubscriptionInfo } from "./DebugSubscriptionInfo";
 
 interface SubscriptionDialogProps {
   isOpen: boolean;
@@ -74,7 +73,6 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
               <StripeSubscriptionManager />
             )}
           </div>
-          <DebugSubscriptionInfo />
         </DialogContent>
       </Dialog>
     );
