@@ -77,7 +77,7 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
       notificationDate.setDate(notificationDate.getDate() + 1);
     }
     
-    // Schedule a single daily notification with iOS-optimized configuration
+    // Schedule a single daily notification with proper configuration
     await LocalNotifications.schedule({
       notifications: [
         {
@@ -88,18 +88,12 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
             at: notificationDate,
             repeats: true,
             every: 'day',
-            // iOS specific: ensure proper daily scheduling
             allowWhileIdle: true
           },
           sound: 'default',
           actionTypeId: 'OPEN_APP',
-          // iOS specific: prevent notification stacking
           autoCancel: true,
           ongoing: false,
-          // iOS specific: add thread identifier to group notifications
-          threadId: 'dream-reminder',
-          // iOS specific: set category for proper handling
-          attachments: [],
           extra: {
             scheduledFor: notificationDate.toISOString()
           }
@@ -107,7 +101,7 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
       ]
     });
     
-    console.log('iOS notification scheduled for:', notificationDate.toLocaleString());
+    console.log('Notification scheduled for:', notificationDate.toLocaleString());
     console.log('Notification will repeat daily at:', settings.time);
     
     // Verify the notification was scheduled correctly
@@ -122,7 +116,7 @@ export async function scheduleNotification(settings: NotificationSettings): Prom
     });
     
   } catch (error) {
-    console.error('Error scheduling iOS notification:', error);
+    console.error('Error scheduling notification:', error);
   }
 }
 
