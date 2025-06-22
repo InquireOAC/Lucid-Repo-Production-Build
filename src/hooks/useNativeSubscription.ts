@@ -49,11 +49,20 @@ export const useNativeSubscription = () => {
 
       if (availablePackages.length === 0) {
         console.warn('No packages found in RevenueCat offerings');
+        console.warn('Expected product IDs:', PRODUCT_IDS.BASIC, PRODUCT_IDS.PREMIUM);
         toast.error('No subscription packages available. Please check RevenueCat configuration.');
         return;
       }
 
-      // ... keep existing code (nativeProducts mapping and processing)
+      // Log detailed package information for debugging
+      availablePackages.forEach((pkg: PurchasesPackage) => {
+        console.log('Found package:', {
+          identifier: pkg.product.identifier,
+          priceString: pkg.product.priceString,
+          title: pkg.product.title,
+          description: pkg.product.description
+        });
+      });
 
       const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
         console.log('Processing package:', pkg.product.identifier, pkg.product.priceString);
@@ -86,6 +95,7 @@ export const useNativeSubscription = () => {
           productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
           features = ['All features included'];
           console.warn('Unexpected product ID:', pkg.product.identifier);
+          console.warn('Expected either:', PRODUCT_IDS.BASIC, 'or', PRODUCT_IDS.PREMIUM);
         }
 
         return {
@@ -267,7 +277,9 @@ export const useNativeSubscription = () => {
         
         console.log('Purchases restored successfully - subscription context should be updated');
       } else {
-        toast.info('No active purchases found to restore');
+        toast.info('No active purchases found to restore', {
+          description: 'Make sure you\'re signed in with the same Apple ID used for the original purchase.'
+        });
       }
       
     } catch (error) {

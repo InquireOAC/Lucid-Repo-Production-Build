@@ -50,10 +50,15 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
               No subscription products available.
             </p>
             <p className="text-xs text-muted-foreground mb-4">
-              Make sure your RevenueCat offerings are configured with products:<br/>
-              • com.lucidrepo.limited.monthly (Basic)<br/>
-              • com.lucidrepo.unlimited.monthly (Premium)
+              Please ensure your RevenueCat offerings are configured with these exact product IDs:<br/>
+              • <code className="bg-gray-100 px-1 rounded">com.lucidrepo.limited.monthly</code> (Basic)<br/>
+              • <code className="bg-gray-100 px-1 rounded">com.lucidrepo.unlimited.monthly</code> (Premium)
             </p>
+            <div className="text-xs text-muted-foreground mb-4 space-y-1">
+              <p>✓ Check that offerings are published in RevenueCat</p>
+              <p>✓ Verify entitlements are attached to products</p>
+              <p>✓ Ensure App Store Connect products are approved</p>
+            </div>
             <Button 
               variant="outline" 
               onClick={() => window.location.reload()}
