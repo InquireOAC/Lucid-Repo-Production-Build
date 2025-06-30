@@ -9,6 +9,7 @@ import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
+import { useRepoSearch } from "@/hooks/useRepoSearch";
 
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
 
@@ -36,6 +37,9 @@ const LucidRepoContainer = () => {
     fetchPublicDreams
   } = useLucidRepoDreamState(user, refreshLikedDreams);
 
+  // Search hook for when user types in search query
+  const { dreams: searchResults, isLoading: searchLoading } = useRepoSearch(searchQuery.trim());
+
   // Custom hooks for dream actions
   const {
     selectedDream,
@@ -56,10 +60,14 @@ const LucidRepoContainer = () => {
     fetchPublicDreams
   );
 
+  // Determine which dreams to use - search results or regular dreams
+  const dreamsToFilter = searchQuery.trim() ? searchResults : dreamsState;
+  const currentLoading = searchQuery.trim() ? searchLoading : isLoading;
+
   // Custom hook for filtering
   const { filteredDreams } = useLucidRepoFilters({
-    dreamsState,
-    searchQuery,
+    dreamsState: dreamsToFilter,
+    searchQuery: "", // Don't double-filter for search since we're using search results
     activeTags
   });
 
@@ -118,7 +126,7 @@ const LucidRepoContainer = () => {
         onClearTags={handleClearTags} 
       />
       <LucidRepoDreamList 
-        isLoading={isLoading || tagsLoading} 
+        isLoading={currentLoading || tagsLoading} 
         filteredDreams={filteredDreams} 
         dreamTags={filteredDreamTags} 
         onLike={handleDreamLikeFromCard} 
