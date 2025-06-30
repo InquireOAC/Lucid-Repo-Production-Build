@@ -39,7 +39,7 @@ const LucidRepoHeader = ({
           aria-label="Search dreams" 
           type="text" 
           className="max-w-xs" 
-          placeholder="Search dreams or usernames..." 
+          placeholder="Search dreams..." 
           value={searchQuery} 
           onChange={e => setSearchQuery(e.target.value)} 
         />
