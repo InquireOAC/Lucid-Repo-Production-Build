@@ -42,7 +42,7 @@ const VideoDetail = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-dream-pink font-medium">
+                <p className="text-dream-pink font-medium text-center">
                   {video.dreamer_story_name}
                 </p>
               </div>
