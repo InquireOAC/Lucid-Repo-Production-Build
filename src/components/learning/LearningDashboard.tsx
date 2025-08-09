@@ -61,18 +61,17 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
         {/* Progress Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           {/* Level Progress Card */}
-          <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-            <CardHeader className="pb-3 relative">
+          <Card className="learning-card">
+            <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
                 <Brain className="h-5 w-5" />
                 Level Progress
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
+            <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-foreground">Level {currentLevel}</span>
+                  <span className="text-3xl font-bold text-high-contrast">Level {currentLevel}</span>
                   <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
                     {currentXP} XP
                   </Badge>
@@ -83,7 +82,7 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
                       value={Math.min(progressToNext, 100)} 
                       className="h-2 bg-primary/10"
                     />
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-contrast">
                       {xpForNextLevel - currentXP} XP to Level {currentLevel + 1}
                     </p>
                   </div>
@@ -93,23 +92,22 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
           </Card>
 
           {/* Practice Streak Card */}
-          <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-accent/10 via-accent/5 to-transparent backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent" />
-            <CardHeader className="pb-3 relative">
+          <Card className="learning-card">
+            <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-accent">
                 <Flame className="h-5 w-5" />
                 Practice Streak
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
+            <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-foreground">{currentStreak}</span>
+                  <span className="text-3xl font-bold text-high-contrast">{currentStreak}</span>
                   <Badge variant="outline" className="border-accent/30 text-accent">
                     Days
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-contrast">
                   Personal best: {longestStreak} days
                 </p>
               </div>
@@ -117,18 +115,17 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
           </Card>
 
           {/* Achievements Card */}
-          <Card className="relative overflow-hidden border-yellow-400/20 bg-gradient-to-br from-yellow-400/10 via-yellow-400/5 to-transparent backdrop-blur-sm">
-            <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/5 to-transparent" />
-            <CardHeader className="pb-3 relative">
+          <Card className="learning-card">
+            <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium flex items-center gap-2 text-yellow-400">
                 <Trophy className="h-5 w-5" />
                 Achievements
               </CardTitle>
             </CardHeader>
-            <CardContent className="relative">
+            <CardContent>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-foreground">{achievements.length}</span>
+                  <span className="text-3xl font-bold text-high-contrast">{achievements.length}</span>
                   <Badge variant="outline" className="border-yellow-400/30 text-yellow-400">
                     Unlocked
                   </Badge>
@@ -140,10 +137,10 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
                     </div>
                   ))}
                   {achievements.length > 3 && (
-                    <span className="text-xs text-muted-foreground ml-1">+{achievements.length - 3} more</span>
+                    <span className="text-xs text-muted-contrast ml-1">+{achievements.length - 3} more</span>
                   )}
                   {achievements.length === 0 && (
-                    <span className="text-xs text-muted-foreground">Start practicing to unlock</span>
+                    <span className="text-xs text-muted-contrast">Start practicing to unlock</span>
                   )}
                 </div>
               </div>

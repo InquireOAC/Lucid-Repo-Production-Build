@@ -5,41 +5,41 @@
 @layer base {
   :root {
     --background: 260 20% 12%;
-    --foreground: 210 40% 98%;
+    --foreground: 220 40% 98%;
 
-    --card: 260 20% 14%;
-    --card-foreground: 210 40% 98%;
+    --card: 260 15% 16%;
+    --card-foreground: 220 40% 98%;
 
-    --popover: 260 20% 14%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 260 15% 16%;
+    --popover-foreground: 220 40% 98%;
 
     --primary: 262 60% 60%;
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 220 40% 98%;
 
-    --secondary: 260 30% 30%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 260 25% 25%;
+    --secondary-foreground: 220 40% 98%;
 
-    --muted: 260 30% 20%;
-    --muted-foreground: 215 20.2% 75%;
+    --muted: 260 20% 22%;
+    --muted-foreground: 220 20% 80%;
 
     --accent: 262 50% 40%;
-    --accent-foreground: 210 40% 98%;
+    --accent-foreground: 220 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 220 40% 98%;
 
-    --border: 260 30% 30%;
-    --input: 260 30% 30%;
+    --border: 260 20% 25%;
+    --input: 260 20% 25%;
     --ring: 262 60% 60%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 260 20% 14%;
-    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-background: 260 15% 16%;
+    --sidebar-foreground: 220 40% 95%;
     --sidebar-primary: 262 60% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary-foreground: 220 40% 98%;
     --sidebar-accent: 260 20% 20%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 220 40% 95%;
     --sidebar-border: 260 20% 20%;
     --sidebar-ring: 262 60% 60%;
   }
@@ -90,14 +90,44 @@
 }
 
 .dream-background {
-  background: radial-gradient(circle at top right, rgba(126, 105, 171, 0.15), transparent 400px),
-              radial-gradient(circle at bottom left, rgba(155, 135, 245, 0.1), transparent 400px),
+  background: radial-gradient(circle at top right, rgba(126, 105, 171, 0.2), transparent 400px),
+              radial-gradient(circle at bottom left, rgba(155, 135, 245, 0.15), transparent 400px),
               hsl(260, 20%, 12%);
 }
 
 /* Gradient text utility */
 .gradient-text {
-  @apply text-transparent bg-clip-text bg-gradient-to-r from-dream-purple to-blue-400;
+  @apply text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400;
+}
+
+/* Enhanced card styles for better contrast */
+.learning-card {
+  @apply relative overflow-hidden border-primary/30 bg-gradient-to-br from-card via-card/95 to-card/80 backdrop-blur-md shadow-lg;
+}
+
+.learning-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(262, 60%, 60%, 0.08) 0%, rgba(262, 50%, 40%, 0.05) 50%, transparent 100%);
+  border-radius: inherit;
+  z-index: 0;
+}
+
+.learning-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Improved text contrast classes */
+.text-high-contrast {
+  @apply text-foreground;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.text-muted-contrast {
+  @apply text-muted-foreground;
+  opacity: 0.9;
 }
 
 /* Share card specific styles - Instagram-optimized */
