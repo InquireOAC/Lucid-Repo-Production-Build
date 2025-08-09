@@ -57,9 +57,6 @@ const VideoDetail = ({ video, isOpen, onClose }: VideoDetailProps) => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-white">
-                  {video.title}
-                </h2>
                 <p className="text-dream-pink font-medium">
                   {video.dreamer_story_name}
                 </p>
