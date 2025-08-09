@@ -68,8 +68,14 @@ const LucidRepoHeader = ({
             <Film className="w-4 h-4 mr-2" />
             Lucid Studios
           </Button>
-          {mode === "videos" && <AdminVideoButton />}
         </div>
+        
+        {/* Admin Video Management Button */}
+        {mode === "videos" && (
+          <div className="mt-4">
+            <AdminVideoButton />
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSearch} className="flex items-center space-x-2 mb-4" autoComplete="off">
