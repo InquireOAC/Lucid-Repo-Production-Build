@@ -62,18 +62,20 @@ const VideoDetail = ({ video, isOpen, onClose }: VideoDetailProps) => {
                 </p>
               </div>
               
-              <div className="flex items-center gap-4 text-sm text-white/70">
-                <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
-                  <span>{video.view_count || 0} views</span>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Eye className="w-4 h-4 text-dream-pink" />
+                  <span className="text-white font-medium">{video.view_count || 0}</span>
+                  <span className="text-white/60 text-sm">views</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
-                  <span>{video.like_count || 0} likes</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Heart className="w-4 h-4 text-red-400" />
+                  <span className="text-white font-medium">{video.like_count || 0}</span>
+                  <span className="text-white/60 text-sm">likes</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  <span>{new Date(video.created_at).toLocaleDateString()}</span>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20">
+                  <Calendar className="w-4 h-4 text-blue-400" />
+                  <span className="text-white font-medium">{new Date(video.created_at).toLocaleDateString()}</span>
                 </div>
               </div>
             </div>
