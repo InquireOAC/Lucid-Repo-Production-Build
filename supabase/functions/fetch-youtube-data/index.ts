@@ -142,7 +142,7 @@ serve(async (req) => {
       view_count: parseInt(statistics.viewCount || '0'),
       like_count: parseInt(statistics.likeCount || '0'),
       published_at: snippet.publishedAt,
-      is_published: false, // Default to unpublished
+      is_published: true, // Auto-publish videos
       created_by: user.id
     };
 
