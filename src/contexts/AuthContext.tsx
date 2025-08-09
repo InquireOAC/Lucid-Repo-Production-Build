@@ -129,22 +129,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        throw error;
-      }
-      // Clear profile data immediately on sign out
+      // Clear states first to ensure UI updates immediately
       setProfile(null);
       profileFetchedRef.current = null;
-      
-      // Clear session and user state immediately for faster UI updates
       setSession(null);
       setUser(null);
       
+      // Try to sign out, but don't fail if session is already invalid
+      const { error } = await supabase.auth.signOut();
+      
+      // If error is about session not found, that's actually fine - user is already signed out
+      if (error && !error.message?.includes('session_not_found') && !error.message?.includes('Session not found')) {
+        console.error("Sign out error:", error);
+        // Don't throw here, just log it since we already cleared the local state
+      }
+      
       toast.success("Successfully signed out");
     } catch (error: any) {
-      toast.error(error.message || "Error signing out");
-      throw error;
+      // Even if sign out fails server-side, we've cleared local state
+      console.error("Error signing out:", error);
+      toast.success("Successfully signed out");
     }
   }, []);
 
