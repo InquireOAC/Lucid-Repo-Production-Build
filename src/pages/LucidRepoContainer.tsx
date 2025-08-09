@@ -5,10 +5,13 @@ import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
 import LucidRepoDreamList from "./LucidRepoDreamList";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
+import VideoGrid from "@/components/videos/VideoGrid";
+import VideoDetail from "@/components/videos/VideoDetail";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
+import { VideoEntry } from "@/types/video";
 
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
 
@@ -17,6 +20,48 @@ const LucidRepoContainer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [mode, setMode] = useState<"dreams" | "videos">("dreams");
+  const [selectedVideo, setSelectedVideo] = useState<VideoEntry | null>(null);
+
+  // Mock video data - replace with real data from your backend
+  const [videos] = useState<VideoEntry[]>([
+    {
+      id: "1",
+      title: "Journey Through the Astral Plane",
+      description: "A mesmerizing exploration of consciousness and the dream realm, following a lucid dreamer as they navigate through different dimensions of awareness.",
+      video_url: "/videos/sample1.mp4",
+      thumbnail_url: "/thumbnails/astral.jpg",
+      dreamer_story_name: "The Astral Explorer",
+      duration: 720,
+      created_at: "2024-01-15T10:00:00Z",
+      view_count: 1250,
+      like_count: 89
+    },
+    {
+      id: "2", 
+      title: "The Nightmare Alchemist",
+      description: "Transform your deepest fears into sources of strength. This film follows the journey of turning nightmares into lucid dreams through ancient techniques.",
+      video_url: "/videos/sample2.mp4",
+      thumbnail_url: "/thumbnails/nightmare.jpg",
+      dreamer_story_name: "Shadow Work Chronicles",
+      duration: 480,
+      created_at: "2024-01-10T14:30:00Z",
+      view_count: 892,
+      like_count: 156
+    },
+    {
+      id: "3",
+      title: "Flying Dreams: Mastery of the Skies",
+      description: "Learn the secrets of dream flight in this comprehensive guide to one of lucid dreaming's most beloved experiences.",
+      video_url: "/videos/sample3.mp4", 
+      thumbnail_url: "/thumbnails/flying.jpg",
+      dreamer_story_name: "Wings of Consciousness",
+      duration: 600,
+      created_at: "2024-01-05T09:15:00Z",
+      view_count: 2103,
+      like_count: 234
+    }
+  ]);
 
   // For profile liked dreams refresh (noop since this is repo)
   function refreshLikedDreams() {
@@ -100,10 +145,23 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
+  const handleOpenVideo = (video: VideoEntry) => {
+    setSelectedVideo(video);
+  };
+
+  const handleCloseVideo = () => {
+    setSelectedVideo(null);
+  };
+
+  const filteredVideos = videos.filter(video =>
+    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    video.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    video.dreamer_story_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   // ---- MAIN UI ----
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <h1 className="text-2xl font-bold mb-6 gradient-text text-center">Lucid Repo</h1>
+    <div className="container mx-auto px-4 py-6 max-w-6xl">
       <LucidRepoHeader 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
@@ -115,19 +173,30 @@ const LucidRepoContainer = () => {
         tags={filteredDreamTags} 
         activeTags={activeTags} 
         onTagClick={handleTagClick} 
-        onClearTags={handleClearTags} 
+        onClearTags={handleClearTags}
+        mode={mode}
+        setMode={setMode}
       />
-      <LucidRepoDreamList 
-        isLoading={isLoading || tagsLoading} 
-        filteredDreams={filteredDreams} 
-        dreamTags={filteredDreamTags} 
-        onLike={handleDreamLikeFromCard} 
-        onOpenDream={handleOpenDream} 
-        onUserClick={handleNavigateToProfile} 
-        onTagClick={handleTagClick} 
-        searchQuery={searchQuery} 
-        currentUser={user} 
-      />
+      
+      {mode === "dreams" ? (
+        <LucidRepoDreamList 
+          isLoading={isLoading || tagsLoading} 
+          filteredDreams={filteredDreams} 
+          dreamTags={filteredDreamTags} 
+          onLike={handleDreamLikeFromCard} 
+          onOpenDream={handleOpenDream} 
+          onUserClick={handleNavigateToProfile} 
+          onTagClick={handleTagClick} 
+          searchQuery={searchQuery} 
+          currentUser={user} 
+        />
+      ) : (
+        <VideoGrid 
+          videos={filteredVideos}
+          onOpenVideo={handleOpenVideo}
+        />
+      )}
+
       {selectedDream && (
         <DreamDetailWrapper 
           selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream} 
@@ -138,6 +207,15 @@ const LucidRepoContainer = () => {
           onLike={() => handleDreamLike(selectedDream.id)} 
         />
       )}
+
+      {selectedVideo && (
+        <VideoDetail
+          video={selectedVideo}
+          isOpen={!!selectedVideo}
+          onClose={handleCloseVideo}
+        />
+      )}
+
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </div>
   );
