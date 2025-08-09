@@ -45,17 +45,17 @@ const SavedChatCard = ({
   const getExpertColor = (type: string) => {
     switch (type) {
       case 'jungian':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
+        return 'bg-purple-500/20 text-purple-300 border-purple-400/30';
       case 'shamanic':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'bg-green-500/20 text-green-300 border-green-400/30';
       case 'cbt':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-blue-500/20 text-blue-300 border-blue-400/30';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'bg-white/10 text-white/80 border-white/20';
     }
   };
-  return <Card className="cursor-pointer hover:shadow-md transition-all duration-200 hover:border-primary/20 group bg-purple-200" onClick={() => onOpenSession(session)}>
-      <CardContent className="p-6 rounded-lg bg-violet-950">
+  return <Card className="cursor-pointer glass-card border border-white/10 hover:border-white/20 transition-all duration-300 group hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10" onClick={() => onOpenSession(session)}>
+      <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             {/* Header with expert type and timestamp */}
@@ -63,7 +63,7 @@ const SavedChatCard = ({
               <Badge variant="outline" className={`font-medium ${getExpertColor(session.expert_type)}`}>
                 {formatExpertType(session.expert_type)}
               </Badge>
-              <div className="flex items-center text-xs text-white">
+              <div className="flex items-center text-xs text-white/60">
                 <Clock className="h-3 w-3 mr-1" />
                 {new Date(session.created_at).toLocaleDateString('en-US', {
                 month: 'short',
@@ -79,18 +79,18 @@ const SavedChatCard = ({
 
             {/* Preview of first message */}
             <div className="mb-3">
-              <p className="text-sm text-white line-clamp-2 leading-relaxed">
+              <p className="text-sm text-white/80 line-clamp-2 leading-relaxed">
                 {getFirstMessage(session.messages)}
               </p>
             </div>
 
             {/* Message count */}
             <div className="flex items-center justify-between">
-              <div className="flex items-center text-xs text-white">
+              <div className="flex items-center text-xs text-white/60">
                 <MessageCircle className="h-3 w-3 mr-1" />
                 {session.messages.length} {session.messages.length === 1 ? 'message' : 'messages'}
               </div>
-              <span className="text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-xs text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity">
                 Click to continue →
               </span>
             </div>
@@ -100,7 +100,7 @@ const SavedChatCard = ({
           <div className="ml-4 flex-shrink-0">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button onClick={e => e.stopPropagation()} variant="ghost" size="sm" disabled={deletingId === session.id} className="text-white hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-all">
+                <Button onClick={e => e.stopPropagation()} variant="ghost" size="sm" disabled={deletingId === session.id} className="text-white/60 hover:text-red-400 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-all">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>

@@ -290,10 +290,13 @@ const DreamChat = () => {
 
   if (!user) {
     return (
-      <div className="h-screen bg-background p-4 flex items-center justify-center overflow-hidden">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
-          <p className="text-muted-foreground">Please sign in to use the AI Dream Chat</p>
+      <div className="h-screen starry-background p-4 flex items-center justify-center overflow-hidden">
+        <div className="glass-card rounded-2xl p-8 text-center max-w-md">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageCircle className="h-8 w-8 text-white" />
+          </div>
+          <h2 className="text-xl font-semibold mb-2 text-white/90">Authentication Required</h2>
+          <p className="text-white/70">Please sign in to use the AI Dream Chat</p>
         </div>
       </div>
     );
@@ -304,19 +307,19 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen starry-background flex flex-col overflow-hidden">
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button
             onClick={() => setViewMode('savedChats')}
             variant="outline"
             size="sm"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 glass-card border-white/10 text-white/80 hover:text-white hover:border-white/20"
           >
             <MessageCircle className="h-4 w-4" />
             Chats
           </Button>
-          <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2">
+          <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2 text-white/90">
             Dream Chat
           </h1>
           <div className="flex gap-2">
@@ -326,24 +329,24 @@ const DreamChat = () => {
                 variant="outline"
                 size="sm"
                 disabled={isSaving}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 glass-card border-white/10 text-white/80 hover:text-white hover:border-white/20"
               >
                 <Save className="h-4 w-4" />
                 {isSaving ? 'Saving...' : 'Save'}
               </Button>
             )}
             {isReadOnly && (
-              <Button onClick={handleNewChat} variant="outline" size="sm">
+              <Button onClick={handleNewChat} variant="outline" size="sm" className="glass-card border-white/10 text-white/80 hover:text-white hover:border-white/20">
                 New Chat
               </Button>
             )}
           </div>
         </div>
 
-        <div className="bg-card rounded-lg border">
+        <div className="glass-card rounded-xl border border-white/10">
           {/* Expert Selection */}
-          <div className="p-4 border-b">
-            <label className="block text-sm font-medium mb-2">Choose Your Dream Expert:</label>
+          <div className="p-4 border-b border-white/10">
+            <label className="block text-sm font-medium mb-2 text-white/90">Choose Your Dream Expert:</label>
             <Select 
               value={expertType} 
               onValueChange={handleExpertChange} 
@@ -363,23 +366,23 @@ const DreamChat = () => {
 
         {/* Feature Access Status */}
         {!isAppCreator && !hasActiveSubscription && (
-          <div className="mt-4 bg-gradient-to-r from-blue-25 to-purple-25 border border-white-200 rounded-lg p-4">
+          <div className="mt-4 glass-card rounded-xl border border-white/10 p-4">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-50">
-                {hasUsedFreeTrial ? <Lock className="h-4 w-4 text-purple-600" /> : <MessageCircle className="h-4 w-4 text-purple-600" />}
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-purple-500/20">
+                {hasUsedFreeTrial ? <Lock className="h-4 w-4 text-purple-300" /> : <MessageCircle className="h-4 w-4 text-purple-300" />}
               </div>
               <div>
                 {!hasUsedFreeTrial ? (
                   <>
-                    <h3 className="text-sm font-medium mb-1 text-gray-300">Free Trial Available</h3>
-                    <p className="text-xs text-gray-50">
+                    <h3 className="text-sm font-medium mb-1 text-white/90">Free Trial Available</h3>
+                    <p className="text-xs text-white/70">
                       This is your first time using AI Dream Chat. You can try it for free once, then upgrade for unlimited access.
                     </p>
                   </>
                 ) : (
                   <>
-                    <h3 className="text-sm font-medium mb-1 text-gray-300">Premium Feature</h3>
-                    <p className="text-xs text-gray-50 mb-2">
+                    <h3 className="text-sm font-medium mb-1 text-white/90">Premium Feature</h3>
+                    <p className="text-xs text-white/70 mb-2">
                       You've used your free trial. Subscribe for unlimited AI Dream Chat access.
                     </p>
                     <Button
@@ -398,12 +401,12 @@ const DreamChat = () => {
 
         {/* Subscription Active Notice */}
         {!isAppCreator && hasActiveSubscription && (
-          <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="mt-4 glass-card rounded-xl border border-green-400/20 p-4">
             <div className="flex items-center gap-2">
-              <MessageCircle className="h-4 w-4 text-green-600" />
-              <span className="text-sm font-medium text-green-800">Unlimited Chat Access</span>
+              <MessageCircle className="h-4 w-4 text-green-300" />
+              <span className="text-sm font-medium text-white/90">Unlimited Chat Access</span>
             </div>
-            <p className="text-xs text-green-700 mt-1">
+            <p className="text-xs text-white/70 mt-1">
               You have unlimited access to AI Dream Chat with your subscription.
             </p>
           </div>
@@ -414,12 +417,17 @@ const DreamChat = () => {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground">
-              <p className="mb-2 text-gray-50">Welcome to your Dream Consultant</p>
-              <p className="text-sm">
-                Ask questions about your dreams and get insights from your chosen expert. 
-                Your dreams from the journal will provide context for interpretations.
-              </p>
+            <div className="text-center">
+              <div className="glass-card rounded-2xl p-8 max-w-md mx-auto">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageCircle className="h-8 w-8 text-white" />
+                </div>
+                <p className="mb-2 text-white/90 font-medium text-lg">Welcome to your Dream Consultant</p>
+                <p className="text-sm text-white/70 leading-relaxed">
+                  Ask questions about your dreams and get insights from your chosen expert. 
+                  Your dreams from the journal will provide context for interpretations.
+                </p>
+              </div>
             </div>
           ) : (
             messages.map((message) => (
@@ -428,10 +436,10 @@ const DreamChat = () => {
                 className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                     message.sender === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/25'
+                      : 'glass-card border border-white/10 text-white/90'
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
@@ -444,9 +452,9 @@ const DreamChat = () => {
           )}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-muted px-4 py-2 rounded-lg flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">AI is typing...</span>
+              <div className="glass-card border border-white/10 px-4 py-3 rounded-2xl flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin text-purple-300" />
+                <span className="text-sm text-white/70">AI is typing...</span>
               </div>
             </div>
           )}
@@ -454,7 +462,7 @@ const DreamChat = () => {
         </div>
 
         {/* Input Area - Fixed at bottom */}
-        <div className="flex-shrink-0 p-4 border-t bg-card">
+        <div className="flex-shrink-0 p-4 border-t border-white/10 glass-card">
           <div className="flex gap-2">
             <Input
               value={input}
@@ -468,10 +476,12 @@ const DreamChat = () => {
               }
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               disabled={isLoading || isReadOnly || isChecking || !isChatEnabled}
+              className="glass-card border-white/10 bg-transparent text-white placeholder:text-white/40 focus:border-white/30"
             />
             <Button
               onClick={handleSendMessage}
               disabled={isLoading || !input.trim() || isReadOnly || isChecking || !isChatEnabled}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 transition-all duration-300"
             >
               {isChecking ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
