@@ -16,7 +16,6 @@ export default function ProfilePage({ usernameParam }) {
 
   useEffect(() => {
     async function fetchProfile() {
-      console.log('ProfilePage: Fetching profile for username:', usernameParam);
       try {
         const { data, error } = await supabase
           .from("profiles")
@@ -24,7 +23,6 @@ export default function ProfilePage({ usernameParam }) {
           .eq("username", usernameParam)
           .maybeSingle();
         
-        console.log('ProfilePage: Profile fetch result:', { data, error });
         setProfile(data);
       } catch (err) {
         console.error('ProfilePage: Error fetching profile:', err);
@@ -36,7 +34,6 @@ export default function ProfilePage({ usernameParam }) {
   useEffect(() => {
     if (!profile?.id) return;
     async function getDreams() {
-      console.log('ProfilePage: Fetching dreams for profile ID:', profile.id);
       try {
         let query = supabase
           .from("dream_entries")
@@ -46,7 +43,6 @@ export default function ProfilePage({ usernameParam }) {
         query = query.order("created_at", { ascending: false });
         const { data, error } = await query;
         
-        console.log('ProfilePage: Dreams fetch result:', { data, error });
         setPublicDreams(data ?? []);
       } catch (err) {
         console.error('ProfilePage: Error fetching dreams:', err);

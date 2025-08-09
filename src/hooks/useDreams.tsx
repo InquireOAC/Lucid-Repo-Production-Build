@@ -38,7 +38,6 @@ export function useDreams(refreshLikedDreams?: () => void) {
   const fetchPublicDreams = async () => {
     setIsLoading(true);
     try {
-      console.log('useDreams: Fetching public dreams...');
       const { data: dreamsRaw, error } = await supabase
         .from("dream_entries")
         .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
@@ -46,10 +45,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
         .order("created_at", { ascending: false })
         .limit(50);
 
-      console.log('useDreams: Raw dreams data:', { dreamsRaw, error });
-
       if (error) {
-        console.error('useDreams: Database error:', error);
         throw error;
       }
 
@@ -80,29 +76,25 @@ export function useDreams(refreshLikedDreams?: () => void) {
             userLiked = !!likeData;
           }
 
-          return {
-            ...dream,
-            isPublic: dream.is_public,
-            likeCount: likeCount || 0,
-            like_count: likeCount || 0,
-            commentCount: commentCount || 0,
-            comment_count: commentCount || 0,
-            liked: userLiked,
-            userId: dream.user_id,
-            profiles: dream.profiles,
-            // Debug log to see profile data
-            _debug_profile: dream.profiles,
-            // pass down avatar
-            avatarSymbol: dream.profiles?.avatar_symbol || null,
-            avatarColor: dream.profiles?.avatar_color || null,
-            // Ensure image URLs are properly normalized
-            generatedImage: dream.generatedImage || dream.image_url || null,
-            image_url: dream.image_url || dream.generatedImage || null,
-          };
-        })
-      );
-        
-      console.log('useDreams: Dreams with counts and profiles:', dreamsWithCounts.slice(0, 2));
+            return {
+              ...dream,
+              isPublic: dream.is_public,
+              likeCount: likeCount || 0,
+              like_count: likeCount || 0,
+              commentCount: commentCount || 0,
+              comment_count: commentCount || 0,
+              liked: userLiked,
+              userId: dream.user_id,
+              profiles: dream.profiles,
+              // pass down avatar
+              avatarSymbol: dream.profiles?.avatar_symbol || null,
+              avatarColor: dream.profiles?.avatar_color || null,
+              // Ensure image URLs are properly normalized
+              generatedImage: dream.generatedImage || dream.image_url || null,
+              image_url: dream.image_url || dream.generatedImage || null,
+            };
+          })
+        );
       
       // If popular tab, sort by engagement after getting actual counts
       if (activeTab === "popular") {
