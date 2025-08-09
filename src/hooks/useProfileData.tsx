@@ -95,16 +95,16 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     try {
       let data, error;
       if (/^[0-9a-fA-F-]{36}$/.test(identifier)) {
-        // Fetch by id using public_profiles view for secure access
+        // Fetch by id
         ({ data, error } = await supabase
-          .from("public_profiles")
+          .from("profiles")
           .select("*")
           .eq("id", identifier)
           .maybeSingle());
       } else {
-        // Fetch by username using public_profiles view for secure access
+        // Fetch by username
         ({ data, error } = await supabase
-          .from("public_profiles")
+          .from("profiles")
           .select("*")
           .eq("username", identifier)
           .maybeSingle());

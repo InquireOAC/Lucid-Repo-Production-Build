@@ -30,7 +30,7 @@ export function useConversations(user: any) {
       
       if (userIds.size > 0) {
         const { data: profiles, error: profilesError } = await supabase
-          .from("public_profiles")
+          .from("profiles")
           .select("*")
           .in("id", Array.from(userIds));
         if (profilesError) throw profilesError;
@@ -49,7 +49,7 @@ export function useConversations(user: any) {
     try {
       // First, get the other user's profile
       const { data: otherUserProfile, error: profileError } = await supabase
-        .from("public_profiles")
+        .from("profiles")
         .select("*")
         .eq("id", otherUserId)
         .maybeSingle();

@@ -16,13 +16,19 @@ export default function ProfilePage({ usernameParam }) {
 
   useEffect(() => {
     async function fetchProfile() {
-      // Use public_profiles view for secure access to public profile data
-      const { data } = await supabase
-        .from("public_profiles")
-        .select("*")
-        .eq("username", usernameParam)
-        .maybeSingle();
-      setProfile(data);
+      console.log('ProfilePage: Fetching profile for username:', usernameParam);
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("username", usernameParam)
+          .maybeSingle();
+        
+        console.log('ProfilePage: Profile fetch result:', { data, error });
+        setProfile(data);
+      } catch (err) {
+        console.error('ProfilePage: Error fetching profile:', err);
+      }
     }
     if (usernameParam) fetchProfile();
   }, [usernameParam]);
@@ -30,14 +36,21 @@ export default function ProfilePage({ usernameParam }) {
   useEffect(() => {
     if (!profile?.id) return;
     async function getDreams() {
-      let query = supabase
-        .from("dream_entries")
-        .select("*, profiles:user_id(username, profile_picture)")
-        .eq("user_id", profile.id);
-      if (profile.id !== user?.id) query = query.eq("is_public", true);
-      query = query.order("created_at", { ascending: false });
-      const { data } = await query;
-      setPublicDreams(data ?? []);
+      console.log('ProfilePage: Fetching dreams for profile ID:', profile.id);
+      try {
+        let query = supabase
+          .from("dream_entries")
+          .select("*, profiles:user_id(username, profile_picture)")
+          .eq("user_id", profile.id);
+        if (profile.id !== user?.id) query = query.eq("is_public", true);
+        query = query.order("created_at", { ascending: false });
+        const { data, error } = await query;
+        
+        console.log('ProfilePage: Dreams fetch result:', { data, error });
+        setPublicDreams(data ?? []);
+      } catch (err) {
+        console.error('ProfilePage: Error fetching dreams:', err);
+      }
     }
     getDreams();
     fetchFollowers();
