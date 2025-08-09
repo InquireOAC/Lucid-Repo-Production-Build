@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
@@ -10,10 +10,21 @@ export function useSubscription(user: any) {
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const fetchingRef = useRef(false);
+  const lastFetchedUser = useRef<string | null>(null);
 
   const fetchSubscription = useCallback(async () => {
     try {
       if (!user?.id) return;
+      
+      // Prevent duplicate fetches
+      if (fetchingRef.current && lastFetchedUser.current === user.id) {
+        console.log("Subscription fetch already in progress for this user, skipping...");
+        return;
+      }
+      
+      fetchingRef.current = true;
+      lastFetchedUser.current = user.id;
       
       setIsLoading(true);
       setIsError(false);
@@ -40,93 +51,48 @@ export function useSubscription(user: any) {
         return;
       }
 
-      console.log("No subscription found by user_id, checking RevenueCat...");
+      console.log("No subscription found by user_id");
 
-      // On native platforms, check RevenueCat with detailed logging
+      // On native platforms, check RevenueCat briefly
       if (Capacitor.isNativePlatform()) {
         try {
-          console.log("Initializing RevenueCat with user ID:", user.id);
-          await revenueCatManager.initialize(user.id);
-          
           console.log("Checking RevenueCat for subscription...");
           const result = await revenueCatManager.getCustomerInfo();
           const customerInfo = result.customerInfo;
           const activeEntitlements = customerInfo.entitlements.active;
           
-          console.log("RevenueCat customer info:", {
-            originalAppUserId: customerInfo.originalAppUserId,
-            originalPurchaseDate: customerInfo.originalPurchaseDate,
-            activeEntitlements: Object.keys(activeEntitlements),
-            allEntitlements: Object.keys(customerInfo.entitlements.all)
-          });
-          
           if (Object.keys(activeEntitlements).length > 0) {
-            // User has active RevenueCat subscription but it's not synced to Supabase
             const [entitlementKey, entitlement] = Object.entries(activeEntitlements)[0];
-            console.log("Found RevenueCat entitlement that needs syncing:", {
-              entitlementKey,
-              productIdentifier: entitlement.productIdentifier,
-              expirationDate: entitlement.expirationDate
-            });
+            console.log("Found RevenueCat entitlement:", entitlementKey);
             
             // Format RevenueCat subscription data temporarily
             const revenuecatSubscription = formatRevenueCatSubscription(entitlement, entitlementKey);
             setSubscription(revenuecatSubscription);
             
-            // Trigger immediate sync to Supabase
-            console.log("Triggering immediate sync to Supabase...");
-            const syncSuccess = await triggerImmediateSync();
-            
-            if (syncSuccess) {
-              // Refresh after successful sync
-              setTimeout(() => {
-                console.log("Refreshing subscription data after successful sync...");
-                fetchSubscription();
-              }, 2000);
-            }
-            
+            // Trigger sync in background without waiting
+            triggerBackgroundSync();
             return;
-          } else {
-            console.log("No active RevenueCat entitlements found");
-            console.log("All entitlements:", customerInfo.entitlements.all);
-            
-            // Check if subscription might have been transferred - look for any subscription records 
-            // that might be associated with this user's email or other identifiers
-            console.log("Checking for transferred subscriptions...");
-            await checkForTransferredSubscriptions();
           }
         } catch (revenueCatError) {
           console.error('RevenueCat check failed:', revenueCatError);
-          toast.error('Failed to check mobile subscription status');
         }
       }
 
-      // Fallback: check by customer_id for legacy Stripe subscriptions
+      // Fallback: check by customer_id for web-based Stripe subscriptions
       if (!Capacitor.isNativePlatform()) {
-        console.log("Checking for legacy Stripe subscriptions by customer_id...");
-        const { data: customerData, error: customerError } = await supabase
+        const { data: customerData } = await supabase
           .from('stripe_customers')
           .select('customer_id')
           .eq('user_id', user.id)
           .maybeSingle();
 
-        if (customerError) {
-          console.error('Error fetching customer:', customerError);
-        }
-
         if (customerData?.customer_id) {
-          console.log(`Found customer ID: ${customerData.customer_id}`);
-
-          const { data: subscriptionData, error: subscriptionError } = await supabase
+          const { data: subscriptionData } = await supabase
             .from('stripe_subscriptions')
             .select('*')
             .eq('customer_id', customerData.customer_id)
             .eq('status', 'active')
             .maybeSingle();
-
-          if (subscriptionError) {
-            console.error('Error fetching subscription by customer_id:', subscriptionError);
-          }
 
           if (subscriptionData) {
             console.log("Found subscription by customer_id:", subscriptionData);
@@ -136,7 +102,7 @@ export function useSubscription(user: any) {
         }
       }
 
-      console.log("No active subscription found anywhere");
+      console.log("No active subscription found");
       setSubscription(null);
     } catch (error: any) {
       console.error('Error fetching subscription:', error);
@@ -145,87 +111,37 @@ export function useSubscription(user: any) {
       toast.error('Failed to load subscription information');
     } finally {
       setIsLoading(false);
+      fetchingRef.current = false;
     }
   }, [user]);
 
-  const checkForTransferredSubscriptions = useCallback(async () => {
+  // Background sync without blocking the UI
+  const triggerBackgroundSync = useCallback(async () => {
     try {
-      console.log('Checking for transferred subscriptions...');
-      
-      // Look for subscriptions that might belong to this user but under different user_ids
-      // This could happen due to RevenueCat transfers
-      const { data: possibleSubscriptions, error } = await supabase
-        .from('stripe_subscriptions')
-        .select('*')
-        .eq('status', 'active')
-        .like('customer_id', 'revenuecat_%');
-
-      if (error) {
-        console.error('Error checking for transferred subscriptions:', error);
-        return;
-      }
-
-      console.log('Found RevenueCat subscriptions:', possibleSubscriptions?.length || 0);
-      
-      // For now, just log this information. In a production app, you might want to
-      // implement more sophisticated matching logic based on email or other identifiers
-      if (possibleSubscriptions && possibleSubscriptions.length > 0) {
-        console.log('Existing RevenueCat subscriptions found, but none match current user ID');
-        console.log('This might indicate a transfer event that needs manual resolution');
-      }
-    } catch (error) {
-      console.error('Error in checkForTransferredSubscriptions:', error);
-    }
-  }, []);
-
-  const triggerImmediateSync = useCallback(async () => {
-    try {
-      console.log('Triggering immediate sync to Supabase...');
-      
-      if (!Capacitor.isNativePlatform()) {
-        console.log('Not on native platform, skipping RevenueCat sync');
-        return false;
-      }
+      if (!Capacitor.isNativePlatform()) return;
       
       const result = await revenueCatManager.getCustomerInfo();
-      const customerInfo = result.customerInfo;
-      
-      console.log('Syncing customer info:', {
-        originalAppUserId: customerInfo.originalAppUserId,
-        activeEntitlements: Object.keys(customerInfo.entitlements.active)
-      });
-      
-      // Get the auth token
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) {
-        console.log('No valid session found for sync');
-        return false;
-      }
+      
+      if (!session?.access_token) return;
 
-      console.log('Calling sync function with customer info...');
-      const { data, error } = await supabase.functions.invoke('sync-revenuecat-subscription', {
-        body: {
-          customerInfo: customerInfo
-        },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
-        }
+      // Fire and forget sync
+      supabase.functions.invoke('sync-revenuecat-subscription', {
+        body: { customerInfo: result.customerInfo },
+        headers: { Authorization: `Bearer ${session.access_token}` }
+      }).then(() => {
+        console.log('Background sync completed');
+        // Refresh after successful sync
+        setTimeout(() => fetchSubscription(), 2000);
+      }).catch(error => {
+        console.error('Background sync failed:', error);
       });
-      
-      if (error) {
-        console.error('Sync function error:', error);
-        return false;
-      }
-      
-      console.log('Immediate sync completed successfully:', data);
-      return true;
     } catch (error) {
-      console.error('Immediate sync failed:', error);
-      return false;
+      console.error('Background sync error:', error);
     }
-  }, []);
+  }, [fetchSubscription]);
 
-  const formatRevenueCatSubscription = (entitlement: any, entitlementKey: string) => {
+  const formatRevenueCatSubscription = useCallback((entitlement: any, entitlementKey: string) => {
     console.log("Formatting RevenueCat subscription:", entitlement);
     
     // Determine plan type from product identifier
@@ -266,9 +182,9 @@ export function useSubscription(user: any) {
       subscriptionType: 'RevenueCat',
       productIdentifier: entitlement.productIdentifier
     };
-  };
+  }, []);
 
-  const formatSubscriptionData = (subscriptionData: any) => {
+  const formatSubscriptionData = useCallback((subscriptionData: any) => {
     // Determine plan type from price_id or subscription_id
     let planName: string;
     let imageTotal: number;
@@ -327,27 +243,28 @@ export function useSubscription(user: any) {
       // Include subscription type for debugging
       subscriptionType: subscriptionData.subscription_id?.startsWith('revenuecat_') ? 'RevenueCat' : 'Stripe'
     };
-  };
+  }, []);
 
   useEffect(() => {
-    if (user) {
+    if (user?.id && (!lastFetchedUser.current || lastFetchedUser.current !== user.id)) {
       fetchSubscription();
     }
-  }, [user, fetchSubscription]);
+  }, [user?.id, fetchSubscription]);
 
   // Refresh function that can be called externally
   const refreshSubscription = useCallback(() => {
-    if (user) {
+    if (user?.id) {
+      fetchingRef.current = false; // Reset fetch guard
       fetchSubscription();
     }
-  }, [user, fetchSubscription]);
+  }, [user?.id, fetchSubscription]);
 
-  return {
+  return useMemo(() => ({
     subscription,
     isLoading,
     isError,
     errorMessage,
     fetchSubscription,
     refreshSubscription
-  };
+  }), [subscription, isLoading, isError, errorMessage, fetchSubscription, refreshSubscription]);
 }

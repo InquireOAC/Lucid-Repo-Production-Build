@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useEffect, useContext, ReactNode } from "react";
+import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -22,6 +22,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<any | null>(null);
+  const profileFetchedRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -30,12 +31,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        // Only fetch profile if user exists and we haven't fetched for this user yet
+        if (session?.user && profileFetchedRef.current !== session.user.id) {
+          profileFetchedRef.current = session.user.id;
+          // Use setTimeout to prevent blocking the auth state change
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
-        } else {
+        } else if (!session?.user) {
           setProfile(null);
+          profileFetchedRef.current = null;
         }
       }
     );
@@ -46,6 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        profileFetchedRef.current = session.user.id;
         fetchProfile(session.user.id);
       }
       
@@ -55,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = useCallback(async (userId: string) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -72,15 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Error in fetchProfile:", error);
     }
-  };
+  }, []);
 
-  const refreshProfile = async () => {
-    if (user) {
+  const refreshProfile = useCallback(async () => {
+    if (user?.id) {
       await fetchProfile(user.id);
     }
-  };
+  }, [user?.id, fetchProfile]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
@@ -96,9 +102,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error(error.message || "Error signing in");
       throw error;
     }
-  };
+  }, []);
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
@@ -119,22 +125,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       toast.error(error.message || "Error signing up");
       throw error;
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         throw error;
       }
+      // Clear profile data immediately on sign out
+      setProfile(null);
+      profileFetchedRef.current = null;
       toast.success("Successfully signed out");
     } catch (error: any) {
       toast.error(error.message || "Error signing out");
       throw error;
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     session,
     user,
     loading,
@@ -143,7 +152,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signUp,
     signOut,
     refreshProfile,
-  };
+  }), [session, user, loading, profile, signIn, signUp, signOut, refreshProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
