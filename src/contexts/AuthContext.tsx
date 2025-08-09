@@ -136,6 +136,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear profile data immediately on sign out
       setProfile(null);
       profileFetchedRef.current = null;
+      
+      // Clear session and user state immediately for faster UI updates
+      setSession(null);
+      setUser(null);
+      
       toast.success("Successfully signed out");
     } catch (error: any) {
       toast.error(error.message || "Error signing out");

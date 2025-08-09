@@ -12,11 +12,12 @@ const MainLayout = () => {
   React.useEffect(() => {
     // Only redirect to auth for pages that require authentication
     // Journal page should work without authentication
-    const publicRoutes = ["/", "/journal"];
+    const publicRoutes = ["/", "/journal", "/auth"];
     const isPublicRoute = publicRoutes.includes(location.pathname);
     
     if (!loading && !user && !isPublicRoute) {
-      navigate("/auth");
+      console.log("Redirecting to auth - user not authenticated");
+      navigate("/auth", { replace: true });
     }
   }, [user, loading, location.pathname, navigate]);
 
