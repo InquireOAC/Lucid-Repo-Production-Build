@@ -1191,6 +1191,60 @@ export type Database = {
           },
         ]
       }
+      video_entries: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          dreamer_story_name: string
+          duration: number | null
+          id: string
+          is_published: boolean
+          like_count: number | null
+          published_at: string | null
+          thumbnail_url: string | null
+          title: string
+          updated_at: string
+          view_count: number | null
+          youtube_id: string
+          youtube_url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dreamer_story_name: string
+          duration?: number | null
+          id?: string
+          is_published?: boolean
+          like_count?: number | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title: string
+          updated_at?: string
+          view_count?: number | null
+          youtube_id: string
+          youtube_url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          dreamer_story_name?: string
+          duration?: number | null
+          id?: string
+          is_published?: boolean
+          like_count?: number | null
+          published_at?: string | null
+          thumbnail_url?: string | null
+          title?: string
+          updated_at?: string
+          view_count?: number | null
+          youtube_id?: string
+          youtube_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       stripe_user_orders: {
