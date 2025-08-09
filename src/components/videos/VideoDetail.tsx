@@ -49,11 +49,11 @@ const VideoDetail = ({
               
               <div className="flex items-center gap-4 text-sm text-white/70">
                 <div className="flex items-center gap-1">
-                  <Eye className="w-4 h-4" />
+                  
                   <span className="text-center">{video.view_count || 0} views</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Heart className="w-4 h-4" />
+                  
                   <span className="text-center">{video.like_count || 0} likes</span>
                 </div>
                 <div className="flex items-center gap-1">
