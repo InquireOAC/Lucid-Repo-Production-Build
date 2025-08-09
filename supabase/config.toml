@@ -33,3 +33,6 @@ verify_jwt = true
 
 [functions.fetch-youtube-data]
 verify_jwt = true
+
+[functions.get-revenuecat-key]
+verify_jwt = true

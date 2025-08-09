@@ -1,10 +1,12 @@
 
 import { Purchases } from '@revenuecat/purchases-capacitor';
 import { Capacitor } from '@capacitor/core';
+import { supabase } from '@/integrations/supabase/client';
 
 class RevenueCatManager {
   private isConfigured = false;
   private currentUserId: string | null = null;
+  private apiKey: string | null = null;
 
   async initialize(userId?: string) {
     if (!Capacitor.isNativePlatform()) {
@@ -16,8 +18,18 @@ class RevenueCatManager {
       // Only configure once per app session to prevent transfers
       if (!this.isConfigured) {
         console.log('RevenueCat: Initial configuration with user:', userId || 'anonymous');
+        
+        // Get API key from server if not already fetched
+        if (!this.apiKey) {
+          await this.fetchApiKey();
+        }
+        
+        if (!this.apiKey) {
+          throw new Error('Failed to retrieve RevenueCat API key');
+        }
+        
         await Purchases.configure({
-          apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
+          apiKey: this.apiKey,
           appUserID: userId || undefined
         });
         this.isConfigured = true;
@@ -67,6 +79,27 @@ class RevenueCatManager {
     return await Purchases.restorePurchases();
   }
 
+  private async fetchApiKey() {
+    try {
+      const { data, error } = await supabase.functions.invoke('get-revenuecat-key');
+      
+      if (error) {
+        console.error('RevenueCat: Error fetching API key:', error);
+        throw error;
+      }
+      
+      if (!data?.apiKey) {
+        throw new Error('RevenueCat API key not found in response');
+      }
+      
+      this.apiKey = data.apiKey;
+      console.log('RevenueCat: API key fetched successfully');
+    } catch (error) {
+      console.error('RevenueCat: Failed to fetch API key:', error);
+      throw error;
+    }
+  }
+
   getCurrentUserId() {
     return this.currentUserId;
   }
@@ -79,6 +112,7 @@ class RevenueCatManager {
   reset() {
     this.isConfigured = false;
     this.currentUserId = null;
+    this.apiKey = null; // Clear the cached API key
     console.log('RevenueCat: Manager reset - requires app restart to switch users safely');
   }
 }
