@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 import { useProfileStats } from "./useProfileStats";
 import { useProfileDreams } from "./useProfileDreams";
 import { useFollowing } from "./useFollowing";
@@ -15,6 +16,7 @@ function isUUID(str: string) {
 }
 
 export const useProfileData = (user: any, profile: any, profileIdentifier?: string) => {
+  const { signOut } = useAuth();
   const [viewedProfile, setViewedProfile] = useState<any>(null);
   // Fix: always use the UUID of the fetched profile for follow
   const [profileIdToUse, setProfileIdToUse] = useState<string | undefined>(undefined);
@@ -123,8 +125,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
 
   const handleSignOut = async () => {
     try {
-      await supabase.auth.signOut();
-      toast.success("Signed out successfully");
+      await signOut();
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out");

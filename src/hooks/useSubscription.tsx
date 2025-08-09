@@ -245,6 +245,15 @@ export function useSubscription(user: any) {
     };
   }, []);
 
+  // Clear subscription state when user changes (including sign out)
+  useEffect(() => {
+    if (!user) {
+      setSubscription(null);
+      fetchingRef.current = false;
+      lastFetchedUser.current = null;
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user?.id && (!lastFetchedUser.current || lastFetchedUser.current !== user.id)) {
       fetchSubscription();
