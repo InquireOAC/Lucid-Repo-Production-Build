@@ -130,8 +130,25 @@ serve(async (req) => {
       );
     }
 
-    // Insert video entry into database
-    const videoEntry = {
+    // Check if video already exists
+    const { data: existingVideo, error: checkError } = await supabase
+      .from('video_entries')
+      .select('*')
+      .eq('youtube_id', youtubeId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking for existing video:', checkError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to check for existing video' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+
+    const videoData = {
       youtube_id: youtubeId,
       youtube_url: youtube_url,
       title: snippet.title,
@@ -146,11 +163,35 @@ serve(async (req) => {
       created_by: user.id
     };
 
-    const { data, error } = await supabase
-      .from('video_entries')
-      .insert([videoEntry])
-      .select()
-      .single();
+    let data, error;
+    let isUpdate = false;
+
+    if (existingVideo) {
+      // Update existing video
+      const { data: updateData, error: updateError } = await supabase
+        .from('video_entries')
+        .update({
+          ...videoData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingVideo.id)
+        .select()
+        .single();
+      
+      data = updateData;
+      error = updateError;
+      isUpdate = true;
+    } else {
+      // Insert new video
+      const { data: insertData, error: insertError } = await supabase
+        .from('video_entries')
+        .insert([videoData])
+        .select()
+        .single();
+      
+      data = insertData;
+      error = insertError;
+    }
 
     if (error) {
       console.error('Database error:', error);
@@ -167,10 +208,10 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         video: data,
-        message: 'Video entry created successfully' 
+        message: isUpdate ? 'Video updated and published successfully' : 'Video entry created and published successfully'
       }),
       { 
-        status: 201, 
+        status: isUpdate ? 200 : 201, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     );
