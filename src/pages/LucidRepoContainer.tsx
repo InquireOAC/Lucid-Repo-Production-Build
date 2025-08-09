@@ -11,6 +11,7 @@ import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
+import { useVideoEntries } from "@/hooks/useVideoEntries";
 import { VideoEntry } from "@/types/video";
 
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
@@ -23,45 +24,8 @@ const LucidRepoContainer = () => {
   const [mode, setMode] = useState<"dreams" | "videos">("dreams");
   const [selectedVideo, setSelectedVideo] = useState<VideoEntry | null>(null);
 
-  // Mock video data - replace with real data from your backend
-  const [videos] = useState<VideoEntry[]>([
-    {
-      id: "1",
-      title: "Journey Through the Astral Plane",
-      description: "A mesmerizing exploration of consciousness and the dream realm, following a lucid dreamer as they navigate through different dimensions of awareness.",
-      video_url: "/videos/sample1.mp4",
-      thumbnail_url: "/thumbnails/astral.jpg",
-      dreamer_story_name: "The Astral Explorer",
-      duration: 720,
-      created_at: "2024-01-15T10:00:00Z",
-      view_count: 1250,
-      like_count: 89
-    },
-    {
-      id: "2", 
-      title: "The Nightmare Alchemist",
-      description: "Transform your deepest fears into sources of strength. This film follows the journey of turning nightmares into lucid dreams through ancient techniques.",
-      video_url: "/videos/sample2.mp4",
-      thumbnail_url: "/thumbnails/nightmare.jpg",
-      dreamer_story_name: "Shadow Work Chronicles",
-      duration: 480,
-      created_at: "2024-01-10T14:30:00Z",
-      view_count: 892,
-      like_count: 156
-    },
-    {
-      id: "3",
-      title: "Flying Dreams: Mastery of the Skies",
-      description: "Learn the secrets of dream flight in this comprehensive guide to one of lucid dreaming's most beloved experiences.",
-      video_url: "/videos/sample3.mp4", 
-      thumbnail_url: "/thumbnails/flying.jpg",
-      dreamer_story_name: "Wings of Consciousness",
-      duration: 600,
-      created_at: "2024-01-05T09:15:00Z",
-      view_count: 2103,
-      like_count: 234
-    }
-  ]);
+  // Use video entries hook
+  const { videos: videoEntries, isLoading: videosLoading } = useVideoEntries();
 
   // For profile liked dreams refresh (noop since this is repo)
   function refreshLikedDreams() {
@@ -153,7 +117,7 @@ const LucidRepoContainer = () => {
     setSelectedVideo(null);
   };
 
-  const filteredVideos = videos.filter(video =>
+  const filteredVideos = videoEntries.filter(video =>
     video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     video.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
     video.dreamer_story_name.toLowerCase().includes(searchQuery.toLowerCase())

@@ -5,6 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Eye, Heart, Calendar } from "lucide-react";
 import { VideoEntry } from "@/types/video";
 
+const extractYouTubeId = (url: string): string => {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/v\/([^&\n?#]+)/,
+  ];
+  
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) return match[1];
+  }
+  
+  return '';
+};
+
 interface VideoDetailProps {
   video: VideoEntry;
   isOpen: boolean;
@@ -22,17 +36,16 @@ const VideoDetail = ({ video, isOpen, onClose }: VideoDetailProps) => {
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Video Player */}
+          {/* YouTube Video Player */}
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
             {video.video_url ? (
-              <video
-                src={video.video_url}
-                controls
+              <iframe
+                src={`https://www.youtube.com/embed/${extractYouTubeId(video.video_url)}`}
+                title={video.title}
                 className="w-full h-full"
-                poster={video.thumbnail_url}
-              >
-                Your browser does not support the video tag.
-              </video>
+                allowFullScreen
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-dream-purple to-dream-pink">
                 <p className="text-white">Video not available</p>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Film, BookOpen } from "lucide-react";
+import { AdminVideoButton } from "@/components/videos/AdminVideoManager";
 // TagFilter import intentionally remains commented out
 
 interface LucidRepoHeaderProps {
@@ -67,6 +68,7 @@ const LucidRepoHeader = ({
             <Film className="w-4 h-4 mr-2" />
             Lucid Studios
           </Button>
+          {mode === "videos" && <AdminVideoButton />}
         </div>
       </div>
 

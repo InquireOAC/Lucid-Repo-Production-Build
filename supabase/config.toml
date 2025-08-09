@@ -30,3 +30,6 @@ verify_jwt = false
 
 [functions.sync-revenuecat-subscription]
 verify_jwt = true
+
+[functions.fetch-youtube-data]
+verify_jwt = true
