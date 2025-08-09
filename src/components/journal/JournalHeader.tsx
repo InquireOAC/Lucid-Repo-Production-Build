@@ -23,7 +23,7 @@ const JournalHeader = ({
         </div>
         <Button 
           onClick={onAddDream} 
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 transition-all duration-300 hover:scale-105 flex items-center gap-2 px-6 py-2"
+          className="bg-white text-purple-800 hover:bg-white/90 shadow-lg shadow-purple-500/20 transition-all duration-300 hover:scale-105 flex items-center gap-2 px-4 py-1.5 text-sm"
         >
           <Pencil size={18} />
           <span className="font-medium">Record Dream</span>
