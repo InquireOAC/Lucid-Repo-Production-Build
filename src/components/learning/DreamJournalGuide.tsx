@@ -18,28 +18,28 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
       title: "Why Keep a Dream Journal?",
       icon: <Lightbulb className="h-6 w-6" />,
       content: (
-        <div className="space-y-4">
-          <p className="text-foreground">Dream journaling is the foundation of lucid dreaming. Here's why it works:</p>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20">
+        <div className="space-y-4 w-full overflow-hidden">
+          <p className="text-foreground break-words">Dream journaling is the foundation of lucid dreaming. Here's why it works:</p>
+          <div className="space-y-3 w-full">
+            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20 w-full overflow-hidden">
               <CheckCircle className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="font-semibold text-green-400">Improves recall:</span>
-                <span className="ml-1 text-foreground">Regular writing trains your brain to remember dreams</span>
+                <span className="ml-1 text-foreground break-words">Regular writing trains your brain to remember dreams</span>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 w-full overflow-hidden">
               <CheckCircle className="h-5 w-5 text-blue-400 mt-0.5 flex-shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="font-semibold text-blue-400">Identifies patterns:</span>
-                <span className="ml-1 text-foreground">Recurring themes become dream signs</span>
+                <span className="ml-1 text-foreground break-words">Recurring themes become dream signs</span>
               </div>
             </div>
-            <div className="flex items-start gap-3 p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20">
+            <div className="flex items-start gap-3 p-3 sm:p-4 rounded-xl bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 w-full overflow-hidden">
               <CheckCircle className="h-5 w-5 text-purple-400 mt-0.5 flex-shrink-0" />
-              <div>
+              <div className="min-w-0 flex-1">
                 <span className="font-semibold text-purple-400">Builds awareness:</span>
-                <span className="ml-1 text-foreground">Connecting with dreams during the day</span>
+                <span className="ml-1 text-foreground break-words">Connecting with dreams during the day</span>
               </div>
             </div>
           </div>
@@ -174,25 +174,25 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
   const allStepsCompleted = completedSteps.length === steps.length;
 
   return (
-    <div className="relative">
-      <Card className="learning-card">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-3 text-2xl text-high-contrast">
-              <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 shadow-sm">
+    <div className="relative w-full overflow-hidden">
+      <Card className="learning-card w-full">
+        <CardHeader className="overflow-hidden">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-2xl text-high-contrast min-w-0">
+              <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-primary/20 border border-primary/30 shadow-sm flex-shrink-0">
                 {currentStepData.icon}
               </div>
-              Dream Journal Guide
+              <span className="truncate">Dream Journal Guide</span>
             </CardTitle>
-            <Badge variant="secondary" className="bg-primary/25 text-primary border-primary/40 px-3 py-1">
+            <Badge variant="secondary" className="bg-primary/25 text-primary border-primary/40 px-2 sm:px-3 py-1 text-xs sm:text-sm flex-shrink-0">
               {currentStep + 1} of {steps.length}
             </Badge>
           </div>
-          <div className="flex gap-2 mt-6">
+          <div className="flex gap-1 sm:gap-2 mt-4 sm:mt-6 overflow-hidden">
             {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-3 flex-1 rounded-full transition-all duration-300 shadow-sm ${
+                className={`h-2 sm:h-3 flex-1 rounded-full transition-all duration-300 shadow-sm ${
                   index <= currentStep
                     ? 'bg-gradient-to-r from-primary to-primary/80'
                     : 'bg-muted/50'
@@ -202,19 +202,19 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-8 overflow-hidden">
-          <div className="space-y-6">
-            <h3 className="text-3xl font-bold text-high-contrast break-words">{currentStepData.title}</h3>
-            <div className="text-high-contrast space-y-4 max-w-full overflow-hidden">
+        <CardContent className="space-y-6 sm:space-y-8 overflow-hidden w-full">
+          <div className="space-y-4 sm:space-y-6 w-full">
+            <h3 className="text-2xl sm:text-3xl font-bold text-high-contrast break-words">{currentStepData.title}</h3>
+            <div className="text-high-contrast space-y-4 w-full overflow-hidden">
               {currentStepData.content}
             </div>
           </div>
 
-          <div className="flex justify-between pt-6 border-t border-border/60">
+          <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0 pt-4 sm:pt-6 border-t border-border/60">
             <Button
               variant="outline"
               onClick={currentStep === 0 ? onClose : handlePrevious}
-              className="border-primary/40 hover:border-primary hover:bg-primary/15 text-high-contrast font-semibold px-6"
+              className="border-primary/40 hover:border-primary hover:bg-primary/15 text-high-contrast font-semibold px-4 sm:px-6 w-full sm:w-auto"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               {currentStep === 0 ? 'Close' : 'Previous'}
@@ -222,7 +222,7 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
             
             <Button 
               onClick={handleNext}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 shadow-lg"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-4 sm:px-6 shadow-lg w-full sm:w-auto"
             >
               {isLastStep ? 'Complete Guide' : 'Next Step'}
               <ArrowRight className="h-4 w-4 ml-2" />

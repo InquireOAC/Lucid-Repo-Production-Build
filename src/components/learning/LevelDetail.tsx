@@ -340,19 +340,21 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-sm border-primary/20">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[85vh] overflow-y-auto overflow-x-hidden bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-sm border-primary/20">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg" />
         
         <DialogHeader className="relative">
-          <DialogTitle className="text-2xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+          <DialogTitle className="text-xl sm:text-2xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent break-words">
             Level {levelNumber}: {level.title}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6 relative">
-          <p className="text-muted-foreground text-lg">{level.description}</p>
+        <div className="space-y-6 relative overflow-hidden">
+          <p className="text-muted-foreground text-base sm:text-lg break-words">{level.description}</p>
           
-          {renderLevelContent()}
+          <div className="w-full overflow-hidden">
+            {renderLevelContent()}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
