@@ -21,7 +21,7 @@ const AdminVideoManager = ({ isOpen, onClose }: AdminVideoManagerProps) => {
   const { user } = useAuth();
 
   // Simple admin check - you can make this more sophisticated
-  const isAdmin = user?.email === 'admin@yourdomain.com'; // Replace with your admin email
+  const isAdmin = user?.email === 'inquireoac@gmail.com'; // Replace with your admin email
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +116,7 @@ export const AdminVideoButton = () => {
   const { user } = useAuth();
 
   // Simple admin check
-  const isAdmin = user?.email === 'admin@yourdomain.com'; // Replace with your admin email
+  const isAdmin = user?.email === 'inquireoac@gmail.com'; // Replace with your admin email
 
   if (!isAdmin) {
     return null;
