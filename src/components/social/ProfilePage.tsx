@@ -16,8 +16,9 @@ export default function ProfilePage({ usernameParam }) {
 
   useEffect(() => {
     async function fetchProfile() {
+      // Use public_profiles view for secure access to public profile data
       const { data } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("*")
         .eq("username", usernameParam)
         .maybeSingle();

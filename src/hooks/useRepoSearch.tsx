@@ -16,9 +16,9 @@ export function useRepoSearch(query: string) {
 
     const fetchSearch = async () => {
       setIsLoading(true);
-      // Search usernames
+      // Search usernames using public_profiles view for secure access
       let { data: profileIds } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id")
         .ilike("username", `%${query}%`);
       const matchIds = (profileIds ?? []).map((p: any) => p.id);
