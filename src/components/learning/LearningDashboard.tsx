@@ -43,46 +43,60 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
     ((currentXP - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100 : 100;
 
   return (
-    <div className="min-h-screen dream-background overflow-hidden">
-      <div className="container mx-auto px-4 pt-6 pb-20 space-y-8 max-w-7xl">
-        {/* Header */}
-        <div className="text-center space-y-4">
+    <div className="min-h-screen starry-background overflow-hidden">
+      <div className="container mx-auto px-4 pt-8 pb-20 space-y-12 max-w-7xl">
+        {/* Oniri-style Header */}
+        <div className="text-center space-y-6 pt-8">
           <div className="relative">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent mb-2">
+            <h1 className="text-5xl md:text-7xl font-bold gradient-text mb-4">
               Lucid Learning
             </h1>
-            <Brain className="absolute -top-1 -right-8 h-8 w-8 text-primary/40 animate-float hidden sm:block" />
+            <div className="absolute -top-2 -right-12 hidden sm:block">
+              <Brain className="h-12 w-12 text-purple-400/30 animate-float" />
+            </div>
+            <div className="absolute -bottom-4 -left-8 hidden sm:block">
+              <Star className="h-8 w-8 text-pink-400/40 animate-float" style={{animationDelay: '1s'}} />
+            </div>
           </div>
-          <p className="text-lg text-muted-foreground max-w-md mx-auto">
-            Master the art of lucid dreaming through guided practices
-          </p>
+          <div className="max-w-2xl mx-auto">
+            <p className="text-xl text-foreground/80 leading-relaxed">
+              Embark on a journey to master lucid dreaming through structured practices and personalized guidance
+            </p>
+          </div>
         </div>
 
-        {/* Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        {/* Oniri-style Progress Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Level Progress Card */}
-          <Card className="learning-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-primary">
-                <Brain className="h-5 w-5" />
+          <Card className="glass-card oniri-hover border-white/10">
+            <div className="geometric-bg absolute inset-0 rounded-lg opacity-50"></div>
+            <CardHeader className="pb-4 relative z-10">
+              <CardTitle className="text-sm font-medium flex items-center gap-3 text-purple-300">
+                <div className="p-2 rounded-full bg-purple-500/20">
+                  <Brain className="h-5 w-5" />
+                </div>
                 Level Progress
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="relative z-10">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-high-contrast">Level {currentLevel}</span>
-                  <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+                  <span className="text-4xl font-bold text-white">Level {currentLevel}</span>
+                  <Badge className="bg-purple-500/20 text-purple-300 border-purple-400/30 px-3 py-1">
                     {currentXP} XP
                   </Badge>
                 </div>
                 {currentLevel < 7 && (
-                  <div className="space-y-2">
-                    <Progress 
-                      value={Math.min(progressToNext, 100)} 
-                      className="h-2 bg-primary/10"
-                    />
-                    <p className="text-xs text-muted-contrast">
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Progress 
+                        value={Math.min(progressToNext, 100)} 
+                        className="h-3 bg-white/10 rounded-full"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-80" 
+                           style={{width: `${Math.min(progressToNext, 100)}%`}}></div>
+                    </div>
+                    <p className="text-sm text-white/70">
                       {xpForNextLevel - currentXP} XP to Level {currentLevel + 1}
                     </p>
                   </div>
@@ -92,22 +106,25 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
           </Card>
 
           {/* Practice Streak Card */}
-          <Card className="learning-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-accent">
-                <Flame className="h-5 w-5" />
+          <Card className="glass-card oniri-hover border-white/10">
+            <div className="geometric-bg absolute inset-0 rounded-lg opacity-30"></div>
+            <CardHeader className="pb-4 relative z-10">
+              <CardTitle className="text-sm font-medium flex items-center gap-3 text-orange-300">
+                <div className="p-2 rounded-full bg-orange-500/20">
+                  <Flame className="h-5 w-5" />
+                </div>
                 Practice Streak
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="relative z-10">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-high-contrast">{currentStreak}</span>
-                  <Badge variant="outline" className="border-accent/30 text-accent">
+                  <span className="text-4xl font-bold text-white">{currentStreak}</span>
+                  <Badge className="bg-orange-500/20 text-orange-300 border-orange-400/30 px-3 py-1">
                     Days
                   </Badge>
                 </div>
-                <p className="text-xs text-muted-contrast">
+                <p className="text-sm text-white/70">
                   Personal best: {longestStreak} days
                 </p>
               </div>
@@ -115,32 +132,35 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
           </Card>
 
           {/* Achievements Card */}
-          <Card className="learning-card">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2 text-yellow-400">
-                <Trophy className="h-5 w-5" />
+          <Card className="glass-card oniri-hover border-white/10">
+            <div className="geometric-bg absolute inset-0 rounded-lg opacity-40"></div>
+            <CardHeader className="pb-4 relative z-10">
+              <CardTitle className="text-sm font-medium flex items-center gap-3 text-yellow-300">
+                <div className="p-2 rounded-full bg-yellow-500/20">
+                  <Trophy className="h-5 w-5" />
+                </div>
                 Achievements
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
+            <CardContent className="relative z-10">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-3xl font-bold text-high-contrast">{achievements.length}</span>
-                  <Badge variant="outline" className="border-yellow-400/30 text-yellow-400">
+                  <span className="text-4xl font-bold text-white">{achievements.length}</span>
+                  <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-400/30 px-3 py-1">
                     Unlocked
                   </Badge>
                 </div>
-                <div className="flex gap-1 items-center">
+                <div className="flex gap-2 items-center">
                   {achievements.slice(0, 3).map((achievement) => (
-                    <div key={achievement.id} className="text-lg animate-float" style={{animationDelay: `${Math.random() * 2}s`}}>
+                    <div key={achievement.id} className="text-2xl animate-float p-1 rounded bg-white/10" style={{animationDelay: `${Math.random() * 2}s`}}>
                       {achievement.learning_achievements?.icon}
                     </div>
                   ))}
                   {achievements.length > 3 && (
-                    <span className="text-xs text-muted-contrast ml-1">+{achievements.length - 3} more</span>
+                    <span className="text-sm text-white/70 ml-2">+{achievements.length - 3} more</span>
                   )}
                   {achievements.length === 0 && (
-                    <span className="text-xs text-muted-contrast">Start practicing to unlock</span>
+                    <span className="text-sm text-white/70">Start practicing to unlock</span>
                   )}
                 </div>
               </div>

@@ -93,12 +93,11 @@ const DreamCard = ({
 
   return (
     <Card 
-      className={`hover:shadow-lg transition-shadow cursor-pointer dream-card ${
-        isJournalView ? 'h-fit' : ''
-      }`}
+      className="hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer glass-card oniri-hover border-white/10 group"
       onClick={handleCardClick}
     >
-      <CardHeader className={isJournalView ? "pb-2 p-4" : "pb-3"}>
+      <div className="geometric-bg absolute inset-0 rounded-lg opacity-20"></div>
+      <CardHeader className={`${isJournalView ? "pb-2 p-4" : "pb-3"} relative z-10`}>
         <div className="flex items-start justify-between">
           <div className="flex-1">
             {(showUserInfo || showUser) && (
@@ -107,10 +106,10 @@ const DreamCard = ({
                 onUserClick={handleUserClick}
               />
             )}
-            <h3 className={`font-semibold leading-tight ${
+            <h3 className={`font-bold leading-tight text-white ${
               isJournalView ? 'text-base mb-1' : 'text-lg'
             }`}>{dream.title}</h3>
-            <p className={`text-muted-foreground ${
+            <p className={`text-white/60 ${
               isJournalView ? 'text-xs' : 'text-sm mt-1'
             }`}>
               {formattedDate}
@@ -131,38 +130,37 @@ const DreamCard = ({
         </div>
       </CardHeader>
       
-      <CardContent className={isJournalView ? "pt-0 p-4" : "pt-0"}>
-        <p className={`line-clamp-2 mb-3 ${
+      <CardContent className={`${isJournalView ? "pt-0 p-4" : "pt-0"} relative z-10`}>
+        <p className={`line-clamp-2 mb-3 text-white/80 ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>{dream.content}</p>
         
         {dream.generatedImage && (
-          <div className={isJournalView ? "mb-2" : "mb-3"}>
+          <div className={`${isJournalView ? "mb-2" : "mb-3"} relative`}>
             <img 
               src={dream.generatedImage} 
               alt="Dream visualization" 
-              className={`w-full object-cover rounded-md ${
+              className={`w-full object-cover rounded-lg shadow-lg ${
                 isJournalView ? 'h-24' : 'h-48'
               }`}
             />
+            <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         )}
         
         {mappedTags.length > 0 && (
-          <div className={`flex flex-wrap gap-1 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
+          <div className={`flex flex-wrap gap-2 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
             {mappedTags.slice(0, isJournalView ? 3 : mappedTags.length).map((tag) => (
               <Badge 
                 key={tag.id} 
-                variant="secondary" 
-                className="text-xs cursor-pointer"
-                style={{ backgroundColor: tag.color + '20', color: tag.color }}
+                className="text-xs cursor-pointer bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all duration-200"
                 onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}
               >
                 {tag.name}
               </Badge>
             ))}
             {isJournalView && mappedTags.length > 3 && (
-              <Badge variant="secondary" className="text-xs">
+              <Badge className="text-xs bg-white/10 text-white/70 border-white/20">
                 +{mappedTags.length - 3}
               </Badge>
             )}
@@ -170,43 +168,60 @@ const DreamCard = ({
         )}
 
         {showSharedBadge && (dream.is_public || dream.isPublic) && (
-          <Badge variant="outline" className={isJournalView ? "mb-2 text-xs" : "mb-3"}>Public</Badge>
+          <Badge className={`${isJournalView ? "mb-2 text-xs" : "mb-3"} bg-blue-500/20 text-blue-200 border-blue-400/30`}>
+            Public
+          </Badge>
         )}
 
         {showActions && (
           <div className={`flex gap-2 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
             {onEdit && (
-              <Button variant="outline" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onEdit)}>
+              <Button 
+                variant="outline" 
+                size={isJournalView ? "sm" : "sm"} 
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/40"
+                onClick={(e) => handleButtonClick(e, onEdit)}
+              >
                 Edit
               </Button>
             )}
             {onTogglePublic && (
-              <Button variant="outline" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onTogglePublic)}>
+              <Button 
+                variant="outline" 
+                size={isJournalView ? "sm" : "sm"} 
+                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/40"
+                onClick={(e) => handleButtonClick(e, onTogglePublic)}
+              >
                 {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
               </Button>
             )}
             {onDelete && (
-              <Button variant="destructive" size={isJournalView ? "xs" : "sm"} onClick={(e) => handleButtonClick(e, onDelete)}>
+              <Button 
+                variant="destructive" 
+                size={isJournalView ? "sm" : "sm"} 
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-400/30"
+                onClick={(e) => handleButtonClick(e, onDelete)}
+              >
                 Delete
               </Button>
             )}
           </div>
         )}
         
-        <div className={`flex items-center gap-4 text-muted-foreground ${
+        <div className={`flex items-center gap-4 text-white/60 ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>
           {/* Display-only like counter - visible to ALL users */}
-          <div className="flex items-center gap-1">
-            <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-500 text-red-500' : ''}`} />
-            <span>{dream.likeCount || dream.like_count || 0}</span>
+          <div className="flex items-center gap-2">
+            <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-400 text-red-400' : 'text-white/60'}`} />
+            <span className="text-white/70">{dream.likeCount || dream.like_count || 0}</span>
           </div>
           
           {/* Comment counter - clickable to open comments */}
           <Button
             variant="ghost"
             size="sm"
-            className={`h-auto p-1 hover:text-blue-500 ${isJournalView ? 'text-xs' : ''}`}
+            className={`h-auto p-1 hover:text-blue-300 text-white/60 hover:bg-white/10 ${isJournalView ? 'text-xs' : ''}`}
             onClick={(e) => handleButtonClick(e, () => onComment?.(dream.id))}
           >
             <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -217,7 +232,7 @@ const DreamCard = ({
             <Button
               variant="ghost"
               size="sm"
-              className={`h-auto p-1 hover:text-green-500 ${isJournalView ? 'text-xs' : ''}`}
+              className={`h-auto p-1 hover:text-green-300 text-white/60 hover:bg-white/10 ${isJournalView ? 'text-xs' : ''}`}
               onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}
             >
               <Share2 className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />

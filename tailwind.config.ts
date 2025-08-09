@@ -36,6 +36,14 @@ export default {
 					light: '#BEB4D6',
 					midnight: '#1A162A',
 				},
+				oniri: {
+					blue: 'hsl(240, 80%, 20%)',
+					purple: 'hsl(262, 60%, 60%)',
+					pink: 'hsl(300, 60%, 70%)',
+					dark: 'hsl(260, 25%, 8%)',
+					card: 'hsl(260, 20%, 12%)',
+					glass: 'rgba(255, 255, 255, 0.02)',
+				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
 					foreground: 'hsl(var(--primary-foreground))'
@@ -109,6 +117,9 @@ export default {
 			},
 			backgroundImage: {
 				'dream-gradient': 'linear-gradient(to bottom, #1E1A2B, #6B5B95)',
+				'oniri-gradient': 'linear-gradient(135deg, hsl(260, 25%, 8%) 0%, hsl(262, 30%, 12%) 50%, hsl(260, 20%, 10%) 100%)',
+				'oniri-card': 'linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%)',
+				'oniri-geometric': 'polygon(0 0, 100% 20%, 100% 100%, 0 80%)',
 			}
 		}
 	},

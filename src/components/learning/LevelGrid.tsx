@@ -28,15 +28,17 @@ export const LevelGrid = ({ currentLevel, userId }: LevelGridProps) => {
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Learning Path
+      <div className="space-y-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-4xl md:text-5xl font-bold gradient-text">
+            Learning Journey
           </h2>
-          <p className="text-muted-foreground">Progress through structured lessons to master lucid dreaming</p>
+          <p className="text-lg text-foreground/70 max-w-2xl mx-auto leading-relaxed">
+            Progress through carefully crafted lessons designed to unlock your lucid dreaming potential
+          </p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
           {levels.map((level) => {
             const isLocked = level.level_number > currentLevel;
             const isCompleted = level.level_number < currentLevel;
@@ -45,61 +47,58 @@ export const LevelGrid = ({ currentLevel, userId }: LevelGridProps) => {
             return (
               <Card 
                 key={level.id} 
-                className={`relative group cursor-pointer transition-all duration-300 ${
+                className={`relative group cursor-pointer glass-card oniri-hover border-white/10 ${
                   isLocked 
                     ? 'opacity-40 cursor-not-allowed' 
-                    : 'hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] hover:-translate-y-1'
+                    : ''
                 } ${
-                  isCurrent ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : ''
-                } ${
-                  isCompleted 
-                    ? 'bg-gradient-to-br from-green-500/10 to-green-600/5 border-green-500/30' 
-                    : isLocked 
-                    ? 'bg-muted/50' 
-                    : 'bg-gradient-to-br from-card to-card/80 border-primary/20 backdrop-blur-sm'
+                  isCurrent ? 'ring-2 ring-purple-400/50 shadow-lg shadow-purple-500/20' : ''
                 }`}
                 onClick={() => handleLevelClick(level.level_number)}
               >
-                {/* Gradient overlay for active card */}
-                {isCurrent && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                )}
+                {/* Background effects based on state */}
+                <div className={`geometric-bg absolute inset-0 rounded-lg ${
+                  isCompleted ? 'opacity-60' : isCurrent ? 'opacity-80' : 'opacity-30'
+                }`}></div>
                 
-                <CardHeader className="pb-3 relative">
+                <CardHeader className="pb-4 relative z-10">
                   <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold transition-all duration-300 ${
                           isCompleted 
-                            ? 'bg-green-500 text-white' 
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg' 
                             : isCurrent 
-                            ? 'bg-primary text-primary-foreground'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg shadow-purple-500/30'
                             : isLocked
-                            ? 'bg-muted text-muted-foreground'
-                            : 'bg-primary/20 text-primary'
+                            ? 'bg-white/10 text-white/50'
+                            : 'bg-white/20 text-white border border-white/30'
                         }`}>
                           {isCompleted ? (
-                            <CheckCircle className="h-4 w-4" />
+                            <CheckCircle className="h-6 w-6" />
                           ) : isLocked ? (
-                            <Lock className="h-4 w-4" />
+                            <Lock className="h-5 w-5" />
                           ) : (
                             level.level_number
                           )}
                         </div>
-                        <CardTitle className="text-lg text-foreground">
-                          Level {level.level_number}
-                        </CardTitle>
+                        <div>
+                          <CardTitle className="text-xl text-white font-bold">
+                            Level {level.level_number}
+                          </CardTitle>
+                          <h3 className="text-lg text-white/80 font-medium mt-1">{level.title}</h3>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-2 items-end">
                       {isCurrent && (
-                        <Badge variant="default" className="bg-primary text-primary-foreground">
+                        <Badge className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-200 border-purple-400/30 px-3 py-1">
                           Current
                         </Badge>
                       )}
                       {isCompleted && (
-                        <Badge variant="secondary" className="bg-green-500/20 text-green-400 border-green-500/30">
+                        <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-200 border-green-400/30 px-3 py-1">
                           Complete
                         </Badge>
                       )}
@@ -107,36 +106,32 @@ export const LevelGrid = ({ currentLevel, userId }: LevelGridProps) => {
                   </div>
                 </CardHeader>
                 
-                <CardContent className="relative space-y-4">
-                  <div>
-                    <h3 className="font-bold text-lg mb-2 text-foreground">{level.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {level.description}
-                    </p>
-                  </div>
+                <CardContent className="relative z-10 space-y-6">
+                  <p className="text-white/70 leading-relaxed text-base">
+                    {level.description}
+                  </p>
                   
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
                     {!isLocked && (
                       <Button 
-                        size="sm" 
-                        variant={isCurrent ? "default" : "outline"}
-                        className={`transition-all duration-200 ${
+                        size="lg" 
+                        className={`transition-all duration-300 font-medium px-6 ${
                           isCurrent 
-                            ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                            : 'border-primary/30 hover:border-primary hover:bg-primary/10'
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30' 
+                            : 'bg-white/10 hover:bg-white/20 text-white border border-white/20 hover:border-white/40'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedLevel(level.level_number);
                         }}
                       >
-                        <Play className="h-3 w-3 mr-2" />
+                        <Play className="h-4 w-4 mr-2" />
                         {isCompleted ? 'Review' : isCurrent ? 'Continue' : 'Start'}
                       </Button>
                     )}
                     
                     {level.xp_required > 0 && (
-                      <Badge variant="outline" className="text-xs border-muted">
+                      <Badge className="bg-white/10 text-white/70 border-white/20 px-3 py-1">
                         {level.xp_required} XP required
                       </Badge>
                     )}

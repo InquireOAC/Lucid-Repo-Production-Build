@@ -106,7 +106,7 @@ const Journal = () => {
   };
 
   return (
-    <div className="min-h-screen dream-background p-4 md:p-6">
+    <div className="min-h-screen starry-background p-4 md:p-6">
       <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
       <TagFilter
