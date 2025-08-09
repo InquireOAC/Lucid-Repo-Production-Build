@@ -38,36 +38,24 @@ export function useDreams(refreshLikedDreams?: () => void) {
   const fetchPublicDreams = async () => {
     setIsLoading(true);
     try {
-      console.log("Fetching public dreams with sort:", sortBy, "tab:", activeTab);
-      
-      let query = supabase
+      console.log('useDreams: Fetching public dreams...');
+      const { data: dreamsRaw, error } = await supabase
         .from("dream_entries")
-        .select(
-          "*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)"
-        )
-        .eq("is_public", true);
+        .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+        .eq("is_public", true)
+        .order("created_at", { ascending: false })
+        .limit(50);
 
-      // Apply sorting based on activeTab and sortBy
-      if (activeTab === "popular") {
-        // For popular, sort by engagement (like_count + comment_count) descending
-        query = query.order("like_count", { ascending: false });
-      } else if (sortBy === "newest") {
-        query = query.order("created_at", { ascending: false });
-      } else if (sortBy === "oldest") {
-        query = query.order("created_at", { ascending: true });
-      } else if (sortBy === "most_liked") {
-        query = query.order("like_count", { ascending: false });
+      console.log('useDreams: Raw dreams data:', { dreamsRaw, error });
+
+      if (error) {
+        console.error('useDreams: Database error:', error);
+        throw error;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      console.log("Fetched public dreams:", data.length);
 
       // For each dream, get the actual like count and comment count from the database
       const dreamsWithCounts = await Promise.all(
-        data.map(async (dream: any) => {
+        (dreamsRaw || []).map(async (dream: any) => {
           // Get actual like count
           const { count: likeCount } = await supabase
             .from("dream_likes")
@@ -102,6 +90,8 @@ export function useDreams(refreshLikedDreams?: () => void) {
             liked: userLiked,
             userId: dream.user_id,
             profiles: dream.profiles,
+            // Debug log to see profile data
+            _debug_profile: dream.profiles,
             // pass down avatar
             avatarSymbol: dream.profiles?.avatar_symbol || null,
             avatarColor: dream.profiles?.avatar_color || null,
@@ -111,6 +101,8 @@ export function useDreams(refreshLikedDreams?: () => void) {
           };
         })
       );
+        
+      console.log('useDreams: Dreams with counts and profiles:', dreamsWithCounts.slice(0, 2));
       
       // If popular tab, sort by engagement after getting actual counts
       if (activeTab === "popular") {
