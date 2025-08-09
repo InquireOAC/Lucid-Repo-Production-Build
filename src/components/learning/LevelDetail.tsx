@@ -27,14 +27,27 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
   if (!level) return null;
 
   const handleStartPractice = async (practiceType: string, duration?: number) => {
-    if (userId) {
-      await createSession({
+    if (!userId) {
+      console.error('No user ID available for practice session');
+      return;
+    }
+
+    try {
+      console.log('Creating practice session:', { userId, practiceType, levelId: level.id });
+      
+      const session = await createSession({
         user_id: userId,
         session_type: practiceType,
         level_id: level.id,
         duration_minutes: duration,
         xp_earned: 10 // Base XP for practice
       });
+
+      if (session) {
+        console.log('Practice session created successfully:', session);
+      }
+    } catch (error) {
+      console.error('Failed to create practice session:', error);
     }
   };
 
