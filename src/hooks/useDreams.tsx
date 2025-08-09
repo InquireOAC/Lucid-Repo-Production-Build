@@ -38,12 +38,12 @@ export function useDreams(refreshLikedDreams?: () => void) {
   const fetchPublicDreams = async () => {
     setIsLoading(true);
     try {
-      const { data: dreamsRaw, error } = await supabase
-        .from("dream_entries")
-        .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
-        .eq("is_public", true)
-        .order("created_at", { ascending: false })
-        .limit(50);
+        const { data: dreamsRaw, error } = await supabase
+          .from("dream_entries")
+          .select("*, profiles!dream_entries_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+          .eq("is_public", true)
+          .order("created_at", { ascending: false })
+          .limit(50);
 
       if (error) {
         throw error;

@@ -37,7 +37,7 @@ export default function ProfilePage({ usernameParam }) {
       try {
         let query = supabase
           .from("dream_entries")
-          .select("*, profiles:user_id(username, profile_picture)")
+          .select("*, profiles!dream_entries_user_id_fkey(username, profile_picture)")
           .eq("user_id", profile.id);
         if (profile.id !== user?.id) query = query.eq("is_public", true);
         query = query.order("created_at", { ascending: false });
