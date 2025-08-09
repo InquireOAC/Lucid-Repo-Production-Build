@@ -14,7 +14,7 @@ const JournalHeader = ({
         <DailyQuote />
       </header>
 
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 gap-4">
         <div className="flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-2 py-1 border border-white/10 w-fit">
           <Calendar size={18} className="text-purple-300" />
           <span className="text-sm text-white/80 font-medium">
