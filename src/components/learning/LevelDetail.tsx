@@ -3,12 +3,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, Play, Volume2 } from 'lucide-react';
+import { CheckCircle, Play, Volume2, Book, ArrowRight } from 'lucide-react';
 import { AudioPlayer } from './AudioPlayer';
 import { PracticeTimer } from './PracticeTimer';
 import { RealityCheckReminder } from './RealityCheckReminder';
+import { DreamJournalGuide } from './DreamJournalGuide';
 import { useLearningLevels } from '@/hooks/useLearningLevels';
 import { usePracticeSessions } from '@/hooks/usePracticeSessions';
+import { useNavigate } from 'react-router-dom';
 
 interface LevelDetailProps {
   levelNumber: number;
@@ -21,6 +23,7 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
   const { levels } = useLearningLevels();
   const { createSession } = usePracticeSessions(userId);
   const [activeComponent, setActiveComponent] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const level = levels.find(l => l.level_number === levelNumber);
 
@@ -60,32 +63,45 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Dream Journal Setup</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Book className="h-5 w-5" />
+                  Dream Journal Setup
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">Set up your dream journal for optimal recall:</p>
-                <ul className="space-y-2 text-sm">
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Keep journal by your bed
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Record immediately upon waking
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-500" />
-                    Include emotions and colors
-                  </li>
-                </ul>
-                <Button 
-                  className="mt-4" 
-                  onClick={() => handleStartPractice('dream_journal_setup')}
-                >
-                  Start Dream Logging
-                </Button>
+                <p className="mb-4">Learn how to set up and maintain an effective dream journal:</p>
+                
+                <div className="space-y-3">
+                  <Button 
+                    className="w-full" 
+                    onClick={() => setActiveComponent('journal-guide')}
+                  >
+                    <Book className="h-4 w-4 mr-2" />
+                    Start Journal Setup Guide
+                  </Button>
+                  
+                  <Button 
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => {
+                      navigate('/journal');
+                      onClose();
+                    }}
+                  >
+                    <ArrowRight className="h-4 w-4 mr-2" />
+                    Go to Dream Journal
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
+            {/* Show the journal guide if active */}
+            {activeComponent === 'journal-guide' && (
+              <DreamJournalGuide 
+                onComplete={() => handleStartPractice('dream_journal_setup')}
+                onClose={() => setActiveComponent(null)}
+              />
+            )}
           </div>
         );
 
