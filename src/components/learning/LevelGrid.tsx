@@ -36,7 +36,7 @@ export const LevelGrid = ({ currentLevel, userId }: LevelGridProps) => {
           <p className="text-muted-foreground">Progress through structured lessons to master lucid dreaming</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 overflow-hidden">
           {levels.map((level) => {
             const isLocked = level.level_number > currentLevel;
             const isCompleted = level.level_number < currentLevel;
@@ -45,10 +45,10 @@ export const LevelGrid = ({ currentLevel, userId }: LevelGridProps) => {
             return (
               <Card 
                 key={level.id} 
-                className={`relative overflow-hidden group cursor-pointer transition-all duration-300 ${
+                className={`relative group cursor-pointer transition-all duration-300 ${
                   isLocked 
                     ? 'opacity-40 cursor-not-allowed' 
-                    : 'hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-1'
+                    : 'hover:shadow-xl hover:shadow-primary/10 hover:scale-[1.01] hover:-translate-y-1'
                 } ${
                   isCurrent ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : ''
                 } ${

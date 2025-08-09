@@ -102,7 +102,9 @@
 
 /* Enhanced card styles for better contrast */
 .learning-card {
-  @apply relative overflow-hidden border-primary/30 bg-gradient-to-br from-card via-card/95 to-card/80 backdrop-blur-md shadow-lg;
+  @apply relative overflow-hidden border-primary/30 bg-gradient-to-br from-card via-card/95 to-card/80 backdrop-blur-sm shadow-md;
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 .learning-card::before {

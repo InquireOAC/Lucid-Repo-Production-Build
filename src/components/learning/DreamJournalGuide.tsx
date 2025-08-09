@@ -202,10 +202,10 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-8">
+        <CardContent className="space-y-8 overflow-hidden">
           <div className="space-y-6">
-            <h3 className="text-3xl font-bold text-high-contrast">{currentStepData.title}</h3>
-            <div className="prose prose-lg max-w-none text-high-contrast">
+            <h3 className="text-3xl font-bold text-high-contrast break-words">{currentStepData.title}</h3>
+            <div className="text-high-contrast space-y-4 max-w-full overflow-hidden">
               {currentStepData.content}
             </div>
           </div>

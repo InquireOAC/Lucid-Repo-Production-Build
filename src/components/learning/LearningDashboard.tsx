@@ -43,8 +43,8 @@ export const LearningDashboard = ({ userId }: LearningDashboardProps) => {
     ((currentXP - xpForCurrentLevel) / (xpForNextLevel - xpForCurrentLevel)) * 100 : 100;
 
   return (
-    <div className="min-h-screen dream-background">
-      <div className="container mx-auto px-4 pt-6 pb-20 space-y-8">
+    <div className="min-h-screen dream-background overflow-hidden">
+      <div className="container mx-auto px-4 pt-6 pb-20 space-y-8 max-w-7xl">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="relative">
