@@ -65,7 +65,7 @@ const DreamEntryForm = ({
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
 
-  const CHARACTER_LIMIT = 1000;
+  const CHARACTER_LIMIT = 3000;
 
   useEffect(() => {
     setAvailableTags(tags);
