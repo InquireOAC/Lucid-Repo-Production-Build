@@ -41,7 +41,7 @@ export function useLucidRepoDreamState(user: any, refreshLikedDreams: () => void
 
         // If we have existing state with local updates, preserve those
         if (prevState.length === normalizedDreams.length) {
-          return prevState.map(prevDream => {
+          const updatedDreams = prevState.map(prevDream => {
             const newDream = normalizedDreams.find(d => d.id === prevDream.id);
             if (newDream) {
               // Keep the higher like count (in case we've updated them locally)
@@ -61,14 +61,35 @@ export function useLucidRepoDreamState(user: any, refreshLikedDreams: () => void
             }
             return prevDream;
           });
+          
+          // If popular tab, re-sort by engagement after preserving local state
+          if (activeTab === "popular") {
+            updatedDreams.sort((a, b) => {
+              const aEngagement = (a.like_count || 0) + (a.comment_count || 0);
+              const bEngagement = (b.like_count || 0) + (b.comment_count || 0);
+              return bEngagement - aEngagement;
+            });
+          }
+          
+          return updatedDreams;
         }
-        // If dreams length changed, use normalized data
-        return normalizedDreams;
+        
+        // If dreams length changed, use normalized data with popular sorting if needed
+        let finalDreams = normalizedDreams;
+        if (activeTab === "popular") {
+          finalDreams = [...normalizedDreams].sort((a, b) => {
+            const aEngagement = (a.like_count || 0) + (a.comment_count || 0);
+            const bEngagement = (b.like_count || 0) + (b.comment_count || 0);
+            return bEngagement - aEngagement;
+          });
+        }
+        
+        return finalDreams;
       });
     } else if (dreams.length === 0) {
       setDreamsState([]);
     }
-  }, [dreams]);
+  }, [dreams, activeTab]);
 
   return {
     dreamsState,
