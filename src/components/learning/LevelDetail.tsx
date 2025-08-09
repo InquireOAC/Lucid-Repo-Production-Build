@@ -61,39 +61,70 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
       case 1:
         return (
           <div className="space-y-6">
-            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-              <CardHeader className="relative">
-                <CardTitle className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                    <Book className="h-5 w-5 text-primary" />
+            <Card className="learning-card">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-xl text-high-contrast">
+                  <div className="p-2 rounded-lg bg-primary/20 border border-primary/30">
+                    <Book className="h-6 w-6 text-primary" />
                   </div>
                   Dream Journal Setup
                 </CardTitle>
               </CardHeader>
-              <CardContent className="relative space-y-4">
-                <p className="text-muted-foreground">Learn how to set up and maintain an effective dream journal:</p>
+              <CardContent className="space-y-6">
+                <p className="text-muted-contrast text-lg leading-relaxed">
+                  Learn how to set up and maintain an effective dream journal - the foundation of lucid dreaming:
+                </p>
                 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <Button 
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 h-auto shadow-lg" 
                     onClick={() => setActiveComponent('journal-guide')}
                   >
-                    <Book className="h-4 w-4 mr-2" />
-                    Start Journal Setup Guide
+                    <Book className="h-5 w-5 mr-3" />
+                    Start Interactive Journal Setup Guide
                   </Button>
                   
                   <Button 
                     variant="outline"
-                    className="w-full border-primary/30 hover:border-primary hover:bg-primary/10"
+                    className="w-full border-primary/40 hover:border-primary hover:bg-primary/15 text-high-contrast font-semibold py-3 h-auto"
                     onClick={() => {
                       navigate('/journal');
                       onClose();
                     }}
                   >
-                    <ArrowRight className="h-4 w-4 mr-2" />
-                    Go to Dream Journal
+                    <ArrowRight className="h-5 w-5 mr-3" />
+                    Go to Your Dream Journal
                   </Button>
+                </div>
+
+                {/* Key Benefits Section */}
+                <div className="mt-8 p-6 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                  <h4 className="font-bold text-lg text-primary mb-4 flex items-center gap-2">
+                    ✨ Why Dream Journaling Works
+                  </h4>
+                  <div className="grid gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-semibold text-high-contrast">Improves Dream Recall:</span>
+                        <span className="text-muted-contrast ml-1">Training your brain to remember more dreams</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-semibold text-high-contrast">Identifies Patterns:</span>
+                        <span className="text-muted-contrast ml-1">Discover recurring themes and dream signs</span>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                      <div>
+                        <span className="font-semibold text-high-contrast">Builds Awareness:</span>
+                        <span className="text-muted-contrast ml-1">Strengthens connection between waking and dreaming mind</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -175,26 +175,24 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
 
   return (
     <div className="relative">
-      <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card/90 to-card/60 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-        
-        <CardHeader className="relative">
+      <Card className="learning-card">
+        <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-3 text-xl">
-              <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <CardTitle className="flex items-center gap-3 text-2xl text-high-contrast">
+              <div className="p-3 rounded-xl bg-primary/20 border border-primary/30 shadow-sm">
                 {currentStepData.icon}
               </div>
               Dream Journal Guide
             </CardTitle>
-            <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
+            <Badge variant="secondary" className="bg-primary/25 text-primary border-primary/40 px-3 py-1">
               {currentStep + 1} of {steps.length}
             </Badge>
           </div>
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-6">
             {steps.map((_, index) => (
               <div
                 key={index}
-                className={`h-2 flex-1 rounded-full transition-all duration-300 ${
+                className={`h-3 flex-1 rounded-full transition-all duration-300 shadow-sm ${
                   index <= currentStep
                     ? 'bg-gradient-to-r from-primary to-primary/80'
                     : 'bg-muted/50'
@@ -204,19 +202,19 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
           </div>
         </CardHeader>
         
-        <CardContent className="space-y-6 relative">
-          <div className="space-y-4">
-            <h3 className="text-2xl font-bold text-foreground">{currentStepData.title}</h3>
-            <div className="prose prose-sm max-w-none text-foreground">
+        <CardContent className="space-y-8">
+          <div className="space-y-6">
+            <h3 className="text-3xl font-bold text-high-contrast">{currentStepData.title}</h3>
+            <div className="prose prose-lg max-w-none text-high-contrast">
               {currentStepData.content}
             </div>
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-border/50">
+          <div className="flex justify-between pt-6 border-t border-border/60">
             <Button
               variant="outline"
               onClick={currentStep === 0 ? onClose : handlePrevious}
-              className="border-primary/30 hover:border-primary hover:bg-primary/10"
+              className="border-primary/40 hover:border-primary hover:bg-primary/15 text-high-contrast font-semibold px-6"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               {currentStep === 0 ? 'Close' : 'Previous'}
@@ -224,9 +222,9 @@ export const DreamJournalGuide = ({ onComplete, onClose }: DreamJournalGuideProp
             
             <Button 
               onClick={handleNext}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 shadow-lg"
             >
-              {isLastStep ? 'Complete Guide' : 'Next'}
+              {isLastStep ? 'Complete Guide' : 'Next Step'}
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
           </div>
