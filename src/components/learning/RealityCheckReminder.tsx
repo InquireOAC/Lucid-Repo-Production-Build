@@ -62,23 +62,28 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
   const allCompleted = completedChecks.length === realityChecks.length;
 
   return (
-    <Card className="w-full max-w-md mx-auto">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span className="flex items-center gap-2">
-            {check.icon}
+    <Card className="relative overflow-hidden w-full max-w-md mx-auto border-primary/20 bg-gradient-to-br from-card via-card/90 to-card/60 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+      
+      <CardHeader className="relative">
+        <CardTitle className="flex items-center justify-between text-xl">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+              {check.icon}
+            </div>
             Reality Check Training
-          </span>
-          <Badge variant="outline">
+          </div>
+          <Badge variant="secondary" className="bg-primary/20 text-primary border-primary/30">
             {completedChecks.length}/{realityChecks.length}
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      
+      <CardContent className="space-y-6 relative">
         {allCompleted ? (
-          <div className="text-center p-6 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Great Job!</h3>
+          <div className="text-center p-6 rounded-xl bg-gradient-to-br from-green-500/15 to-green-600/10 border border-green-500/30">
+            <CheckCircle className="h-12 w-12 text-green-400 mx-auto mb-4 animate-float" />
+            <h3 className="text-xl font-bold mb-2 text-green-400">Great Job!</h3>
             <p className="text-sm text-muted-foreground">
               You've completed all reality checks. Practice these throughout the day to build dream awareness!
             </p>
@@ -86,18 +91,20 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
         ) : (
           <>
             {/* Current Check */}
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-center gap-3">
-                {check.icon}
-                <h3 className="text-lg font-semibold">{check.title}</h3>
+                <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                  {check.icon}
+                </div>
+                <h3 className="text-lg font-bold text-foreground">{check.title}</h3>
               </div>
               
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground leading-relaxed">
                 {check.description}
               </p>
               
-              <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
-                <p className="text-sm font-medium text-primary">
+              <div className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
+                <p className="text-sm font-semibold text-primary">
                   Action: {check.action}
                 </p>
               </div>
@@ -107,7 +114,11 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
             <Button
               onClick={() => handleCompleteCheck(check.id)}
               disabled={isCompleted}
-              className="w-full"
+              className={`w-full ${
+                isCompleted 
+                  ? 'bg-green-500/20 border-green-500/30 text-green-400' 
+                  : 'bg-primary hover:bg-primary/90 text-primary-foreground'
+              }`}
               variant={isCompleted ? "outline" : "default"}
             >
               {isCompleted ? (
@@ -121,12 +132,12 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
             </Button>
 
             {/* Navigation */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={handlePrevious}
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="flex-1 border-primary/30 hover:border-primary hover:bg-primary/10"
               >
                 Previous
               </Button>
@@ -134,7 +145,7 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
                 onClick={handleNext}
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="flex-1 border-primary/30 hover:border-primary hover:bg-primary/10"
               >
                 Next
               </Button>
@@ -147,11 +158,11 @@ export const RealityCheckReminder = ({ onComplete }: RealityCheckReminderProps) 
           {realityChecks.map((_, index) => (
             <div
               key={index}
-              className={`w-2 h-2 rounded-full ${
+              className={`w-3 h-3 rounded-full transition-all duration-200 ${
                 index === currentCheck
-                  ? 'bg-primary'
+                  ? 'bg-primary scale-125'
                   : completedChecks.includes(realityChecks[index].id)
-                  ? 'bg-green-500'
+                  ? 'bg-green-400'
                   : 'bg-muted'
               }`}
             />

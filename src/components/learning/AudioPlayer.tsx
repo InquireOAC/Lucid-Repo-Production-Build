@@ -80,37 +80,44 @@ export const AudioPlayer = ({ onSessionComplete }: AudioPlayerProps) => {
   }, []);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Volume2 className="h-5 w-5" />
+    <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card via-card/90 to-card/60 backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+      
+      <CardHeader className="relative">
+        <CardTitle className="flex items-center gap-3 text-xl">
+          <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+            <Volume2 className="h-5 w-5 text-primary" />
+          </div>
           Binaural Beats
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      
+      <CardContent className="space-y-6 relative">
         {/* Frequency Selection */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Choose Frequency:</label>
-          {frequencies.map((freq) => (
-            <div
-              key={freq.hz}
-              className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                selectedFrequency === freq.hz
-                  ? 'border-primary bg-primary/10'
-                  : 'border-border hover:bg-muted'
-              }`}
-              onClick={() => setSelectedFrequency(freq.hz)}
-            >
-              <div className="font-medium">{freq.name}</div>
-              <div className="text-sm text-muted-foreground">{freq.description}</div>
-            </div>
-          ))}
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-foreground">Choose Frequency:</label>
+          <div className="grid gap-3">
+            {frequencies.map((freq) => (
+              <div
+                key={freq.hz}
+                className={`p-4 rounded-xl border cursor-pointer transition-all duration-200 ${
+                  selectedFrequency === freq.hz
+                    ? 'border-primary bg-gradient-to-br from-primary/15 to-primary/5 shadow-sm'
+                    : 'border-border hover:bg-muted/50'
+                }`}
+                onClick={() => setSelectedFrequency(freq.hz)}
+              >
+                <div className="font-semibold text-foreground">{freq.name}</div>
+                <div className="text-sm text-muted-foreground">{freq.description}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Session Duration */}
-        <div className="space-y-2">
-          <label className="text-sm font-medium">
-            Session Duration: {sessionDuration} minutes
+        <div className="space-y-3">
+          <label className="text-sm font-semibold text-foreground">
+            Session Duration: <span className="text-primary">{sessionDuration} minutes</span>
           </label>
           <Slider
             value={[sessionDuration]}
@@ -123,17 +130,18 @@ export const AudioPlayer = ({ onSessionComplete }: AudioPlayerProps) => {
         </div>
 
         {/* Controls */}
-        <div className="space-y-3">
+        <div className="space-y-4">
           {sessionActive ? (
-            <div className="text-center space-y-2">
-              <div className="text-2xl font-mono">
+            <div className="text-center space-y-4 p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20">
+              <div className="text-3xl font-mono text-primary">
                 {formatTime(timeRemaining)}
               </div>
-              <div className="flex gap-2 justify-center">
+              <div className="flex gap-3 justify-center">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={togglePlayPause}
+                  className="border-primary/30 hover:border-primary hover:bg-primary/10"
                 >
                   {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
                 </Button>
@@ -141,6 +149,7 @@ export const AudioPlayer = ({ onSessionComplete }: AudioPlayerProps) => {
                   variant="outline"
                   size="sm"
                   onClick={endSession}
+                  className="border-primary/30 hover:border-primary hover:bg-primary/10"
                 >
                   <Square className="h-4 w-4" />
                 </Button>
@@ -149,7 +158,7 @@ export const AudioPlayer = ({ onSessionComplete }: AudioPlayerProps) => {
           ) : (
             <Button
               onClick={startSession}
-              className="w-full"
+              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={!selectedFrequency}
             >
               <Play className="h-4 w-4 mr-2" />
@@ -160,8 +169,8 @@ export const AudioPlayer = ({ onSessionComplete }: AudioPlayerProps) => {
 
         {/* Volume Control */}
         {(isPlaying || sessionActive) && (
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Volume</label>
+          <div className="space-y-3 p-4 rounded-xl bg-muted/30">
+            <label className="text-sm font-semibold text-foreground">Volume</label>
             <Slider
               defaultValue={[50]}
               onValueChange={([value]) => setVolume(value / 100)}

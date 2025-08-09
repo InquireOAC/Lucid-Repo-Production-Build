@@ -60,20 +60,23 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
     switch (levelNumber) {
       case 1:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Book className="h-5 w-5" />
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <Book className="h-5 w-5 text-primary" />
+                  </div>
                   Dream Journal Setup
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Learn how to set up and maintain an effective dream journal:</p>
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Learn how to set up and maintain an effective dream journal:</p>
                 
                 <div className="space-y-3">
                   <Button 
-                    className="w-full" 
+                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground" 
                     onClick={() => setActiveComponent('journal-guide')}
                   >
                     <Book className="h-4 w-4 mr-2" />
@@ -82,7 +85,7 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
                   
                   <Button 
                     variant="outline"
-                    className="w-full"
+                    className="w-full border-primary/30 hover:border-primary hover:bg-primary/10"
                     onClick={() => {
                       navigate('/journal');
                       onClose();
@@ -107,32 +110,28 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
       case 2:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Reality Check Training</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="mb-4">Learn to question reality throughout the day:</p>
-                <RealityCheckReminder 
-                  onComplete={() => handleStartPractice('reality_check')}
-                />
-              </CardContent>
-            </Card>
-          </div>
+          <RealityCheckReminder 
+            onComplete={() => handleStartPractice('reality_check')}
+          />
         );
 
       case 3:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Intention Setting</CardTitle>
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  Intention Setting
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Program your mind for lucid dreaming:</p>
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Program your mind for lucid dreaming:</p>
                 <Button 
-                  className="w-full mb-4" 
+                  className="w-full mb-4 bg-primary hover:bg-primary/90 text-primary-foreground" 
                   onClick={() => setActiveComponent('intention')}
                 >
                   Set Tonight's Intention
@@ -149,14 +148,20 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
       case 4:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Meditation & Relaxation</CardTitle>
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <Play className="h-5 w-5 text-primary" />
+                  </div>
+                  Meditation & Relaxation
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Develop mindfulness and body awareness:</p>
-                <div className="space-y-2">
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Develop mindfulness and body awareness:</p>
+                <div className="space-y-3">
                   <PracticeTimer
                     duration={5}
                     title="5-Minute Breathing"
@@ -180,24 +185,30 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
       case 5:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>WBTB & MILD Techniques</CardTitle>
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  WBTB & MILD Techniques
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Advanced induction methods:</p>
-                <div className="space-y-2">
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Advanced induction methods:</p>
+                <div className="space-y-3">
                   <Button 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full border-primary/30 hover:border-primary hover:bg-primary/10"
                     onClick={() => setActiveComponent('wbtb')}
                   >
                     Set WBTB Alarm
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full"
+                    className="w-full border-primary/30 hover:border-primary hover:bg-primary/10"
                     onClick={() => handleStartPractice('mild_practice')}
                   >
                     Practice MILD Technique
@@ -210,13 +221,19 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
       case 6:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Binaural Beats & Audio</CardTitle>
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <Volume2 className="h-5 w-5 text-primary" />
+                  </div>
+                  Binaural Beats & Audio
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Enhance your practice with sound:</p>
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Enhance your practice with sound:</p>
                 <AudioPlayer 
                   onSessionComplete={(duration) => handleStartPractice('audio_session', duration)}
                 />
@@ -227,28 +244,56 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
       case 7:
         return (
-          <div className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Advanced Dream Control</CardTitle>
+          <div className="space-y-6">
+            <Card className="relative overflow-hidden border-primary/20 bg-gradient-to-br from-card to-card/80 backdrop-blur-sm">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <CardHeader className="relative">
+                <CardTitle className="flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                  </div>
+                  Advanced Dream Control
+                </CardTitle>
               </CardHeader>
-              <CardContent>
-                <p className="mb-4">Master your lucid dreams:</p>
-                <div className="space-y-2 text-sm">
-                  <div className="p-3 bg-muted rounded-lg">
-                    <strong>Stabilization Techniques:</strong>
-                    <ul className="mt-2 space-y-1">
-                      <li>• Rub your hands together</li>
-                      <li>• Touch objects in the dream</li>
-                      <li>• Spin around slowly</li>
+              <CardContent className="relative space-y-4">
+                <p className="text-muted-foreground">Master your lucid dreams:</p>
+                <div className="grid gap-4">
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-green-500/10 to-green-600/5 border border-green-500/20">
+                    <h4 className="font-bold text-green-400 mb-3 flex items-center gap-2">
+                      🤲 Stabilization Techniques
+                    </h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                        Rub your hands together
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                        Touch objects in the dream
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-green-400 rounded-full"></div>
+                        Spin around slowly
+                      </li>
                     </ul>
                   </div>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <strong>Control Exercises:</strong>
-                    <ul className="mt-2 space-y-1">
-                      <li>• Start with small objects</li>
-                      <li>• Practice flying gradually</li>
-                      <li>• Summon dream characters</li>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                    <h4 className="font-bold text-blue-400 mb-3 flex items-center gap-2">
+                      🎮 Control Exercises
+                    </h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                        Start with small objects
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                        Practice flying gradually
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <div className="w-1 h-1 bg-blue-400 rounded-full"></div>
+                        Summon dream characters
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -264,13 +309,17 @@ export const LevelDetail = ({ levelNumber, isOpen, onClose, userId }: LevelDetai
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Level {levelNumber}: {level.title}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-gradient-to-br from-card via-card/95 to-card/90 backdrop-blur-sm border-primary/20">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-lg" />
+        
+        <DialogHeader className="relative">
+          <DialogTitle className="text-2xl bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            Level {levelNumber}: {level.title}
+          </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <p className="text-muted-foreground">{level.description}</p>
+        <div className="space-y-6 relative">
+          <p className="text-muted-foreground text-lg">{level.description}</p>
           
           {renderLevelContent()}
         </div>
