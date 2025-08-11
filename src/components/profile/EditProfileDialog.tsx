@@ -48,9 +48,9 @@ const EditProfileDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md glass-card border-white/20">
         <DialogHeader>
-          <DialogTitle className="gradient-text">Edit Profile</DialogTitle>
+          <DialogTitle className="gradient-text text-white">Edit Profile</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="flex flex-col items-center gap-2">
@@ -74,44 +74,47 @@ const EditProfileDialog = ({
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="displayName">Display Name</Label>
+            <Label htmlFor="displayName" className="text-white">Display Name</Label>
             <Input
               id="displayName"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your display name"
+              className="bg-white/10 border-white/20 text-white placeholder-white/50"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
+            <Label htmlFor="username" className="text-white">Username</Label>
             <Input
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Your username"
+              className="bg-white/10 border-white/20 text-white placeholder-white/50"
             />
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
+            <Label htmlFor="bio" className="text-white">Bio</Label>
             <Textarea
               id="bio"
               value={bio}
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell others about yourself..."
               rows={3}
+              className="bg-white/10 border-white/20 text-white placeholder-white/50"
             />
           </div>
         </div>
         
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="glass-button">
             Cancel
           </Button>
           <Button 
             onClick={handleUpdateProfile}
-            className="bg-gradient-to-r from-dream-lavender to-dream-purple"
+            className="glass-button"
           >
             Save Changes
           </Button>
