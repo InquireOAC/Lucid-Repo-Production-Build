@@ -80,9 +80,6 @@ const VideoDetail = ({
                 <Heart className="w-4 h-4 mr-2" />
                 Like
               </Button>
-              <Button variant="outline" className="glass-button">
-                Share
-              </Button>
             </div>
 
             {/* Comments Section */}

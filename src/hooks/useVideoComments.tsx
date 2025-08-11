@@ -13,14 +13,22 @@ export function useVideoComments(videoId: string | undefined) {
       .select("*, profiles:user_id(username, profile_picture)")
       .eq("video_id", videoId)
       .order("created_at", { ascending: true });
-    if (!error) setComments(data);
+    if (error) {
+      console.error("Error fetching comments:", error);
+    } else {
+      setComments(data || []);
+    }
     setIsLoading(false);
   }
 
   async function addComment(user: any, comment_text: string) {
     if (!user || !videoId || !comment_text) return;
-    await supabase.from("video_comments").insert([{ user_id: user.id, video_id: videoId, comment_text }]);
-    fetchComments();
+    const { error } = await supabase.from("video_comments").insert([{ user_id: user.id, video_id: videoId, comment_text }]);
+    if (error) {
+      console.error("Error adding comment:", error);
+    } else {
+      fetchComments();
+    }
   }
 
   async function deleteComment(commentId: string, user: any) {
