@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import LucidRepoContainer from './pages/LucidRepo';
 import Chat from './pages/Chat';
 import Learn from './pages/Learn';
+import Notifications from './pages/Notifications';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -38,6 +39,7 @@ function App() {
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
                   <Route path="chat" element={<Chat />} />
+                  <Route path="notifications" element={<Notifications />} />
                   <Route path="learn" element={<Learn />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
