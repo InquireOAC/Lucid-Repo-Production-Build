@@ -110,13 +110,7 @@ const SharedDreamCard = ({
       {/* Header with profile info */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={handleViewProfile} className="flex items-center gap-3 hover:opacity-80 transition-all duration-200 group">
-          <SymbolAvatar
-            symbol={profile.avatar_symbol}
-            color={profile.avatar_color}
-            fallbackLetter={(profile.display_name || profile.username || "U").charAt(0).toUpperCase()}
-            size={32}
-            className="flex-shrink-0"
-          />
+          <SymbolAvatar symbol={profile.avatar_symbol} color={profile.avatar_color} fallbackLetter={(profile.display_name || profile.username || "U").charAt(0).toUpperCase()} size={32} className="flex-shrink-0" />
           <div className="text-left">
             <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
               {profile.display_name || profile.username}
@@ -125,9 +119,7 @@ const SharedDreamCard = ({
           </div>
         </button>
         
-        {dream.is_public && <Button size="sm" variant="ghost" onClick={handleViewFullDream} className="w-8 h-8 p-0 rounded-full glass-card border border-white/10 hover:border-purple-400/30 hover:bg-purple-500/20 text-white/70 hover:text-white transition-all duration-200">
-            <ExternalLink className="h-4 w-4" />
-          </Button>}
+        {dream.is_public}
       </div>
 
       {/* Dream content */}
