@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { LearningDashboard } from '@/components/learning/LearningDashboard';
@@ -6,7 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Learn = () => {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [showComingSoon, setShowComingSoon] = useState(true);
+
+  const handleCloseComingSoon = () => {
+    setShowComingSoon(false);
+    navigate('/profile');
+  };
 
   if (loading) {
     return (
@@ -35,7 +42,7 @@ const Learn = () => {
       </div>
 
       {/* Coming Soon Modal */}
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+      <Dialog open={showComingSoon} onOpenChange={handleCloseComingSoon}>
         <DialogContent className="glass-card border-white/20">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold text-white gradient-text text-center">
@@ -47,7 +54,7 @@ const Learn = () => {
               The learning system is currently under development. Stay tuned for an amazing lucid dreaming education experience!
             </p>
             <Button 
-              onClick={() => setShowComingSoon(false)}
+              onClick={handleCloseComingSoon}
               className="glass-button"
             >
               Got it!
