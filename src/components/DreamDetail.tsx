@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
-import CopyLinkButton from "@/components/share/CopyLinkButton";
 import DreamComments from "@/components/DreamComments";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -165,7 +164,6 @@ const DreamDetail = ({
             <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
               <div className="flex gap-2 flex-shrink-0">
                 <ShareButton dream={dream} />
-                <CopyLinkButton dream={dream} />
               </div>
               <DreamDetailActions
                 isAuthenticated={isAuthenticated}
