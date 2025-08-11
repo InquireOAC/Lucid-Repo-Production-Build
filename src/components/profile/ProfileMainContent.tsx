@@ -121,30 +121,8 @@ const ProfileMainContent = ({
 
   return (
     <>
-      {/* Notifications Button */}
-      {isOwnProfile && (
-        <div className="mb-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              window.location.href = '/notifications';
-            }}
-            className="flex items-center gap-2 relative"
-          >
-            <Bell className="h-4 w-4" />
-            <span>Notifications</span>
-            {unreadCount > 0 && (
-              <div className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">
-                  {unreadCount > 99 ? '99+' : unreadCount}
-                </span>
-              </div>
-            )}
-          </Button>
-        </div>
-      )}
-
+      {/* Notifications Button - Hidden for now */}
+      
       <ProfileHeader
         profile={profileToShow}
         isOwnProfile={isOwnProfile}
