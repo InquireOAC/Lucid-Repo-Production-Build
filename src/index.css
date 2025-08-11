@@ -162,18 +162,18 @@
 .glass-card {
   background: 
     linear-gradient(135deg, 
-      rgba(0, 255, 255, 0.05) 0%,
-      rgba(255, 0, 255, 0.03) 25%,
-      rgba(255, 255, 0, 0.02) 50%,
-      rgba(0, 255, 255, 0.03) 75%,
-      rgba(255, 0, 255, 0.04) 100%
+      hsla(var(--glass-primary), 0.05) 0%,
+      hsla(var(--glass-secondary), 0.03) 25%,
+      hsla(var(--glass-tertiary), 0.02) 50%,
+      hsla(var(--glass-accent), 0.03) 75%,
+      hsla(var(--glass-primary), 0.04) 100%
     );
-  backdrop-filter: blur(20px) saturate(200%);
+  backdrop-filter: blur(20px) saturate(180%);
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    inset 0 -1px 0 rgba(0, 255, 255, 0.05),
-    0 0 20px rgba(0, 255, 255, 0.05);
+    inset 0 -1px 0 hsla(var(--glass-accent), 0.05),
+    0 0 20px hsla(var(--glass-primary), 0.05);
 }
 
 /* Oniri-style hover effects */
