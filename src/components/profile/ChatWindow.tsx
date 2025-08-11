@@ -76,9 +76,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               }`}
             >
               <div
-                className={`max-w-[80%] ${
+                  className={`max-w-[80%] ${
                   message.sender_id === user?.id
-                    ? "bg-gradient-to-br from-purple-500/80 to-pink-500/80 text-white backdrop-blur-sm border border-white/20"
+                    ? "bg-gradient-to-br from-purple-900/60 to-purple-700/80 text-white backdrop-blur-lg border border-purple-300/20"
                     : "glass-card border-white/10 text-white/90"
                 } rounded-2xl overflow-hidden`}
               >

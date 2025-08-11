@@ -137,7 +137,7 @@ const DreamDetail = ({
   return (
     <>
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden">
+        <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden glass-card border-white/10">
           <DialogHeader>
             <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
           </DialogHeader>

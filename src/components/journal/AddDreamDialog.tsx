@@ -30,7 +30,7 @@ const AddDreamDialog = ({
 }: AddDreamDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
         </DialogHeader>
