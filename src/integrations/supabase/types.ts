@@ -866,6 +866,7 @@ export type Database = {
           read: boolean | null
           receiver_id: string
           sender_id: string
+          shared_dream_id: string | null
         }
         Insert: {
           content: string
@@ -874,6 +875,7 @@ export type Database = {
           read?: boolean | null
           receiver_id: string
           sender_id: string
+          shared_dream_id?: string | null
         }
         Update: {
           content?: string
@@ -882,6 +884,7 @@ export type Database = {
           read?: boolean | null
           receiver_id?: string
           sender_id?: string
+          shared_dream_id?: string | null
         }
         Relationships: [
           {
@@ -910,6 +913,13 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_shared_dream_id_fkey"
+            columns: ["shared_dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
             referencedColumns: ["id"]
           },
         ]

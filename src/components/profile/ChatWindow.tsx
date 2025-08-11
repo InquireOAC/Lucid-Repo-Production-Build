@@ -1,8 +1,9 @@
-
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft } from "lucide-react";
+import { Send, ArrowLeft, Share } from "lucide-react";
+import DreamShareSelector from "./DreamShareSelector";
+import SharedDreamCard from "./SharedDreamCard";
 
 interface ChatWindowProps {
   selectedConversation: any;
@@ -12,7 +13,7 @@ interface ChatWindowProps {
   setNewMessage: (msg: string) => void;
   loading: boolean;
   onBack: () => void;
-  onSend: () => void;
+  onSend: (customMessage?: string) => void;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -26,6 +27,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onSend,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showDreamSelector, setShowDreamSelector] = useState(false);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -34,8 +36,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [messages]);
 
+  const handleShareDream = (dreamId: string) => {
+    // Send message with shared dream
+    onSend(`[SHARED_DREAM:${dreamId}]`);
+  };
+
   return (
-    <div className="flex flex-col h-[400px]">
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 glass-card rounded-xl mb-3 border-white/10">
         <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
@@ -47,9 +54,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               {(selectedConversation.display_name || selectedConversation.username)?.charAt(0)?.toUpperCase()}
             </span>
           </div>
-          <h3 className="font-medium text-white/90">
+          <button 
+            onClick={() => window.location.href = `/profile/${selectedConversation.username || selectedConversation.id}`}
+            className="font-medium text-white/90 hover:text-white transition-colors cursor-pointer text-left"
+          >
             {selectedConversation.display_name || selectedConversation.username}
-          </h3>
+          </button>
         </div>
       </div>
 
@@ -64,19 +74,39 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               }`}
             >
               <div
-                className={`max-w-[80%] p-3 rounded-2xl ${
+                className={`max-w-[80%] ${
                   message.sender_id === user?.id
                     ? "bg-gradient-to-br from-purple-500/80 to-pink-500/80 text-white backdrop-blur-sm border border-white/20"
                     : "glass-card border-white/10 text-white/90"
-                }`}
+                } rounded-2xl overflow-hidden`}
               >
-                <p className="text-sm leading-relaxed">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(message.created_at).toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                  })}
-                </p>
+                {/* Check if message contains shared dream */}
+                {message.content.startsWith('[SHARED_DREAM:') ? (
+                  <div className="p-3">
+                    <p className="text-xs opacity-70 mb-2">
+                      {message.sender_id === user?.id ? "You" : "They"} shared a dream
+                    </p>
+                    <SharedDreamCard 
+                      dreamId={message.content.match(/\[SHARED_DREAM:([^\]]+)\]/)?.[1] || ''}
+                    />
+                    <p className="text-xs opacity-70 mt-2">
+                      {new Date(message.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3">
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-xs opacity-70 mt-1">
+                      {new Date(message.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -87,6 +117,14 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* Input */}
       <div className="glass-card rounded-xl p-3 border-white/10">
         <div className="flex gap-2">
+          <Button
+            onClick={() => setShowDreamSelector(true)}
+            size="icon"
+            variant="ghost"
+            className="hover:bg-white/10 text-white/70"
+          >
+            <Share className="h-4 w-4" />
+          </Button>
           <Input
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
@@ -99,7 +137,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             }}
           />
           <Button
-            onClick={onSend}
+            onClick={() => onSend()}
             disabled={loading || !newMessage.trim()}
             size="icon"
             className="bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-white/20 text-white shadow-lg"
@@ -108,6 +146,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
           </Button>
         </div>
       </div>
+
+      {/* Dream Share Selector */}
+      <DreamShareSelector
+        isOpen={showDreamSelector}
+        onClose={() => setShowDreamSelector(false)}
+        onSelectDream={handleShareDream}
+      />
     </div>
   );
 };

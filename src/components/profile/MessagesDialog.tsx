@@ -82,8 +82,11 @@ const MessagesDialog = ({
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!user || !selectedConversation || !newMessage.trim()) return;
+  const handleSendMessage = async (customMessage?: string) => {
+    if (!user || !selectedConversation) return;
+    
+    const messageContent = customMessage || newMessage.trim();
+    if (!messageContent) return;
 
     setLoading(true);
     try {
@@ -92,12 +95,14 @@ const MessagesDialog = ({
         .insert({
           sender_id: user.id,
           receiver_id: selectedConversation.id,
-          content: newMessage.trim()
+          content: messageContent
         });
 
       if (error) throw error;
 
-      setNewMessage("");
+      if (!customMessage) {
+        setNewMessage("");
+      }
       fetchMessages(selectedConversation.id);
       toast.success("Message sent");
     } catch (error) {
@@ -111,13 +116,13 @@ const MessagesDialog = ({
   // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md glass-card border-white/20 backdrop-blur-xl">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen glass-card border-white/20 backdrop-blur-xl p-0 m-0 rounded-none">
+        <DialogHeader className="p-6 pb-0">
           <DialogTitle className="gradient-text text-xl font-semibold">
             {selectedConversation ? "Chat" : "Messages"}
           </DialogTitle>
         </DialogHeader>
-        <div className="py-4">
+        <div className="flex-1 overflow-hidden p-6 pt-0">
           {!selectedConversation ? (
             <ConversationList
               conversations={conversations}
