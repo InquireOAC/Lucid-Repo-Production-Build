@@ -2,7 +2,7 @@
 import React, { useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, ArrowLeft } from "lucide-react";
 
 interface ChatWindowProps {
   selectedConversation: any;
@@ -36,56 +36,77 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div className="flex flex-col h-[400px]">
-      <div className="flex items-center gap-2 mb-4">
-        <Button variant="ghost" size="sm" onClick={onBack}>
-          Back
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4 glass-card rounded-xl mb-3 border-white/10">
+        <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
+          <ArrowLeft className="h-4 w-4 text-white/80" />
         </Button>
-        <span className="font-medium">
-          {selectedConversation.display_name || selectedConversation.username}
-        </span>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-8 h-8 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
+            <span className="text-white/80 font-medium text-xs">
+              {(selectedConversation.display_name || selectedConversation.username)?.charAt(0)?.toUpperCase()}
+            </span>
+          </div>
+          <h3 className="font-medium text-white/90">
+            {selectedConversation.display_name || selectedConversation.username}
+          </h3>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-        {messages.map((message: any) => (
-          <div
-            key={message.id}
-            className={`flex ${
-              message.sender_id === user?.id
-                ? "justify-end"
-                : "justify-start"
-            }`}
-          >
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-1 mb-4 scrollbar-hide">
+        <div className="space-y-3 pr-3">
+          {messages.map((message: any) => (
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
-                message.sender_id === user?.id
-                  ? "bg-dream-purple text-white"
-                  : "bg-blue-500 dark:bg-blue-700"
+              key={message.id}
+              className={`flex ${
+                message.sender_id === user?.id ? "justify-end" : "justify-start"
               }`}
             >
-              <p className="text-sm">{message.content}</p>
-              <p className="text-xs opacity-70">
-                {new Date(message.created_at).toLocaleTimeString()}
-              </p>
+              <div
+                className={`max-w-[80%] p-3 rounded-2xl ${
+                  message.sender_id === user?.id
+                    ? "bg-gradient-to-br from-purple-500/80 to-pink-500/80 text-white backdrop-blur-sm border border-white/20"
+                    : "glass-card border-white/10 text-white/90"
+                }`}
+              >
+                <p className="text-sm leading-relaxed">{message.content}</p>
+                <p className="text-xs opacity-70 mt-1">
+                  {new Date(message.created_at).toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
+              </div>
             </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
+          ))}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
-      <div className="flex gap-2">
-        <Input
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
-          onKeyPress={(e) =>
-            e.key === "Enter" && onSend()
-          }
-        />
-        <Button
-          size="icon"
-          onClick={onSend}
-          disabled={loading || !newMessage.trim()}
-        >
-          <Send size={16} />
-        </Button>
+
+      {/* Input */}
+      <div className="glass-card rounded-xl p-3 border-white/10">
+        <div className="flex gap-2">
+          <Input
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Type a message..."
+            className="flex-1 bg-white/5 border-white/20 text-white/90 placeholder:text-white/50 focus:border-white/40 focus:bg-white/10"
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && !loading && newMessage.trim()) {
+                onSend();
+              }
+            }}
+          />
+          <Button
+            onClick={onSend}
+            disabled={loading || !newMessage.trim()}
+            size="icon"
+            className="bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-white/20 text-white shadow-lg"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
