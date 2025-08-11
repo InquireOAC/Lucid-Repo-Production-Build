@@ -39,7 +39,7 @@ function App() {
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
                   <Route path="chat" element={<Chat />} />
-                  
+                  <Route path="notifications" element={<Notifications />} />
                   <Route path="learn" element={<Learn />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>

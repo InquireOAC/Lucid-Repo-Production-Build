@@ -127,7 +127,9 @@ const ProfileMainContent = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsNotificationsOpen(true)}
+            onClick={() => {
+              window.location.href = '/notifications';
+            }}
             className="flex items-center gap-2 relative"
           >
             <Bell className="h-4 w-4" />

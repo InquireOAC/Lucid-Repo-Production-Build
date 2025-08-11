@@ -4,13 +4,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock } from "lucide-react";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
 import AIContextDialog from "./AIContextDialog";
 import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
+import WakeTimerDialog from "./WakeTimerDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -37,6 +38,7 @@ const SettingsDialog = ({
   const [showAIContext, setShowAIContext] = useState(false);
   const [showSocialLinks, setShowSocialLinks] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showWakeTimer, setShowWakeTimer] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -66,6 +68,10 @@ const SettingsDialog = ({
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowNotifications(true)}>
                   <Bell className="h-4 w-4 mr-2" />
                   Push Notifications
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowWakeTimer(true)}>
+                  <AlarmClock className="h-4 w-4 mr-2" />
+                  Wake Timer
                 </Button>
               </div>
 
@@ -137,6 +143,8 @@ const SettingsDialog = ({
       <AIContextDialog open={showAIContext} onOpenChange={setShowAIContext} />
 
       <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
+
+      <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
 
       {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
     </>;
