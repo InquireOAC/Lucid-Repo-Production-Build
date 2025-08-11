@@ -104,7 +104,6 @@ const MessagesDialog = ({
         setNewMessage("");
       }
       fetchMessages(selectedConversation.id);
-      toast.success("Message sent");
     } catch (error) {
       console.error("Error sending message:", error);
       toast.error("Failed to send message");
