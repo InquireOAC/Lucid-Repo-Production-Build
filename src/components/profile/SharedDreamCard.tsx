@@ -217,28 +217,6 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
               </div>
             )}
           </div>
-          
-          {/* Engagement stats */}
-          <div className="flex items-center gap-3 text-xs text-white/50">
-            {dream.like_count !== undefined && (
-              <div className="flex items-center gap-1">
-                <Heart className="h-3 w-3" />
-                <span>{dream.like_count}</span>
-              </div>
-            )}
-            {dream.comment_count !== undefined && (
-              <div className="flex items-center gap-1">
-                <MessageCircle className="h-3 w-3" />
-                <span>{dream.comment_count}</span>
-              </div>
-            )}
-            {dream.view_count !== undefined && (
-              <div className="flex items-center gap-1">
-                <Eye className="h-3 w-3" />
-                <span>{dream.view_count}</span>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
