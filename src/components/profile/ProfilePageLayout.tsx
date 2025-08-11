@@ -6,7 +6,7 @@ interface ProfilePageLayoutProps {
 }
 
 const ProfilePageLayout = ({ children }: ProfilePageLayoutProps) => (
-  <div className="min-h-screen dream-background p-4">
+  <div className="min-h-screen starry-background p-4">
     <div className="max-w-3xl mx-auto">{children}</div>
   </div>
 );

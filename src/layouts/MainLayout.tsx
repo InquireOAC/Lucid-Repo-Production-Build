@@ -42,7 +42,6 @@ const MainLayout = () => {
             to="/chat" 
             icon={<MessageCircle />} 
             label="AI Chat" 
-            badge={messageCount}
           />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
