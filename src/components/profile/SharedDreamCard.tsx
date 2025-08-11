@@ -3,6 +3,7 @@ import { Calendar, Tag, Heart, MessageCircle, Eye, ExternalLink } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import SymbolAvatar from "./SymbolAvatar";
 interface Dream {
   id: string;
   title: string;
@@ -109,7 +110,13 @@ const SharedDreamCard = ({
       {/* Header with profile info */}
       <div className="flex items-center justify-between mb-4">
         <button onClick={handleViewProfile} className="flex items-center gap-3 hover:opacity-80 transition-all duration-200 group">
-          
+          <SymbolAvatar
+            symbol={profile.avatar_symbol}
+            color={profile.avatar_color}
+            fallbackLetter={(profile.display_name || profile.username || "U").charAt(0).toUpperCase()}
+            size={32}
+            className="flex-shrink-0"
+          />
           <div className="text-left">
             <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
               {profile.display_name || profile.username}
