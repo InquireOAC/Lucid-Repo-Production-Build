@@ -44,12 +44,6 @@ const MainLayout = () => {
             label="AI Chat" 
             badge={messageCount}
           />
-          <NavTab 
-            to="/notifications" 
-            icon={<Bell />} 
-            label="Notifications" 
-            badge={notificationCount}
-          />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
       </div>
