@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, ArrowLeft, Share } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DreamShareSelector from "./DreamShareSelector";
 import SharedDreamCard from "./SharedDreamCard";
 
@@ -28,6 +29,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showDreamSelector, setShowDreamSelector] = useState(false);
+  const navigate = useNavigate();
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -55,7 +57,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             </span>
           </div>
           <button 
-            onClick={() => window.location.href = `/profile/${selectedConversation.username || selectedConversation.id}`}
+            onClick={() => navigate(`/profile/${selectedConversation.username || selectedConversation.id}`)}
             className="font-medium text-white/90 hover:text-white transition-colors cursor-pointer text-left"
           >
             {selectedConversation.display_name || selectedConversation.username}
