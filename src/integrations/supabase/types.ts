@@ -1306,8 +1306,44 @@ export type Database = {
           },
         ]
       }
+      video_comments: {
+        Row: {
+          comment_text: string
+          created_at: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          comment_text: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          comment_text?: string
+          created_at?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_video_comments_video_id"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "video_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_entries: {
         Row: {
+          comment_count: number | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -1325,6 +1361,7 @@ export type Database = {
           youtube_url: string
         }
         Insert: {
+          comment_count?: number | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -1342,6 +1379,7 @@ export type Database = {
           youtube_url: string
         }
         Update: {
+          comment_count?: number | null
           created_at?: string
           created_by?: string | null
           description?: string | null
