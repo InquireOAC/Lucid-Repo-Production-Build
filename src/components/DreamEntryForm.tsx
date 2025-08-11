@@ -210,7 +210,7 @@ const DreamEntryForm = ({
   };
 
   return (
-    <div className="relative bg-background">
+    <div className="relative">
       <form
         onSubmit={handleSubmit}
         className="overflow-y-auto pt-4 pb-6 space-y-8"
