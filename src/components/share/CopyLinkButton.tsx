@@ -22,8 +22,10 @@ const CopyLinkButton: React.FC<CopyLinkButtonProps> = ({
 
   const handleCopyLink = async () => {
     try {
-      // Generate the link to the dream on the profile page
-      const dreamLink = `${window.location.origin}/profile/${dream.user_id}?dream=${dream.id}`;
+      // Create a universal link that supports deep linking
+      // This link will open the app if installed, or redirect to app store if not
+      const baseUrl = "https://lucidrepo.app"; // You'll need to set up this domain
+      const dreamLink = `${baseUrl}/dream/${dream.id}`;
       
       await navigator.clipboard.writeText(dreamLink);
       
