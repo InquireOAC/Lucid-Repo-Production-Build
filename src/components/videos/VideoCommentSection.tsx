@@ -55,11 +55,17 @@ export default function VideoCommentSection({ videoId, user }) {
         {visibleComments.map(c => (
           <div key={c.id} className="flex gap-2 items-start">
             <Avatar className="h-6 w-6">
-              <AvatarImage src={c.profiles?.profile_picture} />
+              {c.profiles?.profile_picture ? (
+                <AvatarImage src={c.profiles.profile_picture} />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xs font-bold text-white bg-primary rounded-full">
+                  {c.profiles?.avatar_symbol || c.profiles?.username?.[0]?.toUpperCase() || "?"}
+                </div>
+              )}
             </Avatar>
             <div className="flex-1">
               <div className="flex gap-2 items-center">
-                <span className="font-semibold text-xs text-white">{c.profiles?.username}</span>
+                <span className="font-semibold text-xs text-white">{c.profiles?.username || "Anonymous"}</span>
                 <span className="text-[10px] text-white/50">{new Date(c.created_at).toLocaleString()}</span>
                 {user && user.id !== c.user_id && (
                   <FlagButton

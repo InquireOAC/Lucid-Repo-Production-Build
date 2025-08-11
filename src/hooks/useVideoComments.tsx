@@ -10,7 +10,10 @@ export function useVideoComments(videoId: string | undefined) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from("video_comments")
-      .select("*, profiles:user_id(username, profile_picture)")
+      .select(`
+        *,
+        profiles!inner(username, profile_picture, avatar_symbol, avatar_color)
+      `)
       .eq("video_id", videoId)
       .order("created_at", { ascending: true });
     if (error) {
