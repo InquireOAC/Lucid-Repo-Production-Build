@@ -81,11 +81,6 @@ const VideoDetail = ({
                 Like
               </Button>
             </div>
-
-            {/* Comments Section */}
-            <div className="glass-card p-4 rounded-lg border-white/10">
-              <VideoCommentSection videoId={video.id} user={user} />
-            </div>
           </div>
         </div>
       </DialogContent>
