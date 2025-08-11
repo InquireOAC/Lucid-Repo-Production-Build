@@ -1434,6 +1434,15 @@ export type Database = {
         Args: { customer_id: string; credit_type: string }
         Returns: boolean
       }
+      create_activity: {
+        Args: {
+          activity_type: string
+          user_id_param: string
+          target_user_id_param: string
+          dream_id_param?: string
+        }
+        Returns: undefined
+      }
       delete_user_account: {
         Args: { user_id_to_delete: string }
         Returns: undefined
