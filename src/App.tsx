@@ -18,13 +18,10 @@ import DreamLanding from './pages/DreamLanding';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
-import { useDeepLinking } from "@/hooks/useDeepLinking";
 
 const queryClient = new QueryClient();
 
 function App() {
-  // Initialize deep linking
-  useDeepLinking();
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

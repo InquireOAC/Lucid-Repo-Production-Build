@@ -4,6 +4,7 @@ import { Book, Moon, User, MessageCircle, GraduationCap, Bell } from "lucide-rea
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
+import { useDeepLinking } from "@/hooks/useDeepLinking";
 import { cn } from "@/lib/utils";
 
 const MainLayout = () => {
@@ -12,6 +13,9 @@ const MainLayout = () => {
   const { unreadCount: messageCount } = useUnreadMessages();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Initialize deep linking
+  useDeepLinking();
   
   React.useEffect(() => {
     // Only redirect to auth for pages that require authentication
