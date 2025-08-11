@@ -9,4 +9,5 @@ export interface VideoEntry {
   created_at: string;
   view_count?: number;
   like_count?: number;
+  comment_count?: number;
 }

@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Heart, Calendar } from "lucide-react";
 import { VideoEntry } from "@/types/video";
+import { useAuth } from "@/contexts/AuthContext";
+import VideoCommentSection from "./VideoCommentSection";
 const extractYouTubeId = (url: string): string => {
   const patterns = [/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/, /youtube\.com\/v\/([^&\n?#]+)/];
   for (const pattern of patterns) {
@@ -22,6 +24,7 @@ const VideoDetail = ({
   isOpen,
   onClose
 }: VideoDetailProps) => {
+  const { user } = useAuth();
   return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass-card border-white/20">
         <DialogHeader>
@@ -80,6 +83,11 @@ const VideoDetail = ({
               <Button variant="outline" className="glass-button">
                 Share
               </Button>
+            </div>
+
+            {/* Comments Section */}
+            <div className="glass-card p-4 rounded-lg border-white/10">
+              <VideoCommentSection videoId={video.id} user={user} />
             </div>
           </div>
         </div>

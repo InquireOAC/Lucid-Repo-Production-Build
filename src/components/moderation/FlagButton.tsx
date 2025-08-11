@@ -5,7 +5,7 @@ import ContentFlagDialog from "./ContentFlagDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 interface FlagButtonProps {
-  contentType: 'dream' | 'comment';
+  contentType: 'dream' | 'comment' | 'video_comment';
   contentId: string;
   contentOwnerId: string;
   size?: 'sm' | 'default';

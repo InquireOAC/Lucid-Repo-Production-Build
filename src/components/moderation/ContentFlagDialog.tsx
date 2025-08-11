@@ -11,7 +11,7 @@ import { toast } from "sonner";
 interface ContentFlagDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  contentType: 'dream' | 'comment';
+  contentType: 'dream' | 'comment' | 'video_comment';
   contentId: string;
   contentOwnerId: string;
 }
