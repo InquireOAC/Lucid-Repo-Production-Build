@@ -73,14 +73,6 @@ const VideoDetail = ({
                 {video.description}
               </p>
             </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-3">
-              <Button variant="outline" className="glass-button">
-                <Heart className="w-4 h-4 mr-2" />
-                Like
-              </Button>
-            </div>
           </div>
         </div>
       </DialogContent>

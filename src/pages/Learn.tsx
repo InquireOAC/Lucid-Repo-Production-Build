@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { LearningDashboard } from '@/components/learning/LearningDashboard';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Learn = () => {
   const { user, loading } = useAuth();
+  const [showComingSoon, setShowComingSoon] = useState(true);
 
   if (loading) {
     return (
@@ -25,8 +28,33 @@ const Learn = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-background">
-      <LearningDashboard userId={user.id} />
+    <div className="relative flex flex-col min-h-screen bg-background">
+      {/* Darkened background when coming soon is active */}
+      <div className={`${showComingSoon ? 'opacity-30 pointer-events-none' : ''} flex flex-col min-h-screen bg-background`}>
+        <LearningDashboard userId={user.id} />
+      </div>
+
+      {/* Coming Soon Modal */}
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent className="glass-card border-white/20">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-white gradient-text text-center">
+              🚀 Coming Soon!
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4">
+            <p className="text-white/80">
+              The learning system is currently under development. Stay tuned for an amazing lucid dreaming education experience!
+            </p>
+            <Button 
+              onClick={() => setShowComingSoon(false)}
+              className="glass-button"
+            >
+              Got it!
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
