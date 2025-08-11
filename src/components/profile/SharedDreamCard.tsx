@@ -186,38 +186,13 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
         )}
 
         {/* Metadata */}
-        <div className="flex items-center justify-between text-xs text-white/50 pt-2 border-t border-white/10">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              {new Date(dream.date).toLocaleDateString()}
-            </div>
-            {dream.mood && (
-              <span className="capitalize">{dream.mood}</span>
-            )}
+        <div className="flex items-center gap-3 text-xs text-white/50 pt-2 border-t border-white/10">
+          <div className="flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {new Date(dream.date).toLocaleDateString()}
           </div>
-          
-          {dream.is_public && (
-            <div className="flex items-center gap-3">
-              {dream.like_count !== undefined && (
-                <div className="flex items-center gap-1">
-                  <Heart className="h-3 w-3" />
-                  {dream.like_count}
-                </div>
-              )}
-              {dream.comment_count !== undefined && (
-                <div className="flex items-center gap-1">
-                  <MessageCircle className="h-3 w-3" />
-                  {dream.comment_count}
-                </div>
-              )}
-              {dream.view_count !== undefined && (
-                <div className="flex items-center gap-1">
-                  <Eye className="h-3 w-3" />
-                  {dream.view_count}
-                </div>
-              )}
-            </div>
+          {dream.mood && (
+            <span className="capitalize">{dream.mood}</span>
           )}
         </div>
       </div>
