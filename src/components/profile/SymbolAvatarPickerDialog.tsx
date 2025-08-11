@@ -45,9 +45,9 @@ export default function SymbolAvatarPickerDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px] flex flex-col gap-6 pt-6">
+      <DialogContent className="sm:max-w-[400px] flex flex-col gap-6 pt-6 glass-card border-white/20">
         <DialogHeader>
-          <DialogTitle className="gradient-text text-lg mb-2">Pick your Avatar</DialogTitle>
+          <DialogTitle className="gradient-text text-lg mb-2 text-white">Pick your Avatar</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col items-center gap-4">
           <div className="flex flex-wrap gap-4 justify-center">
@@ -70,25 +70,23 @@ export default function SymbolAvatarPickerDialog({
             })}
           </div>
           <div className="w-full flex flex-col items-center gap-2 mt-2">
-            <label className="text-sm font-medium text-gray-700 mb-1">Pick any color</label>
+            <label className="text-sm font-medium text-white mb-1">Pick any color</label>
             <div className="flex gap-4 items-center">
               <input
                 type="color"
                 value={selectedColor}
                 onChange={(e) => setSelectedColor(e.target.value)}
                 aria-label="Select avatar color"
-                className="rounded-full border-2 border-dream-purple shadow w-12 h-12 p-1 bg-transparent"
+                className="rounded-full border-2 border-white/20 shadow w-12 h-12 p-1 bg-white/10"
                 style={{
-                  background: "transparent",
                   cursor: "pointer",
                 }}
               />
               <div
-                className="rounded-full border-2 border-dream-purple flex items-center justify-center"
+                className="rounded-full border-2 border-white/20 flex items-center justify-center bg-white/10"
                 style={{
                   width: 40,
                   height: 40,
-                  background: "transparent",
                 }}
               >
                 {/* Preview */}
@@ -98,13 +96,13 @@ export default function SymbolAvatarPickerDialog({
                 })()}
               </div>
             </div>
-            <span className="text-[12px] text-dream-purple mt-1">Choose any color you want!</span>
+            <span className="text-[12px] text-white/80 mt-1">Choose any color you want!</span>
           </div>
         </div>
         <div className="flex justify-center mt-2">
           <Button
             onClick={handleSave}
-            className="bg-gradient-to-r from-dream-lavender to-dream-purple text-white font-bold"
+            className="glass-button"
           >
             Save
           </Button>
