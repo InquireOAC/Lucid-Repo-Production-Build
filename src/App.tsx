@@ -14,7 +14,6 @@ import Chat from './pages/Chat';
 import Learn from './pages/Learn';
 import Notifications from './pages/Notifications';
 import NotFound from './pages/NotFound';
-import DreamLanding from './pages/DreamLanding';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
@@ -33,7 +32,6 @@ function App() {
                 <Route path="/" element={<MainLayout />}>
                   <Route index element={<Index />} />
                   <Route path="journal" element={<Journal />} />
-                  <Route path="dream/:dreamId" element={<DreamLanding />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="profile/:userId" element={<Profile />} />
                   <Route path="profile/:username" element={<Profile />} />

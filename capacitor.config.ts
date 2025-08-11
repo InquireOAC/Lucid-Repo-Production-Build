@@ -11,19 +11,8 @@ const config: CapacitorConfig = {
   plugins: {
     PurchasesCapacitor: {
       apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk'
-    },
-    App: {
-      launchUrl: 'https://lucidrepo.app'
     }
-  },
-  // Deep linking configuration
-  deepLinks: [
-    {
-      name: 'Dream Link',
-      url: 'https://lucidrepo.app',
-      paths: ['/dream/*']
-    }
-  ]
+  }
 };
 
 export default config;
