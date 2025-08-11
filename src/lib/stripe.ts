@@ -142,8 +142,8 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       return true;
     }
     
-    // PRIORITY 1: Try to increment by user_id first
-    console.log('Incrementing usage by user_id...');
+    // PRIORITY 1: Try to increment by user_id first (now available!)
+    console.log('Incrementing usage by user_id for:', featureType);
     const { error: directError } = await supabase.rpc(
       'increment_subscription_usage_by_user',
       { 
@@ -153,7 +153,7 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
     );
     
     if (!directError) {
-      console.log('Successfully incremented usage by user_id');
+      console.log('Successfully incremented usage by user_id for:', featureType);
       return true;
     }
     

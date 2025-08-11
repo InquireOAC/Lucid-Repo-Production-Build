@@ -80,12 +80,18 @@ export const useImageGeneration = ({
           markFeatureAsUsed("image");
         } else {
           // Record usage in database for subscription users
-          await recordFeatureUsage("image");
+          console.log('Recording image usage in database...');
+          const usageRecorded = await recordFeatureUsage("image");
+          console.log('Image usage recorded:', usageRecorded);
         }
         
-        // Refresh subscription data to update credits display
+        // Refresh subscription data with a delay to ensure database propagation
         if (onSubscriptionRefresh) {
-          onSubscriptionRefresh();
+          console.log('Refreshing subscription data after image generation...');
+          setTimeout(() => {
+            console.log('Delayed subscription refresh executing...');
+            onSubscriptionRefresh();
+          }, 1000);
         }
       }
 

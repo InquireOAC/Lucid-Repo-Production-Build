@@ -1451,6 +1451,10 @@ export type Database = {
         Args: { customer_id: string; credit_type: string }
         Returns: undefined
       }
+      increment_subscription_usage_by_user: {
+        Args: { user_id_param: string; credit_type: string }
+        Returns: undefined
+      }
       reset_subscription_usage: {
         Args: Record<PropertyKey, never>
         Returns: undefined

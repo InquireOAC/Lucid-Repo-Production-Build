@@ -213,8 +213,9 @@ export const useFeatureUsage = () => {
       }
       
       // For subsequent usage, increment in database if they have a subscription
-      console.log(`Recording ${featureType} usage in database`);
+      console.log(`Recording ${featureType} usage in database for subscribed user`);
       const success = await incrementFeatureUsage(featureType);
+      console.log(`Database usage increment result for ${featureType}:`, success);
       return success;
     } catch (error) {
       console.error('Error recording feature usage:', error);

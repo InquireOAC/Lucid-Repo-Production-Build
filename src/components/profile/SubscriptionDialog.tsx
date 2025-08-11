@@ -26,6 +26,14 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
   const { subscription, isLoading, refreshSubscription } = useSubscription(user);
   const isNativePlatform = Capacitor.isNativePlatform();
 
+  // Auto-refresh when dialog opens to ensure latest data
+  React.useEffect(() => {
+    if (isOpen && user) {
+      console.log('Subscription dialog opened, refreshing data...');
+      refreshSubscription();
+    }
+  }, [isOpen, user, refreshSubscription]);
+
   const handleRefresh = () => {
     console.log('Manual refresh triggered from subscription dialog');
     refreshSubscription();

@@ -22,7 +22,7 @@ export const useDreamImageGeneration = ({
   dreamId = "preview",
 }: UseDreamImageGenerationProps) => {
   const { uploadImage } = useReliableImageUpload();
-  const { refreshSubscription } = useSubscriptionContext();
+  const { forceRefreshSubscription } = useSubscriptionContext();
   
   const {
     imagePrompt,
@@ -48,7 +48,7 @@ export const useDreamImageGeneration = ({
     dreamId,
     onImageGenerated,
     disabled,
-    onSubscriptionRefresh: refreshSubscription,
+    onSubscriptionRefresh: forceRefreshSubscription,
   });
 
   const generateImage = () => {
