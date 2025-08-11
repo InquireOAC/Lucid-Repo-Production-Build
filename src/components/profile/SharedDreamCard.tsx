@@ -87,11 +87,21 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
 
   if (loading) {
     return (
-      <div className={`glass-card rounded-xl p-4 border-white/10 animate-pulse ${className}`}>
-        <div className="space-y-3">
-          <div className="h-4 bg-white/10 rounded"></div>
-          <div className="h-3 bg-white/10 rounded w-3/4"></div>
-          <div className="h-3 bg-white/10 rounded w-1/2"></div>
+      <div className={`glass-card rounded-xl p-6 border border-white/10 backdrop-blur-xl animate-pulse ${className}`}>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full"></div>
+            <div className="space-y-2 flex-1">
+              <div className="h-4 bg-white/20 rounded-lg"></div>
+              <div className="h-3 bg-white/10 rounded-lg w-1/2"></div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <div className="h-5 bg-white/20 rounded-lg w-3/4"></div>
+            <div className="h-32 bg-white/10 rounded-lg"></div>
+            <div className="h-3 bg-white/10 rounded-lg"></div>
+            <div className="h-3 bg-white/10 rounded-lg w-2/3"></div>
+          </div>
         </div>
       </div>
     );
@@ -99,9 +109,13 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
 
   if (!dream || !profile) {
     return (
-      <div className={`glass-card rounded-xl p-4 border-white/10 ${className}`}>
-        <div className="text-center text-white/70">
-          <p>Dream not found or no longer accessible</p>
+      <div className={`glass-card rounded-xl p-6 border border-white/10 backdrop-blur-xl ${className}`}>
+        <div className="text-center text-white/70 py-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full mx-auto mb-3 flex items-center justify-center">
+            <Eye className="h-6 w-6 text-white/50" />
+          </div>
+          <p className="text-lg font-medium mb-1">Dream not found</p>
+          <p className="text-sm text-white/50">This dream is no longer accessible</p>
         </div>
       </div>
     );
@@ -112,20 +126,24 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
     : dream.content;
 
   return (
-    <div className={`glass-card rounded-xl p-4 border-white/10 hover:border-white/20 transition-all ${className}`}>
+    <div className={`glass-card rounded-xl p-6 border border-white/10 backdrop-blur-xl hover:border-purple-400/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 ${className}`}>
       {/* Header with profile info */}
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-4">
         <button
           onClick={handleViewProfile}
-          className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          className="flex items-center gap-3 hover:opacity-80 transition-all duration-200 group"
         >
-          <div className="w-8 h-8 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
-            <span className="text-white/80 font-medium text-xs">
-              {(profile.display_name || profile.username)?.charAt(0)?.toUpperCase()}
-            </span>
+          <div className="w-10 h-10 bg-gradient-to-br from-purple-500/30 to-pink-500/30 rounded-full flex items-center justify-center group-hover:from-purple-500/40 group-hover:to-pink-500/40 transition-all duration-200">
+            {profile.avatar_symbol ? (
+              <span className="text-lg">{profile.avatar_symbol}</span>
+            ) : (
+              <span className="text-white/90 font-semibold text-sm">
+                {(profile.display_name || profile.username)?.charAt(0)?.toUpperCase()}
+              </span>
+            )}
           </div>
           <div className="text-left">
-            <p className="text-sm font-medium text-white/90">
+            <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors">
               {profile.display_name || profile.username}
             </p>
             <p className="text-xs text-white/60">shared a dream</p>
@@ -137,7 +155,7 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
             size="sm"
             variant="ghost"
             onClick={handleViewFullDream}
-            className="hover:bg-white/10 text-white/70"
+            className="w-8 h-8 p-0 rounded-full glass-card border border-white/10 hover:border-purple-400/30 hover:bg-purple-500/20 text-white/70 hover:text-white transition-all duration-200"
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
@@ -145,25 +163,25 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
       </div>
 
       {/* Dream content */}
-      <div className="space-y-3">
-        <h3 className="font-semibold text-white/90">{dream.title}</h3>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-white/95 leading-tight">{dream.title}</h3>
         
         {dream.image_url && (
-          <div className="rounded-lg overflow-hidden">
+          <div className="rounded-lg overflow-hidden border border-white/10">
             <img
               src={dream.image_url}
               alt="Dream visualization"
-              className="w-full h-48 object-cover"
+              className="w-full h-48 object-cover hover:scale-105 transition-transform duration-300"
             />
           </div>
         )}
 
         <div className="text-sm text-white/80 leading-relaxed">
-          {contentPreview}
+          <p className="whitespace-pre-wrap">{contentPreview}</p>
           {dream.content.length > 200 && (
             <button
               onClick={() => setExpanded(!expanded)}
-              className="ml-2 text-purple-300 hover:text-purple-200 transition-colors"
+              className="mt-2 text-purple-300 hover:text-purple-200 transition-colors font-medium text-xs uppercase tracking-wide"
             >
               {expanded ? "Show less" : "Read more"}
             </button>
@@ -172,11 +190,11 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
 
         {/* Tags */}
         {dream.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap gap-2">
             {dream.tags.map((tag, index) => (
               <span
                 key={index}
-                className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full flex items-center gap-1"
+                className="text-xs bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 text-purple-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 hover:from-purple-500/30 hover:to-pink-500/30 transition-all duration-200"
               >
                 <Tag className="h-3 w-3" />
                 {tag}
@@ -185,15 +203,42 @@ const SharedDreamCard = ({ dreamId, className = "" }: SharedDreamCardProps) => {
           </div>
         )}
 
-        {/* Metadata */}
-        <div className="flex items-center gap-3 text-xs text-white/50 pt-2 border-t border-white/10">
-          <div className="flex items-center gap-1">
-            <Calendar className="h-3 w-3" />
-            {new Date(dream.date).toLocaleDateString()}
+        {/* Metadata Footer */}
+        <div className="flex items-center justify-between pt-3 border-t border-white/10">
+          <div className="flex items-center gap-4 text-xs text-white/60">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{new Date(dream.date).toLocaleDateString()}</span>
+            </div>
+            {dream.mood && (
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-400"></div>
+                <span className="capitalize">{dream.mood}</span>
+              </div>
+            )}
           </div>
-          {dream.mood && (
-            <span className="capitalize">{dream.mood}</span>
-          )}
+          
+          {/* Engagement stats */}
+          <div className="flex items-center gap-3 text-xs text-white/50">
+            {dream.like_count !== undefined && (
+              <div className="flex items-center gap-1">
+                <Heart className="h-3 w-3" />
+                <span>{dream.like_count}</span>
+              </div>
+            )}
+            {dream.comment_count !== undefined && (
+              <div className="flex items-center gap-1">
+                <MessageCircle className="h-3 w-3" />
+                <span>{dream.comment_count}</span>
+              </div>
+            )}
+            {dream.view_count !== undefined && (
+              <div className="flex items-center gap-1">
+                <Eye className="h-3 w-3" />
+                <span>{dream.view_count}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
