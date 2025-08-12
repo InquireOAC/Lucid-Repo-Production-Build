@@ -94,6 +94,45 @@ export const useVideoEntries = () => {
     }
   };
 
+  const refreshVideoStatistics = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get all published videos
+      const { data: videosData, error: videosError } = await supabase
+        .from('video_entries')
+        .select('id, youtube_url, dreamer_story_name')
+        .eq('is_published', true);
+
+      if (videosError) {
+        throw videosError;
+      }
+
+      // Update each video's statistics
+      for (const video of videosData) {
+        try {
+          await supabase.functions.invoke('fetch-youtube-data', {
+            body: {
+              youtube_url: video.youtube_url,
+              dreamer_story_name: video.dreamer_story_name,
+            },
+          });
+        } catch (error) {
+          console.error(`Failed to update statistics for video ${video.id}:`, error);
+        }
+      }
+
+      // Refresh the videos list with updated statistics
+      await fetchVideos();
+      toast.success('Video statistics updated successfully');
+    } catch (error) {
+      console.error('Error refreshing video statistics:', error);
+      toast.error('Failed to refresh video statistics');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchVideos();
   }, []);
@@ -104,5 +143,6 @@ export const useVideoEntries = () => {
     fetchVideos,
     addVideoFromYoutube,
     toggleVideoPublication,
+    refreshVideoStatistics,
   };
 };
