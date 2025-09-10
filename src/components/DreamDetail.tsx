@@ -153,14 +153,9 @@ const DreamDetail = ({
               contentOwnerId={dream.user_id}
               onLike={onLike}
               currentUser={user}
+              audioUrl={audioUrl}
             />
             
-            {audioUrl && (
-              <div className="mt-4 w-full">
-                <audio src={audioUrl} controls className="w-full max-w-full" />
-              </div>
-            )}
-
             <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
               <div className="flex gap-2 flex-shrink-0">
                 <ShareButton dream={dream} />

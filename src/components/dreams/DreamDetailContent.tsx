@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { DreamTag } from "@/types/dream";
 import { Heart } from "lucide-react";
 import FlagButton from "@/components/moderation/FlagButton";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface DreamDetailContentProps {
   content: string;
@@ -16,6 +17,7 @@ interface DreamDetailContentProps {
   contentOwnerId?: string;
   onLike?: () => void;
   currentUser?: any;
+  audioUrl?: string;
 }
 
 const DreamDetailContent = ({
@@ -28,7 +30,8 @@ const DreamDetailContent = ({
   dreamId,
   contentOwnerId,
   onLike,
-  currentUser
+  currentUser,
+  audioUrl
 }: DreamDetailContentProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   const lastTapRef = useRef<number>(0);
@@ -120,6 +123,18 @@ const DreamDetailContent = ({
               </div>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Audio Recording */}
+      {audioUrl && (
+        <div className="mt-4">
+          <h3 className="text-sm font-medium mb-2">Audio Recording</h3>
+          <AudioPlayer 
+            audioUrl={audioUrl} 
+            title="Dream Recording"
+            compact
+          />
         </div>
       )}
 
