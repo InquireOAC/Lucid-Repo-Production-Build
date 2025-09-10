@@ -153,7 +153,7 @@ const DreamDetail = ({
               contentOwnerId={dream.user_id}
               onLike={onLike}
               currentUser={user}
-              audioUrl={audioUrl}
+              audioUrl={audioUrl || dream.audioUrl}
             />
             
             <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">

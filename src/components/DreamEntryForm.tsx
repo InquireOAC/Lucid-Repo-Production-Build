@@ -72,8 +72,8 @@ const DreamEntryForm = ({
   const [newTagColor, setNewTagColor] = useState("#6366f1");
   const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>(existingDream?.audio_url || '');
-  const [isProcessingAudio, setIsProcessingAudio] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string>(existingDream?.audio_url || existingDream?.audioUrl || '');
+  
 
   const CHARACTER_LIMIT = 3000;
 
@@ -134,76 +134,18 @@ const DreamEntryForm = ({
   };
 
   const handleVoiceRecording = async (audioBlob: Blob) => {
+    console.log('Voice recording received:', audioBlob);
     setRecordedAudio(audioBlob);
-    setAudioUrl(URL.createObjectURL(audioBlob));
-    setIsProcessingAudio(true);
     
-    // Show processing message in content
+    // Create a local URL for immediate playback
+    const localAudioUrl = URL.createObjectURL(audioBlob);
+    setAudioUrl(localAudioUrl);
+    
+    // Simply update the content to show audio was recorded
     setFormData(p => ({
       ...p,
-      content: p.content + (p.content ? '\n\n' : '') + '🎵 Processing audio transcription...'
+      content: (p.content + '\n\n🎵 Audio recorded').trim()
     }));
-    
-    try {
-      // Upload audio first
-      const uploaded = await uploadAudio(audioBlob, existingDream?.id || 'new');
-      if (uploaded) {
-        setAudioUrl(uploaded);
-      }
-
-      // Convert blob to base64 for transcription
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      
-      reader.onloadend = async () => {
-        try {
-          const base64Audio = (reader.result as string).split(',')[1];
-          
-          // Call voice-to-text edge function
-          const response = await fetch('https://oelghoaiuvjhywlzldkt.supabase.co/functions/v1/voice-to-text', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ audio: base64Audio }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Transcription failed');
-          }
-
-          const result = await response.json();
-          if (result.success && result.text) {
-            // Replace processing message with transcription
-            setFormData(p => ({
-              ...p,
-              content: p.content.replace('🎵 Processing audio transcription...', result.text)
-            }));
-            toast.success('Recording transcribed successfully!');
-          } else {
-            throw new Error(result.error || 'Transcription failed');
-          }
-        } catch (error) {
-          console.error('Transcription error:', error);
-          // Replace processing message with error
-          setFormData(p => ({
-            ...p,
-            content: p.content.replace('🎵 Processing audio transcription...', '🎵 Audio recorded (transcription failed)')
-          }));
-          toast.error('Failed to transcribe recording. Audio saved successfully.');
-        } finally {
-          setIsProcessingAudio(false);
-        }
-      };
-    } catch (error) {
-      console.error('Audio processing error:', error);
-      setFormData(p => ({
-        ...p,
-        content: p.content.replace('🎵 Processing audio transcription...', '🎵 Audio recorded')
-      }));
-      setIsProcessingAudio(false);
-      toast.error('Failed to process audio recording.');
-    }
   };
 
   const handleClearRecording = () => {
@@ -362,7 +304,7 @@ const DreamEntryForm = ({
                 <VoiceRecorder
                   onRecordingComplete={handleVoiceRecording}
                   onClear={handleClearRecording}
-                  disabled={isUploading || externalIsSubmitting || isSubmitting || isProcessingAudio}
+                  disabled={isUploading || externalIsSubmitting || isSubmitting}
                 />
               </div>
               
@@ -394,16 +336,13 @@ const DreamEntryForm = ({
                   placeholder="Add any additional details or notes about your dream..."
                   value={formData.content}
                   onChange={handleChange}
-                  className={`dream-input resize-none ${isProcessingAudio ? 'bg-muted/50 cursor-not-allowed' : ''}`}
+                  className={`dream-input resize-none`}
                   rows={3}
                   maxLength={CHARACTER_LIMIT}
-                  disabled={isProcessingAudio}
+                  disabled={false}
                 />
                 <p className="text-xs text-muted-foreground">
-                  {isProcessingAudio 
-                    ? '🎵 Processing audio transcription...' 
-                    : 'Voice transcription will be added here automatically'
-                  }
+                  Voice recordings will appear in the dream card after saving
                 </p>
               </div>
             </div>
@@ -424,11 +363,11 @@ const DreamEntryForm = ({
                 placeholder="Describe your dream in detail..."
                 value={formData.content}
                 onChange={handleChange}
-                className={`dream-input resize-none ${isProcessingAudio ? 'bg-muted/50 cursor-not-allowed' : ''}`}
+                className={`dream-input resize-none`}
                 rows={4}
                 required
                 maxLength={CHARACTER_LIMIT}
-                disabled={isProcessingAudio}
+                disabled={false}
               />
             </div>
           )}

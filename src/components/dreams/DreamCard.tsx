@@ -91,6 +91,14 @@ const DreamCard = ({
 
   // Determine if this is a journal view (compact layout)
   const isJournalView = !showUserInfo && !showUser;
+  
+  // Debug logging for audio
+  console.log('DreamCard audio debug:', {
+    dreamId: dream.id,
+    audio_url: dream.audio_url,
+    audioUrl: dream.audioUrl,
+    hasAudio: !!(dream.audio_url || dream.audioUrl)
+  });
 
   return (
     <Card 
@@ -137,7 +145,7 @@ const DreamCard = ({
         }`}>{dream.content}</p>
 
         {/* Audio Player */}
-        {dream.audio_url && (
+        {(dream.audio_url || dream.audioUrl) && (
           <div className={`${isJournalView ? "mb-2" : "mb-3"}`}>
             <div className="flex items-center gap-2 mb-2 text-white/70">
               <Volume2 className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
@@ -146,7 +154,7 @@ const DreamCard = ({
               </span>
             </div>
             <AudioPlayer 
-              audioUrl={dream.audio_url} 
+              audioUrl={dream.audio_url || dream.audioUrl} 
               title="Dream Recording"
               compact={isJournalView}
             />
