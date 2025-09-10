@@ -36,3 +36,6 @@ verify_jwt = true
 
 [functions.get-revenuecat-key]
 verify_jwt = true
+
+[functions.voice-to-text]
+verify_jwt = true
