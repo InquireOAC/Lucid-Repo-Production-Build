@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1469,15 +1469,15 @@ export type Database = {
     }
     Functions: {
       check_subscription_credits: {
-        Args: { customer_id: string; credit_type: string }
+        Args: { credit_type: string; customer_id: string }
         Returns: boolean
       }
       create_activity: {
         Args: {
           activity_type: string
-          user_id_param: string
-          target_user_id_param: string
           dream_id_param?: string
+          target_user_id_param: string
+          user_id_param: string
         }
         Returns: undefined
       }
@@ -1486,11 +1486,11 @@ export type Database = {
         Returns: undefined
       }
       increment_subscription_usage: {
-        Args: { customer_id: string; credit_type: string }
+        Args: { credit_type: string; customer_id: string }
         Returns: undefined
       }
       increment_subscription_usage_by_user: {
-        Args: { user_id_param: string; credit_type: string }
+        Args: { credit_type: string; user_id_param: string }
         Returns: undefined
       }
       reset_subscription_usage: {

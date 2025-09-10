@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +17,10 @@ import {
 } from "@/components/ui/select";
 import DreamAnalysis from "./DreamAnalysis";
 import DreamImageGenerator from "./DreamImageGenerator";
-import { Check } from "lucide-react";
+import { VoiceRecorder } from "./dreams/VoiceRecorder";
+import { AudioPlayer } from "./dreams/AudioPlayer";
+import { useAudioUpload } from "@/hooks/useAudioUpload";
+import { Check, Mic, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 
@@ -34,6 +36,7 @@ interface DreamEntryFormProps {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
+    audio_url?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -46,6 +49,8 @@ const DreamEntryForm = ({
 }: DreamEntryFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { uploadAudio, isUploading } = useAudioUpload();
+  
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
     content: existingDream?.content || "",
@@ -59,11 +64,15 @@ const DreamEntryForm = ({
     imagePrompt: existingDream?.imagePrompt || existingDream?.image_prompt || "",
     lucid: existingDream?.lucid || false,
   });
+  
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#6366f1");
+  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
+  const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string>(existingDream?.audio_url || '');
 
   const CHARACTER_LIMIT = 3000;
 
@@ -123,6 +132,26 @@ const DreamEntryForm = ({
     }
   };
 
+  const handleVoiceRecording = (audioBlob: Blob, transcription: string) => {
+    setRecordedAudio(audioBlob);
+    setAudioUrl(URL.createObjectURL(audioBlob));
+    
+    // If there's transcription, add it to the content
+    if (transcription.trim()) {
+      const currentContent = formData.content;
+      const newContent = currentContent ? `${currentContent}\n\n${transcription}` : transcription;
+      setFormData(p => ({ ...p, content: newContent }));
+    }
+  };
+
+  const handleClearRecording = () => {
+    setRecordedAudio(null);
+    if (audioUrl && audioUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    setAudioUrl('');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
@@ -132,6 +161,16 @@ const DreamEntryForm = ({
     if (containsInappropriateContent(textToCheck)) {
       toast.error(getContentWarningMessage());
       return;
+    }
+
+    let uploadedAudioUrl = audioUrl;
+
+    // Upload audio if there's a new recording
+    if (recordedAudio) {
+      const uploaded = await uploadAudio(recordedAudio, existingDream?.id || 'new');
+      if (uploaded) {
+        uploadedAudioUrl = uploaded;
+      }
     }
     
     // Use external submit handler if provided
@@ -145,7 +184,8 @@ const DreamEntryForm = ({
           mood: formData.mood,
           analysis: formData.analysis,
           generatedImage: formData.generatedImage,
-          imagePrompt: formData.imagePrompt
+          imagePrompt: formData.imagePrompt,
+          audio_url: uploadedAudioUrl || null
         });
       } catch (error) {
         console.error("Submit error:", error);
@@ -166,10 +206,12 @@ const DreamEntryForm = ({
         is_public: false,
         image_url: formData.generatedImage,
         image_prompt: formData.imagePrompt,
-        lucid: formData.lucid
+        lucid: formData.lucid,
+        audio_url: uploadedAudioUrl || null
       };
 
       console.log("Saving dream with image URL:", formData.generatedImage);
+      console.log("Saving dream with audio URL:", uploadedAudioUrl);
 
       if (existingDream) {
         const { error } = await supabase
@@ -226,29 +268,103 @@ const DreamEntryForm = ({
             className="dream-input"
             required
           />
-          
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <Label>Dream Description</Label>
-              <span className={`text-sm ${
-                formData.content.length > CHARACTER_LIMIT * 0.9 
-                  ? 'text-red-500' 
-                  : 'text-muted-foreground'
-              }`}>
-                {formData.content.length}/{CHARACTER_LIMIT}
-              </span>
-            </div>
-            <Textarea
-              name="content"
-              placeholder="Dream Description"
-              value={formData.content}
-              onChange={handleChange}
-              className="dream-input resize-none"
-              rows={4}
-              required
-              maxLength={CHARACTER_LIMIT}
-            />
+
+          {/* Input Mode Toggle */}
+          <div className="flex items-center justify-center gap-2 p-3 bg-muted/30 rounded-lg">
+            <Button
+              type="button"
+              variant={inputMode === 'text' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setInputMode('text')}
+              className="flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4" />
+              Text Mode
+            </Button>
+            <Button
+              type="button"
+              variant={inputMode === 'voice' ? "default" : "outline"}
+              size="sm"
+              onClick={() => setInputMode('voice')}
+              className="flex items-center gap-2"
+            >
+              <Mic className="h-4 w-4" />
+              Voice Mode
+            </Button>
           </div>
+          
+          {inputMode === 'voice' ? (
+            <div className="space-y-4">
+              <Label>Record Your Dream</Label>
+              <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
+                <VoiceRecorder
+                  onRecordingComplete={handleVoiceRecording}
+                  onClear={handleClearRecording}
+                  disabled={isUploading || externalIsSubmitting || isSubmitting}
+                />
+              </div>
+              
+              {/* Show audio player if there's a recording */}
+              {audioUrl && (
+                <div className="mt-4">
+                  <AudioPlayer 
+                    audioUrl={audioUrl} 
+                    title="Dream Recording"
+                    compact
+                  />
+                </div>
+              )}
+
+              {/* Still show text area but make it optional */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Additional Notes (Optional)</Label>
+                  <span className={`text-sm ${
+                    formData.content.length > CHARACTER_LIMIT * 0.9 
+                      ? 'text-red-500' 
+                      : 'text-muted-foreground'
+                  }`}>
+                    {formData.content.length}/{CHARACTER_LIMIT}
+                  </span>
+                </div>
+                <Textarea
+                  name="content"
+                  placeholder="Add any additional details or notes about your dream..."
+                  value={formData.content}
+                  onChange={handleChange}
+                  className="dream-input resize-none"
+                  rows={3}
+                  maxLength={CHARACTER_LIMIT}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Voice transcription will be added here automatically
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label>Dream Description</Label>
+                <span className={`text-sm ${
+                  formData.content.length > CHARACTER_LIMIT * 0.9 
+                    ? 'text-red-500' 
+                    : 'text-muted-foreground'
+                }`}>
+                  {formData.content.length}/{CHARACTER_LIMIT}
+                </span>
+              </div>
+              <Textarea
+                name="content"
+                placeholder="Describe your dream in detail..."
+                value={formData.content}
+                onChange={handleChange}
+                className="dream-input resize-none"
+                rows={4}
+                required
+                maxLength={CHARACTER_LIMIT}
+              />
+            </div>
+          )}
           
           <div className="space-y-2">
             <Label>Date</Label>
@@ -399,10 +515,12 @@ const DreamEntryForm = ({
           <div className="flex justify-end">
             <Button
               type="submit"
-              disabled={externalIsSubmitting || isSubmitting}
+              disabled={externalIsSubmitting || isSubmitting || isUploading}
               className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
             >
-              {externalIsSubmitting || isSubmitting ? "Saving..." : "Save Dream"}
+              {isUploading ? "Uploading Audio..." : 
+               (externalIsSubmitting || isSubmitting) ? "Saving..." : 
+               "Save Dream"}
             </Button>
           </div>
         </div>

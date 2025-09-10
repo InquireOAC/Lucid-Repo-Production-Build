@@ -3,12 +3,13 @@ import React from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Share2, Volume2 } from "lucide-react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { formatDistanceToNow } from "date-fns";
 import DreamCardUser from "./DreamCardUser";
 import FlagButton from "@/components/moderation/FlagButton";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
+import { AudioPlayer } from "./AudioPlayer";
 
 interface DreamCardProps {
   dream: DreamEntry;
@@ -134,6 +135,23 @@ const DreamCard = ({
         <p className={`line-clamp-2 mb-3 text-white/80 ${
           isJournalView ? 'text-xs' : 'text-sm'
         }`}>{dream.content}</p>
+
+        {/* Audio Player */}
+        {dream.audio_url && (
+          <div className={`${isJournalView ? "mb-2" : "mb-3"}`}>
+            <div className="flex items-center gap-2 mb-2 text-white/70">
+              <Volume2 className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              <span className={`font-medium ${isJournalView ? 'text-xs' : 'text-sm'}`}>
+                Voice Recording
+              </span>
+            </div>
+            <AudioPlayer 
+              audioUrl={dream.audio_url} 
+              title="Dream Recording"
+              compact={isJournalView}
+            />
+          </div>
+        )}
         
         {dream.generatedImage && (
           <div className={`${isJournalView ? "mb-2" : "mb-3"} relative`}>
