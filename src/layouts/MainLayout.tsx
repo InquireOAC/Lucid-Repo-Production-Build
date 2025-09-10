@@ -27,14 +27,14 @@ const MainLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen starry-background">
-      {/* Main content - scrollable area with bottom padding to account for tab bar */}
-      <div className="flex-1 overflow-y-auto pt-0 pb-16">
+      {/* Main content - scrollable area with safe area padding */}
+      <div className="flex-1 overflow-y-auto pt-safe-top pb-20">
         <Outlet />
       </div>
       
-      {/* Oniri-style Fixed tab bar positioned at the bottom */}
-      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 backdrop-blur-xl z-50">
-        <div className="flex justify-around items-center h-16 pb-0">
+      {/* Fixed tab bar positioned at the bottom with safe area padding */}
+      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 backdrop-blur-xl z-50 pb-safe-bottom">
+        <div className="flex justify-around items-center h-16">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/learn" icon={<GraduationCap />} label="Learn" />
