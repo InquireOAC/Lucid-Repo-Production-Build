@@ -139,7 +139,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         const base64Audio = (reader.result as string).split(',')[1];
         
         // Call voice-to-text edge function
-        const response = await fetch('/api/voice-to-text', {
+        const response = await fetch('/functions/v1/voice-to-text', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -223,56 +223,61 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             onClick={startRecording}
             disabled={disabled || isTranscribing}
             size="lg"
-            className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-red-500/30"
+            className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-red-500/30 flex flex-col items-center justify-center gap-1"
           >
             <Circle className="h-6 w-6 fill-current" />
+            <span className="text-xs font-medium">Record</span>
           </Button>
         )}
 
         {recordingState === 'recording' && (
-          <>
+          <div className="flex items-center gap-3">
             <Button
               type="button"
               onClick={pauseRecording}
               disabled={disabled || isTranscribing}
               size="lg"
-              className="h-12 w-12 rounded-full bg-yellow-500 hover:bg-yellow-600"
+              className="h-14 w-20 rounded-lg bg-yellow-500 hover:bg-yellow-600 flex flex-col items-center justify-center gap-1"
             >
               <Pause className="h-5 w-5" />
+              <span className="text-xs font-medium">Pause</span>
             </Button>
             <Button
               type="button"
               onClick={stopRecording}
               disabled={disabled || isTranscribing}
               size="lg"
-              className="h-12 w-12 rounded-full bg-gray-500 hover:bg-gray-600"
+              className="h-14 w-20 rounded-lg bg-gray-500 hover:bg-gray-600 flex flex-col items-center justify-center gap-1"
             >
               <StopCircle className="h-5 w-5" />
+              <span className="text-xs font-medium">Stop</span>
             </Button>
-          </>
+          </div>
         )}
 
         {recordingState === 'paused' && (
-          <>
+          <div className="flex items-center gap-3">
             <Button
               type="button"
               onClick={resumeRecording}
               disabled={disabled || isTranscribing}
               size="lg"
-              className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600"
+              className="h-14 w-20 rounded-lg bg-green-500 hover:bg-green-600 flex flex-col items-center justify-center gap-1"
             >
               <Play className="h-5 w-5" />
+              <span className="text-xs font-medium">Resume</span>
             </Button>
             <Button
               type="button"
               onClick={stopRecording}
               disabled={disabled || isTranscribing}
               size="lg"
-              className="h-12 w-12 rounded-full bg-gray-500 hover:bg-gray-600"
+              className="h-14 w-20 rounded-lg bg-gray-500 hover:bg-gray-600 flex flex-col items-center justify-center gap-1"
             >
               <StopCircle className="h-5 w-5" />
+              <span className="text-xs font-medium">Stop</span>
             </Button>
-          </>
+          </div>
         )}
       </div>
 
@@ -284,7 +289,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <span className="text-sm font-medium">Recording: {formatTime(recordingTime)}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Tap pause to pause or stop to finish
+            Use Pause to pause or Stop to finish recording
           </p>
         </div>
       )}
@@ -296,7 +301,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <span className="text-sm font-medium">Paused: {formatTime(recordingTime)}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Tap play to resume or stop to finish
+            Use Resume to continue or Stop to finish recording
           </p>
         </div>
       )}
