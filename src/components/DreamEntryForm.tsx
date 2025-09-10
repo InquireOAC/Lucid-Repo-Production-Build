@@ -279,7 +279,7 @@ const DreamEntryForm = ({
               className="flex items-center gap-2"
             >
               <FileText className="h-4 w-4" />
-              Text Mode
+              Text
             </Button>
             <Button
               type="button"
@@ -289,7 +289,7 @@ const DreamEntryForm = ({
               className="flex items-center gap-2"
             >
               <Mic className="h-4 w-4" />
-              Voice Mode
+              Voice
             </Button>
           </div>
           
