@@ -83,6 +83,7 @@ const DreamImageGenerator = ({
   const styleOptions = [
     { value: "surreal", label: "Surreal" },
     { value: "realistic", label: "Realistic" },
+    { value: "hyper_realism", label: "Hyper Realism" },
     { value: "abstract", label: "Abstract" },
     { value: "impressionist", label: "Impressionist" },
     { value: "fantasy", label: "Fantasy" },
