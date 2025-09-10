@@ -26,7 +26,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const formatTime = (time: number) => {
-    if (isNaN(time)) return '0:00';
+    if (isNaN(time) || !isFinite(time) || time < 0) return '0:00';
     const mins = Math.floor(time / 60);
     const secs = Math.floor(time % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
@@ -70,8 +70,13 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     const audio = audioRef.current;
     if (!audio) return;
 
-    const handleLoadedData = () => {
-      setDuration(audio.duration);
+    const handleLoadedMetadata = () => {
+      const audioDuration = audio.duration;
+      if (isFinite(audioDuration) && audioDuration > 0) {
+        setDuration(audioDuration);
+      } else {
+        setDuration(0);
+      }
       setIsLoading(false);
       setHasError(false);
     };
@@ -92,7 +97,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setIsLoading(false);
     };
 
-    audio.addEventListener('loadeddata', handleLoadedData);
+    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('play', handlePlay);
     audio.addEventListener('pause', handlePause);
@@ -100,7 +105,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     audio.addEventListener('error', handleError);
 
     return () => {
-      audio.removeEventListener('loadeddata', handleLoadedData);
+      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('play', handlePlay);
       audio.removeEventListener('pause', handlePause);
@@ -150,7 +155,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>{formatTime(currentTime)}</span>
-            <span>{formatTime(duration)}</span>
+            <span>{duration > 0 ? formatTime(duration) : '--:--'}</span>
           </div>
         </div>
 
@@ -178,7 +183,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div className="flex items-center justify-between">
         <h4 className="font-medium text-sm">{title}</h4>
         <div className="text-xs text-muted-foreground">
-          {formatTime(currentTime)} / {formatTime(duration)}
+          {formatTime(currentTime)} / {duration > 0 ? formatTime(duration) : '--:--'}
         </div>
       </div>
 
