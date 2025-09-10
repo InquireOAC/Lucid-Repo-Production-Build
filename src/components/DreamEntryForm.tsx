@@ -49,7 +49,7 @@ const DreamEntryForm = ({
 }: DreamEntryFormProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { uploadAudio, isUploading } = useAudioUpload();
+  const { uploadAudio, deleteAudio, isUploading } = useAudioUpload();
   
   const [formData, setFormData] = useState({
     title: existingDream?.title || "",
@@ -148,7 +148,13 @@ const DreamEntryForm = ({
     }));
   };
 
-  const handleClearRecording = () => {
+  const handleClearRecording = async () => {
+    // If there's an existing audio URL that's not a blob URL, delete it from storage
+    if (audioUrl && !audioUrl.startsWith('blob:') && existingDream) {
+      console.log('Deleting audio from storage:', audioUrl);
+      await deleteAudio(audioUrl);
+    }
+    
     setRecordedAudio(null);
     if (audioUrl && audioUrl.startsWith('blob:')) {
       URL.revokeObjectURL(audioUrl);
@@ -171,9 +177,20 @@ const DreamEntryForm = ({
 
     // Upload audio if there's a new recording
     if (recordedAudio) {
+      // If editing and there's existing audio, delete it first
+      if (existingDream && audioUrl && !audioUrl.startsWith('blob:')) {
+        console.log('Deleting old audio before uploading new one:', audioUrl);
+        await deleteAudio(audioUrl);
+      }
+      
       const uploaded = await uploadAudio(recordedAudio, existingDream?.id || 'new');
       if (uploaded) {
         uploadedAudioUrl = uploaded;
+        console.log('New audio uploaded:', uploaded);
+      } else {
+        console.error('Failed to upload new audio');
+        toast.error('Failed to upload audio recording');
+        return; // Don't proceed if audio upload failed
       }
     }
     
