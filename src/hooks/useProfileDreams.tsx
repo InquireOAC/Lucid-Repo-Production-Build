@@ -31,6 +31,7 @@ export function useProfileDreams(user: any, userId?: string) {
         commentCount: dream.comment_count || 0,
         userId: dream.user_id,
         audioUrl: dream.audio_url,
+        audio_url: dream.audio_url,
         profiles: dream.profiles
       }));
 
@@ -77,6 +78,7 @@ export function useProfileDreams(user: any, userId?: string) {
           commentCount: dream.comment_count || 0,
           userId: dream.user_id,
           audioUrl: dream.audio_url,
+          audio_url: dream.audio_url,
           profiles: dream.profiles
         }));
 

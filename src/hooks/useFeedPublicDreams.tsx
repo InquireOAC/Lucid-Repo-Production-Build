@@ -81,6 +81,9 @@ export function useFeedPublicDreams(user: any) {
               // Ensure image URLs are properly normalized
               generatedImage: dream.generatedImage || dream.image_url || null,
               image_url: dream.image_url || dream.generatedImage || null,
+              // Ensure audio URL is available
+              audio_url: dream.audio_url || null,
+              audioUrl: dream.audio_url || null,
             };
           })
         );

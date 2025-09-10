@@ -49,6 +49,7 @@ export const useJournalEntries = () => {
             comment_count: dream.comment_count || 0,
             commentCount: dream.comment_count || 0,
             user_id: dream.user_id,
+            audio_url: dream.audio_url,
             audioUrl: dream.audio_url
           };
         });
