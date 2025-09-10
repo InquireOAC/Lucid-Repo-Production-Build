@@ -222,59 +222,58 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             type="button"
             onClick={startRecording}
             disabled={disabled || isTranscribing}
-            size="lg"
-            className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-red-500/30 flex flex-col items-center justify-center gap-1"
+            size="sm"
+            className="h-12 w-12 rounded-full bg-red-500 hover:bg-red-600 shadow-md hover:shadow-red-500/20 flex items-center justify-center"
           >
-            <Circle className="h-6 w-6 fill-current" />
-            <span className="text-xs font-medium">Record</span>
+            <Circle className="h-4 w-4 fill-current" />
           </Button>
         )}
 
         {recordingState === 'recording' && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               onClick={pauseRecording}
               disabled={disabled || isTranscribing}
-              size="lg"
-              className="h-14 w-20 rounded-lg bg-yellow-500 hover:bg-yellow-600 flex flex-col items-center justify-center gap-1"
+              size="sm"
+              className="h-10 px-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 flex items-center gap-2"
             >
-              <Pause className="h-5 w-5" />
+              <Pause className="h-4 w-4" />
               <span className="text-xs font-medium">Pause</span>
             </Button>
             <Button
               type="button"
               onClick={stopRecording}
               disabled={disabled || isTranscribing}
-              size="lg"
-              className="h-14 w-20 rounded-lg bg-gray-500 hover:bg-gray-600 flex flex-col items-center justify-center gap-1"
+              size="sm"
+              className="h-10 px-3 rounded-lg bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
             >
-              <StopCircle className="h-5 w-5" />
+              <StopCircle className="h-4 w-4" />
               <span className="text-xs font-medium">Stop</span>
             </Button>
           </div>
         )}
 
         {recordingState === 'paused' && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               onClick={resumeRecording}
               disabled={disabled || isTranscribing}
-              size="lg"
-              className="h-14 w-20 rounded-lg bg-green-500 hover:bg-green-600 flex flex-col items-center justify-center gap-1"
+              size="sm"
+              className="h-10 px-3 rounded-lg bg-green-500 hover:bg-green-600 flex items-center gap-2"
             >
-              <Play className="h-5 w-5" />
+              <Play className="h-4 w-4" />
               <span className="text-xs font-medium">Resume</span>
             </Button>
             <Button
               type="button"
               onClick={stopRecording}
               disabled={disabled || isTranscribing}
-              size="lg"
-              className="h-14 w-20 rounded-lg bg-gray-500 hover:bg-gray-600 flex flex-col items-center justify-center gap-1"
+              size="sm"
+              className="h-10 px-3 rounded-lg bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
             >
-              <StopCircle className="h-5 w-5" />
+              <StopCircle className="h-4 w-4" />
               <span className="text-xs font-medium">Stop</span>
             </Button>
           </div>
