@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Play, Pause, Trash2, Upload, Radio } from 'lucide-react';
+import { Mic, Square, Play, Pause, Trash2, Upload, Radio, Circle, StopCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -17,7 +17,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   disabled = false,
   className,
 }) => {
-  const [isRecording, setIsRecording] = useState(false);
+  const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'paused' | 'stopped'>('idle');
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -64,6 +64,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
         setHasRecording(true);
+        setRecordingState('stopped');
         
         // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
@@ -73,7 +74,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       mediaRecorder.start(100); // Collect data every 100ms
-      setIsRecording(true);
+      setRecordingState('recording');
       setRecordingTime(0);
 
       // Start recording timer
@@ -88,10 +89,37 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
   };
 
+  const pauseRecording = () => {
+    if (mediaRecorderRef.current && recordingState === 'recording') {
+      mediaRecorderRef.current.pause();
+      setRecordingState('paused');
+      
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+        recordingIntervalRef.current = null;
+      }
+      
+      toast.success('Recording paused');
+    }
+  };
+
+  const resumeRecording = () => {
+    if (mediaRecorderRef.current && recordingState === 'paused') {
+      mediaRecorderRef.current.resume();
+      setRecordingState('recording');
+      
+      // Resume recording timer
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      toast.success('Recording resumed');
+    }
+  };
+
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && (recordingState === 'recording' || recordingState === 'paused')) {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
       
       if (recordingIntervalRef.current) {
         clearInterval(recordingIntervalRef.current);
@@ -159,6 +187,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     setHasRecording(false);
     setIsPlaying(false);
     setRecordingTime(0);
+    setRecordingState('idle');
     onClear?.();
     toast.success('Recording cleared');
   };
@@ -187,44 +216,87 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   return (
     <div className={cn("space-y-4", className)}>
       {/* Recording Interface */}
-      <div className="flex items-center justify-center">
-        <div className="relative">
-          {/* Recording Button */}
+      <div className="flex items-center justify-center gap-3">
+        {recordingState === 'idle' && (
           <Button
             type="button"
-            onClick={isRecording ? stopRecording : startRecording}
+            onClick={startRecording}
             disabled={disabled || isTranscribing}
             size="lg"
-            className={cn(
-              "h-16 w-16 rounded-full transition-all duration-300",
-              isRecording 
-                ? "bg-red-500 hover:bg-red-600 animate-pulse shadow-lg shadow-red-500/30" 
-                : "bg-primary hover:bg-primary/90 shadow-lg hover:shadow-primary/30"
-            )}
+            className="h-16 w-16 rounded-full bg-red-500 hover:bg-red-600 shadow-lg hover:shadow-red-500/30"
           >
-            {isRecording ? (
-              <Square className="h-6 w-6" />
-            ) : (
-              <Mic className="h-6 w-6" />
-            )}
+            <Circle className="h-6 w-6 fill-current" />
           </Button>
+        )}
 
-          {/* Recording Animation */}
-          {isRecording && (
-            <div className="absolute -inset-2 rounded-full border-2 border-red-500 animate-ping" />
-          )}
-        </div>
+        {recordingState === 'recording' && (
+          <>
+            <Button
+              type="button"
+              onClick={pauseRecording}
+              disabled={disabled || isTranscribing}
+              size="lg"
+              className="h-12 w-12 rounded-full bg-yellow-500 hover:bg-yellow-600"
+            >
+              <Pause className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              onClick={stopRecording}
+              disabled={disabled || isTranscribing}
+              size="lg"
+              className="h-12 w-12 rounded-full bg-gray-500 hover:bg-gray-600"
+            >
+              <StopCircle className="h-5 w-5" />
+            </Button>
+          </>
+        )}
+
+        {recordingState === 'paused' && (
+          <>
+            <Button
+              type="button"
+              onClick={resumeRecording}
+              disabled={disabled || isTranscribing}
+              size="lg"
+              className="h-12 w-12 rounded-full bg-green-500 hover:bg-green-600"
+            >
+              <Play className="h-5 w-5" />
+            </Button>
+            <Button
+              type="button"
+              onClick={stopRecording}
+              disabled={disabled || isTranscribing}
+              size="lg"
+              className="h-12 w-12 rounded-full bg-gray-500 hover:bg-gray-600"
+            >
+              <StopCircle className="h-5 w-5" />
+            </Button>
+          </>
+        )}
       </div>
 
       {/* Recording Status */}
-      {isRecording && (
+      {recordingState === 'recording' && (
         <div className="text-center">
           <div className="flex items-center justify-center gap-2 text-red-500">
             <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
             <span className="text-sm font-medium">Recording: {formatTime(recordingTime)}</span>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Tap the square to stop recording
+            Tap pause to pause or stop to finish
+          </p>
+        </div>
+      )}
+
+      {recordingState === 'paused' && (
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 text-yellow-500">
+            <div className="h-2 w-2 rounded-full bg-yellow-500" />
+            <span className="text-sm font-medium">Paused: {formatTime(recordingTime)}</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Tap play to resume or stop to finish
           </p>
         </div>
       )}
@@ -240,7 +312,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       )}
 
       {/* Playback Controls */}
-      {hasRecording && !isRecording && (
+      {hasRecording && recordingState !== 'recording' && recordingState !== 'paused' && (
         <div className="bg-muted/50 rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Recording ({formatTime(recordingTime)})</span>
@@ -277,9 +349,9 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       )}
 
       {/* Instructions */}
-      {!hasRecording && !isRecording && (
+      {!hasRecording && recordingState === 'idle' && (
         <div className="text-center text-sm text-muted-foreground">
-          <p>Tap the microphone to record your dream</p>
+          <p>Tap the red circle to start recording your dream</p>
           <p>Your voice will be automatically transcribed</p>
         </div>
       )}
