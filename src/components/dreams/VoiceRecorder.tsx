@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
 interface VoiceRecorderProps {
-  onRecordingComplete: (audioBlob: Blob, transcription: string) => void;
+  onRecordingComplete: (audioBlob: Blob) => void;
   onClear?: () => void;
   disabled?: boolean;
   className?: string;
@@ -20,7 +20,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'paused' | 'stopped'>('idle');
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasRecording, setHasRecording] = useState(false);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [recordingTime, setRecordingTime] = useState(0);
@@ -69,8 +68,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         // Stop all audio tracks
         stream.getTracks().forEach(track => track.stop());
 
-        // Start transcription
-        await transcribeAudio(blob);
+        // Send the audio blob to parent for processing
+        onRecordingComplete(blob);
       };
 
       mediaRecorder.start(100); // Collect data every 100ms
@@ -128,46 +127,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     }
   };
 
-  const transcribeAudio = async (blob: Blob) => {
-    setIsTranscribing(true);
-    try {
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        
-        // Call voice-to-text edge function
-        const response = await fetch('https://oelghoaiuvjhywlzldkt.supabase.co/functions/v1/voice-to-text', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ audio: base64Audio }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Transcription failed');
-        }
-
-        const result = await response.json();
-        if (result.success && result.text) {
-          onRecordingComplete(blob, result.text);
-          toast.success('Recording transcribed successfully!');
-        } else {
-          throw new Error(result.error || 'Transcription failed');
-        }
-      };
-    } catch (error) {
-      console.error('Transcription error:', error);
-      toast.error('Failed to transcribe recording. You can still use the audio.');
-      // Still call onRecordingComplete with empty transcription
-      onRecordingComplete(blob, '');
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
 
   const playRecording = () => {
     if (audioRef.current && audioUrl) {
@@ -221,7 +180,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
           <Button
             type="button"
             onClick={startRecording}
-            disabled={disabled || isTranscribing}
+            disabled={disabled}
             size="sm"
             className="h-12 w-12 rounded-full bg-red-500 hover:bg-red-600 shadow-md hover:shadow-red-500/20 flex items-center justify-center"
           >
@@ -234,7 +193,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <Button
               type="button"
               onClick={pauseRecording}
-              disabled={disabled || isTranscribing}
+              disabled={disabled}
               size="sm"
               className="h-10 px-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 flex items-center gap-2"
             >
@@ -244,7 +203,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <Button
               type="button"
               onClick={stopRecording}
-              disabled={disabled || isTranscribing}
+              disabled={disabled}
               size="sm"
               className="h-10 px-3 rounded-lg bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
             >
@@ -259,7 +218,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <Button
               type="button"
               onClick={resumeRecording}
-              disabled={disabled || isTranscribing}
+              disabled={disabled}
               size="sm"
               className="h-10 px-3 rounded-lg bg-green-500 hover:bg-green-600 flex items-center gap-2"
             >
@@ -269,7 +228,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
             <Button
               type="button"
               onClick={stopRecording}
-              disabled={disabled || isTranscribing}
+              disabled={disabled}
               size="sm"
               className="h-10 px-3 rounded-lg bg-gray-500 hover:bg-gray-600 flex items-center gap-2"
             >
@@ -305,15 +264,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         </div>
       )}
 
-      {/* Transcription Status */}
-      {isTranscribing && (
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2">
-            <Radio className="h-4 w-4 animate-pulse" />
-            <span className="text-sm font-medium">Transcribing audio...</span>
-          </div>
-        </div>
-      )}
 
       {/* Playback Controls */}
       {hasRecording && recordingState !== 'recording' && recordingState !== 'paused' && (
@@ -326,7 +276,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={playRecording}
-                disabled={isTranscribing}
               >
                 {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
               </Button>
@@ -335,7 +284,6 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
                 variant="outline"
                 size="sm"
                 onClick={clearRecording}
-                disabled={isTranscribing}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
