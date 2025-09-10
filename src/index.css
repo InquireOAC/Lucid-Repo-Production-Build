@@ -138,9 +138,9 @@
 /* Oniri-style geometric shapes */
 .geometric-bg {
   background: linear-gradient(135deg, 
-    rgba(262, 60%, 60%, 0.15) 0%, 
-    rgba(280, 50%, 55%, 0.12) 25%,
-    rgba(300, 45%, 50%, 0.08) 50%,
+    hsla(262, 60%, 60%, 0.15) 0%, 
+    hsla(280, 50%, 55%, 0.12) 25%,
+    hsla(300, 45%, 50%, 0.08) 50%,
     transparent 100%);
   position: relative;
 }
@@ -152,28 +152,36 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    polygon(0 0, 100% 20%, 100% 100%, 0 80%) rgba(262, 60%, 60%, 0.05),
-    polygon(0 20%, 100% 0, 100% 80%, 0 100%) rgba(280, 50%, 55%, 0.03);
+  background: linear-gradient(135deg, 
+    hsla(262, 60%, 60%, 0.05) 0%,
+    hsla(280, 50%, 55%, 0.03) 50%,
+    transparent 100%);
   pointer-events: none;
 }
 
-/* Enhanced iridescent glass effect */
+/* Neutral glass effect - iOS compatible */
 .glass-card {
-  background: 
-    linear-gradient(135deg, 
-      hsla(var(--glass-primary), 0.12) 0%,
-      hsla(var(--glass-secondary), 0.08) 25%,
-      hsla(var(--glass-tertiary), 0.06) 50%,
-      hsla(var(--glass-accent), 0.08) 75%,
-      hsla(var(--glass-primary), 0.10) 100%
-    );
-  backdrop-filter: blur(20px) saturate(180%);
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.08) 0%,
+    rgba(255, 255, 255, 0.03) 100%
+  );
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
+  backdrop-filter: blur(16px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow: 
-    0 8px 32px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.15),
-    inset 0 -1px 0 hsla(var(--glass-accent), 0.1),
-    0 0 20px hsla(var(--glass-primary), 0.08);
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  background-clip: padding-box;
+}
+
+/* iOS stability enhancement */
+@supports (-webkit-backdrop-filter: blur(1px)) {
+  .glass-card {
+    background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.10) 0%,
+      rgba(255, 255, 255, 0.04) 100%
+    );
+  }
 }
 
 /* Oniri-style hover effects */
@@ -185,7 +193,7 @@
   transform: translateY(-8px) scale(1.02);
   box-shadow: 
     0 20px 40px rgba(0, 0, 0, 0.4),
-    0 0 20px rgba(262, 60%, 60%, 0.2);
+    0 0 20px hsla(262, 60%, 60%, 0.2);
 }
 
 /* Enhanced card styles for better contrast */
@@ -199,7 +207,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(262, 60%, 60%, 0.08) 0%, rgba(262, 50%, 40%, 0.05) 50%, transparent 100%);
+  background: linear-gradient(135deg, hsla(262, 60%, 60%, 0.08) 0%, hsla(262, 50%, 40%, 0.05) 50%, transparent 100%);
   border-radius: inherit;
   z-index: 0;
 }
