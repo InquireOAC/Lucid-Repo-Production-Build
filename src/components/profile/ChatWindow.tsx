@@ -79,7 +79,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                   className={`max-w-[80%] ${
                   message.sender_id === user?.id
                     ? "bg-gradient-to-br from-purple-900/60 to-purple-700/80 text-white backdrop-blur-lg border border-purple-300/20"
-                    : "glass-card border-white/10 text-white/90"
+                    : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
                 } rounded-2xl overflow-hidden`}
               >
                 {/* Check if message contains shared dream */}
