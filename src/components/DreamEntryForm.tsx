@@ -36,7 +36,7 @@ interface DreamEntryFormProps {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
-    audio_url?: string;
+    audioUrl?: string;
   }) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -189,7 +189,7 @@ const DreamEntryForm = ({
           analysis: formData.analysis,
           generatedImage: formData.generatedImage,
           imagePrompt: formData.imagePrompt,
-          audio_url: uploadedAudioUrl || null
+          audioUrl: uploadedAudioUrl || null
         });
       } catch (error) {
         console.error("Submit error:", error);

@@ -16,6 +16,7 @@ interface AddDreamDialogProps {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
+    audioUrl?: string;
   }) => Promise<void>;
   tags: DreamTag[];
   isSubmitting: boolean;

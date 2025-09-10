@@ -87,11 +87,13 @@ export const useJournalActions = () => {
         throw error;
       }
 
-      // Update local store with final image URL
+      // Update local store with final image URL and audio URL
       updateEntry(newDreamForStore.id, { 
         generatedImage: finalImageUrl, 
         image_url: finalImageUrl, 
-        image_dataurl: finalImageUrl 
+        image_dataurl: finalImageUrl,
+        audio_url: dreamData.audioUrl || null,
+        audioUrl: dreamData.audioUrl || null
       });
       
       toast.success("Dream saved successfully!");
