@@ -18,6 +18,7 @@ export const useDreamDbActions = () => {
       | "generatedImage"
       | "image_url"
       | "imagePrompt"
+      | "audio_url"
     > & { is_public?: boolean }
   ) => {
     const dbSaveDream = {
@@ -34,6 +35,7 @@ export const useDreamDbActions = () => {
       generatedImage: dreamData.generatedImage || null,
       image_url: dreamData.image_url || null,
       imagePrompt: dreamData.imagePrompt || null,
+      audio_url: dreamData.audio_url || null,
     };
     return supabase.from("dream_entries").insert(dbSaveDream);
   };
@@ -46,7 +48,7 @@ export const useDreamDbActions = () => {
     const dbUpdates: Partial<any> = {}; // Prepare a clean object for DB
     const allowedFields: (keyof DreamEntry)[] = [
       "title", "content", "tags", "mood", "lucid", "analysis",
-      "generatedImage", "image_url", "imagePrompt", "is_public"
+      "generatedImage", "image_url", "imagePrompt", "is_public", "audio_url"
     ];
 
     allowedFields.forEach(field => {

@@ -75,6 +75,7 @@ export const useJournalActions = () => {
         image_url: finalImageUrl,
         image_dataurl: finalImageUrl,
         imagePrompt: dreamData.imagePrompt || null,
+        audio_url: dreamData.audioUrl || null,
       };
 
       console.log("Saving dream to database with final image URL:", finalImageUrl);
@@ -227,6 +228,8 @@ export const useJournalActions = () => {
 
       const updates: Partial<DreamEntry> = {
         ...dreamData,
+        // Handle audio URL
+        audio_url: dreamData.audioUrl || null,
         // If a new or existing image URL is present, set all related props
         ...(shouldUpdateImage
           ? {
