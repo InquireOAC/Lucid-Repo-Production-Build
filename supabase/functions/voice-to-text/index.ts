@@ -57,7 +57,7 @@ serve(async (req) => {
     const formData = new FormData();
     const blob = new Blob([binaryAudio], { type: 'audio/webm' });
     formData.append('file', blob, 'audio.webm');
-    formData.append('model', 'whisper-1');
+    formData.append('model', 'gpt-4o-transcribe');
     formData.append('language', 'en');
     formData.append('response_format', 'json');
 
