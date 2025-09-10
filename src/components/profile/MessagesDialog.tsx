@@ -115,7 +115,7 @@ const MessagesDialog = ({
   // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-none w-screen h-screen max-h-screen glass-card border-white/20 backdrop-blur-xl p-0 m-0 rounded-none">
+      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-full max-h-screen glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="gradient-text text-xl font-semibold">
             {selectedConversation ? "Chat" : "Messages"}

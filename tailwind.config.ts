@@ -30,11 +30,12 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				dream: {
-					lavender: '#9F8FD9',
-					purple: '#6B5B95',
-					dark: '#1E1A2B',
-					light: '#BEB4D6',
-					midnight: '#1A162A',
+					lavender: 'hsl(262, 47%, 70%)',
+					purple: 'hsl(262, 35%, 47%)',
+					pink: 'hsl(300, 60%, 70%)',
+					dark: 'hsl(260, 25%, 15%)',
+					light: 'hsl(262, 40%, 75%)',
+					midnight: 'hsl(260, 30%, 12%)',
 				},
 				oniri: {
 					blue: 'hsl(240, 80%, 20%)',

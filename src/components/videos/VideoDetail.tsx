@@ -26,7 +26,7 @@ const VideoDetail = ({
 }: VideoDetailProps) => {
   const { user } = useAuth();
   return <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto glass-card border-white/20">
+      <DialogContent className="max-w-4xl h-full max-h-[90vh] overflow-y-auto glass-card border-white/20 bg-background/95 backdrop-blur-xl">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-white gradient-text">
             {video.title}
@@ -67,10 +67,10 @@ const VideoDetail = ({
             </div>
 
             {/* Description */}
-            <div className="glass-card p-4 rounded-lg border-white/10">
-              <h3 className="text-sm font-semibold text-white mb-2">Description</h3>
-              <p className="text-white/80 leading-relaxed whitespace-pre-wrap">
-                {video.description}
+            <div className="glass-card p-4 rounded-lg border-white/10 bg-card/50">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
+              <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap min-h-[60px]">
+                {video.description || 'No description available.'}
               </p>
             </div>
           </div>

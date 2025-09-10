@@ -33,7 +33,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
         <div
           key={conversation.id}
           onClick={() => onSelectConversation(conversation)}
-          className="glass-card rounded-xl p-4 cursor-pointer border border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10"
+          className="glass-card rounded-xl p-4 cursor-pointer border border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 bg-card/30"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
@@ -42,10 +42,10 @@ const ConversationList: React.FC<ConversationListProps> = ({
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium truncate text-white/90">
+              <p className="font-medium truncate text-foreground">
                 {conversation.display_name || conversation.username}
               </p>
-              <p className="text-xs text-white/60 truncate">Tap to start chatting</p>
+              <p className="text-xs text-muted-foreground truncate">Tap to start chatting</p>
             </div>
           </div>
         </div>
