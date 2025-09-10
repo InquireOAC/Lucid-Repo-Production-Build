@@ -417,6 +417,7 @@ export type Database = {
       dream_entries: {
         Row: {
           analysis: string | null
+          audio_url: string | null
           cbt_analysis: string | null
           comment_count: number | null
           content: string
@@ -442,6 +443,7 @@ export type Database = {
         }
         Insert: {
           analysis?: string | null
+          audio_url?: string | null
           cbt_analysis?: string | null
           comment_count?: number | null
           content: string
@@ -467,6 +469,7 @@ export type Database = {
         }
         Update: {
           analysis?: string | null
+          audio_url?: string | null
           cbt_analysis?: string | null
           comment_count?: number | null
           content?: string

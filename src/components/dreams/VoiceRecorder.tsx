@@ -139,7 +139,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         const base64Audio = (reader.result as string).split(',')[1];
         
         // Call voice-to-text edge function
-        const response = await fetch('/functions/v1/voice-to-text', {
+        const response = await fetch('https://oelghoaiuvjhywlzldkt.supabase.co/functions/v1/voice-to-text', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
