@@ -118,8 +118,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Input Area - Fixed at bottom */}
-      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg m-4 mt-0">
+      {/* Input Area - Part of normal flow */}
+      <div className="backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg m-4 mt-0">
         <div className="flex gap-2">
           <Button
             onClick={() => setShowDreamSelector(true)}
