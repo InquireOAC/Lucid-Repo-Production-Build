@@ -65,8 +65,10 @@ const Journal = () => {
     analysis?: string;
     generatedImage?: string;
     imagePrompt?: string;
+    audioUrl?: string;
   }): Promise<void> => {
     if (!selectedDream) return;
+    console.log('Edit dream submit with audio:', dreamData.audioUrl);
     await handleEditDream(dreamData, selectedDream.id);
     setIsEditingDream(false);
     setSelectedDream(null);
@@ -100,7 +102,9 @@ const Journal = () => {
         analysis: updates.analysis ?? selectedDream.analysis,
         generatedImage: updates.generatedImage ?? selectedDream.generatedImage,
         imagePrompt: updates.imagePrompt ?? selectedDream.imagePrompt,
+        audioUrl: updates.audio_url ?? updates.audioUrl ?? selectedDream.audio_url ?? selectedDream.audioUrl,
       };
+      console.log('Dream detail update with audio:', dreamPayload.audioUrl);
       handleEditDream(dreamPayload, id);
     }
   };

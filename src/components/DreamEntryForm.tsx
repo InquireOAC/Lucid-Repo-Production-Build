@@ -74,6 +74,15 @@ const DreamEntryForm = ({
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>(existingDream?.audio_url || existingDream?.audioUrl || '');
   
+  // Add debugging for audio URL initialization
+  useEffect(() => {
+    console.log('DreamEntryForm audio URL initialized:', {
+      existingDream_audio_url: existingDream?.audio_url,
+      existingDream_audioUrl: existingDream?.audioUrl,
+      finalAudioUrl: existingDream?.audio_url || existingDream?.audioUrl || ''
+    });
+  }, [existingDream]);
+  
 
   const CHARACTER_LIMIT = 3000;
 
@@ -198,6 +207,10 @@ const DreamEntryForm = ({
         toast.error('Failed to upload audio recording');
         return; // Don't proceed if audio upload failed
       }
+    } else if (audioUrl && !audioUrl.startsWith('blob:')) {
+      // No new recording, but there's an existing audio URL - preserve it
+      uploadedAudioUrl = audioUrl;
+      console.log('Preserving existing audio URL:', uploadedAudioUrl);
     }
     
     // Use external submit handler if provided
