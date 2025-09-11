@@ -67,11 +67,9 @@ const VideoDetail = ({
             </div>
 
             {/* Description */}
-            <div className="glass-card p-4 rounded-lg border-white/10 bg-card/50">
-              <h3 className="text-sm font-semibold text-foreground mb-2">Description</h3>
-              <p className="text-foreground/80 leading-relaxed whitespace-pre-wrap min-h-[60px]">
-                {video.description || 'No description available.'}
-              </p>
+            <div className="mt-4">
+              <h3 className="text-sm font-medium mb-2">Description</h3>
+              <div className="text-sm whitespace-pre-wrap">{video.description || 'No description available.'}</div>
             </div>
           </div>
         </div>
