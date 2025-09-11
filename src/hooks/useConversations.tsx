@@ -16,25 +16,55 @@ export function useConversations(user: any) {
       // Fetch messages sent or received by the user
       const { data: messages, error } = await supabase
         .from("messages")
-        .select("sender_id, receiver_id")
-        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
+        .select("sender_id, receiver_id, content, created_at")
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Collect unique user IDs that are conversation partners (exclude own ID)
-      const userIds = new Set();
+      // Group messages by conversation partner and get the most recent message
+      const conversationMap = new Map();
       (messages || []).forEach((msg: any) => {
-        if (msg.sender_id !== user.id) userIds.add(msg.sender_id);
-        if (msg.receiver_id !== user.id) userIds.add(msg.receiver_id);
+        const partnerId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+        
+        // Only store the first (most recent) message for each partner
+        if (!conversationMap.has(partnerId)) {
+          conversationMap.set(partnerId, {
+            partnerId,
+            last_message: msg.content,
+            last_message_time: msg.created_at
+          });
+        }
       });
       
-      if (userIds.size > 0) {
+      if (conversationMap.size > 0) {
+        // Fetch profiles for all conversation partners
+        const partnerIds = Array.from(conversationMap.keys());
         const { data: profiles, error: profilesError } = await supabase
           .from("profiles")
           .select("*")
-          .in("id", Array.from(userIds));
+          .in("id", partnerIds);
+          
         if (profilesError) throw profilesError;
-        setConversations(profiles || []);
+        
+        // Merge profile data with last message info
+        const conversationsWithMessages = (profiles || []).map(profile => {
+          const messageInfo = conversationMap.get(profile.id);
+          return {
+            ...profile,
+            last_message: messageInfo?.last_message,
+            last_message_time: messageInfo?.last_message_time
+          };
+        });
+        
+        // Sort by most recent message first
+        conversationsWithMessages.sort((a, b) => {
+          if (!a.last_message_time) return 1;
+          if (!b.last_message_time) return -1;
+          return new Date(b.last_message_time).getTime() - new Date(a.last_message_time).getTime();
+        });
+        
+        setConversations(conversationsWithMessages);
       } else {
         setConversations([]);
       }

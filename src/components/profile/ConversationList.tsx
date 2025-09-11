@@ -1,6 +1,7 @@
 
 import React from "react";
 import { MessageSquare } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 interface ConversationListProps {
   conversations: any[];
@@ -11,6 +12,15 @@ const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   onSelectConversation
 }) => {
+  const formatLastMessageTime = (timestamp: string | null) => {
+    if (!timestamp) return "New";
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: false });
+    } catch (error) {
+      return "New";
+    }
+  };
+
   if (!conversations || conversations.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
@@ -49,11 +59,11 @@ const ConversationList: React.FC<ConversationListProps> = ({
                 {conversation.display_name || conversation.username}
               </h4>
               <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                2h
+                {formatLastMessageTime(conversation.last_message_time)}
               </span>
             </div>
             <p className="text-sm text-muted-foreground truncate">
-              Tap to start chatting
+              {conversation.last_message || "Tap to start chatting"}
             </p>
           </div>
         </div>
