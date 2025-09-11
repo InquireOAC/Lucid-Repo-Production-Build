@@ -144,14 +144,14 @@ const DreamEntryForm = ({
     // Simply update the content to show audio was recorded
     setFormData(p => ({
       ...p,
-      content: (p.content + '\n\n🎵 Audio recorded').trim()
+      content: (p.content + '\n\n🎵 New audio recorded').trim()
     }));
   };
 
   const handleClearRecording = async () => {
     // If there's an existing audio URL that's not a blob URL, delete it from storage
     if (audioUrl && !audioUrl.startsWith('blob:') && existingDream) {
-      console.log('Deleting audio from storage:', audioUrl);
+      console.log('Deleting existing audio from storage:', audioUrl);
       await deleteAudio(audioUrl);
     }
     
@@ -160,6 +160,8 @@ const DreamEntryForm = ({
       URL.revokeObjectURL(audioUrl);
     }
     setAudioUrl('');
+    
+    toast.success('Audio recording deleted');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -317,22 +319,57 @@ const DreamEntryForm = ({
           {inputMode === 'voice' ? (
             <div className="space-y-4">
               <Label>Record Your Dream</Label>
+              
+              {/* Show existing audio first if available */}
+              {audioUrl && !recordedAudio && (
+                <div className="bg-gradient-to-br from-accent/5 via-secondary/5 to-accent/10 rounded-xl p-4 border border-accent/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-medium text-foreground">Existing Recording</h4>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearRecording}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      Delete Recording
+                    </Button>
+                  </div>
+                  <AudioPlayer 
+                    audioUrl={audioUrl} 
+                    title="Current Dream Recording"
+                    compact
+                  />
+                </div>
+              )}
+              
+              {/* Voice recorder for new recordings */}
               <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
                 <VoiceRecorder
                   onRecordingComplete={handleVoiceRecording}
-                  onClear={handleClearRecording}
+                  onClear={() => {
+                    setRecordedAudio(null);
+                    if (audioUrl && audioUrl.startsWith('blob:')) {
+                      URL.revokeObjectURL(audioUrl);
+                      setAudioUrl(existingDream?.audio_url || existingDream?.audioUrl || '');
+                    }
+                  }}
                   disabled={isUploading || externalIsSubmitting || isSubmitting}
                 />
               </div>
               
-              {/* Show audio player if there's a recording */}
-              {audioUrl && (
-                <div className="mt-4">
+              {/* Show new recording if user made one */}
+              {recordedAudio && audioUrl && audioUrl.startsWith('blob:') && (
+                <div className="bg-gradient-to-br from-green-50 via-green-50 to-green-100 dark:from-green-950 dark:via-green-950 dark:to-green-900 rounded-xl p-4 border border-green-200 dark:border-green-800">
+                  <h4 className="text-sm font-medium text-green-700 dark:text-green-300 mb-3">New Recording</h4>
                   <AudioPlayer 
                     audioUrl={audioUrl} 
-                    title="Dream Recording"
+                    title="New Dream Recording"
                     compact
                   />
+                  <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                    This will replace your existing recording when saved
+                  </p>
                 </div>
               )}
 
