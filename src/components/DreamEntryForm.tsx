@@ -149,10 +149,13 @@ const DreamEntryForm = ({
   };
 
   const handleClearRecording = async () => {
+    console.log('handleClearRecording called', { audioUrl, existingDream: !!existingDream });
+    
     // If there's an existing audio URL that's not a blob URL, delete it from storage
     if (audioUrl && !audioUrl.startsWith('blob:') && existingDream) {
       console.log('Deleting existing audio from storage:', audioUrl);
-      await deleteAudio(audioUrl);
+      const success = await deleteAudio(audioUrl);
+      console.log('Delete audio result:', success);
     }
     
     setRecordedAudio(null);
@@ -161,6 +164,7 @@ const DreamEntryForm = ({
     }
     setAudioUrl('');
     
+    console.log('Audio recording cleared');
     toast.success('Audio recording deleted');
   };
 
@@ -329,7 +333,12 @@ const DreamEntryForm = ({
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={handleClearRecording}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Delete Recording button clicked');
+                        handleClearRecording();
+                      }}
                       className="text-red-500 hover:text-red-600 hover:bg-red-50"
                     >
                       Delete Recording

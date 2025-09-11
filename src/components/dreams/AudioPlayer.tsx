@@ -32,20 +32,31 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const togglePlay = () => {
+  const togglePlay = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
+    console.log('AudioPlayer togglePlay called', { isPlaying, audioUrl });
     const audio = audioRef.current;
-    if (!audio) return;
+    if (!audio) {
+      console.log('No audio element found');
+      return;
+    }
 
     if (isPlaying) {
       audio.pause();
     } else {
-      audio.play().catch(() => {
+      audio.play().catch((error) => {
+        console.error('Audio play error:', error);
         setHasError(true);
       });
     }
   };
 
-  const toggleMute = () => {
+  const toggleMute = (e?: React.MouseEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+    
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -54,6 +65,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   };
 
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     const audio = audioRef.current;
     if (!audio || duration === 0) return;
 
@@ -130,9 +144,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          onClick={togglePlay}
+          onClick={(e) => togglePlay(e)}
           disabled={isLoading || hasError}
           className="h-8 w-8 p-0"
+          type="button"
         >
           {isLoading ? (
             <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -162,9 +177,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          onClick={toggleMute}
+          onClick={(e) => toggleMute(e)}
           disabled={isLoading || hasError}
           className="h-8 w-8 p-0"
+          type="button"
         >
           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </Button>
@@ -203,9 +219,10 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       <div className="flex items-center justify-between">
         <Button
           size="sm"
-          onClick={togglePlay}
+          onClick={(e) => togglePlay(e)}
           disabled={isLoading || hasError}
           className="bg-primary/10 hover:bg-primary/20 text-primary border-0"
+          type="button"
         >
           {isLoading ? (
             <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
@@ -220,8 +237,9 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         <Button
           size="sm"
           variant="ghost"
-          onClick={toggleMute}
+          onClick={(e) => toggleMute(e)}
           disabled={isLoading || hasError}
+          type="button"
         >
           {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </Button>
