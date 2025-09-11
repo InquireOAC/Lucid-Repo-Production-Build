@@ -126,7 +126,7 @@ const MessagesDialog = ({
   // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-full max-h-screen glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none sm:pr-6 pr-safe-right">
+      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none sm:pr-6 pr-safe-right">
         <div className="pt-safe-top pb-safe-bottom h-full flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 pr-safe-right pl-safe-left border-b border-white/10">
             <DialogTitle className="gradient-text text-xl font-semibold">
