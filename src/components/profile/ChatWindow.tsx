@@ -33,18 +33,25 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const handleShareDream = (dreamId: string) => {
-    // Send message with shared dream
     onSend(`[SHARED_DREAM:${dreamId}]`);
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div
+      className="relative h-full flex flex-col"
+      style={
+        {
+          // Set fallbacks if not supplied globally
+          // @ts-ignore
+          "--tabbar-h": "56px",
+          "--chat-input-h": "72px",
+        } as React.CSSProperties
+      }
+    >
       {/* Header */}
       <div className="flex-shrink-0 flex items-center gap-3 p-4 backdrop-blur-xl bg-background/95 rounded-xl border border-white/10 shadow-lg m-4 mb-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
@@ -56,7 +63,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               {(selectedConversation.display_name || selectedConversation.username)?.charAt(0)?.toUpperCase()}
             </span>
           </div>
-          <button 
+          <button
             onClick={() => navigate(`/profile/${selectedConversation.username || selectedConversation.id}`)}
             className="font-medium text-foreground hover:text-primary transition-colors cursor-pointer text-left"
           >
@@ -65,16 +72,21 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Messages Area - Scrollable Container */}
+      {/* Messages Area - Scrollable */}
       <div className="flex-1 overflow-hidden mx-4 min-h-0">
-        <div className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div
+          className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            // Keep last message visible above fixed composer + tab bar + safe area
+            paddingBottom: `calc(var(--tabbar-h) + var(--chat-input-h) + env(safe-area-inset-bottom, 0px) + 16px)`,
+          }}
+        >
           <div className="space-y-3 p-4">
             {messages.map((message: any) => (
               <div
                 key={message.id}
-                className={`flex ${
-                  message.sender_id === user?.id ? "justify-end" : "justify-start"
-                }`}
+                className={`flex ${message.sender_id === user?.id ? "justify-end" : "justify-start"}`}
               >
                 <div
                   className={`max-w-[80%] ${
@@ -83,29 +95,29 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
                   } rounded-2xl overflow-hidden`}
                 >
-                  {/* Check if message contains shared dream */}
-                  {message.content.startsWith('[SHARED_DREAM:') ? (
+                  {/* Shared Dream */}
+                  {message.content.startsWith("[SHARED_DREAM:") ? (
                     <div className="p-3">
                       <p className="text-xs opacity-70 mb-2">
                         {message.sender_id === user?.id ? "You" : "They"} shared a dream
                       </p>
-                      <SharedDreamCard 
-                        dreamId={message.content.match(/\[SHARED_DREAM:([^\]]+)\]/)?.[1] || ''}
+                      <SharedDreamCard
+                        dreamId={message.content.match(/\[SHARED_DREAM:([^\]]+)\]/)?.[1] || ""}
                       />
                       <p className="text-xs opacity-70 mt-2">
-                        {new Date(message.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {new Date(message.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                     </div>
                   ) : (
                     <div className="p-3">
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-sm leading-relaxed break-words">{message.content}</p>
                       <p className="text-xs opacity-70 mt-1">
-                        {new Date(message.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
+                        {new Date(message.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </p>
                     </div>
@@ -118,36 +130,44 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Input Area - Part of normal flow */}
-      <div className="backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg m-4 mt-0">
-        <div className="flex gap-2">
-          <Button
-            onClick={() => setShowDreamSelector(true)}
-            size="icon"
-            variant="ghost"
-            className="hover:bg-white/10 text-muted-foreground hover:text-foreground"
-          >
-            <Share className="h-4 w-4" />
-          </Button>
-          <Input
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type a message..."
-            className="flex-1 bg-background/50 border-white/20 text-foreground placeholder:text-muted-foreground focus:border-ring"
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !loading && newMessage.trim()) {
-                onSend();
-              }
-            }}
-          />
-          <Button
-            onClick={() => onSend()}
-            disabled={loading || !newMessage.trim()}
-            size="icon"
-            className="bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-white/20 text-white shadow-lg"
-          >
-            <Send className="h-4 w-4" />
-          </Button>
+      {/* Fixed Composer - pinned above tab bar */}
+      <div
+        className="fixed inset-x-0 z-20"
+        style={{
+          bottom: `calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))`,
+        }}
+      >
+        <div className="mx-4 mb-2 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg">
+          <div className="flex gap-2 items-center" style={{ height: "var(--chat-input-h)" }}>
+            <Button
+              onClick={() => setShowDreamSelector(true)}
+              size="icon"
+              variant="ghost"
+              className="hover:bg-white/10 text-muted-foreground hover:text-foreground"
+            >
+              <Share className="h-4 w-4" />
+            </Button>
+            <Input
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              placeholder="Type a message..."
+              className="flex-1 bg-background/50 border-white/20 text-foreground placeholder:text-muted-foreground focus:border-ring"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey && !loading && newMessage.trim()) {
+                  e.preventDefault();
+                  onSend();
+                }
+              }}
+            />
+            <Button
+              onClick={() => onSend()}
+              disabled={loading || !newMessage.trim()}
+              size="icon"
+              className="bg-gradient-to-br from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 border-white/20 text-white shadow-lg"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
