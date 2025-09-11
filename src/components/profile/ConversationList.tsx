@@ -13,40 +13,48 @@ const ConversationList: React.FC<ConversationListProps> = ({
 }) => {
   if (!conversations || conversations.length === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="glass-card rounded-xl p-6 border-white/10">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center mx-auto mb-4">
-            <MessageSquare className="h-8 w-8 text-purple-300" />
-          </div>
-          <h3 className="font-semibold mb-2 text-white/90">No messages yet</h3>
-          <p className="text-sm text-white/70">
-            Connect with other dreamers to start chatting
-          </p>
+      <div className="flex flex-col items-center justify-center h-64">
+        <div className="w-16 h-16 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center mb-4">
+          <MessageSquare className="h-8 w-8 text-purple-300" />
         </div>
+        <h3 className="font-semibold mb-2 text-foreground text-lg">No conversations yet</h3>
+        <p className="text-sm text-muted-foreground text-center max-w-xs">
+          Connect with other dreamers to start chatting
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 overflow-y-auto scrollbar-hide">
-      {conversations.map((conversation: any) => (
+    <div className="space-y-1">
+      {conversations.map((conversation: any, index: number) => (
         <div
           key={conversation.id}
           onClick={() => onSelectConversation(conversation)}
-          className="glass-card rounded-xl p-4 cursor-pointer border border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10 bg-card/30"
+          className="flex items-center gap-4 p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-all duration-200 active:scale-[0.98]"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
-              <span className="text-white/80 font-medium text-sm">
+          <div className="relative flex-shrink-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
+              <span className="text-white/90 font-semibold text-base">
                 {(conversation.display_name || conversation.username)?.charAt(0)?.toUpperCase()}
               </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate text-foreground">
+            {/* Online indicator - you can conditionally show this */}
+            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline justify-between mb-1">
+              <h4 className="font-semibold text-foreground truncate text-base">
                 {conversation.display_name || conversation.username}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">Tap to start chatting</p>
+              </h4>
+              <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                2h
+              </span>
             </div>
+            <p className="text-sm text-muted-foreground truncate">
+              Tap to start chatting
+            </p>
           </div>
         </div>
       ))}

@@ -4,6 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 
@@ -29,6 +31,7 @@ const MessagesDialog = ({
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Always fetch all conversations every time the dialog is opened
   useEffect(() => {
@@ -112,39 +115,66 @@ const MessagesDialog = ({
     }
   };
 
+  // Filter conversations based on search term
+  const filteredConversations = conversations.filter(conversation => {
+    const displayName = conversation.display_name || "";
+    const username = conversation.username || "";
+    return displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           username.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-full max-h-screen glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
         <div className="pt-safe-top pb-safe-bottom h-full flex flex-col">
-          <DialogHeader className="p-6 pb-0 pr-safe-right pl-safe-left">
+          <DialogHeader className="px-6 pt-6 pb-4 pr-safe-right pl-safe-left border-b border-white/10">
             <DialogTitle className="gradient-text text-xl font-semibold">
               {selectedConversation ? "Chat" : "Messages"}
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-hidden p-6 pt-0 pr-safe-right pl-safe-left">
+          
+          {!selectedConversation && (
+            <div className="px-6 py-4 pr-safe-right pl-safe-left border-b border-white/5">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search conversations..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-background/50 border-white/20 text-foreground placeholder:text-muted-foreground focus:border-ring"
+                />
+              </div>
+            </div>
+          )}
+          
+          <div className="flex-1 overflow-hidden">
             {!selectedConversation ? (
-              <ConversationList
-                conversations={conversations}
-                onSelectConversation={(conv) => {
-                  setSelectedConversation(conv);
-                  if (setSelectedConversationUser) setSelectedConversationUser(conv);
-                }}
-              />
+              <div className="h-full overflow-y-auto px-6 py-4 pr-safe-right pl-safe-left">
+                <ConversationList
+                  conversations={filteredConversations}
+                  onSelectConversation={(conv) => {
+                    setSelectedConversation(conv);
+                    if (setSelectedConversationUser) setSelectedConversationUser(conv);
+                  }}
+                />
+              </div>
             ) : (
-              <ChatWindow
-                selectedConversation={selectedConversation}
-                messages={messages}
-                user={user}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                loading={loading}
-                onBack={() => {
-                  setSelectedConversation(null);
-                  if (setSelectedConversationUser) setSelectedConversationUser(null);
-                }}
-                onSend={handleSendMessage}
-              />
+              <div className="h-full p-6 pr-safe-right pl-safe-left">
+                <ChatWindow
+                  selectedConversation={selectedConversation}
+                  messages={messages}
+                  user={user}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  loading={loading}
+                  onBack={() => {
+                    setSelectedConversation(null);
+                    if (setSelectedConversationUser) setSelectedConversationUser(null);
+                  }}
+                  onSend={handleSendMessage}
+                />
+              </div>
             )}
           </div>
         </div>
