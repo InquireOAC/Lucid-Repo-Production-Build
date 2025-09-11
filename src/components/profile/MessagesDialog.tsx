@@ -160,7 +160,7 @@ const MessagesDialog = ({
                 />
               </div>
             ) : (
-              <div className="h-full flex flex-col min-h-0 p-6 pr-safe-right pl-safe-left">
+              <div className="h-full p-6 pr-safe-right pl-safe-left">
                 <ChatWindow
                   selectedConversation={selectedConversation}
                   messages={messages}

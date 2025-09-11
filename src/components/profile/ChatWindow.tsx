@@ -44,9 +44,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 backdrop-blur-xl bg-background/95 rounded-xl mb-3 border border-white/10 shadow-lg">
+      <div className="flex-shrink-0 flex items-center gap-3 p-4 backdrop-blur-xl bg-background/95 rounded-xl mb-3 border border-white/10 shadow-lg">
         <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
           <ArrowLeft className="h-4 w-4 text-foreground" />
         </Button>
@@ -65,61 +65,59 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-1 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
-          <div className="space-y-3 pr-3 min-h-full">
-            {messages.map((message: any) => (
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto px-1 mb-3" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="space-y-3 pr-3">
+          {messages.map((message: any) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.sender_id === user?.id ? "justify-end" : "justify-start"
+              }`}
+            >
               <div
-                key={message.id}
-                className={`flex ${
-                  message.sender_id === user?.id ? "justify-end" : "justify-start"
-                }`}
+                  className={`max-w-[80%] ${
+                  message.sender_id === user?.id
+                    ? "bg-gradient-to-br from-purple-900/60 to-purple-700/80 text-white backdrop-blur-lg border border-purple-300/20"
+                    : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
+                } rounded-2xl overflow-hidden`}
               >
-                <div
-                    className={`max-w-[80%] ${
-                    message.sender_id === user?.id
-                      ? "bg-gradient-to-br from-purple-900/60 to-purple-700/80 text-white backdrop-blur-lg border border-purple-300/20"
-                      : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
-                  } rounded-2xl overflow-hidden`}
-                >
-                  {/* Check if message contains shared dream */}
-                  {message.content.startsWith('[SHARED_DREAM:') ? (
-                    <div className="p-3">
-                      <p className="text-xs opacity-70 mb-2">
-                        {message.sender_id === user?.id ? "You" : "They"} shared a dream
-                      </p>
-                      <SharedDreamCard 
-                        dreamId={message.content.match(/\[SHARED_DREAM:([^\]]+)\]/)?.[1] || ''}
-                      />
-                      <p className="text-xs opacity-70 mt-2">
-                        {new Date(message.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-3">
-                      <p className="text-sm leading-relaxed">{message.content}</p>
-                      <p className="text-xs opacity-70 mt-1">
-                        {new Date(message.created_at).toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                {/* Check if message contains shared dream */}
+                {message.content.startsWith('[SHARED_DREAM:') ? (
+                  <div className="p-3">
+                    <p className="text-xs opacity-70 mb-2">
+                      {message.sender_id === user?.id ? "You" : "They"} shared a dream
+                    </p>
+                    <SharedDreamCard 
+                      dreamId={message.content.match(/\[SHARED_DREAM:([^\]]+)\]/)?.[1] || ''}
+                    />
+                    <p className="text-xs opacity-70 mt-2">
+                      {new Date(message.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3">
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <p className="text-xs opacity-70 mt-1">
+                      {new Date(message.created_at).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </p>
+                  </div>
+                )}
               </div>
-            ))}
-            <div ref={messagesEndRef} />
-          </div>
+            </div>
+          ))}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input */}
-      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg mt-2">
+      {/* Input Area */}
+      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg">
         <div className="flex gap-2">
           <Button
             onClick={() => setShowDreamSelector(true)}
