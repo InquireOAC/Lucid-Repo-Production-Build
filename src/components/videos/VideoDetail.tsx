@@ -27,7 +27,7 @@ const VideoDetail = ({
   const { user } = useAuth();
   return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-full max-h-[90vh] overflow-y-auto glass-card border-white/20 bg-background/95 backdrop-blur-xl sm:pt-0 pt-safe-top sm:pb-0 pb-safe-bottom sm:pr-6 pr-safe-right">
-        <DialogHeader>
+        <DialogHeader className="pr-8">
           <DialogTitle className="text-xl font-bold text-white gradient-text">
             {video.title}
           </DialogTitle>
