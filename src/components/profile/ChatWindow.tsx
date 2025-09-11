@@ -44,7 +44,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-[calc(100vh-4rem)] flex flex-col bg-background">
       {/* Header - Fixed height */}
       <div className="flex-shrink-0 flex items-center gap-3 p-4 backdrop-blur-xl bg-background/95 rounded-xl border border-white/10 shadow-lg m-4 mb-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
