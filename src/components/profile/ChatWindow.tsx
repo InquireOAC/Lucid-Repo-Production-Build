@@ -66,8 +66,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-1 mb-3" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="space-y-3 pr-3">
+      <div className="flex-1 overflow-y-auto px-1 pb-4" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="space-y-3 pr-3 pb-20">
           {messages.map((message: any) => (
             <div
               key={message.id}
@@ -116,9 +116,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg">
-        <div className="flex gap-2">
+      {/* Input Area - Fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 backdrop-blur-xl bg-background/95 p-3 border-t border-white/10 shadow-lg pb-safe-bottom z-10">
+        <div className="flex gap-2 max-w-[95vw] mx-auto sm:max-w-none sm:mx-0 px-4">
           <Button
             onClick={() => setShowDreamSelector(true)}
             size="icon"
