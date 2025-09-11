@@ -27,12 +27,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onBack,
   onSend,
 }) => {
+  const scrollerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [showDreamSelector, setShowDreamSelector] = useState(false);
   const navigate = useNavigate();
 
-  // Auto-scroll to bottom when messages change
+  // Always keep the view scrolled to bottom when messages change
   useEffect(() => {
+    const el = scrollerRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
@@ -42,10 +45,12 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div
-      className="relative h-full flex flex-col"
+      // Own the viewport so parent overflow/height can't break scrolling
+      className="fixed inset-0 z-10 flex flex-col"
       style={
         {
-          // Set fallbacks if not supplied globally
+          height: "100dvh", // dynamic viewport height (mobile-safe)
+          // Fallbacks if not defined globally
           // @ts-ignore
           "--tabbar-h": "56px",
           "--chat-input-h": "72px",
@@ -72,13 +77,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Messages Area - Scrollable */}
-      <div className="flex-1 overflow-hidden mx-4 min-h-0">
+      {/* Messages Area (true flex scroller) */}
+      <div className="flex-1 min-h-0 overflow-hidden">
         <div
-          className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          ref={scrollerRef}
+          className="h-full overflow-y-auto mx-4 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
           style={{
             WebkitOverflowScrolling: "touch",
-            // Keep last message visible above fixed composer + tab bar + safe area
+            touchAction: "pan-y",
+            // keep last bubble above composer + tab bar + safe area
             paddingBottom: `calc(var(--tabbar-h) + var(--chat-input-h) + env(safe-area-inset-bottom, 0px) + 16px)`,
           }}
         >
@@ -95,7 +102,6 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
                       : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
                   } rounded-2xl overflow-hidden`}
                 >
-                  {/* Shared Dream */}
                   {message.content.startsWith("[SHARED_DREAM:") ? (
                     <div className="p-3">
                       <p className="text-xs opacity-70 mb-2">
@@ -130,7 +136,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Fixed Composer - pinned above tab bar */}
+      {/* Fixed Composer (pinned above tab bar) */}
       <div
         className="fixed inset-x-0 z-20"
         style={{
