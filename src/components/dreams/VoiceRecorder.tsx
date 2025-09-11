@@ -45,8 +45,22 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         } 
       });
 
+      // Check for supported MIME types - iOS prefers MP4/AAC
+      let mimeType = 'audio/webm;codecs=opus';
+      if (MediaRecorder.isTypeSupported('audio/mp4;codecs=mp4a.40.2')) {
+        mimeType = 'audio/mp4;codecs=mp4a.40.2';
+      } else if (MediaRecorder.isTypeSupported('audio/aac')) {
+        mimeType = 'audio/aac';
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm';
+      } else if (MediaRecorder.isTypeSupported('audio/ogg')) {
+        mimeType = 'audio/ogg';
+      }
+
+      console.log('Using MIME type:', mimeType);
+
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: mimeType
       });
 
       mediaRecorderRef.current = mediaRecorder;
@@ -59,7 +73,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       };
 
       mediaRecorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blob = new Blob(chunksRef.current, { type: mimeType });
         setAudioBlob(blob);
         setAudioUrl(URL.createObjectURL(blob));
         setHasRecording(true);
@@ -84,7 +98,21 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       toast.success('Recording started');
     } catch (error) {
       console.error('Error starting recording:', error);
-      toast.error('Failed to start recording. Please check microphone permissions.');
+      
+      // More specific error handling for iOS
+      if (error instanceof DOMException) {
+        if (error.name === 'NotAllowedError') {
+          toast.error('Microphone access denied. Please enable in Settings > Safari > Camera & Microphone');
+        } else if (error.name === 'NotFoundError') {
+          toast.error('No microphone found on this device');
+        } else if (error.name === 'NotSupportedError') {
+          toast.error('Audio recording not supported on this device/browser');
+        } else {
+          toast.error(`Recording failed: ${error.message}`);
+        }
+      } else {
+        toast.error('Failed to start recording. Please check microphone permissions.');
+      }
     }
   };
 

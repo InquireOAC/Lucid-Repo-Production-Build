@@ -131,7 +131,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 bg-white/5 border-white/20 text-white/90 placeholder:text-white/50 focus:border-white/40 focus:bg-white/10"
+            className="flex-1 bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring"
             onKeyPress={(e) => {
               if (e.key === "Enter" && !loading && newMessage.trim()) {
                 onSend();

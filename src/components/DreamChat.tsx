@@ -476,7 +476,7 @@ const DreamChat = () => {
               }
               onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
               disabled={isLoading || isReadOnly || isChecking || !isChatEnabled}
-              className="glass-card border-white/10 bg-transparent text-white placeholder:text-white/40 focus:border-white/30"
+              className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring"
             />
             <Button
               onClick={handleSendMessage}
