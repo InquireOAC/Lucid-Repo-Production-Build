@@ -45,11 +45,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   return (
     <div
-      // Own the viewport so parent overflow/height can't break scrolling
-      className="fixed inset-0 z-10 flex flex-col"
+      className="flex flex-col h-full"
       style={
         {
-          height: "100dvh", // dynamic viewport height (mobile-safe)
           // Fallbacks if not defined globally
           // @ts-ignore
           "--tabbar-h": "56px",
