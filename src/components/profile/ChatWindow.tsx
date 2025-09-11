@@ -65,9 +65,9 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto px-4 mx-4 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <div className="space-y-3 pr-3">
+      {/* Messages Area - This is the key scrollable area */}
+      <div className="flex-1 overflow-y-auto mx-4 min-h-0 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+        <div className="space-y-3 p-4">
           {messages.map((message: any) => (
             <div
               key={message.id}
@@ -76,7 +76,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               }`}
             >
               <div
-                  className={`max-w-[80%] ${
+                className={`max-w-[80%] ${
                   message.sender_id === user?.id
                     ? "bg-gradient-to-br from-purple-900/60 to-purple-700/80 text-white backdrop-blur-lg border border-purple-300/20"
                     : "bg-gradient-to-br from-blue-900/60 to-cyan-700/80 text-white backdrop-blur-lg border border-blue-300/20"
@@ -116,8 +116,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg m-4 mt-4">
+      {/* Input Area - Fixed at bottom */}
+      <div className="flex-shrink-0 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg m-4 mt-0">
         <div className="flex gap-2">
           <Button
             onClick={() => setShowDreamSelector(true)}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -123,19 +122,18 @@ const MessagesDialog = ({
            username.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
-  // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none sm:pr-6 pr-safe-right">
-        <div className="pt-safe-top pb-safe-bottom h-full flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 pr-safe-right pl-safe-left border-b border-white/10">
+      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
+        <div className="h-full flex flex-col">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
             <DialogTitle className="gradient-text text-xl font-semibold">
               {selectedConversation ? "Chat" : "Messages"}
             </DialogTitle>
           </DialogHeader>
           
           {!selectedConversation && (
-            <div className="px-6 py-4 pr-safe-right pl-safe-left border-b border-white/5">
+            <div className="px-6 py-4 border-b border-white/5 flex-shrink-0">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -148,9 +146,9 @@ const MessagesDialog = ({
             </div>
           )}
           
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-h-0">
             {!selectedConversation ? (
-              <div className="h-full overflow-y-auto px-6 py-4 pr-safe-right pl-safe-left">
+              <div className="h-full overflow-y-auto px-6 py-4">
                 <ConversationList
                   conversations={filteredConversations}
                   onSelectConversation={(conv) => {
@@ -160,21 +158,19 @@ const MessagesDialog = ({
                 />
               </div>
             ) : (
-              <div className="h-full flex flex-col">
-                <ChatWindow
-                  selectedConversation={selectedConversation}
-                  messages={messages}
-                  user={user}
-                  newMessage={newMessage}
-                  setNewMessage={setNewMessage}
-                  loading={loading}
-                  onBack={() => {
-                    setSelectedConversation(null);
-                    if (setSelectedConversationUser) setSelectedConversationUser(null);
-                  }}
-                  onSend={handleSendMessage}
-                />
-              </div>
+              <ChatWindow
+                selectedConversation={selectedConversation}
+                messages={messages}
+                user={user}
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                loading={loading}
+                onBack={() => {
+                  setSelectedConversation(null);
+                  if (setSelectedConversationUser) setSelectedConversationUser(null);
+                }}
+                onSend={handleSendMessage}
+              />
             )}
           </div>
         </div>
