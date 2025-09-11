@@ -95,6 +95,12 @@
   padding-right: env(safe-area-inset-right);
 }
 
+/* Safe close button positioning for dialogs */
+.safe-close-button {
+  right: max(1rem, env(safe-area-inset-right, 1rem));
+  top: max(1rem, env(safe-area-inset-top, 1rem));
+}
+
 .dream-background {
   background: 
     radial-gradient(circle at top right, rgba(0, 255, 255, 0.15), transparent 500px),

@@ -115,36 +115,38 @@ const MessagesDialog = ({
   // --- rendering using subcomponents ---
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-full max-h-screen glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none pt-safe-top pb-safe-bottom">
-        <DialogHeader className="p-6 pb-0">
-          <DialogTitle className="gradient-text text-xl font-semibold">
-            {selectedConversation ? "Chat" : "Messages"}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="flex-1 overflow-hidden p-6 pt-0">
-          {!selectedConversation ? (
-            <ConversationList
-              conversations={conversations}
-              onSelectConversation={(conv) => {
-                setSelectedConversation(conv);
-                if (setSelectedConversationUser) setSelectedConversationUser(conv);
-              }}
-            />
-          ) : (
-            <ChatWindow
-              selectedConversation={selectedConversation}
-              messages={messages}
-              user={user}
-              newMessage={newMessage}
-              setNewMessage={setNewMessage}
-              loading={loading}
-              onBack={() => {
-                setSelectedConversation(null);
-                if (setSelectedConversationUser) setSelectedConversationUser(null);
-              }}
-              onSend={handleSendMessage}
-            />
-          )}
+      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-full max-h-screen glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
+        <div className="pt-safe-top pb-safe-bottom h-full flex flex-col">
+          <DialogHeader className="p-6 pb-0 pr-safe-right pl-safe-left">
+            <DialogTitle className="gradient-text text-xl font-semibold">
+              {selectedConversation ? "Chat" : "Messages"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden p-6 pt-0 pr-safe-right pl-safe-left">
+            {!selectedConversation ? (
+              <ConversationList
+                conversations={conversations}
+                onSelectConversation={(conv) => {
+                  setSelectedConversation(conv);
+                  if (setSelectedConversationUser) setSelectedConversationUser(conv);
+                }}
+              />
+            ) : (
+              <ChatWindow
+                selectedConversation={selectedConversation}
+                messages={messages}
+                user={user}
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                loading={loading}
+                onBack={() => {
+                  setSelectedConversation(null);
+                  if (setSelectedConversationUser) setSelectedConversationUser(null);
+                }}
+                onSend={handleSendMessage}
+              />
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

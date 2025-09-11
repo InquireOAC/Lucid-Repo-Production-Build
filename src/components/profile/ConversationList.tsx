@@ -28,7 +28,7 @@ const ConversationList: React.FC<ConversationListProps> = ({
   }
 
   return (
-    <div className="space-y-4 max-h-80 overflow-y-auto scrollbar-hide">
+    <div className="space-y-4 overflow-y-auto scrollbar-hide">
       {conversations.map((conversation: any) => (
         <div
           key={conversation.id}
