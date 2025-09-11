@@ -28,12 +28,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onSend,
 }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [showDreamSelector, setShowDreamSelector] = useState(false);
   const navigate = useNavigate();
 
-  // Auto-scroll to bottom when messages change
+  // Auto-scroll to bottom when messages change - iOS compatible
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const handleShareDream = (dreamId: string) => {
@@ -41,19 +44,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   };
 
   return (
-    <div
-      // Own the viewport so ancestors can't break height/scroll
-      className="fixed inset-0 h-[100dvh] flex flex-col z-10"
-      style={
-        {
-          // Fallbacks if these CSS vars aren’t defined globally
-          // @ts-ignore
-          "--tabbar-h": "56px",
-          "--chat-input-h": "72px",
-        } as React.CSSProperties
-      }
-    >
-      {/* Header */}
+    <div className="h-screen flex flex-col bg-background">
+      {/* Header - Fixed height */}
       <div className="flex-shrink-0 flex items-center gap-3 p-4 backdrop-blur-xl bg-background/95 rounded-xl border border-white/10 shadow-lg m-4 mb-0">
         <Button variant="ghost" size="icon" onClick={onBack} className="hover:bg-white/10">
           <ArrowLeft className="h-4 w-4 text-foreground" />
@@ -73,18 +65,20 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Messages Area - true flex scroller */}
-      <div className="flex-1 min-h-0 mx-4">
+      {/* Messages Area - Flexible with proper iOS scrolling */}
+      <div className="flex-1 mx-4 overflow-hidden">
         <div
-          className="h-full overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"
+          ref={messagesContainerRef}
+          className="h-full overflow-y-auto"
           style={{
-            WebkitOverflowScrolling: "touch",
-            touchAction: "pan-y",
-            // keep last bubble visible above the fixed composer + tab bar + safe area
-            paddingBottom: `calc(var(--tabbar-h) + var(--chat-input-h) + env(safe-area-inset-bottom, 0px) + 16px)`,
+            WebkitOverflowScrolling: 'touch',
+            transform: 'translateZ(0)',
+            touchAction: 'pan-y',
+            overscrollBehavior: 'contain',
+            paddingBottom: '20px'
           }}
         >
-          <div className="space-y-3 p-4">
+          <div className="p-4 space-y-3">
             {messages.map((message: any) => (
               <div
                 key={message.id}
@@ -132,15 +126,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         </div>
       </div>
 
-      {/* Fixed Composer - pinned above tab bar */}
-      <div
-        className="fixed inset-x-0 z-20"
-        style={{
-          bottom: `calc(var(--tabbar-h) + env(safe-area-inset-bottom, 0px))`,
-        }}
-      >
-        <div className="mx-4 mb-2 backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg">
-          <div className="flex gap-2 items-center" style={{ height: "var(--chat-input-h)" }}>
+      {/* Input Area - Fixed at bottom but in normal flow */}
+      <div className="flex-shrink-0 p-4 pt-0" style={{ paddingBottom: `calc(16px + env(safe-area-inset-bottom, 0px))` }}>
+        <div className="backdrop-blur-xl bg-background/95 rounded-xl p-3 border border-white/10 shadow-lg">
+          <div className="flex gap-2 items-center">
             <Button
               onClick={() => setShowDreamSelector(true)}
               size="icon"
