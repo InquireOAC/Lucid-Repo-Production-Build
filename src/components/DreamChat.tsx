@@ -307,7 +307,7 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="h-screen starry-background flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] starry-background flex flex-col overflow-hidden">
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -415,7 +415,7 @@ const DreamChat = () => {
 
       {/* Messages Area - Takes remaining space and scrollable */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-0">
           {messages.length === 0 ? (
             <div className="text-center">
               <div className="glass-card rounded-2xl p-8 max-w-md mx-auto">
@@ -460,38 +460,38 @@ const DreamChat = () => {
           )}
           <div ref={messagesEndRef} />
         </div>
+      </div>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="flex-shrink-0 p-4 border-t border-white/10 glass-card">
-          <div className="flex gap-2">
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={
-                isReadOnly
-                  ? "This is a saved session (read-only)"
-                  : !isChatEnabled
-                  ? "Subscribe to continue chatting..."
-                  : "Ask about your dreams..."
-              }
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-              disabled={isLoading || isReadOnly || isChecking || !isChatEnabled}
-              className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={isLoading || !input.trim() || isReadOnly || isChecking || !isChatEnabled}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 transition-all duration-300"
-            >
-              {isChecking ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : !isChatEnabled ? (
-                <Lock className="h-4 w-4" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+      {/* Input Area - Fixed at bottom above tab bar */}
+      <div className="fixed bottom-16 left-0 right-0 p-4 border-t border-white/10 glass-card backdrop-blur-xl bg-background/95">
+        <div className="flex gap-2">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={
+              isReadOnly
+                ? "This is a saved session (read-only)"
+                : !isChatEnabled
+                ? "Subscribe to continue chatting..."
+                : "Ask about your dreams..."
+            }
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            disabled={isLoading || isReadOnly || isChecking || !isChatEnabled}
+            className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring"
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={isLoading || !input.trim() || isReadOnly || isChecking || !isChatEnabled}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg shadow-purple-500/30 transition-all duration-300"
+          >
+            {isChecking ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : !isChatEnabled ? (
+              <Lock className="h-4 w-4" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
     </div>
