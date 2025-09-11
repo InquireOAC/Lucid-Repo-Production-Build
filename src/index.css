@@ -298,3 +298,11 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;  /* Chrome, Safari, and Opera */
 }
+
+/* iOS scroll fix */
+.ios-scroll-fix {
+  -webkit-overflow-scrolling: touch;
+  transform: translateZ(0);
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
