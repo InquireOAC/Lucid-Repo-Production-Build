@@ -147,13 +147,13 @@ const Auth = () => {
   };
 
   if (termsLoading) {
-    return <div className="flex items-center justify-center min-h-screen bg-background">Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right">Loading...</div>;
   }
 
   // If user is logged in but hasn't accepted terms, show terms acceptance
   if (user && hasAcceptedTerms === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="min-h-screen flex items-center justify-center bg-background pt-safe-top px-4 pl-safe-left pr-safe-right">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl gradient-text">Terms of Use</CardTitle>
@@ -214,7 +214,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background pt-safe-top px-4 pl-safe-left pr-safe-right">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl gradient-text">Welcome to Lucid Repository</CardTitle>

@@ -35,7 +35,7 @@ const Learn = () => {
   }
 
   return (
-    <div className="relative flex flex-col min-h-screen bg-background">
+    <div className="relative flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right">
       {/* Darkened background when coming soon is active */}
       <div className={`${showComingSoon ? 'opacity-30 pointer-events-none' : ''} flex flex-col min-h-screen bg-background`}>
         <LearningDashboard userId={user.id} />

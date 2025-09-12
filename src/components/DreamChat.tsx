@@ -290,7 +290,7 @@ const DreamChat = () => {
 
   if (!user) {
     return (
-      <div className="h-screen starry-background p-4 flex items-center justify-center overflow-hidden">
+      <div className="h-screen starry-background pt-safe-top px-4 flex items-center justify-center overflow-hidden pl-safe-left pr-safe-right">
         <div className="glass-card rounded-2xl p-8 text-center max-w-md">
           <div className="w-16 h-16 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <MessageCircle className="h-8 w-8 text-white" />
@@ -307,7 +307,7 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] starry-background flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] starry-background flex flex-col overflow-hidden pt-safe-top pl-safe-left pr-safe-right">
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button

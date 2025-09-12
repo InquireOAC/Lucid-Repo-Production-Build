@@ -11,14 +11,14 @@ const Notifications = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-safe-top pl-safe-left pr-safe-right">
         <p className="text-white/60">Please sign in to view notifications</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pt-4 pb-20 px-4">
+    <div className="min-h-screen pt-safe-top pb-20 px-4 pl-safe-left pr-safe-right">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
