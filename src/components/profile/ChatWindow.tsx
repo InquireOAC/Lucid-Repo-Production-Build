@@ -75,7 +75,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             transform: 'translateZ(0)',
             touchAction: 'pan-y',
             overscrollBehavior: 'contain',
-            paddingBottom: '20px'
+            paddingBottom: '120px'
           }}
         >
           <div className="p-4 space-y-3">
