@@ -415,7 +415,7 @@ const DreamChat = () => {
 
       {/* Messages Area - Takes remaining space and scrollable */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-0">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ paddingBottom: '120px' }}>
           {messages.length === 0 ? (
             <div className="text-center">
               <div className="glass-card rounded-2xl p-8 max-w-md mx-auto">
