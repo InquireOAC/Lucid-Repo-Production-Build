@@ -14,9 +14,16 @@ export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Pro
       return false;
     }
     
-    // Special case for admin users for testing
-    if (user.email === "inquireoac@gmail.com") {
-      console.log('Admin user, granting access');
+    // Check if user has admin role in database
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    if (roleData) {
+      console.log('Admin user detected via database role, granting access');
       return true;
     }
     
@@ -136,9 +143,16 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
       return false;
     }
     
-    // Special case for admin users
-    if (user.email === "inquireoac@gmail.com") {
-      console.log('Admin user, not incrementing usage');
+    // Check if user has admin role - admins don't increment usage
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    if (roleData) {
+      console.log('Admin user detected, not incrementing usage');
       return true;
     }
     
@@ -234,8 +248,15 @@ export const hasActiveSubscription = async (): Promise<boolean> => {
       return false;
     }
     
-    // Special case for admin users
-    if (user.email === "inquireoac@gmail.com") {
+    // Check if user has admin role
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('role', 'admin')
+      .maybeSingle();
+    
+    if (roleData) {
       return true;
     }
     

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Settings, RefreshCw } from 'lucide-react';
 import { useVideoEntries } from '@/hooks/useVideoEntries';
-import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface AdminVideoManagerProps {
   isOpen: boolean;
@@ -18,10 +18,7 @@ const AdminVideoManager = ({ isOpen, onClose }: AdminVideoManagerProps) => {
   const [dreamerStoryName, setDreamerStoryName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { addVideoFromYoutube, refreshVideoStatistics, isLoading } = useVideoEntries();
-  const { user } = useAuth();
-
-  // Simple admin check - you can make this more sophisticated
-  const isAdmin = user?.email === 'inquireoac@gmail.com'; // Replace with your admin email
+  const { isAdmin } = useUserRole();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,13 +110,10 @@ const AdminVideoManager = ({ isOpen, onClose }: AdminVideoManagerProps) => {
 
 export const AdminVideoButton = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const { user } = useAuth();
-  const { refreshVideoStatistics, isLoading } = useVideoEntries();
+  const { isAdmin, isLoading } = useUserRole();
+  const { refreshVideoStatistics, isLoading: isRefreshing } = useVideoEntries();
 
-  // Simple admin check
-  const isAdmin = user?.email === 'inquireoac@gmail.com'; // Replace with your admin email
-
-  if (!isAdmin) {
+  if (isLoading || !isAdmin) {
     return null;
   }
 
@@ -141,9 +135,9 @@ export const AdminVideoButton = () => {
           variant="outline"
           size="sm"
           className="glass-button"
-          disabled={isLoading}
+          disabled={isRefreshing}
         >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh Stats
         </Button>
       </div>

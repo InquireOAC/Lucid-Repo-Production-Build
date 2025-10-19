@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25MB limit
+
 // Process base64 in chunks to prevent memory issues
 function processBase64Chunks(base64String: string, chunkSize = 32768) {
   const chunks: Uint8Array[] = [];
@@ -44,11 +46,18 @@ serve(async (req) => {
   try {
     const { audio } = await req.json();
     
-    if (!audio) {
+    // Input validation
+    if (!audio || typeof audio !== 'string') {
       throw new Error('No audio data provided');
     }
 
-    console.log('Processing voice-to-text request...');
+    // Validate audio size (base64 encoded size)
+    const estimatedSize = (audio.length * 3) / 4;
+    if (estimatedSize > MAX_AUDIO_SIZE) {
+      throw new Error(`Audio file too large. Maximum ${MAX_AUDIO_SIZE / 1024 / 1024}MB allowed.`);
+    }
+
+    console.log(`Processing voice-to-text, estimated size: ${(estimatedSize / 1024 / 1024).toFixed(2)}MB`);
 
     // Process audio in chunks to prevent memory issues
     const binaryAudio = processBase64Chunks(audio);

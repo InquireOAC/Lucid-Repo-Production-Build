@@ -12,6 +12,9 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY')!;
 
+const VALID_EXPERT_TYPES = ['jungian', 'shamanic', 'cbt'];
+const MAX_MESSAGE_LENGTH = 3000;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -19,6 +22,25 @@ serve(async (req) => {
 
   try {
     const { message, expertType, sessionId } = await req.json();
+    
+    // Input validation
+    if (!message || typeof message !== 'string') {
+      throw new Error('Invalid message');
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      throw new Error(`Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters allowed.`);
+    }
+
+    if (!VALID_EXPERT_TYPES.includes(expertType)) {
+      throw new Error('Invalid expert type');
+    }
+
+    if (!sessionId || typeof sessionId !== 'string') {
+      throw new Error('Invalid session ID');
+    }
+
+    console.log("Dream chat request received:", { expertType, sessionId, messageLength: message.length });
     
     const authHeader = req.headers.get('Authorization')!;
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {

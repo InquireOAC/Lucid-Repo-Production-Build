@@ -11,16 +11,16 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.analyze-dream]
-verify_jwt = false
+verify_jwt = true
 
 [functions.generate-dream-image]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-flag-notification]
 verify_jwt = true
 
 [functions.upload-openai-image]
-verify_jwt = false
+verify_jwt = true
 
 [functions.dream-chat]
 verify_jwt = true

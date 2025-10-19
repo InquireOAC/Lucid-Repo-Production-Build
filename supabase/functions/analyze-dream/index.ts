@@ -1,11 +1,15 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const VALID_TASKS = ['analyze_dream', 'generate_image_prompt']
+const MAX_CONTENT_LENGTH = 5000
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,7 +17,39 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing authorization header')
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      throw new Error('Unauthorized')
+    }
+
     const { dreamContent, task = 'analyze_dream' } = await req.json()
+
+    // Input validation
+    if (!dreamContent || typeof dreamContent !== 'string') {
+      throw new Error('Invalid dream content')
+    }
+
+    if (dreamContent.length > MAX_CONTENT_LENGTH) {
+      throw new Error(`Dream content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`)
+    }
+
+    if (!VALID_TASKS.includes(task)) {
+      throw new Error('Invalid task type')
+    }
+
+    console.log(`Processing ${task} for user ${user.id}, content length: ${dreamContent.length}`)
     
     // Set system prompt based on the requested task
     const systemPrompt = task === 'create_image_prompt' 

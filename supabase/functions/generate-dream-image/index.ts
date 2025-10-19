@@ -1,11 +1,14 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
+
+const MAX_PROMPT_LENGTH = 2000
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,7 +16,35 @@ serve(async (req) => {
   }
 
   try {
+    // Verify authentication
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      throw new Error('Missing authorization header')
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      throw new Error('Unauthorized')
+    }
+
     const { prompt } = await req.json()
+    
+    // Input validation
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('Invalid prompt')
+    }
+
+    if (prompt.length > MAX_PROMPT_LENGTH) {
+      throw new Error(`Prompt too long. Maximum ${MAX_PROMPT_LENGTH} characters allowed.`)
+    }
+
+    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}`)
     
     console.log("Generating image with prompt:", prompt)
     
