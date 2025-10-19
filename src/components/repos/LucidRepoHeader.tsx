@@ -40,7 +40,7 @@ const LucidRepoHeader = ({
   setMode
 }: LucidRepoHeaderProps) => {
   return (
-    <div className="mb-6">
+    <div className="mb-6 pt-6">
       {/* Mode Toggle Header */}
       <div className="text-center mb-6">
         <div className="inline-flex glass-card rounded-lg p-1 border-white/20">
