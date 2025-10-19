@@ -10,7 +10,7 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
   const [imagePrompt, setImagePrompt] = useState(existingPrompt);
   const [generatedImage, setGeneratedImage] = useState(existingImage);
   const [imageError, setImageError] = useState(false);
-  const [useAIContext, setUseAIContext] = useState(true);
+  const [useAIContext, setUseAIContext] = useState(false);
   const [imageStyle, setImageStyle] = useState("surreal");
 
   // Determine if we should show the initial prompt or the full interface
