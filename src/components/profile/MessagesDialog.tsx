@@ -195,7 +195,7 @@ const MessagesDialog = ({
                   )}
                 </div>
               )}
-              <DialogTitle className="text-white text-xl font-semibold absolute left-1/2 -translate-x-1/2">
+              <DialogTitle className="text-white text-xl font-semibold absolute left-1/2 -translate-x-1/2 top-3">
                 {selectedConversation ? "Chat" : "Messages"}
               </DialogTitle>
               <div></div>
