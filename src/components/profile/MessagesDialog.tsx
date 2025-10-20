@@ -169,9 +169,12 @@ const MessagesDialog = ({
       <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
         <div className="h-full flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center justify-between relative">
-              {!selectedConversation && (
-                <div className="flex items-center gap-2">
+            {!selectedConversation ? (
+              <div className="flex flex-col gap-3">
+                <DialogTitle className="text-white text-xl font-semibold text-center">
+                  Messages
+                </DialogTitle>
+                <div className="flex items-center justify-start gap-2">
                   <Button
                     variant={isSelectionMode ? "secondary" : "outline"}
                     size="sm"
@@ -194,12 +197,14 @@ const MessagesDialog = ({
                     </Button>
                   )}
                 </div>
-              )}
-              <DialogTitle className="text-white text-xl font-semibold absolute left-1/2 -translate-x-1/2 top-3">
-                {selectedConversation ? "Chat" : "Messages"}
-              </DialogTitle>
-              <div></div>
-            </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center relative">
+                <DialogTitle className="text-white text-xl font-semibold">
+                  Chat
+                </DialogTitle>
+              </div>
+            )}
           </DialogHeader>
           
           {!selectedConversation && (
