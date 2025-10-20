@@ -169,12 +169,19 @@ const MessagesDialog = ({
       <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
         <div className="h-full flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="gradient-text text-xl font-semibold">
-                {selectedConversation ? "Chat" : "Messages"}
-              </DialogTitle>
+            <div className="flex items-center justify-between relative">
               {!selectedConversation && (
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant={isSelectionMode ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setIsSelectionMode(!isSelectionMode);
+                      setSelectedConversations(new Set());
+                    }}
+                  >
+                    {isSelectionMode ? "Cancel" : "Select"}
+                  </Button>
                   {isSelectionMode && selectedConversations.size > 0 && (
                     <Button
                       variant="destructive"
@@ -186,18 +193,12 @@ const MessagesDialog = ({
                       Delete ({selectedConversations.size})
                     </Button>
                   )}
-                  <Button
-                    variant={isSelectionMode ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => {
-                      setIsSelectionMode(!isSelectionMode);
-                      setSelectedConversations(new Set());
-                    }}
-                  >
-                    {isSelectionMode ? "Cancel" : "Select"}
-                  </Button>
                 </div>
               )}
+              <DialogTitle className="text-white text-xl font-semibold absolute left-1/2 -translate-x-1/2">
+                {selectedConversation ? "Chat" : "Messages"}
+              </DialogTitle>
+              <div></div>
             </div>
           </DialogHeader>
           
