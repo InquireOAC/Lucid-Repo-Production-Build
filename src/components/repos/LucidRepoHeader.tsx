@@ -78,7 +78,7 @@ const LucidRepoHeader = ({
         )}
       </div>
 
-      <form onSubmit={handleSearch} className="flex items-center space-x-2 mb-4" autoComplete="off">
+      <form onSubmit={handleSearch} className="flex items-center justify-center space-x-2 mb-4" autoComplete="off">
         <Input 
           aria-label={mode === "dreams" ? "Search dreams" : "Search videos"} 
           type="text" 
