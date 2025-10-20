@@ -171,9 +171,6 @@ const MessagesDialog = ({
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
             {!selectedConversation ? (
               <div className="flex flex-col gap-3">
-                <DialogTitle className="text-white text-xl font-semibold text-center">
-                  Messages
-                </DialogTitle>
                 <div className="flex items-center justify-start gap-2">
                   <Button
                     variant={isSelectionMode ? "secondary" : "outline"}
@@ -197,6 +194,9 @@ const MessagesDialog = ({
                     </Button>
                   )}
                 </div>
+                <DialogTitle className="text-white text-xl font-semibold text-center">
+                  Messages
+                </DialogTitle>
               </div>
             ) : (
               <div className="flex items-center justify-center relative">
