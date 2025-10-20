@@ -2,15 +2,20 @@
 import React from "react";
 import { MessageSquare } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ConversationListProps {
   conversations: any[];
   onSelectConversation: (user: any) => void;
+  isSelectionMode?: boolean;
+  selectedConversations?: Set<string>;
 }
 
 const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
-  onSelectConversation
+  onSelectConversation,
+  isSelectionMode = false,
+  selectedConversations = new Set()
 }) => {
   const formatLastMessageTime = (timestamp: string | null) => {
     if (!timestamp) return "New";
@@ -37,37 +42,50 @@ const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <div className="space-y-1">
-      {conversations.map((conversation: any, index: number) => (
-        <div
-          key={conversation.id}
-          onClick={() => onSelectConversation(conversation)}
-          className="flex items-center gap-4 p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-all duration-200 active:scale-[0.98]"
-        >
-          <div className="relative flex-shrink-0">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
-              <span className="text-white/90 font-semibold text-base">
-                {(conversation.display_name || conversation.username)?.charAt(0)?.toUpperCase()}
-              </span>
+      {conversations.map((conversation: any, index: number) => {
+        const isSelected = selectedConversations.has(conversation.id);
+        return (
+          <div
+            key={conversation.id}
+            onClick={() => onSelectConversation(conversation)}
+            className={`flex items-center gap-4 p-4 rounded-xl cursor-pointer hover:bg-white/5 transition-all duration-200 active:scale-[0.98] ${
+              isSelected ? "bg-primary/10 border border-primary/30" : ""
+            }`}
+          >
+            {isSelectionMode && (
+              <Checkbox
+                checked={isSelected}
+                onCheckedChange={() => onSelectConversation(conversation)}
+                onClick={(e) => e.stopPropagation()}
+                className="h-5 w-5"
+              />
+            )}
+            <div className="relative flex-shrink-0">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
+                <span className="text-white/90 font-semibold text-base">
+                  {(conversation.display_name || conversation.username)?.charAt(0)?.toUpperCase()}
+                </span>
+              </div>
+              {/* Online indicator - you can conditionally show this */}
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
             </div>
-            {/* Online indicator - you can conditionally show this */}
-            <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background"></div>
-          </div>
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline justify-between mb-1">
-              <h4 className="font-semibold text-foreground truncate text-base">
-                {conversation.display_name || conversation.username}
-              </h4>
-              <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                {formatLastMessageTime(conversation.last_message_time)}
-              </span>
+            
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline justify-between mb-1">
+                <h4 className="font-semibold text-foreground truncate text-base">
+                  {conversation.display_name || conversation.username}
+                </h4>
+                <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
+                  {formatLastMessageTime(conversation.last_message_time)}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground truncate">
+                {conversation.last_message || "Tap to start chatting"}
+              </p>
             </div>
-            <p className="text-sm text-muted-foreground truncate">
-              {conversation.last_message || "Tap to start chatting"}
-            </p>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

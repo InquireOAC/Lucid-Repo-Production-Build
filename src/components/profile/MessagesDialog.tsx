@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Trash2 } from "lucide-react";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 
@@ -31,6 +32,8 @@ const MessagesDialog = ({
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedConversations, setSelectedConversations] = useState<Set<string>>(new Set());
 
   // Always fetch all conversations every time the dialog is opened
   useEffect(() => {
@@ -61,6 +64,8 @@ const MessagesDialog = ({
       setSelectedConversation(null);
       setMessages([]);
       setNewMessage("");
+      setIsSelectionMode(false);
+      setSelectedConversations(new Set());
       if (setSelectedConversationUser) setSelectedConversationUser(null);
     }
   }, [isOpen, setSelectedConversationUser]);
@@ -114,6 +119,43 @@ const MessagesDialog = ({
     }
   };
 
+  const handleDeleteSelected = async () => {
+    if (!user || selectedConversations.size === 0) return;
+    
+    setLoading(true);
+    try {
+      // Delete all messages between current user and selected users
+      for (const partnerId of selectedConversations) {
+        await supabase
+          .from("messages")
+          .delete()
+          .or(
+            `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
+          );
+      }
+      
+      toast.success(`Deleted ${selectedConversations.size} conversation${selectedConversations.size > 1 ? 's' : ''}`);
+      setSelectedConversations(new Set());
+      setIsSelectionMode(false);
+      if (fetchConversations) fetchConversations();
+    } catch (error) {
+      console.error("Error deleting conversations:", error);
+      toast.error("Failed to delete conversations");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleConversationSelection = (conversationId: string) => {
+    const newSelected = new Set(selectedConversations);
+    if (newSelected.has(conversationId)) {
+      newSelected.delete(conversationId);
+    } else {
+      newSelected.add(conversationId);
+    }
+    setSelectedConversations(newSelected);
+  };
+
   // Filter conversations based on search term
   const filteredConversations = conversations.filter(conversation => {
     const displayName = conversation.display_name || "";
@@ -127,9 +169,36 @@ const MessagesDialog = ({
       <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
         <div className="h-full flex flex-col">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
-            <DialogTitle className="gradient-text text-xl font-semibold">
-              {selectedConversation ? "Chat" : "Messages"}
-            </DialogTitle>
+            <div className="flex items-center justify-between">
+              <DialogTitle className="gradient-text text-xl font-semibold">
+                {selectedConversation ? "Chat" : "Messages"}
+              </DialogTitle>
+              {!selectedConversation && (
+                <div className="flex items-center gap-2">
+                  {isSelectionMode && selectedConversations.size > 0 && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={handleDeleteSelected}
+                      disabled={loading}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete ({selectedConversations.size})
+                    </Button>
+                  )}
+                  <Button
+                    variant={isSelectionMode ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setIsSelectionMode(!isSelectionMode);
+                      setSelectedConversations(new Set());
+                    }}
+                  >
+                    {isSelectionMode ? "Cancel" : "Select"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </DialogHeader>
           
           {!selectedConversation && (
@@ -152,9 +221,15 @@ const MessagesDialog = ({
                 <ConversationList
                   conversations={filteredConversations}
                   onSelectConversation={(conv) => {
-                    setSelectedConversation(conv);
-                    if (setSelectedConversationUser) setSelectedConversationUser(conv);
+                    if (isSelectionMode) {
+                      toggleConversationSelection(conv.id);
+                    } else {
+                      setSelectedConversation(conv);
+                      if (setSelectedConversationUser) setSelectedConversationUser(conv);
+                    }
                   }}
+                  isSelectionMode={isSelectionMode}
+                  selectedConversations={selectedConversations}
                 />
               </div>
             ) : (
