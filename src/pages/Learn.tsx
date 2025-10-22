@@ -11,8 +11,8 @@ import { DailyPracticeChecklist } from '@/components/learning/DailyPracticeCheck
 const Learn = () => {
   const { user, loading } = useAuth();
   const { data: paths, isLoading: pathsLoading } = useLearningPaths();
-  const { progress } = usePathProgress();
-  const { learningProgress } = useLearningProgress();
+  const { progress: pathProgress } = usePathProgress();
+  const { progress: learningProgress } = useLearningProgress();
 
   if (loading) {
     return (
@@ -70,7 +70,7 @@ const Learn = () => {
               <PathCard
                 key={path.id}
                 path={path}
-                progress={progress?.find((p) => p.path_id === path.id)}
+                progress={pathProgress?.find((p) => p.path_id === path.id)}
                 onClick={() => {}}
               />
             ))}
