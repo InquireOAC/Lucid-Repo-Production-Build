@@ -273,6 +273,67 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_practice_log: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          id: string
+          level_id: string | null
+          notes: string | null
+          path_id: string | null
+          practice_type_id: string | null
+          user_id: string | null
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          level_id?: string | null
+          notes?: string | null
+          path_id?: string | null
+          practice_type_id?: string | null
+          user_id?: string | null
+          xp_earned?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          id?: string
+          level_id?: string | null
+          notes?: string | null
+          path_id?: string | null
+          practice_type_id?: string | null
+          user_id?: string | null
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_practice_log_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "path_levels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_practice_log_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "daily_practice_log_practice_type_id_fkey"
+            columns: ["practice_type_id"]
+            isOneToOne: false
+            referencedRelation: "practice_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       device_tokens: {
         Row: {
           created_at: string
@@ -694,36 +755,50 @@ export type Database = {
       }
       learning_achievements: {
         Row: {
+          category: string | null
           created_at: string
           description: string
           icon: string
           id: string
           name: string
+          path_id: string | null
           requirement_type: string
           requirement_value: number
           xp_reward: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description: string
           icon: string
           id?: string
           name: string
+          path_id?: string | null
           requirement_type: string
           requirement_value: number
           xp_reward?: number
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string
           icon?: string
           id?: string
           name?: string
+          path_id?: string | null
           requirement_type?: string
           requirement_value?: number
           xp_reward?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "learning_achievements_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       learning_levels: {
         Row: {
@@ -755,14 +830,53 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_paths: {
+        Row: {
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          order_index: number
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          name: string
+          order_index: number
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          order_index?: number
+          title?: string
+        }
+        Relationships: []
+      }
       learning_progress: {
         Row: {
           created_at: string
           current_level: number
           current_streak: number
+          dream_recall_level: number | null
+          dream_recall_xp: number | null
           id: string
           last_activity_date: string | null
+          last_practice_date: string | null
           longest_streak: number
+          lucid_dreaming_level: number | null
+          lucid_dreaming_xp: number | null
+          meditation_level: number | null
+          meditation_xp: number | null
+          obe_level: number | null
+          obe_xp: number | null
           total_xp: number
           updated_at: string
           user_id: string
@@ -771,9 +885,18 @@ export type Database = {
           created_at?: string
           current_level?: number
           current_streak?: number
+          dream_recall_level?: number | null
+          dream_recall_xp?: number | null
           id?: string
           last_activity_date?: string | null
+          last_practice_date?: string | null
           longest_streak?: number
+          lucid_dreaming_level?: number | null
+          lucid_dreaming_xp?: number | null
+          meditation_level?: number | null
+          meditation_xp?: number | null
+          obe_level?: number | null
+          obe_xp?: number | null
           total_xp?: number
           updated_at?: string
           user_id: string
@@ -782,9 +905,18 @@ export type Database = {
           created_at?: string
           current_level?: number
           current_streak?: number
+          dream_recall_level?: number | null
+          dream_recall_xp?: number | null
           id?: string
           last_activity_date?: string | null
+          last_practice_date?: string | null
           longest_streak?: number
+          lucid_dreaming_level?: number | null
+          lucid_dreaming_xp?: number | null
+          meditation_level?: number | null
+          meditation_xp?: number | null
+          obe_level?: number | null
+          obe_xp?: number | null
           total_xp?: number
           updated_at?: string
           user_id?: string
@@ -817,6 +949,41 @@ export type Database = {
           xp_earned?: number
         }
         Relationships: []
+      }
+      lesson_completions: {
+        Row: {
+          completed_at: string | null
+          id: string
+          lesson_id: string
+          lesson_type: string
+          level_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          lesson_id: string
+          lesson_type: string
+          level_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          lesson_id?: string
+          lesson_type?: string
+          level_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_completions_level_id_fkey"
+            columns: ["level_id"]
+            isOneToOne: false
+            referencedRelation: "path_levels"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       likes: {
         Row: {
@@ -960,6 +1127,47 @@ export type Database = {
         }
         Relationships: []
       }
+      path_levels: {
+        Row: {
+          content: Json
+          created_at: string | null
+          description: string
+          id: string
+          level_number: number
+          path_id: string | null
+          title: string
+          xp_required: number
+        }
+        Insert: {
+          content?: Json
+          created_at?: string | null
+          description: string
+          id?: string
+          level_number: number
+          path_id?: string | null
+          title: string
+          xp_required?: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          description?: string
+          id?: string
+          level_number?: number
+          path_id?: string | null
+          title?: string
+          xp_required?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "path_levels_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       practice_sessions: {
         Row: {
           completed_at: string
@@ -997,6 +1205,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      practice_types: {
+        Row: {
+          category: string
+          created_at: string | null
+          display_name: string
+          id: string
+          name: string
+          requires_timer: boolean | null
+          xp_reward: number
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          display_name: string
+          id?: string
+          name: string
+          requires_timer?: boolean | null
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          name?: string
+          requires_timer?: boolean | null
+          xp_reward?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1309,6 +1547,68 @@ export type Database = {
           },
         ]
       }
+      user_path_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          current_level: number
+          id: string
+          is_unlocked: boolean | null
+          path_id: string | null
+          updated_at: string | null
+          user_id: string | null
+          xp_earned: number
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_level?: number
+          id?: string
+          is_unlocked?: boolean | null
+          path_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          xp_earned?: number
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          current_level?: number
+          id?: string
+          is_unlocked?: boolean | null
+          path_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          xp_earned?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_path_progress_path_id_fkey"
+            columns: ["path_id"]
+            isOneToOne: false
+            referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_public_map: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1524,10 +1824,7 @@ export type Database = {
         Args: { credit_type: string; user_id_param: string }
         Returns: undefined
       }
-      reset_subscription_usage: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      reset_subscription_usage: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

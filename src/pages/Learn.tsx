@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { LearningDashboard } from '@/components/learning/LearningDashboard';
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLearningPaths } from '@/hooks/useLearningPaths';
+import { usePathProgress } from '@/hooks/usePathProgress';
+import { useLearningProgress } from '@/hooks/useLearningProgress';
+import { PathCard } from '@/components/learning/PathCard';
+import { RecommendedNextStep } from '@/components/learning/RecommendedNextStep';
+import { StreakCounter } from '@/components/learning/StreakCounter';
+import { DailyPracticeChecklist } from '@/components/learning/DailyPracticeChecklist';
 
 const Learn = () => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [showComingSoon, setShowComingSoon] = useState(true);
-
-  const handleCloseComingSoon = () => {
-    setShowComingSoon(false);
-    navigate('/profile');
-  };
+  const { data: paths, isLoading: pathsLoading } = useLearningPaths();
+  const { progress } = usePathProgress();
+  const { learningProgress } = useLearningProgress();
 
   if (loading) {
     return (
@@ -34,34 +33,50 @@ const Learn = () => {
     );
   }
 
-  return (
-    <div className="relative flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right">
-      {/* Darkened background when coming soon is active */}
-      <div className={`${showComingSoon ? 'opacity-30 pointer-events-none' : ''} flex flex-col min-h-screen bg-background`}>
-        <LearningDashboard userId={user.id} />
+  if (pathsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
+    );
+  }
 
-      {/* Coming Soon Modal */}
-      <Dialog open={showComingSoon} onOpenChange={handleCloseComingSoon}>
-        <DialogContent className="glass-card border-white/20">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-white gradient-text text-center">
-              🚀 Coming Soon!
-            </DialogTitle>
-          </DialogHeader>
-          <div className="text-center space-y-4">
-            <p className="text-white/80">
-              The learning system is currently under development. Stay tuned for an amazing lucid dreaming education experience!
-            </p>
-            <Button 
-              onClick={handleCloseComingSoon}
-              className="glass-button"
-            >
-              Got it!
-            </Button>
+  return (
+    <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
+      <div className="max-w-7xl mx-auto w-full space-y-6">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold gradient-text mb-2">🎯 My Learning Journey</h1>
+          <div className="flex items-center justify-center gap-4 text-sm">
+            <span className="text-primary font-semibold">XP: {learningProgress?.total_xp || 0}</span>
+            <span className="text-muted-foreground">Level {learningProgress?.current_level || 1}</span>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+
+        <StreakCounter 
+          currentStreak={learningProgress?.current_streak || 0}
+          longestStreak={learningProgress?.longest_streak || 0}
+        />
+
+        <RecommendedNextStep
+          pathTitle="Dream Recall Mastery"
+          levelTitle="Dream Journal Foundation"
+          onClick={() => {}}
+        />
+
+        <div>
+          <h2 className="text-2xl font-semibold mb-4">📊 My Paths</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {paths?.map((path) => (
+              <PathCard
+                key={path.id}
+                path={path}
+                progress={progress?.find((p) => p.path_id === path.id)}
+                onClick={() => {}}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
