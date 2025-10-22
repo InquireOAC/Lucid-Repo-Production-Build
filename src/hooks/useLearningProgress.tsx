@@ -10,6 +10,15 @@ interface LearningProgress {
   current_streak: number;
   longest_streak: number;
   last_activity_date?: string;
+  last_practice_date?: string;
+  dream_recall_level: number;
+  lucid_dreaming_level: number;
+  obe_level: number;
+  meditation_level: number;
+  dream_recall_xp: number;
+  lucid_dreaming_xp: number;
+  obe_xp: number;
+  meditation_xp: number;
   created_at: string;
   updated_at: string;
 }
@@ -42,7 +51,15 @@ export const useLearningProgress = (userId?: string) => {
             current_level: 1,
             total_xp: 0,
             current_streak: 0,
-            longest_streak: 0
+            longest_streak: 0,
+            dream_recall_level: 1,
+            lucid_dreaming_level: 1,
+            obe_level: 1,
+            meditation_level: 1,
+            dream_recall_xp: 0,
+            lucid_dreaming_xp: 0,
+            obe_xp: 0,
+            meditation_xp: 0
           })
           .select()
           .single();

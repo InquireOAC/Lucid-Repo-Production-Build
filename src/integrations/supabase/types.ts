@@ -1825,6 +1825,10 @@ export type Database = {
         Returns: undefined
       }
       reset_subscription_usage: { Args: never; Returns: undefined }
+      update_learning_streak_and_xp: {
+        Args: { p_user_id: string; p_xp_to_add: number }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
