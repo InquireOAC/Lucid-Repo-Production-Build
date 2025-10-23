@@ -8,6 +8,10 @@ import { ArrowLeft, PlayCircle, BookOpen, Dumbbell, Award } from "lucide-react";
 import { PathLevel } from "@/hooks/usePathLevels";
 import { useLessonTracking } from "@/hooks/useLessonTracking";
 import { usePracticeLog } from "@/hooks/usePracticeLog";
+import { JournalSetupWizard } from "./exercises/JournalSetupWizard";
+import { TimedWriteSession } from "./exercises/TimedWriteSession";
+import { SleepCycleCalculator } from "./exercises/SleepCycleCalculator";
+import { DreamSignDetector } from "./exercises/DreamSignDetector";
 
 interface LevelContentViewProps {
   level: PathLevel;
@@ -222,6 +226,46 @@ export const LevelContentView: React.FC<LevelContentViewProps> = ({
         <TabsContent value="exercises" className="space-y-4 mt-6">
           {level.content.exercises?.map((exercise) => {
             const completed = isLessonComplete(exercise.id);
+            
+            // Render interactive exercises
+            if (exercise.id === "setup_wizard") {
+              return (
+                <JournalSetupWizard
+                  key={exercise.id}
+                  onComplete={() => handleExerciseComplete(exercise.id)}
+                />
+              );
+            }
+            
+            if (exercise.id === "timed_write") {
+              return (
+                <TimedWriteSession
+                  key={exercise.id}
+                  duration={exercise.duration || 5}
+                  onComplete={() => handleExerciseComplete(exercise.id)}
+                />
+              );
+            }
+            
+            if (exercise.id === "sleep_calculator") {
+              return (
+                <SleepCycleCalculator
+                  key={exercise.id}
+                  onComplete={() => handleExerciseComplete(exercise.id)}
+                />
+              );
+            }
+            
+            if (exercise.id === "ai_detector") {
+              return (
+                <DreamSignDetector
+                  key={exercise.id}
+                  onComplete={() => handleExerciseComplete(exercise.id)}
+                />
+              );
+            }
+            
+            // Default exercise card
             return (
               <Card key={exercise.id} className="glass-card border-white/10">
                 <CardHeader>
