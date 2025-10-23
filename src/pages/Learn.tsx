@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useLearningPaths } from '@/hooks/useLearningPaths';
 import { usePathProgress } from '@/hooks/usePathProgress';
@@ -11,8 +12,17 @@ import { PathDetailView } from '@/components/learning/PathDetailView';
 import { LevelContentView } from '@/components/learning/LevelContentView';
 import { AchievementNotification } from '@/components/learning/AchievementNotification';
 import { PathLevel } from '@/hooks/usePathLevels';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 const Learn = () => {
+  const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { data: paths, isLoading: pathsLoading } = useLearningPaths();
   const { progress: pathProgress, initializePathProgress } = usePathProgress();
@@ -21,8 +31,14 @@ const Learn = () => {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<PathLevel | null>(null);
   const [achievement, setAchievement] = useState<any>(null);
+  const [showComingSoon, setShowComingSoon] = useState(true);
   
   const { data: levels } = usePathLevels(selectedPath || undefined);
+
+  const handleCloseComingSoon = () => {
+    setShowComingSoon(false);
+    navigate('/');
+  };
   
   const currentPath = paths?.find(p => p.id === selectedPath);
   const currentPathProgress = pathProgress?.find(p => p.path_id === selectedPath);
@@ -109,8 +125,25 @@ const Learn = () => {
 
   // Main dashboard
   return (
-    <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
-      <div className="max-w-7xl mx-auto w-full space-y-6">
+    <>
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">🚧 Coming Soon</DialogTitle>
+            <DialogDescription className="text-center pt-4 text-base">
+              The Learning System is currently under development. We're building an amazing experience to help you master lucid dreaming!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center pt-4">
+            <Button onClick={handleCloseComingSoon} className="w-full sm:w-auto">
+              Go Back Home
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
+        <div className="max-w-7xl mx-auto w-full space-y-6">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">🎯 My Learning Journey</h1>
           <div className="flex items-center justify-center gap-4 text-sm">
@@ -150,8 +183,9 @@ const Learn = () => {
           achievement={achievement}
           onClose={() => setAchievement(null)}
         />
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
