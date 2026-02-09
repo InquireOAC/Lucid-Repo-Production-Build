@@ -8,15 +8,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
-
-        // Check if the root view controller is a Capacitor web view
         if let webViewController = self.window?.rootViewController as? CAPBridgeViewController {
-            // Directly access the webView as WKWebView (it’s already a WKWebView)
             let wkWebView = webViewController.webView as? WKWebView
-            
-            // If it is a WKWebView, set the contentInsetAdjustmentBehavior to always
             wkWebView?.scrollView.contentInsetAdjustmentBehavior = .always
+            wkWebView?.configuration.allowsInlineMediaPlayback = true
+            wkWebView?.configuration.mediaTypesRequiringUserActionForPlayback = []
         }
 
         return true

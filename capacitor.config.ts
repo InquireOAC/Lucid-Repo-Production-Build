@@ -12,6 +12,11 @@ const config: CapacitorConfig = {
     PurchasesCapacitor: {
       apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk'
     }
+  },
+  ios: {
+    allowsLinkPreview: false,
+    scrollEnabled: true,
+    allowsInlineMediaPlayback: true
   }
 };
 

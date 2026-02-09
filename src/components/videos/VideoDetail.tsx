@@ -34,7 +34,28 @@ const VideoDetail = ({
         <div className="space-y-6">
           {/* YouTube Video Player */}
           <div className="aspect-video bg-black rounded-lg overflow-hidden">
-            {video.video_url ? <iframe src={`https://www.youtube.com/embed/${extractYouTubeId(video.video_url)}?playsinline=1`} title={video.title} className="w-full h-full" allowFullScreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-dream-purple to-dream-pink">
+            {video.video_url ? (() => {
+              const videoId = extractYouTubeId(video.video_url);
+              const params = new URLSearchParams({
+                playsinline: '1',
+                enablejsapi: '1',
+                modestbranding: '1',
+                rel: '0',
+                origin: window.location.origin,
+                widget_referrer: window.location.origin,
+              });
+              return (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${videoId}?${params.toString()}`}
+                  title={video.title}
+                  className="w-full h-full"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
+                />
+              );
+            })() : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-dream-purple to-dream-pink">
                 <p className="text-white">Video not available</p>
               </div>}
           </div>
