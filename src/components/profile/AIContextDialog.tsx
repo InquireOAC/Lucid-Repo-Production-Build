@@ -8,6 +8,27 @@ import { Upload, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+
+import styleDigitalArt from "@/assets/styles/digital_art.jpg";
+import styleSurreal from "@/assets/styles/surreal.jpg";
+import styleFantasy from "@/assets/styles/fantasy.jpg";
+import styleCyberpunk from "@/assets/styles/cyberpunk.jpg";
+import styleRealistic from "@/assets/styles/realistic.jpg";
+import styleWatercolor from "@/assets/styles/watercolor.jpg";
+import styleSketch from "@/assets/styles/sketch.jpg";
+import styleOilPainting from "@/assets/styles/oil_painting.jpg";
+
+const avatarStyleOptions = [
+  { value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
+  { value: "surreal", label: "Surreal", thumb: styleSurreal },
+  { value: "fantasy", label: "Fantasy", thumb: styleFantasy },
+  { value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
+  { value: "realistic", label: "Realistic", thumb: styleRealistic },
+  { value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
+  { value: "sketch", label: "Sketch", thumb: styleSketch },
+  { value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting },
+];
 
 interface AIContextDialogProps {
   open: boolean;
@@ -32,6 +53,7 @@ const AIContextDialog = ({
   const [rawPhotoPreview, setRawPhotoPreview] = useState<string | null>(null);
   const [generatedAvatarUrl, setGeneratedAvatarUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState("digital_art");
 
   useEffect(() => {
     if (open && user) {
@@ -103,7 +125,8 @@ const AIContextDialog = ({
 
   const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
     try {
-      const prompt = "Create a stylized character portrait of the person in this reference photo. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be semi-realistic digital art suitable for a profile picture.";
+      const styleLabel = avatarStyleOptions.find(s => s.value === selectedStyle)?.label || "Digital Art";
+      const prompt = `Create a stylized character portrait of the person in this reference photo in a ${styleLabel} art style. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be suitable for a profile picture.`;
       
       const result = await supabase.functions.invoke("generate-dream-image", {
         body: { prompt, referenceImageUrl: rawPhotoUrl },
@@ -241,7 +264,38 @@ const AIContextDialog = ({
                   onChange={handlePhotoUpload}
                 />
               </label>
+          </div>
+
+          {/* Visual Style Selector */}
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avatar Style</p>
+            <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+              {avatarStyleOptions.map((style) => (
+                <button
+                  key={style.value}
+                  onClick={() => setSelectedStyle(style.value)}
+                  className="flex-shrink-0 flex flex-col items-center gap-1.5"
+                >
+                  <div
+                    className={cn(
+                      "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
+                      selectedStyle === style.value
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border/50 hover:border-primary/30"
+                    )}
+                  >
+                    <img src={style.thumb} alt={style.label} className="w-full h-full object-cover" />
+                  </div>
+                  <span className={cn(
+                    "text-[10px] leading-tight",
+                    selectedStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
+                  )}>
+                    {style.label}
+                  </span>
+                </button>
+              ))}
             </div>
+          </div>
             {rawPhotoPreview && (
               <div className="mt-3 flex items-center gap-3">
                 <img
