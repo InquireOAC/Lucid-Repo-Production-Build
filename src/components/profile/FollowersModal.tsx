@@ -17,11 +17,11 @@ const FollowersModal = ({ title, open, onOpenChange, users, loading }: Followers
   const navigate = useNavigate();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="w-[95vw] max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <div className="max-h-80 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto ios-scroll-fix">
           {loading ? (
             <div className="text-center py-8">Loading...</div>
           ) : users.length === 0 ? (

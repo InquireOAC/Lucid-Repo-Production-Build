@@ -55,7 +55,7 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
   if (!subscription) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="w-[95vw] max-w-xl">
           <DialogHeader>
             <DialogTitle>Choose Your Plan</DialogTitle>
           </DialogHeader>

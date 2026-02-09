@@ -101,10 +101,33 @@
   min-height: env(safe-area-inset-top);
 }
 
-/* Safe close button positioning for dialogs */
+/* Safe close button positioning for dialogs - positions within dialog context */
 .safe-close-button {
-  right: max(1rem, env(safe-area-inset-right, 1rem));
-  top: max(1rem, env(safe-area-inset-top, 1rem));
+  right: 0.75rem;
+  top: 0.75rem;
+}
+
+/* Safe dialog content that accounts for all safe areas */
+.safe-dialog-content {
+  max-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 2rem);
+}
+
+/* Safe bottom fixed positioning (above tab bar) */
+.safe-bottom-fixed {
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+}
+
+/* Full screen dialog for mobile - handles all safe areas */
+.full-screen-dialog {
+  padding-top: max(1.5rem, env(safe-area-inset-top));
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  padding-left: max(1rem, env(safe-area-inset-left));
+  padding-right: max(1rem, env(safe-area-inset-right));
+}
+
+/* Dialog header with close button spacing */
+.dialog-header-with-close {
+  padding-right: 2.5rem;
 }
 
 .dream-background {

@@ -166,9 +166,9 @@ const MessagesDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[95vw] sm:max-h-[90vh] w-full h-screen sm:h-[90vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 m-0 sm:rounded-lg rounded-none">
-        <div className="h-full flex flex-col">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 flex-shrink-0">
+      <DialogContent className="w-[95vw] max-w-2xl h-[85vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 sm:rounded-lg rounded-lg">
+        <div className="h-full flex flex-col pt-10">
+          <DialogHeader className="px-6 pb-4 border-b border-white/10 flex-shrink-0">
             {!selectedConversation ? (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-start gap-2">

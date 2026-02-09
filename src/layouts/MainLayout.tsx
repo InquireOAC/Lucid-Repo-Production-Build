@@ -28,15 +28,15 @@ const MainLayout = () => {
   return (
     <div className="flex flex-col min-h-screen starry-background">
       {/* Fixed opaque overlay for status bar safe area */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-background safe-area-overlay" />
+      <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       
-      {/* Main content - scrollable area extends to full screen */}
-      <div className="flex-1 overflow-y-auto pb-20">
+      {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
+      <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </div>
       
       {/* Fixed tab bar positioned at the bottom with safe area padding */}
-      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 backdrop-blur-xl z-50 pb-safe-bottom">
+      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right">
         <div className="flex justify-around items-center h-16">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />

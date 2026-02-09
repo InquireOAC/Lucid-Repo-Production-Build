@@ -48,7 +48,7 @@ const EditProfileDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md glass-card border-white/20">
+      <DialogContent className="w-[95vw] max-w-md glass-card border-white/20">
         <DialogHeader>
           <DialogTitle className="gradient-text text-white">Edit Profile</DialogTitle>
         </DialogHeader>

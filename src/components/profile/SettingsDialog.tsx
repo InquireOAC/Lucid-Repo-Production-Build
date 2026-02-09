@@ -46,8 +46,8 @@ const SettingsDialog = ({
 
   return <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md h-[85vh] flex flex-col p-0">
-          <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
+        <DialogContent className="w-[95vw] max-w-md h-[80vh] flex flex-col p-0 pt-10">
+          <DialogHeader className="px-6 pb-4 shrink-0">
             <DialogTitle>Settings</DialogTitle>
           </DialogHeader>
           

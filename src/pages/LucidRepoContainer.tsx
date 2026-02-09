@@ -125,7 +125,7 @@ const LucidRepoContainer = () => {
 
   // ---- MAIN UI ----
   return (
-    <div className="container mx-auto pt-safe-top px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right">
+    <div className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right">
       <LucidRepoHeader 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
