@@ -64,9 +64,20 @@ export const useImageGeneration = ({
       setImagePrompt(generatedPromptText);
       console.log("Image prompt generated:", generatedPromptText);
 
-      // 2. Generate image from prompt via edge function
+      // 2. If using AI context, fetch reference photo URL
+      let referenceImageUrl: string | undefined;
+      if (useAIContext && user.id) {
+        const { getUserAIContext } = await import("@/utils/aiContextUtils");
+        const aiContext = await getUserAIContext(user.id);
+        if (aiContext?.photo_url) {
+          referenceImageUrl = aiContext.photo_url;
+          console.log("Reference photo found, will include in generation");
+        }
+      }
+
+      // 3. Generate image from prompt via edge function
       console.log("Step 2: Generating image from AI...");
-      const openaiUrl = await generateDreamImageFromAI(generatedPromptText);
+      const openaiUrl = await generateDreamImageFromAI(generatedPromptText, referenceImageUrl);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
       console.log("AI image generated:", openaiUrl);
 
