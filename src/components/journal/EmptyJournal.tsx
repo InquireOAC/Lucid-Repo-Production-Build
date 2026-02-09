@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { Book, Sparkles } from "lucide-react";
+import { Book, PenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EmptyJournalProps {
@@ -20,7 +20,6 @@ const EmptyJournal = ({ onAddDream }: EmptyJournalProps) => {
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-aurora-purple/20 to-aurora-violet/20 flex items-center justify-center animate-float">
           <Book size={36} className="text-aurora-purple" />
         </div>
-        <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-aurora-gold animate-float" style={{ animationDelay: '0.5s' }} />
       </div>
       
       <h3 className="text-xl font-semibold mb-2 gradient-text">Your dream journal awaits</h3>
@@ -33,7 +32,7 @@ const EmptyJournal = ({ onAddDream }: EmptyJournalProps) => {
         variant="aurora"
         className="px-6 py-2"
       >
-        <Sparkles className="mr-2 h-4 w-4" />
+        <PenLine className="mr-2 h-4 w-4" />
         Record Your First Dream
       </Button>
     </div>

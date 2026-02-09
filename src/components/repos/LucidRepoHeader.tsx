@@ -2,7 +2,7 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Film, BookOpen, Search, Sparkles } from "lucide-react";
+import { Film, BookOpen, Search } from "lucide-react";
 import { AdminVideoButton } from "@/components/videos/AdminVideoManager";
 
 interface LucidRepoHeaderProps {
@@ -39,9 +39,7 @@ const LucidRepoHeader = ({
       {/* Hero Section */}
       <div className="text-center space-y-3">
         <div className="flex items-center justify-center gap-2">
-          <Sparkles className="h-5 w-5 text-aurora-gold animate-float" />
           <h1 className="text-3xl font-bold gradient-text">Lucid Repo</h1>
-          <Sparkles className="h-5 w-5 text-aurora-gold animate-float" style={{ animationDelay: '0.5s' }} />
         </div>
         <p className="text-muted-foreground">Explore dreams from around the world</p>
       </div>

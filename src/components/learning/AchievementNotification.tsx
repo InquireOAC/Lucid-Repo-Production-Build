@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import { Award, Sparkles, X } from "lucide-react";
+import { Award, Star, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface AchievementNotificationProps {
@@ -65,7 +65,7 @@ export const AchievementNotification: React.FC<AchievementNotificationProps> = (
                     transition={{ repeat: Infinity, duration: 2 }}
                     className="absolute -top-1 -right-1"
                   >
-                    <Sparkles className="w-6 h-6 text-yellow-500" />
+                    <Star className="w-6 h-6 text-yellow-500" />
                   </motion.div>
                 </div>
 

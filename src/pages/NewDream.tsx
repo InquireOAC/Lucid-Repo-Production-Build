@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Sparkles, Mic, FileText, Save, Calendar, Tag } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Calendar, Tag, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -152,11 +152,7 @@ const NewDream = () => {
       <div className="px-4 py-6 pb-24 space-y-8 max-w-2xl mx-auto">
         {/* Magic intro */}
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2">
-            <Sparkles className="h-5 w-5 text-aurora-gold animate-float" />
-            <span className="text-sm text-muted-foreground">What did you dream?</span>
-            <Sparkles className="h-5 w-5 text-aurora-gold animate-float" style={{ animationDelay: '0.5s' }} />
-          </div>
+          <span className="text-sm text-muted-foreground">What did you dream?</span>
         </div>
 
         {/* Title Input */}
@@ -264,7 +260,7 @@ const NewDream = () => {
         </div>
 
         {/* Metadata Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -275,7 +271,7 @@ const NewDream = () => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input w-full"
+              className="dream-input w-full h-9 text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -284,7 +280,7 @@ const NewDream = () => {
               value={formData.mood}
               onValueChange={(value) => setFormData(p => ({ ...p, mood: value }))}
             >
-              <SelectTrigger className="dream-input w-full">
+              <SelectTrigger className="dream-input w-full h-9 text-sm">
                 <SelectValue placeholder="How did it feel?" />
               </SelectTrigger>
               <SelectContent>
@@ -330,7 +326,7 @@ const NewDream = () => {
         <div className="space-y-4">
           <div className="featured-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-aurora-gold" />
+              <Wand2 className="h-5 w-5 text-aurora-gold" />
               <h3 className="font-semibold gold-text">Transform Your Dream</h3>
             </div>
             
@@ -361,7 +357,7 @@ const NewDream = () => {
             onClick={handleSubmit}
             disabled={isSubmitting || isUploading || !formData.title.trim()}
           >
-            {isSubmitting ? "Saving..." : "✨ Save Dream"}
+            {isSubmitting ? "Saving..." : "Save Dream"}
           </Button>
         </div>
       </div>
