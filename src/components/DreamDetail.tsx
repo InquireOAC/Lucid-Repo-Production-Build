@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { format, isValid } from "date-fns";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription } from "@/components/ui/alert-dialog";
 import { DreamEntry, DreamTag } from "@/types/dream";
@@ -9,6 +10,7 @@ import DreamDetailContent from "@/components/dreams/DreamDetailContent";
 import DreamDetailActions from "@/components/dreams/DreamDetailActions";
 import ShareButton from "@/components/share/ShareButton";
 import DreamComments from "@/components/DreamComments";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
@@ -35,6 +37,7 @@ const DreamDetail = ({
   onLike
 }: DreamDetailProps) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
 
@@ -140,6 +143,35 @@ const DreamDetail = ({
           <DialogHeader>
             <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
           </DialogHeader>
+
+          {/* User avatar and name */}
+          {(() => {
+            const profile = (dream as any).profiles || {};
+            const username = profile.username;
+            const displayName = profile.display_name || username || "Anonymous";
+            const avatarSymbol = profile.avatar_symbol;
+            const avatarColor = profile.avatar_color;
+            return (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onClose();
+                  if (username) {
+                    navigate(`/user/${username}`);
+                  }
+                }}
+                className="flex items-center gap-2.5 hover:opacity-80 transition-opacity -mt-1 mb-1"
+              >
+                <SymbolAvatar
+                  symbol={avatarSymbol}
+                  color={avatarColor}
+                  fallbackLetter={displayName[0]?.toUpperCase() || "?"}
+                  size={32}
+                />
+                <span className="text-sm font-medium text-muted-foreground">@{username || "anon"}</span>
+              </button>
+            );
+          })()}
           
           <div className="w-full overflow-hidden">
             <DreamDetailContent
