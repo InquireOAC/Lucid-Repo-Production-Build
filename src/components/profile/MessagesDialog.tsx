@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Trash2 } from "lucide-react";
+import { Search, ArrowLeft, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import ConversationList from "./ConversationList";
 import ChatWindow from "./ChatWindow";
 
@@ -35,14 +35,10 @@ const MessagesDialog = ({
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedConversations, setSelectedConversations] = useState<Set<string>>(new Set());
 
-  // Always fetch all conversations every time the dialog is opened
   useEffect(() => {
-    if (isOpen && fetchConversations) {
-      fetchConversations();
-    }
+    if (isOpen && fetchConversations) fetchConversations();
   }, [isOpen, fetchConversations]);
 
-  // Handle navigation between messages list and conversation chat window
   useEffect(() => {
     if (isOpen && selectedConversationUser) {
       setSelectedConversation(selectedConversationUser);
@@ -51,14 +47,10 @@ const MessagesDialog = ({
     }
   }, [isOpen, selectedConversationUser]);
 
-  // Fetch messages when a conversation is clicked/selected
   useEffect(() => {
-    if (selectedConversation) {
-      fetchMessages(selectedConversation.id);
-    }
+    if (selectedConversation) fetchMessages(selectedConversation.id);
   }, [selectedConversation]);
 
-  // Reset state when closed
   useEffect(() => {
     if (!isOpen) {
       setSelectedConversation(null);
@@ -80,7 +72,6 @@ const MessagesDialog = ({
           `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
         )
         .order("created_at", { ascending: true });
-
       if (error) throw error;
       setMessages(data || []);
     } catch (error) {
@@ -91,25 +82,17 @@ const MessagesDialog = ({
 
   const handleSendMessage = async (customMessage?: string) => {
     if (!user || !selectedConversation) return;
-    
     const messageContent = customMessage || newMessage.trim();
     if (!messageContent) return;
-
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from("messages")
-        .insert({
-          sender_id: user.id,
-          receiver_id: selectedConversation.id,
-          content: messageContent
-        });
-
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: selectedConversation.id,
+        content: messageContent,
+      });
       if (error) throw error;
-
-      if (!customMessage) {
-        setNewMessage("");
-      }
+      if (!customMessage) setNewMessage("");
       fetchMessages(selectedConversation.id);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -121,10 +104,8 @@ const MessagesDialog = ({
 
   const handleDeleteSelected = async () => {
     if (!user || selectedConversations.size === 0) return;
-    
     setLoading(true);
     try {
-      // Delete all messages between current user and selected users
       for (const partnerId of selectedConversations) {
         await supabase
           .from("messages")
@@ -133,8 +114,7 @@ const MessagesDialog = ({
             `and(sender_id.eq.${user.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user.id})`
           );
       }
-      
-      toast.success(`Deleted ${selectedConversations.size} conversation${selectedConversations.size > 1 ? 's' : ''}`);
+      toast.success(`Deleted ${selectedConversations.size} conversation${selectedConversations.size > 1 ? "s" : ""}`);
       setSelectedConversations(new Set());
       setIsSelectionMode(false);
       if (fetchConversations) fetchConversations();
@@ -156,74 +136,66 @@ const MessagesDialog = ({
     setSelectedConversations(newSelected);
   };
 
-  // Filter conversations based on search term
-  const filteredConversations = conversations.filter(conversation => {
-    const displayName = conversation.display_name || "";
-    const username = conversation.username || "";
-    return displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           username.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredConversations = conversations.filter((c) => {
+    const dn = c.display_name || "";
+    const un = c.username || "";
+    return dn.toLowerCase().includes(searchTerm.toLowerCase()) || un.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl h-[85vh] glass-card border-white/20 backdrop-blur-xl bg-background/95 p-0 sm:rounded-lg rounded-lg">
-        <div className="h-full flex flex-col pt-10">
-          <DialogHeader className="px-6 pb-4 border-b border-white/10 flex-shrink-0">
-            {!selectedConversation ? (
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-start gap-2">
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          {!selectedConversation ? (
+            <>
+              {/* Conversation List Header */}
+              <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-xl">
+                <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+                <h1 className="text-base font-semibold text-foreground">Messages</h1>
+                <div className="flex items-center gap-1">
+                  {isSelectionMode && selectedConversations.size > 0 && (
+                    <Button variant="ghost" size="icon" onClick={handleDeleteSelected} disabled={loading}>
+                      <Trash2 className="h-5 w-5 text-destructive" />
+                    </Button>
+                  )}
                   <Button
-                    variant={isSelectionMode ? "secondary" : "outline"}
+                    variant="ghost"
                     size="sm"
+                    className="text-xs text-primary"
                     onClick={() => {
                       setIsSelectionMode(!isSelectionMode);
                       setSelectedConversations(new Set());
                     }}
                   >
-                    {isSelectionMode ? "Cancel" : "Select"}
+                    {isSelectionMode ? "Done" : "Edit"}
                   </Button>
-                  {isSelectionMode && selectedConversations.size > 0 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleDeleteSelected}
-                      disabled={loading}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete ({selectedConversations.size})
-                    </Button>
-                  )}
                 </div>
-                <DialogTitle className="text-white text-xl font-semibold text-center">
-                  Messages
-                </DialogTitle>
               </div>
-            ) : (
-              <div className="flex items-center justify-center relative">
-                <DialogTitle className="text-white text-xl font-semibold">
-                  Chat
-                </DialogTitle>
+
+              {/* Search */}
+              <div className="flex-shrink-0 px-4 py-2 border-b border-border/50">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9 rounded-lg bg-muted/50 border-none text-sm"
+                  />
+                </div>
               </div>
-            )}
-          </DialogHeader>
-          
-          {!selectedConversation && (
-            <div className="px-6 py-4 border-b border-white/5 flex-shrink-0">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search conversations..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-background/50 border-white/20 text-foreground placeholder:text-muted-foreground focus:border-ring"
-                />
-              </div>
-            </div>
-          )}
-          
-          <div className="flex-1 min-h-0">
-            {!selectedConversation ? (
-              <div className="h-full overflow-y-auto px-6 py-4">
+
+              {/* Conversation List */}
+              <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
                 <ConversationList
                   conversations={filteredConversations}
                   onSelectConversation={(conv) => {
@@ -238,25 +210,25 @@ const MessagesDialog = ({
                   selectedConversations={selectedConversations}
                 />
               </div>
-            ) : (
-              <ChatWindow
-                selectedConversation={selectedConversation}
-                messages={messages}
-                user={user}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                loading={loading}
-                onBack={() => {
-                  setSelectedConversation(null);
-                  if (setSelectedConversationUser) setSelectedConversationUser(null);
-                }}
-                onSend={handleSendMessage}
-              />
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </>
+          ) : (
+            <ChatWindow
+              selectedConversation={selectedConversation}
+              messages={messages}
+              user={user}
+              newMessage={newMessage}
+              setNewMessage={setNewMessage}
+              loading={loading}
+              onBack={() => {
+                setSelectedConversation(null);
+                if (setSelectedConversationUser) setSelectedConversationUser(null);
+              }}
+              onSend={handleSendMessage}
+            />
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
