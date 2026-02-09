@@ -22,7 +22,7 @@ const MasonryDreamGrid = ({
   currentUser,
 }: MasonryDreamGridProps) => {
   return (
-    <div className="masonry-grid">
+    <div className="masonry-grid pb-4">
       {dreams.map((dream, index) => (
         <MasonryDreamCard
           key={dream.id}
@@ -67,7 +67,7 @@ const MasonryDreamCard = ({
 
   return (
     <div 
-      className="masonry-item luminous-card rounded-xl overflow-hidden cursor-pointer group"
+      className="masonry-item luminous-card rounded-xl overflow-hidden cursor-pointer group bg-card"
       onClick={() => onOpenDream(dream)}
     >
       {/* Image */}

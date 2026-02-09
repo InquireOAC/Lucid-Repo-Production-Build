@@ -45,16 +45,7 @@ const NewDream = () => {
   const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
-  const [showTransformSection, setShowTransformSection] = useState(false);
-
   const CHARACTER_LIMIT = 3000;
-
-  useEffect(() => {
-    // Show transform section once content has substance
-    if (formData.content.length > 50 || formData.title.length > 5) {
-      setShowTransformSection(true);
-    }
-  }, [formData.content, formData.title]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -273,7 +264,7 @@ const NewDream = () => {
         </div>
 
         {/* Metadata Section */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -284,7 +275,7 @@ const NewDream = () => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input"
+              className="dream-input w-full"
             />
           </div>
           <div className="space-y-2">
@@ -293,7 +284,7 @@ const NewDream = () => {
               value={formData.mood}
               onValueChange={(value) => setFormData(p => ({ ...p, mood: value }))}
             >
-              <SelectTrigger className="dream-input">
+              <SelectTrigger className="dream-input w-full">
                 <SelectValue placeholder="How did it feel?" />
               </SelectTrigger>
               <SelectContent>
@@ -335,13 +326,8 @@ const NewDream = () => {
           </div>
         </div>
 
-        {/* Transform Section - Appears with animation */}
-        <div className={cn(
-          "space-y-4 transition-all duration-500",
-          showTransformSection 
-            ? "opacity-100 translate-y-0" 
-            : "opacity-0 translate-y-4 pointer-events-none"
-        )}>
+        {/* Transform Section - Always visible */}
+        <div className="space-y-4">
           <div className="featured-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-5 w-5 text-aurora-gold" />
