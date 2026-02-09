@@ -52,7 +52,6 @@ const VideoDetail = ({
                   allowFullScreen
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   referrerPolicy="strict-origin-when-cross-origin"
-                  sandbox="allow-scripts allow-same-origin allow-presentation allow-popups"
                 />
               );
             })() : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-dream-purple to-dream-pink">
