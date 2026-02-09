@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, TrendingUp } from "lucide-react";
+import { Eye, TrendingUp } from "lucide-react";
 import { useDreams } from "@/hooks/useDreams";
 
 interface DreamSignDetectorProps {
@@ -68,7 +68,7 @@ export const DreamSignDetector: React.FC<DreamSignDetectorProps> = ({ onComplete
     <Card className="glass-card border-white/10">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <Eye className="w-5 h-5 text-primary" />
           AI Dream Sign Detector
         </CardTitle>
       </CardHeader>

@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Sparkles } from "lucide-react";
+import { Compass } from "lucide-react";
 
 interface RecommendedNextStepProps {
   pathTitle: string;
@@ -19,7 +19,7 @@ export const RecommendedNextStep: React.FC<RecommendedNextStepProps> = ({
       <CardContent className="pt-6">
         <div className="flex items-start gap-4">
           <div className="p-3 rounded-full bg-primary/20">
-            <Sparkles className="w-6 h-6 text-primary" />
+            <Compass className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1">
             <h3 className="font-semibold text-lg mb-1">Recommended Next Step</h3>

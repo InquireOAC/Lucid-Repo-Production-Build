@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Lock } from "lucide-react";
+import { Loader2, Brain, Lock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -125,7 +125,7 @@ const DreamAnalysis = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
-            <Sparkles className="h-5 w-5 mr-2 text-dream-purple" />
+            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
             Dream Analysis
           </CardTitle>
         </CardHeader>
@@ -145,7 +145,7 @@ const DreamAnalysis = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center text-lg">
-            <Sparkles className="h-5 w-5 mr-2 text-dream-purple" />
+            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
             Dream Analysis
             {!isFeatureEnabled && <Lock className="h-4 w-4 ml-2 text-muted-foreground" />}
           </CardTitle>
@@ -165,7 +165,7 @@ const DreamAnalysis = ({
                 onClick={generateAnalysis}
                 className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
               >
-                <Sparkles className="h-4 w-4 mr-2" /> 
+                <Brain className="h-4 w-4 mr-2" /> 
                 Analyze Dream
               </Button>
             )}
@@ -189,7 +189,7 @@ const DreamAnalysis = ({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center text-lg">
-          <Sparkles className="h-5 w-5 mr-2 text-dream-purple" />
+          <Brain className="h-5 w-5 mr-2 text-dream-purple" />
           Dream Analysis
         </CardTitle>
       </CardHeader>
@@ -218,7 +218,7 @@ const DreamAnalysis = ({
                   onClick={generateAnalysis}
                   disabled={isGenerating}
                 >
-                  <Sparkles className="h-4 w-4 mr-1" /> Regenerate
+                  <Brain className="h-4 w-4 mr-1" /> Regenerate
                 </Button>
               </div>
             )}

@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, ImagePlus, Download, Palette } from "lucide-react";
+import { Wand2, ImagePlus, Download, Palette } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -238,7 +238,7 @@ const DreamImageGenerator = ({
             {!disabled && (generatedImage || imagePrompt) && !isGenerating && (
               <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={generateImage} disabled={isGenerating}>
-                  <Sparkles className="h-4 w-4 mr-1" /> Regenerate
+                  <Wand2 className="h-4 w-4 mr-1" /> Regenerate
                 </Button>
               </div>
             )}
