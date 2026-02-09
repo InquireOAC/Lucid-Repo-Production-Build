@@ -31,7 +31,7 @@ export const useImageGeneration = ({
   const generateImage = useCallback(async (
     setImagePrompt: (prompt: string) => void,
     setGeneratedImage: (url: string) => void,
-    uploadImage: (url: string, dreamId: string) => Promise<string | null>,
+    _uploadImage: (url: string, dreamId: string) => Promise<string | null>,
     useAIContext: boolean = true,
     imageStyle: string = "surreal"
   ) => {
@@ -70,22 +70,21 @@ export const useImageGeneration = ({
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
       console.log("AI image generated:", openaiUrl);
 
-      // 3. Immediately show the AI image to user
+      // 3. Show the image (already a permanent Supabase URL from edge function)
       setGeneratedImage(openaiUrl);
       onImageGenerated(openaiUrl, generatedPromptText);
+      toast.success("Dream image generated!");
 
       // 4. Record feature usage and refresh subscription data
       if (!isAppCreator) {
         if (!hasUsedFeature("image")) {
           markFeatureAsUsed("image");
         } else {
-          // Record usage in database for subscription users
           console.log('Recording image usage in database...');
           const usageRecorded = await recordFeatureUsage("image");
           console.log('Image usage recorded:', usageRecorded);
         }
         
-        // Refresh subscription data with a delay to ensure database propagation
         if (onSubscriptionRefresh) {
           console.log('Refreshing subscription data after image generation...');
           setTimeout(() => {
@@ -94,32 +93,6 @@ export const useImageGeneration = ({
           }, 1000);
         }
       }
-
-      // 5. Try to upload image to Supabase in background (non-blocking)
-      console.log("Step 3: Attempting background upload to Supabase...");
-      
-      try {
-        const uploadPromise = uploadImage(openaiUrl, dreamId);
-        const timeoutPromise = new Promise<null>((_, reject) => 
-          setTimeout(() => reject(new Error("Upload timeout")), 10000)
-        );
-        
-        const supabaseUrl = await Promise.race([uploadPromise, timeoutPromise]);
-        
-        if (supabaseUrl) {
-          console.log("Upload successful, updating with Supabase URL:", supabaseUrl);
-          setGeneratedImage(supabaseUrl);
-          onImageGenerated(supabaseUrl, generatedPromptText);
-          toast.success("Dream image generated and saved permanently!");
-        } else {
-          console.warn("Upload returned null - keeping temporary URL");
-          toast.success("Image generated! Note: Using temporary URL for display.");
-        }
-      } catch (uploadError) {
-        console.warn("Background upload failed:", uploadError);
-        toast.success("Image generated! Note: Could not save permanently to cloud.");
-      }
-      
     } catch (error: any) {
       console.error("=== IMAGE GENERATION FAILED ===");
       console.error("Error details:", error);

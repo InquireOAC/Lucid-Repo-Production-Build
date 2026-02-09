@@ -1,6 +1,5 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
@@ -16,17 +15,18 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader) {
       throw new Error('Missing authorization header')
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      { global: { headers: { Authorization: authHeader } } }
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY') ?? ''
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    })
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
@@ -35,7 +35,6 @@ serve(async (req) => {
 
     const { prompt } = await req.json()
     
-    // Input validation
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Invalid prompt')
     }
@@ -45,38 +44,91 @@ serve(async (req) => {
     }
 
     console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}`)
-    
-    console.log("Generating image with prompt:", prompt)
-    
-    const response = await fetch('https://api.openai.com/v1/images/generations', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "dall-e-3",
-        prompt,
-        n: 1,
-        size: "1024x1024",
-        quality: "standard",
-        style: "vivid"
-      }),
-    })
 
-    const data = await response.json()
-    if (data.error) {
-      console.error("OpenAI API error:", data.error)
-      throw new Error(data.error.message)
+    const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
+    if (!googleApiKey) {
+      throw new Error('GOOGLE_AI_API_KEY not configured')
     }
 
-    const imageUrl = data.data[0].url;
-    console.log("Image generation successful, returning URL")
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image-generation:generateContent?key=${googleApiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        }),
+      }
+    )
+
+    const data = await response.json()
     
-    // Return with multiple field names for compatibility with different parts of the app
+    if (data.error) {
+      console.error("Gemini API error:", data.error)
+      throw new Error(data.error.message || 'Gemini API error')
+    }
+
+    // Extract base64 image from response
+    const candidates = data.candidates
+    if (!candidates || candidates.length === 0) {
+      throw new Error('No candidates returned from Gemini')
+    }
+
+    let imageBase64: string | null = null
+    let mimeType = 'image/png'
+
+    for (const part of candidates[0].content.parts) {
+      if (part.inlineData) {
+        imageBase64 = part.inlineData.data
+        mimeType = part.inlineData.mimeType || 'image/png'
+        break
+      }
+    }
+
+    if (!imageBase64) {
+      throw new Error('No image data returned from Gemini')
+    }
+
+    console.log("Image generated, uploading to storage...")
+
+    // Decode base64 and upload to Supabase Storage
+    const binaryString = atob(imageBase64)
+    const bytes = new Uint8Array(binaryString.length)
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i)
+    }
+
+    const ext = mimeType.includes('png') ? 'png' : 'jpg'
+    const fileName = `${user.id}/${Date.now()}.${ext}`
+
+    // Use service role client for storage upload
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey)
+
+    const { error: uploadError } = await adminSupabase.storage
+      .from('dream-images')
+      .upload(fileName, bytes, {
+        contentType: mimeType,
+        upsert: false,
+      })
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError)
+      throw new Error('Failed to upload image to storage')
+    }
+
+    const { data: urlData } = adminSupabase.storage
+      .from('dream-images')
+      .getPublicUrl(fileName)
+
+    const imageUrl = urlData.publicUrl
+    console.log("Image uploaded successfully:", imageUrl)
+
     return new Response(
       JSON.stringify({ 
-        imageUrl: imageUrl, 
+        imageUrl, 
         image_url: imageUrl,
         generatedImage: imageUrl 
       }), 
