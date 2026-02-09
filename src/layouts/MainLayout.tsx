@@ -1,22 +1,16 @@
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, MessageCircle, GraduationCap, Bell } from "lucide-react";
+import { Book, Moon, User, MessageCircle, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNotifications } from "@/hooks/useNotifications";
-import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { cn } from "@/lib/utils";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
-  const { unreadCount: notificationCount } = useNotifications();
-  const { unreadCount: messageCount } = useUnreadMessages();
   const navigate = useNavigate();
   const location = useLocation();
   
   React.useEffect(() => {
-    // Only redirect to auth for pages that require authentication
-    // Journal page should work without authentication
-    const publicRoutes = ["/", "/journal", "/auth"];
+    const publicRoutes = ["/", "/journal", "/journal/new", "/auth"];
     const isPublicRoute = publicRoutes.includes(location.pathname);
     
     if (!loading && !user && !isPublicRoute) {
@@ -26,7 +20,7 @@ const MainLayout = () => {
   }, [user, loading, location.pathname, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen starry-background">
+    <div className="flex flex-col min-h-screen cosmic-background">
       {/* Fixed opaque overlay for status bar safe area */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       
@@ -36,7 +30,7 @@ const MainLayout = () => {
       </div>
       
       {/* Fixed tab bar positioned at the bottom with safe area padding */}
-      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-white/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right">
+      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right">
         <div className="flex justify-around items-center h-16">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
@@ -65,8 +59,8 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
   
   // Special handling for journal route - both "/" and "/journal" should be active
   const isActive = to === "/" 
-    ? (location.pathname === "/" || location.pathname === "/journal")
-    : location.pathname === to;
+    ? (location.pathname === "/" || location.pathname === "/journal" || location.pathname === "/journal/new")
+    : location.pathname === to || location.pathname.startsWith(to + "/");
   
   return (
     <NavLink 
@@ -74,20 +68,20 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       className={cn(
         "flex flex-col items-center justify-center w-full py-2 transition-all duration-300 rounded-lg mx-1 relative",
         isActive 
-          ? "text-primary bg-primary/15 shadow-md shadow-primary/20" 
-          : "text-white/60 hover:text-white/80 hover:bg-white/5"
+          ? "text-primary" 
+          : "text-white/50 hover:text-white/70 hover:bg-white/5"
       )}
     >
       <div className={cn(
         "p-2 rounded-full transition-all duration-300 relative",
         isActive 
-          ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30" 
-          : "text-white/60"
+          ? "bg-gradient-to-r from-aurora-purple via-aurora-violet to-aurora-blue text-white shadow-lg shadow-aurora-purple/40" 
+          : "text-white/50"
       )}>
         {icon}
         {badge && badge > 0 && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-            <span className="text-white text-xs font-bold">
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-aurora-gold rounded-full flex items-center justify-center">
+            <span className="text-cosmic-black text-xs font-bold">
               {badge > 99 ? '99+' : badge}
             </span>
           </div>
@@ -95,7 +89,7 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       </div>
       <span className={cn(
         "text-xs mt-1 font-medium",
-        isActive ? "text-white" : "text-white/60"
+        isActive ? "text-white" : "text-white/50"
       )}>{label}</span>
     </NavLink>
   );
