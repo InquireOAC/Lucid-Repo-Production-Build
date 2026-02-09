@@ -1,27 +1,31 @@
 
 
-## Add Visual Style Selector to Dream Avatar Modal
+## Fix: Lucid Repo Tag Filtering
 
-### Change
-Add a horizontal scrollable style picker to the Dream Avatar dialog (same visual pattern used in the dream image generator) so users can choose an art style for their generated character avatar (e.g., Surreal, Cyberpunk, Fantasy, Digital Art, etc.).
+### Problem
+When you select a filter tag (e.g., "Lucid") on the Lucid Repo page, it shows "No dreams found" because of a data mismatch:
 
-### How It Works
-1. User uploads a reference photo as before
-2. A new style selector row appears below the upload area, showing thumbnail previews of each art style
-3. User taps a style to select it (defaults to "Digital Art" since it suits avatars well)
-4. Clicking "Generate Character" uses the selected style in the prompt sent to the edge function
-5. User can change styles and regenerate to compare looks
+- The filter passes the **public_dream_tags UUID** (e.g., `19bb001c-cb66-4f73-a54b-1c8d09885506`)
+- But dreams store tags as **lowercase names** (e.g., `"lucid"`, `"nightmare"`) or user-specific tag UUIDs from the `dream_tags` table
+- These never match, so every dream gets filtered out
 
-### Technical Details
+### Solution
+Change the filter logic to match by **tag name** instead of tag ID. When a public tag is selected, look up its name and compare it (case-insensitive) against the dream's stored tag values.
 
-**File: `src/components/profile/AIContextDialog.tsx`**
+### Technical Changes
 
-- Import the existing style thumbnail images from `@/assets/styles/` (same imports used in `DreamImageGenerator.tsx`)
-- Define a `styleOptions` array with a curated subset of styles that work well for character avatars (e.g., Digital Art, Surreal, Fantasy, Cyberpunk, Realistic, Watercolor, Sketch, Oil Painting)
-- Add state: `selectedStyle` (default: `"digital_art"`)
-- Render a horizontal scrollable row of style thumbnails between the photo upload section and the Name field, using the same visual pattern as `DreamImageGenerator.tsx` (72x72 rounded thumbnails with selection ring)
-- Modify `generateCharacterAvatar()` to incorporate the selected style into the prompt, e.g.: `"Create a stylized character portrait... in a ${styleLabel} art style..."`
-- The style selector is always visible (not gated on photo upload) so users can browse styles before uploading
+**File: `src/components/repos/LucidRepoFilters.tsx`**
+- Accept the `tags` (public_dream_tags list) as a new prop
+- When `activeTags` contains selected tag IDs, resolve them to tag names
+- Compare dream tag values against those names using case-insensitive matching
 
-No changes needed to the edge function or any other files -- the style is purely a prompt modification on the client side.
+**File: `src/pages/LucidRepoContainer.tsx`**
+- Pass `filteredDreamTags` (the public tags list) into `useLucidRepoFilters` so it can resolve IDs to names
+
+### How it will work after the fix
+
+1. User clicks "Lucid" tag -- `activeTags` = `["19bb001c-..."]`
+2. Filter resolves that ID to the name `"Lucid"`
+3. Each dream's tags (e.g., `["lucid", "adventure"]`) are compared case-insensitively against `"Lucid"`
+4. Dreams with matching tag names are shown correctly
 
