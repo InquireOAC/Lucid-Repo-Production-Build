@@ -1,24 +1,29 @@
 
-import { DreamEntry } from "@/types/dream";
+import { DreamEntry, DreamTag } from "@/types/dream";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 
 interface UseLucidRepoFiltersProps {
   dreamsState: DreamEntry[];
   searchQuery: string;
   activeTags: string[];
+  publicTags?: DreamTag[];
 }
 
-export function useLucidRepoFilters({ dreamsState, searchQuery, activeTags }: UseLucidRepoFiltersProps) {
+export function useLucidRepoFilters({ dreamsState, searchQuery, activeTags, publicTags = [] }: UseLucidRepoFiltersProps) {
   const { isUserBlocked } = useBlockedUsers();
 
-  // Filter dreams based on search query and tags and blocked users
-  const normalizedDreams = dreamsState.filter(dream => !isUserBlocked(dream.user_id)) // Filter out blocked users
+  // Resolve active tag IDs to tag names for case-insensitive matching
+  const activeTagNames = activeTags.map(tagId => {
+    const found = publicTags.find(t => t.id === tagId);
+    return found ? found.name.toLowerCase() : tagId.toLowerCase();
+  });
+
+  const normalizedDreams = dreamsState.filter(dream => !isUserBlocked(dream.user_id))
     .map(dream => ({
       ...dream,
       tags: Array.isArray(dream.tags) ? dream.tags : []
     }));
 
-  // Tag filtering: Only show dreams where at least one dream.tags[] (ID string) matches activeTags[]
   const filteredDreams = normalizedDreams.filter(dream => {
     let matchesSearch = true;
     let matchesTags = true;
@@ -29,8 +34,8 @@ export function useLucidRepoFilters({ dreamsState, searchQuery, activeTags }: Us
         dream.profiles?.username?.toLowerCase()?.includes(query) || 
         dream.profiles?.display_name?.toLowerCase()?.includes(query);
     }
-    if (activeTags.length > 0) {
-      matchesTags = dream.tags && dream.tags.some((t: string) => activeTags.includes(t));
+    if (activeTagNames.length > 0) {
+      matchesTags = dream.tags && dream.tags.some((t: string) => activeTagNames.includes(t.toLowerCase()));
     }
     return matchesSearch && matchesTags;
   });
