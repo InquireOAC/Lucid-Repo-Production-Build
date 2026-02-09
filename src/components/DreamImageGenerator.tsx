@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, Download, Wand2, Lock, Check } from "lucide-react";
+import { ImagePlus, Download, Wand2, Lock } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 
@@ -210,11 +210,6 @@ const DreamImageGenerator = ({
                       : "border-border/50 hover:border-primary/30"
                   )}
                 >
-                  {imageStyle === style.value && (
-                    <div className="absolute">
-                      <Check className="h-4 w-4 text-primary" />
-                    </div>
-                  )}
                   <span className="text-lg opacity-60">
                     {style.value === 'surreal' && '🌀'}
                     {style.value === 'realistic' && '📷'}
