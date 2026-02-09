@@ -63,14 +63,15 @@ const LucidRepoContainer = () => {
     fetchPublicDreams
   );
 
+  const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
+  const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
+
   const { filteredDreams } = useLucidRepoFilters({
     dreamsState,
     searchQuery,
-    activeTags
+    activeTags,
+    publicTags: filteredDreamTags
   });
-
-  const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
-  const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
 
   useEffect(() => {
     if (!hasInitialized) {
