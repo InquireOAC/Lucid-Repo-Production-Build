@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2 } from "lucide-react";
+import { Upload, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +30,8 @@ const AIContextDialog = ({
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [rawPhotoPreview, setRawPhotoPreview] = useState<string | null>(null);
+  const [generatedAvatarUrl, setGeneratedAvatarUrl] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     if (open && user) {
@@ -72,6 +74,7 @@ const AIContextDialog = ({
       }
       setPhotoFile(file);
       setRawPhotoPreview(URL.createObjectURL(file));
+      setGeneratedAvatarUrl(null);
     }
   };
 
@@ -118,34 +121,46 @@ const AIContextDialog = ({
     }
   };
 
+  const handleGenerateCharacter = async () => {
+    if (!photoFile || !user) return;
+
+    setIsGenerating(true);
+    try {
+      const rawPhotoUrl = await uploadPhoto(photoFile);
+      if (!rawPhotoUrl) {
+        toast.error('Failed to upload photo');
+        return;
+      }
+
+      toast.info('Generating your character...');
+      const avatarUrl = await generateCharacterAvatar(rawPhotoUrl);
+
+      if (avatarUrl) {
+        setGeneratedAvatarUrl(avatarUrl);
+        setPhotoPreview(avatarUrl);
+        toast.success('Character generated!');
+      } else {
+        toast.error('Character generation failed. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('Error generating character:', error);
+      toast.error('Failed to generate character');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
+    if (photoFile && !generatedAvatarUrl) {
+      toast.error('Please generate your character first before saving.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      let photoUrl = contextData.photo_url;
-
-      if (photoFile) {
-        // Step 1: Upload raw photo
-        const rawPhotoUrl = await uploadPhoto(photoFile);
-        if (!rawPhotoUrl) {
-          toast.error('Failed to upload photo');
-          setIsLoading(false);
-          return;
-        }
-
-        // Step 2: Generate character avatar from the raw photo
-        toast.info('Generating your avatar...');
-        const generatedAvatarUrl = await generateCharacterAvatar(rawPhotoUrl);
-        
-        if (generatedAvatarUrl) {
-          photoUrl = generatedAvatarUrl;
-        } else {
-          toast.error('Avatar generation failed. Please try again.');
-          setIsLoading(false);
-          return;
-        }
-      }
+      const photoUrl = generatedAvatarUrl || contextData.photo_url;
 
       const dataToSave = {
         name: contextData.name || null,
@@ -165,6 +180,7 @@ const AIContextDialog = ({
       setPhotoPreview(photoUrl || null);
       setPhotoFile(null);
       setRawPhotoPreview(null);
+      setGeneratedAvatarUrl(null);
       toast.success('Dream Avatar saved successfully!');
     } catch (error: any) {
       console.error('Error saving Dream Avatar:', error);
@@ -173,6 +189,8 @@ const AIContextDialog = ({
       setIsLoading(false);
     }
   };
+
+  const avatarDisplay = generatedAvatarUrl || photoPreview;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -188,14 +206,14 @@ const AIContextDialog = ({
           {/* Avatar Preview */}
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
-              {isLoading ? (
+              {isGenerating ? (
                 <div className="flex flex-col items-center gap-2">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground">Generating...</span>
                 </div>
-              ) : photoPreview ? (
+              ) : avatarDisplay ? (
                 <img
-                  src={photoPreview}
+                  src={avatarDisplay}
                   alt="Dream Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -225,12 +243,30 @@ const AIContextDialog = ({
               </label>
             </div>
             {rawPhotoPreview && (
-              <div className="mt-3">
+              <div className="mt-3 flex items-center gap-3">
                 <img
                   src={rawPhotoPreview}
                   alt="Reference photo"
                   className="w-24 h-24 object-cover rounded-lg border border-muted"
                 />
+                <Button
+                  onClick={handleGenerateCharacter}
+                  disabled={isGenerating}
+                  variant="luminous"
+                  size="sm"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {generatedAvatarUrl ? 'Regenerate' : 'Generate Character'}
+                    </>
+                  )}
+                </Button>
               </div>
             )}
           </div>
@@ -262,11 +298,11 @@ const AIContextDialog = ({
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancel
             </Button>
-            <Button onClick={handleSave} disabled={isLoading}>
+            <Button onClick={handleSave} disabled={isLoading || isGenerating}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Avatar...
+                  Saving...
                 </>
               ) : 'Save Avatar'}
             </Button>
