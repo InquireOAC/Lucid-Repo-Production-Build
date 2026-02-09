@@ -140,10 +140,6 @@ const DreamDetail = ({
     <>
       <Dialog open onOpenChange={onClose}>
         <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden glass-card border-white/10">
-          <DialogHeader>
-            <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
-          </DialogHeader>
-
           {/* User avatar and name */}
           {(() => {
             const profile = (dream as any).profiles || {};
@@ -160,19 +156,23 @@ const DreamDetail = ({
                     navigate(`/user/${username}`);
                   }
                 }}
-                className="flex items-center gap-2.5 hover:opacity-80 transition-opacity -mt-1 mb-1"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-2"
               >
                 <SymbolAvatar
                   symbol={avatarSymbol}
                   color={avatarColor}
                   fallbackLetter={displayName[0]?.toUpperCase() || "?"}
-                  size={32}
+                  size={40}
                 />
-                <span className="text-sm font-medium text-muted-foreground">@{username || "anon"}</span>
+                <span className="text-base font-semibold text-foreground/80">@{username || "anon"}</span>
               </button>
             );
           })()}
-          
+
+          <DialogHeader>
+            <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
+          </DialogHeader>
+
           <div className="w-full overflow-hidden">
             <DreamDetailContent
               content={dream.content}
