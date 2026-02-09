@@ -1338,6 +1338,7 @@ export type Database = {
           avatar_color: string | null
           avatar_symbol: string | null
           avatar_url: string | null
+          banner_image: string | null
           bio: string | null
           created_at: string
           display_name: string | null
@@ -1354,6 +1355,7 @@ export type Database = {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
@@ -1370,6 +1372,7 @@ export type Database = {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
           created_at?: string
           display_name?: string | null
