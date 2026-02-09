@@ -1,6 +1,6 @@
-
 import React from "react";
-import { Book } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Book, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface EmptyJournalProps {
@@ -8,19 +8,33 @@ interface EmptyJournalProps {
 }
 
 const EmptyJournal = ({ onAddDream }: EmptyJournalProps) => {
+  const navigate = useNavigate();
+
+  const handleRecordDream = () => {
+    navigate("/journal/new");
+  };
+
   return (
-    <div className="text-center py-12">
-      <Book size={32} className="mx-auto mb-2 text-primary/70" />
-      <h3 className="text-lg font-medium mb-1">Your dream journal is empty</h3>
-      <p className="text-muted-foreground">
-        Record your first dream to get started
+    <div className="text-center py-16 px-4">
+      <div className="relative inline-block mb-6">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-aurora-purple/20 to-aurora-violet/20 flex items-center justify-center animate-float">
+          <Book size={36} className="text-aurora-purple" />
+        </div>
+        <Sparkles className="absolute -top-2 -right-2 h-6 w-6 text-aurora-gold animate-float" style={{ animationDelay: '0.5s' }} />
+      </div>
+      
+      <h3 className="text-xl font-semibold mb-2 gradient-text">Your dream journal awaits</h3>
+      <p className="text-muted-foreground max-w-sm mx-auto mb-6">
+        Record your first dream to begin your journey into the realm of lucid dreaming
       </p>
+      
       <Button
-        onClick={onAddDream}
-        variant="outline"
-        className="mt-4 border-primary/50 text-primary hover:bg-primary/10 hover:border-primary"
+        onClick={handleRecordDream}
+        variant="aurora"
+        className="px-6 py-2"
       >
-        Record Dream
+        <Sparkles className="mr-2 h-4 w-4" />
+        Record Your First Dream
       </Button>
     </div>
   );

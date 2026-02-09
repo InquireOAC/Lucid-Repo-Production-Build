@@ -1,12 +1,9 @@
-
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Film, BookOpen } from "lucide-react";
+import { Film, BookOpen, Search, Sparkles } from "lucide-react";
 import { AdminVideoButton } from "@/components/videos/AdminVideoManager";
-// TagFilter import intentionally remains commented out
 
 interface LucidRepoHeaderProps {
   searchQuery: string;
@@ -29,8 +26,6 @@ const LucidRepoHeader = ({
   setSearchQuery,
   activeTab,
   setActiveTab,
-  // sortBy,
-  // setSortBy,
   handleSearch,
   tags,
   activeTags,
@@ -40,62 +35,83 @@ const LucidRepoHeader = ({
   setMode
 }: LucidRepoHeaderProps) => {
   return (
-    <div className="mb-6 pt-6">
-      {/* Mode Toggle Header */}
-      <div className="text-center mb-6">
-        <div className="inline-flex glass-card rounded-lg p-1 border-white/20">
-          <Button
-            variant={mode === "dreams" ? "default" : "ghost"}
-            onClick={() => setMode("dreams")}
-            className={`px-6 py-2 transition-all duration-200 ${
-              mode === "dreams" 
-                ? "bg-gradient-to-r from-dream-purple to-dream-pink text-white shadow-lg" 
-                : "text-white/70 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            <BookOpen className="w-4 h-4 mr-2" />
-            Lucid Repo
-          </Button>
-          <Button
-            variant={mode === "videos" ? "default" : "ghost"}
-            onClick={() => setMode("videos")}
-            className={`px-6 py-2 transition-all duration-200 ${
-              mode === "videos" 
-                ? "bg-gradient-to-r from-dream-purple to-dream-pink text-white shadow-lg" 
-                : "text-white/70 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            <Film className="w-4 h-4 mr-2" />
-            Lucid Studios
-          </Button>
+    <div className="mb-8 pt-6 space-y-6">
+      {/* Hero Section */}
+      <div className="text-center space-y-3">
+        <div className="flex items-center justify-center gap-2">
+          <Sparkles className="h-5 w-5 text-aurora-gold animate-float" />
+          <h1 className="text-3xl font-bold gradient-text">Lucid Repo</h1>
+          <Sparkles className="h-5 w-5 text-aurora-gold animate-float" style={{ animationDelay: '0.5s' }} />
         </div>
-        
-        {/* Admin Video Management Button */}
-        {mode === "videos" && (
-          <div className="mt-4">
-            <AdminVideoButton />
-          </div>
-        )}
+        <p className="text-muted-foreground">Explore dreams from around the world</p>
       </div>
 
-      <form onSubmit={handleSearch} className="flex items-center justify-center space-x-2 mb-4" autoComplete="off">
-        <Input 
-          aria-label={mode === "dreams" ? "Search dreams" : "Search videos"} 
-          type="text" 
-          className="max-w-xs" 
-          placeholder={mode === "dreams" ? "Search dreams..." : "Search videos..."} 
-          value={searchQuery} 
-          onChange={e => setSearchQuery(e.target.value)} 
-        />
+      {/* Mode Toggle */}
+      <div className="flex justify-center">
+        <div className="inline-flex glass-card rounded-full p-1 border-primary/20">
+          <Button
+            variant={mode === "dreams" ? "aurora" : "ghost"}
+            onClick={() => setMode("dreams")}
+            className="rounded-full px-6"
+          >
+            <BookOpen className="w-4 h-4 mr-2" />
+            Dreams
+          </Button>
+          <Button
+            variant={mode === "videos" ? "aurora" : "ghost"}
+            onClick={() => setMode("videos")}
+            className="rounded-full px-6"
+          >
+            <Film className="w-4 h-4 mr-2" />
+            Studios
+          </Button>
+        </div>
+      </div>
+      
+      {mode === "videos" && (
+        <div className="flex justify-center">
+          <AdminVideoButton />
+        </div>
+      )}
+
+      {/* Search */}
+      <form onSubmit={handleSearch} className="flex justify-center" autoComplete="off">
+        <div className="relative w-full max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input 
+            aria-label={mode === "dreams" ? "Search dreams" : "Search videos"} 
+            type="text" 
+            className="pl-10 pr-4 py-2 rounded-full bg-secondary/30 border-primary/20 focus:border-primary/50" 
+            placeholder={mode === "dreams" ? "Search dreams..." : "Search videos..."} 
+            value={searchQuery} 
+            onChange={e => setSearchQuery(e.target.value)} 
+          />
+        </div>
       </form>
 
+      {/* Tabs */}
       {mode === "dreams" && (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="flex justify-center">
-            <TabsList className="bg-dream-purple">
-              <TabsTrigger value="following" className="text-zinc-50">Following</TabsTrigger>
-              <TabsTrigger value="recent" className="text-stone-50">Recent</TabsTrigger>
-              <TabsTrigger value="popular" className="text-stone-50">Popular</TabsTrigger>
+            <TabsList className="bg-secondary/30 rounded-full p-1">
+              <TabsTrigger 
+                value="following" 
+                className="rounded-full px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora-purple data-[state=active]:to-aurora-violet data-[state=active]:text-white"
+              >
+                Following
+              </TabsTrigger>
+              <TabsTrigger 
+                value="recent"
+                className="rounded-full px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora-purple data-[state=active]:to-aurora-violet data-[state=active]:text-white"
+              >
+                Recent
+              </TabsTrigger>
+              <TabsTrigger 
+                value="popular"
+                className="rounded-full px-6 data-[state=active]:bg-gradient-to-r data-[state=active]:from-aurora-purple data-[state=active]:to-aurora-violet data-[state=active]:text-white"
+              >
+                Popular
+              </TabsTrigger>
             </TabsList>
           </div>
           <TabsContent value="following"></TabsContent>
@@ -104,8 +120,32 @@ const LucidRepoHeader = ({
         </Tabs>
       )}
 
-      {/* Tag filter intentionally hidden */}
-      {/* <TagFilter ... /> */}
+      {/* Category pills */}
+      {mode === "dreams" && tags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-2">
+          {tags.map((tag) => (
+            <button
+              key={tag.id}
+              onClick={() => onTagClick(tag.id)}
+              className={`px-3 py-1 rounded-full text-sm transition-all ${
+                activeTags.includes(tag.id)
+                  ? 'bg-gradient-to-r from-aurora-purple to-aurora-violet text-white'
+                  : 'bg-secondary/30 text-muted-foreground hover:bg-secondary/50'
+              }`}
+            >
+              {tag.name}
+            </button>
+          ))}
+          {activeTags.length > 0 && (
+            <button
+              onClick={onClearTags}
+              className="px-3 py-1 rounded-full text-sm bg-destructive/20 text-destructive hover:bg-destructive/30 transition-all"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

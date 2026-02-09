@@ -1,15 +1,23 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Calendar, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import DailyQuote from "./DailyQuote";
+
 interface JournalHeaderProps {
   onAddDream: () => void;
 }
-const JournalHeader = ({
-  onAddDream
-}: JournalHeaderProps) => {
-  return <>
+
+const JournalHeader = ({ onAddDream }: JournalHeaderProps) => {
+  const navigate = useNavigate();
+
+  const handleRecordDream = () => {
+    navigate("/journal/new");
+  };
+
+  return (
+    <>
       <header className="mb-6">
         <DailyQuote />
       </header>
@@ -22,14 +30,16 @@ const JournalHeader = ({
           </span>
         </div>
         <Button 
-          onClick={onAddDream} 
-          variant="luminous"
+          onClick={handleRecordDream} 
+          variant="aurora"
           className="flex items-center gap-2 px-4 py-1.5 text-sm"
         >
           <Pencil size={18} />
           <span className="font-medium">Record Dream</span>
         </Button>
       </div>
-    </>;
+    </>
+  );
 };
+
 export default JournalHeader;
