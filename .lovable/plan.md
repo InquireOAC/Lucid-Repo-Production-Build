@@ -1,49 +1,69 @@
 
-## Fix Banner/Button Overlap and Add Header Image Upload
 
-### Problem
-The gradient banner extends too far down, overlapping the Follow and Message buttons. The buttons need to sit fully below the banner on the dark background area.
+## Switch to Gemini 2.5 Flash Image via Google Cloud + Simplify Dream Avatar UI
 
-### Solution
+### Overview
+Replace DALL-E 3 with Google Gemini 2.5 Flash Image generation using your own Google Cloud project API key, and simplify the Dream Avatar dialog.
 
-#### 1. Fix the banner height and button positioning
-- Reduce the banner height back to a smaller size (e.g., `h-28 sm:h-36`) so it ends above the action buttons
-- Move the action buttons lower so they sit entirely on the dark background, not overlapping the gradient
-- Restructure the layout: keep the avatar overlapping the banner, but position the buttons below the banner line
+### 1. Add Google AI API Key Secret
+- You'll need to provide your Google AI API key (from Google AI Studio or Google Cloud console)
+- It will be stored as a Supabase secret named `GOOGLE_AI_API_KEY`
 
-#### 2. Add `banner_image` column to the `profiles` table
-- Add a new migration to create a `banner_image TEXT` column on the `profiles` table to store the URL of an uploaded header image
+### 2. Update `generate-dream-image` Edge Function
+- Replace the OpenAI DALL-E 3 call with a direct call to Google's Generative Language API (`generativelanguage.googleapis.com`)
+- Use the `gemini-2.5-flash-preview-image-generation` model with `responseModalities: ["TEXT", "IMAGE"]`
+- The response returns base64-encoded image data
+- The edge function will decode the base64, upload it to the `dream-images` Supabase storage bucket, and return a permanent public URL
+- Authentication via `GOOGLE_AI_API_KEY` query parameter
 
-#### 3. Upload header image functionality
-- Add an image upload button on the banner (visible only for own profile) using Supabase Storage
-- Create a `profile-banners` storage bucket for the images
-- When a user uploads an image, store it in Supabase Storage and save the URL to `profiles.banner_image`
+### 3. Simplify Dream Avatar Dialog (`AIContextDialog.tsx`)
+Remove these fields:
+- Pronouns
+- Age Range
+- Hair Color
+- Hair Style
+- Skin Tone
+- Height/Build
 
-#### 4. Display the header image
-- Update `ProfileBanner` to accept and display a `bannerImage` URL prop
-- If a banner image exists, show it as a cover image; otherwise fall back to the gradient
+Keep:
+- Name/Nickname
+- Reference Photo upload
+- Eye Color
+- Clothing Style
+
+### 4. Simplify Prompt Building (`promptBuildingUtils.ts`)
+- Remove hair_color, hair_style, skin_tone, height, age_range from the `buildPersonalizedPrompt` function
+- Keep eye_color and clothing_style descriptors
+
+### 5. Simplify Client-Side Upload Logic (`useImageGeneration.ts`)
+- Since the edge function now returns a permanent Supabase URL (not a temporary OpenAI URL), remove the background upload step with timeout racing
+- The generated URL is already permanent, so no need for the `uploadImage` call
 
 ---
 
 ### Technical Details
 
 **Files to modify:**
-- `src/components/profile/ProfileBanner.tsx` -- accept `bannerImage` and `isOwnProfile` props; show image or gradient; add camera/upload icon overlay for own profile
-- `src/components/profile/ProfileHeader.tsx` -- reduce banner overlap; adjust `-mt-` value and button positioning so buttons are fully below the banner; pass `bannerImage` and `isOwnProfile` to `ProfileBanner`
-- `src/components/profile/EditProfileDialog.tsx` -- optionally add banner upload here as well
-- `src/components/profile/ProfileMainContent.tsx` -- pass banner image data through
+- `supabase/functions/generate-dream-image/index.ts` -- Replace OpenAI with direct Google Generative Language API call, handle base64 response, upload to Supabase Storage
+- `supabase/config.toml` -- Keep `generate-dream-image` config (no change needed)
+- `src/components/profile/AIContextDialog.tsx` -- Remove pronouns, age_range, hair_color, hair_style, skin_tone, height fields
+- `src/utils/promptBuildingUtils.ts` -- Remove hair/skin/height/age descriptors, keep eye_color and clothing_style
+- `src/hooks/useImageGeneration.ts` -- Remove background upload step since edge function returns permanent URLs
 
-**Database changes:**
-- Migration: `ALTER TABLE profiles ADD COLUMN banner_image TEXT;`
-- Storage: create `profile-banners` bucket (public)
+**New secret required:** `GOOGLE_AI_API_KEY` -- Your API key from Google AI Studio (https://aistudio.google.com/apikey) or Google Cloud Console
 
-**Upload flow:**
-1. User clicks camera icon on banner
-2. File picker opens, user selects image
-3. Image is uploaded to `profile-banners/{user_id}/banner.{ext}` in Supabase Storage
-4. The public URL is saved to `profiles.banner_image`
-5. Banner re-renders with the new image
+**Edge function API call (new):**
+```
+POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image-generation:generateContent?key={API_KEY}
 
-**Layout fix approach:**
-- Change banner height to `h-28 sm:h-36`
-- Adjust the avatar/button row: keep avatar overlapping with `-mt-12`, but move buttons to `items-start pt-2` so they render below the banner edge on the dark background
+Body:
+{
+  "contents": [{ "parts": [{ "text": prompt }] }],
+  "generationConfig": {
+    "responseModalities": ["TEXT", "IMAGE"]
+  }
+}
+```
+
+The response contains `inlineData` with `mimeType` and base64 `data` which gets uploaded to Supabase Storage.
+
