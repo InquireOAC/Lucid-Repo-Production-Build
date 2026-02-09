@@ -34,12 +34,6 @@ const MainLayout = () => {
         <div className="flex justify-around items-center h-16">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
-          <NavTab to="/learn" icon={<GraduationCap />} label="Learn" />
-          <NavTab 
-            to="/chat" 
-            icon={<MessageCircle />} 
-            label="AI Chat" 
-          />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
       </div>
