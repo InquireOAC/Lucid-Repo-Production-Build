@@ -63,7 +63,7 @@ const ProfileHeader = ({
         {/* Avatar and action buttons row */}
         <div className="flex justify-between items-start">
           {/* Avatar - overlapping banner */}
-          <div className="relative -mt-12">
+          <div className="relative -mt-12 z-10">
             <div className="ring-4 ring-background rounded-full bg-background">
               <ProfileAvatar
                 avatarSymbol={profile?.avatar_symbol}

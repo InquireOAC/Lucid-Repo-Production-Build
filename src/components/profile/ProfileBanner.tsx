@@ -54,7 +54,7 @@ const ProfileBanner = ({ className, bannerImage, isOwnProfile, onBannerUpdated }
   };
 
   return (
-    <div className={`profile-banner h-28 sm:h-36 w-full relative ${className || ''}`}>
+    <div className={`profile-banner h-28 sm:h-36 w-full relative z-0 ${className || ''}`}>
       {bannerImage ? (
         <img src={bannerImage} alt="Profile banner" className="w-full h-full object-cover relative z-10" />
       ) : (
