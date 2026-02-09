@@ -153,7 +153,7 @@ const DreamDetail = ({
                   e.stopPropagation();
                   onClose();
                   if (username) {
-                    navigate(`/user/${username}`);
+                    navigate(`/profile/${username}`);
                   }
                 }}
                 className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-2"
