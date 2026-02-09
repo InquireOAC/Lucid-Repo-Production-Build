@@ -1,31 +1,28 @@
 
 
-## Add "Generate Character" Button to Avatar Dialog
+## Fix Character Generation - Correct Model Name
+
+### Problem
+The edge function calls model `gemini-2.5-flash-preview-image-generation`, which does not exist (404 error). According to the official Vertex AI / Google AI documentation, the correct model ID for Gemini 2.5 Flash image generation is `gemini-2.5-flash-image`.
 
 ### Change
-Instead of automatically generating the avatar when "Save Avatar" is pressed, add a separate "Generate Character" button that appears after uploading a reference photo. This lets the user preview the generated avatar before committing to save.
 
-### How It Works
-1. User uploads a reference photo -- raw photo preview appears below the upload area
-2. A "Generate Character" button appears next to/below the raw photo preview
-3. Clicking it uploads the raw photo, calls the edge function, and shows the result in the avatar circle
-4. User can re-generate if they don't like the result
-5. "Save Avatar" only saves the current state to the database (no generation logic)
+**File: `supabase/functions/generate-dream-image/index.ts`**
 
-### Technical Details
+One-line fix on line 87 -- update the model name in the API URL:
 
-**File: `src/components/profile/AIContextDialog.tsx`**
+- **Before:** `gemini-2.5-flash-preview-image-generation`
+- **After:** `gemini-2.5-flash-image`
 
-- Add a new state: `generatedAvatarUrl` to hold the URL returned by the edge function (separate from `photoPreview` which tracks what's loaded from DB)
-- Add a `handleGenerateCharacter` function that:
-  - Uploads the raw photo via `uploadPhoto()`
-  - Calls `generateCharacterAvatar(rawPhotoUrl)`
-  - On success, sets `generatedAvatarUrl` and updates `photoPreview` to show the result in the avatar circle
-  - Shows loading spinner in the avatar circle during generation
-- Add a "Generate Character" button that appears when `rawPhotoPreview` exists (a file has been selected). Disabled while loading.
-- Simplify `handleSave`:
-  - Remove all photo upload and generation logic from it
-  - It saves `generatedAvatarUrl || contextData.photo_url` as the `photo_url` -- just a database write
-  - If a photo was uploaded but not generated yet, show a toast prompting the user to generate first
-- The avatar circle shows: loading spinner during generation, `generatedAvatarUrl` if set, otherwise `photoPreview` (from DB), otherwise "No avatar yet"
+The full URL becomes:
+```
+https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=...
+```
+
+Everything else remains unchanged: the `generativelanguage.googleapis.com` endpoint, `GOOGLE_AI_API_KEY` authentication, the `inline_data` reference image format, `responseModalities: ["TEXT", "IMAGE"]`, and the `inlineData` response parsing are all correct per the API spec.
+
+### No Other Files Affected
+- `AIContextDialog.tsx` -- no changes
+- `useImageGeneration.ts` -- no changes
+- `useDreamImageAI.ts` -- no changes
 
