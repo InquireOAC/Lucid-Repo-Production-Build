@@ -74,14 +74,14 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       className={cn(
         "flex flex-col items-center justify-center w-full py-2 transition-all duration-300 rounded-lg mx-1 relative",
         isActive 
-          ? "text-purple-300 bg-purple-500/20 shadow-md shadow-purple-500/30" 
+          ? "text-primary bg-primary/15 shadow-md shadow-primary/20" 
           : "text-white/60 hover:text-white/80 hover:bg-white/5"
       )}
     >
       <div className={cn(
         "p-2 rounded-full transition-all duration-300 relative",
         isActive 
-          ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg" 
+          ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30" 
           : "text-white/60"
       )}>
         {icon}

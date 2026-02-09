@@ -102,7 +102,7 @@ const DreamCard = ({
 
   return (
     <Card 
-      className="hover:shadow-xl hover:shadow-purple-500/20 transition-all duration-300 cursor-pointer glass-card oniri-hover border-white/10 group"
+      className="hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer luminous-card oniri-hover border-primary/10 group"
       onClick={handleCardClick}
     >
       <div className="geometric-bg absolute inset-0 rounded-lg opacity-20"></div>
@@ -176,17 +176,17 @@ const DreamCard = ({
         
         {mappedTags.length > 0 && (
           <div className={`flex flex-wrap gap-2 ${isJournalView ? 'mb-2' : 'mb-3'}`}>
-            {mappedTags.slice(0, isJournalView ? 3 : mappedTags.length).map((tag) => (
+          {mappedTags.slice(0, isJournalView ? 3 : mappedTags.length).map((tag) => (
               <Badge 
                 key={tag.id} 
-                className="text-xs cursor-pointer bg-white/10 hover:bg-white/20 text-white border-white/20 transition-all duration-200"
+                className="text-xs cursor-pointer bg-primary/15 hover:bg-primary/25 text-primary border-primary/30 transition-all duration-200"
                 onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}
               >
                 {tag.name}
               </Badge>
             ))}
             {isJournalView && mappedTags.length > 3 && (
-              <Badge className="text-xs bg-white/10 text-white/70 border-white/20">
+              <Badge className="text-xs bg-primary/10 text-primary/70 border-primary/20">
                 +{mappedTags.length - 3}
               </Badge>
             )}
@@ -194,7 +194,7 @@ const DreamCard = ({
         )}
 
         {showSharedBadge && (dream.is_public || dream.isPublic) && (
-          <Badge className={`${isJournalView ? "mb-2 text-xs" : "mb-3"} bg-blue-500/20 text-blue-200 border-blue-400/30`}>
+          <Badge className={`${isJournalView ? "mb-2 text-xs" : "mb-3"} bg-primary/20 text-primary border-primary/30`}>
             Public
           </Badge>
         )}
@@ -205,7 +205,7 @@ const DreamCard = ({
               <Button 
                 variant="outline" 
                 size={isJournalView ? "sm" : "sm"} 
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/40"
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
                 onClick={(e) => handleButtonClick(e, onEdit)}
               >
                 Edit
@@ -215,7 +215,7 @@ const DreamCard = ({
               <Button 
                 variant="outline" 
                 size={isJournalView ? "sm" : "sm"} 
-                className="bg-white/10 hover:bg-white/20 text-white border-white/20 hover:border-white/40"
+                className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
                 onClick={(e) => handleButtonClick(e, onTogglePublic)}
               >
                 {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
@@ -225,7 +225,7 @@ const DreamCard = ({
               <Button 
                 variant="destructive" 
                 size={isJournalView ? "sm" : "sm"} 
-                className="bg-red-500/20 hover:bg-red-500/30 text-red-200 border-red-400/30"
+                className="bg-destructive/20 hover:bg-destructive/30 text-destructive-foreground border-destructive/30"
                 onClick={(e) => handleButtonClick(e, onDelete)}
               >
                 Delete
