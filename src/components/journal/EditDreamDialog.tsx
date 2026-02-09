@@ -25,16 +25,18 @@ const EditDreamDialog: React.FC<EditDreamDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-lg glass-card border-white/10">
+      <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-hidden flex flex-col glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="gradient-text">Edit Dream</DialogTitle>
         </DialogHeader>
-        <DreamEntryForm
-          existingDream={existingDream}
-          onSubmit={onSubmit}
-          tags={tags}
-          isSubmitting={isSubmitting}
-        />
+        <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 pr-1">
+          <DreamEntryForm
+            existingDream={existingDream}
+            onSubmit={onSubmit}
+            tags={tags}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
