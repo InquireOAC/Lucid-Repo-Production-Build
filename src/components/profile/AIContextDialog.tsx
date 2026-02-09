@@ -29,6 +29,7 @@ const AIContextDialog = ({
   const [isLoading, setIsLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [rawPhotoPreview, setRawPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && user) {
@@ -70,7 +71,7 @@ const AIContextDialog = ({
         return;
       }
       setPhotoFile(file);
-      setPhotoPreview(URL.createObjectURL(file));
+      setRawPhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -140,8 +141,9 @@ const AIContextDialog = ({
         if (generatedAvatarUrl) {
           photoUrl = generatedAvatarUrl;
         } else {
-          toast.warning('Avatar generation failed, using original photo');
-          photoUrl = rawPhotoUrl;
+          toast.error('Avatar generation failed. Please try again.');
+          setIsLoading(false);
+          return;
         }
       }
 
@@ -162,6 +164,7 @@ const AIContextDialog = ({
       setContextData(prev => ({ ...prev, photo_url: photoUrl }));
       setPhotoPreview(photoUrl || null);
       setPhotoFile(null);
+      setRawPhotoPreview(null);
       toast.success('Dream Avatar saved successfully!');
     } catch (error: any) {
       console.error('Error saving Dream Avatar:', error);
@@ -221,6 +224,15 @@ const AIContextDialog = ({
                 />
               </label>
             </div>
+            {rawPhotoPreview && (
+              <div className="mt-3">
+                <img
+                  src={rawPhotoPreview}
+                  alt="Reference photo"
+                  className="w-24 h-24 object-cover rounded-lg border border-muted"
+                />
+              </div>
+            )}
           </div>
 
           {/* Name */}
