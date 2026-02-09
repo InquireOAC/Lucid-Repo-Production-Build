@@ -8,10 +8,6 @@ export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imag
 
   if (aiContext) {
     const appearanceDetails = [];
-    
-    if (aiContext.eye_color) {
-      appearanceDetails.push(`${aiContext.eye_color} eyes`);
-    }
 
     if (aiContext.clothing_style) {
       appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
