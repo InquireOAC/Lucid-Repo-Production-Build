@@ -326,7 +326,6 @@ const NewDream = () => {
         <div className="space-y-4">
           <div className="featured-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2">
-              <Wand2 className="h-5 w-5 text-aurora-gold" />
               <h3 className="font-semibold gold-text">Transform Your Dream</h3>
             </div>
             
