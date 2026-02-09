@@ -54,7 +54,7 @@ const ProfileHeader = ({
         {/* Avatar - overlapping banner */}
         <div className="flex justify-between items-end -mt-16 mb-4">
           <div className="relative">
-            <div className="ring-4 ring-background rounded-full">
+            <div className="ring-4 ring-background rounded-full bg-background">
               <ProfileAvatar
                 avatarSymbol={profile?.avatar_symbol}
                 avatarColor={profile?.avatar_color}
