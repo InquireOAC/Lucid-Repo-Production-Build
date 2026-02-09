@@ -217,7 +217,7 @@ const AIContextDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md">
+      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Your Dream Avatar</DialogTitle>
           <p className="text-sm text-muted-foreground">
@@ -264,6 +264,34 @@ const AIContextDialog = ({
                   onChange={handlePhotoUpload}
                 />
               </label>
+            </div>
+            {rawPhotoPreview && (
+              <div className="mt-3 flex items-center gap-3">
+                <img
+                  src={rawPhotoPreview}
+                  alt="Reference photo"
+                  className="w-24 h-24 object-cover rounded-lg border border-muted"
+                />
+                <Button
+                  onClick={handleGenerateCharacter}
+                  disabled={isGenerating}
+                  variant="luminous"
+                  size="sm"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      {generatedAvatarUrl ? 'Regenerate' : 'Generate Character'}
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Visual Style Selector */}
@@ -295,34 +323,6 @@ const AIContextDialog = ({
                 </button>
               ))}
             </div>
-          </div>
-            {rawPhotoPreview && (
-              <div className="mt-3 flex items-center gap-3">
-                <img
-                  src={rawPhotoPreview}
-                  alt="Reference photo"
-                  className="w-24 h-24 object-cover rounded-lg border border-muted"
-                />
-                <Button
-                  onClick={handleGenerateCharacter}
-                  disabled={isGenerating}
-                  variant="luminous"
-                  size="sm"
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      {generatedAvatarUrl ? 'Regenerate' : 'Generate Character'}
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Name */}
