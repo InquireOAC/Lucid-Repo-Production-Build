@@ -17,7 +17,6 @@ interface AIContextDialogProps {
 interface AIContextData {
   name?: string;
   photo_url?: string;
-  eye_color?: string;
   clothing_style?: string;
 }
 
@@ -29,6 +28,7 @@ const AIContextDialog = ({
   const [contextData, setContextData] = useState<AIContextData>({});
   const [isLoading, setIsLoading] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && user) {
@@ -53,9 +53,9 @@ const AIContextDialog = ({
         setContextData({
           name: data.name,
           photo_url: data.photo_url,
-          eye_color: data.eye_color,
           clothing_style: data.clothing_style,
         });
+        setPhotoPreview(data.photo_url || null);
       }
     } catch (error) {
       console.error('Error loading AI context:', error);
@@ -70,6 +70,7 @@ const AIContextDialog = ({
         return;
       }
       setPhotoFile(file);
+      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -115,7 +116,6 @@ const AIContextDialog = ({
       const dataToSave = {
         name: contextData.name || null,
         photo_url: photoUrl || null,
-        eye_color: contextData.eye_color || null,
         clothing_style: contextData.clothing_style || null,
         user_id: user.id,
         updated_at: new Date().toISOString()
@@ -127,8 +127,10 @@ const AIContextDialog = ({
 
       if (error) throw error;
 
+      setContextData(prev => ({ ...prev, photo_url: photoUrl }));
+      setPhotoPreview(photoUrl || null);
+      setPhotoFile(null);
       toast.success('Dream Avatar saved successfully!');
-      onOpenChange(false);
     } catch (error: any) {
       console.error('Error saving Dream Avatar:', error);
       toast.error(`Failed to save Dream Avatar: ${error.message}`);
@@ -143,29 +145,33 @@ const AIContextDialog = ({
         <DialogHeader>
           <DialogTitle>Your Dream Avatar</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Help AI generate dream images that better represent you. Upload a reference photo for best results.
+            Upload a reference photo so AI can generate dream images that look like you.
           </p>
         </DialogHeader>
 
         <div className="space-y-5">
-          {/* Name */}
-          <div>
-            <Label htmlFor="name">Name or Nickname</Label>
-            <Input
-              id="name"
-              value={contextData.name || ''}
-              onChange={e => setContextData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="How you'd like to be referred to"
-            />
+          {/* Avatar Preview */}
+          <div className="flex justify-center">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
+              {photoPreview ? (
+                <img
+                  src={photoPreview}
+                  alt="Dream Avatar"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-muted-foreground text-xs text-center px-2">No avatar yet</span>
+              )}
+            </div>
           </div>
 
-          {/* Reference Photo */}
+          {/* Photo Upload */}
           <div>
-            <Label>Reference Photo (Optional)</Label>
+            <Label>Reference Photo</Label>
             <div className="mt-2">
-              <label className="flex items-center justify-center w-full h-24 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors">
+              <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors">
                 <div className="flex flex-col items-center">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <Upload className="h-5 w-5 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">
                     {photoFile ? photoFile.name : 'Upload photo (max 5MB)'}
                   </span>
@@ -180,29 +186,29 @@ const AIContextDialog = ({
             </div>
           </div>
 
-          {/* Eye Color & Clothing Style */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="eye_color">Eye Color</Label>
-              <Input
-                id="eye_color"
-                value={contextData.eye_color || ''}
-                onChange={e => setContextData(prev => ({ ...prev, eye_color: e.target.value }))}
-                placeholder="e.g., brown, blue, green"
-              />
-            </div>
-            <div>
-              <Label htmlFor="clothing_style">Clothing Style</Label>
-              <Input
-                id="clothing_style"
-                value={contextData.clothing_style || ''}
-                onChange={e => setContextData(prev => ({ ...prev, clothing_style: e.target.value }))}
-                placeholder="e.g., casual, alternative"
-              />
-            </div>
+          {/* Name */}
+          <div>
+            <Label htmlFor="name">Name or Nickname</Label>
+            <Input
+              id="name"
+              value={contextData.name || ''}
+              onChange={e => setContextData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="How you'd like to be referred to"
+            />
           </div>
 
-          {/* Save Button */}
+          {/* Clothing Style */}
+          <div>
+            <Label htmlFor="clothing_style">Clothing Style</Label>
+            <Input
+              id="clothing_style"
+              value={contextData.clothing_style || ''}
+              onChange={e => setContextData(prev => ({ ...prev, clothing_style: e.target.value }))}
+              placeholder="e.g., casual, alternative, streetwear"
+            />
+          </div>
+
+          {/* Actions */}
           <div className="flex justify-end space-x-2 pt-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
