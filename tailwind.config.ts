@@ -30,20 +30,20 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				dream: {
-					lavender: 'hsl(262, 47%, 70%)',
-					purple: 'hsl(262, 35%, 47%)',
-					pink: 'hsl(300, 60%, 70%)',
-					dark: 'hsl(260, 25%, 15%)',
-					light: 'hsl(262, 40%, 75%)',
-					midnight: 'hsl(260, 30%, 12%)',
+					teal: 'hsl(180, 85%, 55%)',
+					cyan: 'hsl(175, 70%, 45%)',
+					seafoam: 'hsl(165, 70%, 65%)',
+					dark: 'hsl(220, 25%, 8%)',
+					light: 'hsl(180, 60%, 70%)',
+					midnight: 'hsl(210, 28%, 10%)',
 				},
 				oniri: {
-					blue: 'hsl(240, 80%, 20%)',
-					purple: 'hsl(262, 60%, 60%)',
-					pink: 'hsl(300, 60%, 70%)',
-					dark: 'hsl(260, 25%, 8%)',
-					card: 'hsl(260, 20%, 12%)',
-					glass: 'rgba(255, 255, 255, 0.02)',
+					ocean: 'hsl(210, 35%, 18%)',
+					teal: 'hsl(180, 85%, 55%)',
+					cyan: 'hsl(175, 70%, 45%)',
+					dark: 'hsl(220, 25%, 6%)',
+					card: 'hsl(210, 25%, 12%)',
+					glass: 'rgba(0, 200, 200, 0.02)',
 				},
 				primary: {
 					DEFAULT: 'hsl(var(--primary))',
@@ -109,18 +109,37 @@ export default {
 				'float': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-10px)' }
+				},
+				'luminous-pulse': {
+					'0%, 100%': { 
+						boxShadow: '0 0 15px hsla(180, 85%, 50%, 0.2), 0 0 30px hsla(180, 85%, 50%, 0.1)'
+					},
+					'50%': { 
+						boxShadow: '0 0 25px hsla(180, 85%, 50%, 0.35), 0 0 50px hsla(180, 85%, 50%, 0.2)'
+					}
+				},
+				'shimmer': {
+					'0%': { backgroundPosition: '-200% 0' },
+					'100%': { backgroundPosition: '200% 0' }
+				},
+				'glow': {
+					'0%, 100%': { opacity: '0.8' },
+					'50%': { opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
-				'float': 'float 6s ease-in-out infinite'
+				'float': 'float 6s ease-in-out infinite',
+				'luminous-pulse': 'luminous-pulse 3s ease-in-out infinite',
+				'shimmer': 'shimmer 3s ease-in-out infinite',
+				'glow': 'glow 2s ease-in-out infinite'
 			},
 			backgroundImage: {
-				'dream-gradient': 'linear-gradient(to bottom, #1E1A2B, #6B5B95)',
-				'oniri-gradient': 'linear-gradient(135deg, hsl(260, 25%, 8%) 0%, hsl(262, 30%, 12%) 50%, hsl(260, 20%, 10%) 100%)',
-				'oniri-card': 'linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.01) 100%)',
-				'oniri-geometric': 'polygon(0 0, 100% 20%, 100% 100%, 0 80%)',
+				'dream-gradient': 'linear-gradient(to bottom, hsl(220, 25%, 6%), hsl(180, 40%, 30%))',
+				'oniri-gradient': 'linear-gradient(135deg, hsl(220, 25%, 6%) 0%, hsl(210, 28%, 10%) 50%, hsl(200, 25%, 8%) 100%)',
+				'oniri-card': 'linear-gradient(135deg, rgba(0, 200, 200, 0.02) 0%, rgba(0, 150, 150, 0.01) 100%)',
+				'luminous-gradient': 'linear-gradient(135deg, hsl(180, 85%, 55%) 0%, hsl(175, 70%, 45%) 50%, hsl(195, 80%, 60%) 100%)',
 			}
 		}
 	},
