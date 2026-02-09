@@ -14,6 +14,20 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { cn } from "@/lib/utils";
 
+import styleSurreal from "@/assets/styles/surreal.jpg";
+import styleRealistic from "@/assets/styles/realistic.jpg";
+import styleHyperRealism from "@/assets/styles/hyper_realism.jpg";
+import styleAbstract from "@/assets/styles/abstract.jpg";
+import styleImpressionist from "@/assets/styles/impressionist.jpg";
+import styleFantasy from "@/assets/styles/fantasy.jpg";
+import styleMinimalist from "@/assets/styles/minimalist.jpg";
+import styleVintage from "@/assets/styles/vintage.jpg";
+import styleCyberpunk from "@/assets/styles/cyberpunk.jpg";
+import styleWatercolor from "@/assets/styles/watercolor.jpg";
+import styleOilPainting from "@/assets/styles/oil_painting.jpg";
+import styleDigitalArt from "@/assets/styles/digital_art.jpg";
+import styleSketch from "@/assets/styles/sketch.jpg";
+
 interface DreamImageGeneratorProps {
   dreamContent: string;
   existingPrompt?: string;
@@ -24,19 +38,19 @@ interface DreamImageGeneratorProps {
 }
 
 const styleOptions = [
-  { value: "surreal", label: "Surreal" },
-  { value: "realistic", label: "Realistic" },
-  { value: "hyper_realism", label: "Hyper Realism" },
-  { value: "abstract", label: "Abstract" },
-  { value: "impressionist", label: "Impressionist" },
-  { value: "fantasy", label: "Fantasy" },
-  { value: "minimalist", label: "Minimalist" },
-  { value: "vintage", label: "Vintage" },
-  { value: "cyberpunk", label: "Cyberpunk" },
-  { value: "watercolor", label: "Watercolor" },
-  { value: "oil_painting", label: "Oil Painting" },
-  { value: "digital_art", label: "Digital Art" },
-  { value: "sketch", label: "Sketch" },
+  { value: "surreal", label: "Surreal", thumb: styleSurreal },
+  { value: "realistic", label: "Realistic", thumb: styleRealistic },
+  { value: "hyper_realism", label: "Hyper Realism", thumb: styleHyperRealism },
+  { value: "abstract", label: "Abstract", thumb: styleAbstract },
+  { value: "impressionist", label: "Impressionist", thumb: styleImpressionist },
+  { value: "fantasy", label: "Fantasy", thumb: styleFantasy },
+  { value: "minimalist", label: "Minimalist", thumb: styleMinimalist },
+  { value: "vintage", label: "Vintage", thumb: styleVintage },
+  { value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
+  { value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
+  { value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting },
+  { value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
+  { value: "sketch", label: "Sketch", thumb: styleSketch },
 ];
 
 const DreamImageGenerator = ({
@@ -203,28 +217,17 @@ const DreamImageGenerator = ({
               >
                 <div
                   className={cn(
-                    "w-[72px] h-[72px] rounded-xl border-2 transition-all flex items-center justify-center text-xl",
-                    "bg-muted/50",
+                    "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
                     imageStyle === style.value
                       ? "border-primary ring-2 ring-primary/20"
                       : "border-border/50 hover:border-primary/30"
                   )}
                 >
-                  <span className="text-lg opacity-60">
-                    {style.value === 'surreal' && '🌀'}
-                    {style.value === 'realistic' && '📷'}
-                    {style.value === 'hyper_realism' && '🔍'}
-                    {style.value === 'abstract' && '🎨'}
-                    {style.value === 'impressionist' && '🖌️'}
-                    {style.value === 'fantasy' && '🐉'}
-                    {style.value === 'minimalist' && '◻️'}
-                    {style.value === 'vintage' && '📜'}
-                    {style.value === 'cyberpunk' && '🤖'}
-                    {style.value === 'watercolor' && '💧'}
-                    {style.value === 'oil_painting' && '🖼️'}
-                    {style.value === 'digital_art' && '💻'}
-                    {style.value === 'sketch' && '✏️'}
-                  </span>
+                  <img
+                    src={style.thumb}
+                    alt={style.label}
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className={cn(
                   "text-[10px] leading-tight",
