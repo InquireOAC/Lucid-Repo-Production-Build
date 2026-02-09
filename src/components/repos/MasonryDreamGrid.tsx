@@ -127,40 +127,42 @@ const MasonryDreamCard = ({
         )}
         
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-primary/10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onUserClick(username);
-            }}
-            className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
-          >
-            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-aurora-purple to-aurora-violet flex items-center justify-center text-white text-xs font-medium">
-              {displayName[0]?.toUpperCase()}
-            </div>
-            <span className="text-xs text-muted-foreground truncate max-w-[80px]">
-              @{username || "anon"}
-            </span>
-          </button>
-          
-          <div className="flex items-center gap-3 text-muted-foreground">
+        <div className="pt-3 border-t border-primary/10 space-y-0">
+          <div className="flex items-center justify-between">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onLike(dream.id);
+                onUserClick(username);
               }}
-              className={cn(
-                "flex items-center gap-1 transition-colors text-xs",
-                isLiked ? "text-aurora-gold" : "hover:text-aurora-gold"
-              )}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-1 mr-3"
             >
-              <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-current")} />
-              {dream.like_count || 0}
+              <div className="w-7 h-7 flex-shrink-0 rounded-full bg-gradient-to-br from-aurora-purple to-aurora-violet flex items-center justify-center text-white text-xs font-medium">
+                {displayName[0]?.toUpperCase()}
+              </div>
+              <span className="text-xs text-muted-foreground truncate">
+                @{username || "anon"}
+              </span>
             </button>
             
-            <div className="flex items-center gap-1 text-xs">
-              <MessageCircle className="h-3.5 w-3.5" />
-              {dream.comment_count || 0}
+            <div className="flex items-center gap-3 flex-shrink-0 text-muted-foreground">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onLike(dream.id);
+                }}
+                className={cn(
+                  "flex items-center gap-1 transition-colors text-xs",
+                  isLiked ? "text-aurora-gold" : "hover:text-aurora-gold"
+                )}
+              >
+                <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-current")} />
+                <span>{dream.like_count || 0}</span>
+              </button>
+              
+              <div className="flex items-center gap-1 text-xs">
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span>{dream.comment_count || 0}</span>
+              </div>
             </div>
           </div>
         </div>
