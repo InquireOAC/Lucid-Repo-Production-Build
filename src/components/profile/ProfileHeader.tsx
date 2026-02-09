@@ -43,17 +43,27 @@ const ProfileHeader = ({
   onSocialLinksEdit
 }: ProfileHeaderProps) => {
   const joinDate = profile?.created_at ? format(new Date(profile.created_at), "MMM yyyy") : null;
+  const [bannerImage, setBannerImage] = React.useState<string | null>(profile?.banner_image || null);
+
+  React.useEffect(() => {
+    setBannerImage(profile?.banner_image || null);
+  }, [profile?.banner_image]);
 
   return (
     <div className="relative">
       {/* Banner */}
-      <ProfileBanner />
+      <ProfileBanner
+        bannerImage={bannerImage}
+        isOwnProfile={isOwnProfile}
+        onBannerUpdated={(url) => setBannerImage(url)}
+      />
       
       {/* Profile Content - X/Twitter style */}
       <div className="px-4 pb-4">
-        {/* Avatar - overlapping banner */}
-        <div className="flex justify-between items-end -mt-16 mb-4">
-          <div className="relative">
+        {/* Avatar and action buttons row */}
+        <div className="flex justify-between items-start">
+          {/* Avatar - overlapping banner */}
+          <div className="relative -mt-12">
             <div className="ring-4 ring-background rounded-full bg-background">
               <ProfileAvatar
                 avatarSymbol={profile?.avatar_symbol}
@@ -65,8 +75,8 @@ const ProfileHeader = ({
             </div>
           </div>
           
-          {/* Action buttons */}
-          <div className="flex gap-2 pb-2">
+          {/* Action buttons - below banner */}
+          <div className="flex gap-2 pt-3">
             <ProfileHeaderActions
               isOwnProfile={isOwnProfile}
               isFollowing={isFollowing}
