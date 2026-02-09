@@ -1,69 +1,81 @@
 
 
-## Switch to Gemini 2.5 Flash Image via Google Cloud + Simplify Dream Avatar UI
+## Fix Avatar Character Generation + Reference Photo in Dream Images
 
-### Overview
-Replace DALL-E 3 with Google Gemini 2.5 Flash Image generation using your own Google Cloud project API key, and simplify the Dream Avatar dialog.
+### Problem 1: Saving Avatar Does Nothing with the Photo
+Currently, when you upload a reference photo and save your Dream Avatar, it just stores the raw photo URL in the database. It never sends the photo to Gemini to generate a character version of you. The avatar preview just shows your uploaded selfie, not an AI-generated character.
 
-### 1. Add Google AI API Key Secret
-- You'll need to provide your Google AI API key (from Google AI Studio or Google Cloud console)
-- It will be stored as a Supabase secret named `GOOGLE_AI_API_KEY`
+### Problem 2: Reference Photo Not Sent During Dream Image Generation
+When generating a dream image with "avatar likeness" enabled, the code fetches `ai_context` from the database but only uses `clothing_style` as a text descriptor in the prompt. The actual reference photo (`photo_url`) is never sent to the Gemini API. Since Gemini supports image inputs via `inline_data`, the reference photo should be included so the generated dream image actually looks like you, rendered in whatever visual style is selected.
 
-### 2. Update `generate-dream-image` Edge Function
-- Replace the OpenAI DALL-E 3 call with a direct call to Google's Generative Language API (`generativelanguage.googleapis.com`)
-- Use the `gemini-2.5-flash-preview-image-generation` model with `responseModalities: ["TEXT", "IMAGE"]`
-- The response returns base64-encoded image data
-- The edge function will decode the base64, upload it to the `dream-images` Supabase storage bucket, and return a permanent public URL
-- Authentication via `GOOGLE_AI_API_KEY` query parameter
+---
 
-### 3. Simplify Dream Avatar Dialog (`AIContextDialog.tsx`)
-Remove these fields:
-- Pronouns
-- Age Range
-- Hair Color
-- Hair Style
-- Skin Tone
-- Height/Build
+### Solution
 
-Keep:
-- Name/Nickname
-- Reference Photo upload
-- Eye Color
-- Clothing Style
+#### 1. Avatar Character Generation on Save (`AIContextDialog.tsx`)
+When the user uploads a reference photo and clicks "Save Avatar":
+- Upload the raw photo to storage (as it does now)
+- Then call `generate-dream-image` with the photo + a prompt like "Create a stylized character portrait based on this reference photo" 
+- The returned AI-generated character image becomes the avatar preview and is saved as `photo_url`
+- Show a loading state ("Generating your avatar...") while this happens
+- Display the generated avatar in the preview circle
 
-### 4. Simplify Prompt Building (`promptBuildingUtils.ts`)
-- Remove hair_color, hair_style, skin_tone, height, age_range from the `buildPersonalizedPrompt` function
-- Keep eye_color and clothing_style descriptors
+#### 2. Update Edge Function to Accept Reference Images (`generate-dream-image/index.ts`)
+- Accept an optional `referenceImageUrl` parameter alongside `prompt`
+- When a reference image URL is provided, fetch the image, convert to base64, and include it as `inline_data` in the Gemini API `parts` array
+- This allows Gemini to see the reference photo and generate images that match the person's likeness
 
-### 5. Simplify Client-Side Upload Logic (`useImageGeneration.ts`)
-- Since the edge function now returns a permanent Supabase URL (not a temporary OpenAI URL), remove the background upload step with timeout racing
-- The generated URL is already permanent, so no need for the `uploadImage` call
+#### 3. Pass Reference Photo During Dream Image Generation (`useDreamImageAI.ts`)
+- When `useAIContext` is true and the user has a `photo_url`, pass it to `generate-dream-image` as `referenceImageUrl`
+- The edge function will include the reference image in the Gemini call so the dream image respects the avatar likeness
+- The selected image style (surreal, watercolor, etc.) is already in the text prompt, so Gemini will apply both the likeness and the style
 
 ---
 
 ### Technical Details
 
 **Files to modify:**
-- `supabase/functions/generate-dream-image/index.ts` -- Replace OpenAI with direct Google Generative Language API call, handle base64 response, upload to Supabase Storage
-- `supabase/config.toml` -- Keep `generate-dream-image` config (no change needed)
-- `src/components/profile/AIContextDialog.tsx` -- Remove pronouns, age_range, hair_color, hair_style, skin_tone, height fields
-- `src/utils/promptBuildingUtils.ts` -- Remove hair/skin/height/age descriptors, keep eye_color and clothing_style
-- `src/hooks/useImageGeneration.ts` -- Remove background upload step since edge function returns permanent URLs
 
-**New secret required:** `GOOGLE_AI_API_KEY` -- Your API key from Google AI Studio (https://aistudio.google.com/apikey) or Google Cloud Console
+1. **`supabase/functions/generate-dream-image/index.ts`**
+   - Accept optional `referenceImageUrl` in the request body
+   - When present, fetch the image from the URL, convert to base64
+   - Include it as an `inline_data` part in the Gemini API `contents[0].parts` array alongside the text prompt
+   - Structure: `{ inline_data: { mime_type: "image/jpeg", data: base64Data } }`
 
-**Edge function API call (new):**
+2. **`src/components/profile/AIContextDialog.tsx`**
+   - After uploading the raw photo, call the edge function with a character generation prompt + the uploaded photo URL as reference
+   - Save the AI-generated character URL as `photo_url` instead of the raw photo
+   - Add loading state with "Generating your avatar..." message
+   - Keep the raw photo available for reference during dream generation
+
+3. **`src/hooks/useDreamImageAI.ts`**
+   - Update `generateDreamImageFromAI` to accept an optional `referenceImageUrl` parameter
+   - When `useAIContext` is true, fetch the AI context and pass `photo_url` as `referenceImageUrl` to the edge function
+   - Pass the image style through properly so Gemini renders the likeness in the correct visual style
+
+4. **`src/hooks/useImageGeneration.ts`**
+   - Pass `useAIContext` and user ID to `generateDreamImageFromAI` so it can fetch and include the reference photo
+
+**Edge function Gemini API call (updated structure):**
 ```
-POST https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-image-generation:generateContent?key={API_KEY}
-
-Body:
-{
-  "contents": [{ "parts": [{ "text": prompt }] }],
-  "generationConfig": {
-    "responseModalities": ["TEXT", "IMAGE"]
-  }
-}
+contents: [{
+  parts: [
+    { text: "dream scene prompt with style..." },
+    { inline_data: { mime_type: "image/jpeg", data: "<base64>" } }  // reference photo
+  ]
+}]
 ```
 
-The response contains `inlineData` with `mimeType` and base64 `data` which gets uploaded to Supabase Storage.
+**Avatar generation flow:**
+1. User uploads photo -> stored in Supabase Storage
+2. Edge function called with prompt "Create a stylized character portrait of this person" + photo as inline_data
+3. Gemini generates a character version
+4. Character image saved to storage, URL stored as `photo_url`
+5. Avatar preview updates to show the generated character
+
+**Dream image generation flow (with likeness):**
+1. Dream prompt generated from dream content + style
+2. AI context fetched, `photo_url` retrieved
+3. Edge function called with dream prompt + reference photo as inline_data
+4. Gemini generates dream scene featuring the person's likeness in the selected art style
 
