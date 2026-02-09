@@ -27,7 +27,7 @@ const ProfileSocialLinks = ({
   }
 
   return (
-    <div className="flex items-center justify-center gap-3 mt-2 mb-2">
+    <div className="flex items-center justify-start gap-3 mt-2 mb-2">
       {socialLinks?.twitter && (
         <a 
           href={`https://twitter.com/${socialLinks.twitter}`} 
