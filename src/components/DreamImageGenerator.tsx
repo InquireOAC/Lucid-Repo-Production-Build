@@ -209,6 +209,7 @@ const DreamImageGenerator = ({
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {styleOptions.map((style) => (
               <button
+                type="button"
                 key={style.value}
                 onClick={() => setImageStyle(style.value)}
                 className={cn(
