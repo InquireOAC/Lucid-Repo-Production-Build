@@ -66,7 +66,7 @@ const Learn = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-safe-top">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
@@ -74,7 +74,7 @@ const Learn = () => {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-safe-top px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Sign in required</h2>
           <p className="text-muted-foreground">Please sign in to access the learning system.</p>
@@ -85,7 +85,7 @@ const Learn = () => {
 
   if (pathsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen pt-safe-top">
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );

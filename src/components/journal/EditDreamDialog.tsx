@@ -25,7 +25,7 @@ const EditDreamDialog: React.FC<EditDreamDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg overflow-y-auto max-h-[90vh] glass-card border-white/10">
+      <DialogContent className="w-[95vw] max-w-lg glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="gradient-text">Edit Dream</DialogTitle>
         </DialogHeader>

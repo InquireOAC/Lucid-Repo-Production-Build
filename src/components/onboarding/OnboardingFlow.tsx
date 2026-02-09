@@ -75,8 +75,8 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       <div className="flex-1 relative">
         <img src={screens[currentScreen].image} alt={screens[currentScreen].alt} className="w-full h-full object-cover" />
         
-        {/* Button overlay positioned to cover the static nav buttons in the images - moved up 10px from previous position */}
-        <div className="absolute bottom-[132px] left-1/2 transform -translate-x-1/2">
+        {/* Button overlay positioned to cover the static nav buttons in the images - accounts for safe area */}
+        <div className="absolute left-1/2 transform -translate-x-1/2" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
           <Button onClick={isLastScreen ? handleStart : handleNext} className="w-60 h-14 text-lg font-semibold border-0 py-0 my-[5px] text-black rounded-full bg-white opacity-100">
             {isLastScreen ? "Start" : "Next"}
           </Button>

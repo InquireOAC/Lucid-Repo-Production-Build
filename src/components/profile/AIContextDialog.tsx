@@ -145,7 +145,7 @@ const AIContextDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-xl">
         <DialogHeader>
           <DialogTitle>Your Dream Avatar</DialogTitle>
           <p className="text-sm text-muted-foreground">

@@ -307,7 +307,7 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] starry-background flex flex-col overflow-hidden pt-safe-top pl-safe-left pr-safe-right">
+    <div className="h-full starry-background flex flex-col overflow-hidden pt-safe-top pl-safe-left pr-safe-right" style={{ minHeight: 'calc(100vh - 4rem - env(safe-area-inset-bottom))' }}>
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -415,7 +415,7 @@ const DreamChat = () => {
 
       {/* Messages Area - Takes remaining space and scrollable */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ paddingBottom: '120px' }}>
+        <div className="flex-1 overflow-y-auto ios-scroll-fix p-4 space-y-4" style={{ paddingBottom: '140px' }}>
           {messages.length === 0 ? (
             <div className="text-center">
               <div className="glass-card rounded-2xl p-8 max-w-md mx-auto">
@@ -463,7 +463,7 @@ const DreamChat = () => {
       </div>
 
       {/* Input Area - Fixed at bottom above tab bar */}
-      <div className="fixed bottom-16 left-0 right-0 p-4 border-t border-white/10 glass-card backdrop-blur-xl bg-background/95">
+      <div className="fixed left-0 right-0 p-4 border-t border-white/10 glass-card backdrop-blur-xl bg-background/95 pl-safe-left pr-safe-right" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
         <div className="flex gap-2">
           <Input
             value={input}

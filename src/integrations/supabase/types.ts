@@ -246,6 +246,54 @@ export type Database = {
         }
         Relationships: []
       }
+      creator_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          content_style: string | null
+          created_at: string | null
+          display_name: string
+          engagement_rate: number | null
+          follower_count: number | null
+          id: string
+          niches: string[] | null
+          portfolio_images: string[] | null
+          services_offered: string[] | null
+          social_links: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          content_style?: string | null
+          created_at?: string | null
+          display_name: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id: string
+          niches?: string[] | null
+          portfolio_images?: string[] | null
+          services_offered?: string[] | null
+          social_links?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          content_style?: string | null
+          created_at?: string | null
+          display_name?: string
+          engagement_rate?: number | null
+          follower_count?: number | null
+          id?: string
+          niches?: string[] | null
+          portfolio_images?: string[] | null
+          services_offered?: string[] | null
+          social_links?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           created_at: string
@@ -1235,6 +1283,53 @@ export type Database = {
           xp_reward?: number
         }
         Relationships: []
+      }
+      pricing_tiers: {
+        Row: {
+          created_at: string | null
+          creator_id: string
+          description: string | null
+          duration_days: number | null
+          id: string
+          platforms: string[] | null
+          price: number
+          tier_name: string
+          updated_at: string | null
+          usage_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          creator_id: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          platforms?: string[] | null
+          price: number
+          tier_name: string
+          updated_at?: string | null
+          usage_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          creator_id?: string
+          description?: string | null
+          duration_days?: number | null
+          id?: string
+          platforms?: string[] | null
+          price?: number
+          tier_name?: string
+          updated_at?: string | null
+          usage_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pricing_tiers_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "creator_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

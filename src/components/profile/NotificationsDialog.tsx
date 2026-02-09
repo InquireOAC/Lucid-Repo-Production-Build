@@ -69,7 +69,7 @@ const NotificationsDialog = ({ isOpen, onOpenChange }: NotificationsDialogProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="w-[95vw] max-w-[400px]">
         <DialogHeader>
           <DialogTitle className="gradient-text flex items-center gap-2">
             <Bell className="w-5 h-5" /> Notification Settings

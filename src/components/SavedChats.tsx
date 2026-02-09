@@ -30,7 +30,7 @@ const SavedChats = ({ onBack, onOpenSession }: SavedChatsProps) => {
   }
 
   return (
-    <div className="min-h-screen starry-background p-4">
+    <div className="min-h-screen starry-background p-4 pt-safe-top pl-safe-left pr-safe-right">
       <div className="max-w-4xl mx-auto">
         <SavedChatsHeader onBack={onBack} sessionCount={sessions.length} />
 
