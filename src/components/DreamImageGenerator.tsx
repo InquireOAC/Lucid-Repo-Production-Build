@@ -1,27 +1,18 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Wand2, ImagePlus, Download, Palette } from "lucide-react";
+import { ImagePlus, Download, Wand2, Lock, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 
 import { useDreamImageGeneration } from "@/hooks/useDreamImageGeneration";
-import InitialImagePrompt from "@/components/dreams/InitialImagePrompt";
 import ImageDisplay from "@/components/dreams/ImageDisplay";
 import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
+import { cn } from "@/lib/utils";
 
 interface DreamImageGeneratorProps {
   dreamContent: string;
@@ -31,6 +22,22 @@ interface DreamImageGeneratorProps {
   disabled?: boolean;
   dreamId?: string;
 }
+
+const styleOptions = [
+  { value: "surreal", label: "Surreal" },
+  { value: "realistic", label: "Realistic" },
+  { value: "hyper_realism", label: "Hyper Realism" },
+  { value: "abstract", label: "Abstract" },
+  { value: "impressionist", label: "Impressionist" },
+  { value: "fantasy", label: "Fantasy" },
+  { value: "minimalist", label: "Minimalist" },
+  { value: "vintage", label: "Vintage" },
+  { value: "cyberpunk", label: "Cyberpunk" },
+  { value: "watercolor", label: "Watercolor" },
+  { value: "oil_painting", label: "Oil Painting" },
+  { value: "digital_art", label: "Digital Art" },
+  { value: "sketch", label: "Sketch" },
+];
 
 const DreamImageGenerator = ({
   dreamContent,
@@ -70,187 +77,172 @@ const DreamImageGenerator = ({
       toast.error("No image available to save");
       return;
     }
-
     try {
-      console.log("Attempting to save image:", generatedImage);
       await shareOrSaveImage(generatedImage, "dream-image.png");
     } catch (error) {
       console.error("Save failed:", error);
-      // Error handling is now done in shareOrSaveImage utility
     }
   };
 
-  const styleOptions = [
-    { value: "surreal", label: "Surreal" },
-    { value: "realistic", label: "Realistic" },
-    { value: "hyper_realism", label: "Hyper Realism" },
-    { value: "abstract", label: "Abstract" },
-    { value: "impressionist", label: "Impressionist" },
-    { value: "fantasy", label: "Fantasy" },
-    { value: "minimalist", label: "Minimalist" },
-    { value: "vintage", label: "Vintage" },
-    { value: "cyberpunk", label: "Cyberpunk" },
-    { value: "watercolor", label: "Watercolor" },
-    { value: "oil_painting", label: "Oil Painting" },
-    { value: "digital_art", label: "Digital Art" },
-    { value: "sketch", label: "Sketch" },
-  ];
+  const isFeatureEnabled = isAppCreator || !hasUsedFeature("image") || hasActiveSubscription;
 
-  if (showInfo && !isGenerating) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
-            Dream Image
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <InitialImagePrompt
-            disabled={disabled}
-            hasUsedFeature={hasUsedFeature("image")}
-            isAppCreator={isAppCreator}
-            hasActiveSubscription={hasActiveSubscription}
-            onGenerate={generateImage}
-          />
-          
-          {/* AI Context Toggle - now visible in initial state */}
-          {!disabled && (
-            <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/30 rounded-lg">
-              <Switch
-                id="use-ai-context-initial"
-                checked={useAIContext}
-                onCheckedChange={setUseAIContext}
-              />
-              <Label htmlFor="use-ai-context-initial" className="text-sm cursor-pointer">
-                Use my avatar appearance in images
-              </Label>
-            </div>
-          )}
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <ImagePlus className="h-5 w-5 text-primary" />
+        <h3 className="font-semibold text-base">Dream Visualization</h3>
+      </div>
 
-          {/* Image Style Selection */}
-          {!disabled && (
-            <div className="space-y-2 mb-4">
-              <Label className="flex items-center gap-2">
-                <Palette className="h-4 w-4" />
-                Image Style
-              </Label>
-              <Select value={imageStyle} onValueChange={setImageStyle}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Choose art style" />
-                </SelectTrigger>
-                <SelectContent>
-                  {styleOptions.map((style) => (
-                    <SelectItem key={style.value} value={style.value}>
-                      {style.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          
+      {/* Image Area */}
+      {isGenerating ? (
+        <GeneratingImage />
+      ) : generatedImage ? (
+        <div className="space-y-3">
           <ImageDisplay
-            imageUrl=""
-            imageDataUrl=""
+            imageUrl={generatedImage}
+            imageDataUrl={generatedImage}
             onError={() => setImageError(true)}
             disabled={disabled || isGenerating}
           />
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          <ImagePlus className="h-5 w-5 mr-2 text-dream-purple" />
-          Dream Image
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isGenerating ? (
-          <GeneratingImage />
-        ) : (
-          <>
-            <ImageDisplay
-              imageUrl={generatedImage || ""}
-              imageDataUrl={generatedImage}
-              onError={() => setImageError(true)}
-              disabled={disabled || isGenerating}
-            />
-            {generatedImage && (
-              <div className="flex justify-end mb-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={handleSaveAsPng}
-                >
-                  <Download className="h-4 w-4 mr-1" /> Save as PNG
-                </Button>
-              </div>
-            )}
-            
-            {/* AI Context Toggle */}
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
+              <Download className="h-4 w-4 mr-1" /> Save
+            </Button>
             {!disabled && (
-              <div className="flex items-center space-x-2 mb-4 p-3 bg-muted/30 rounded-lg">
-                <Switch
-                  id="use-ai-context"
-                  checked={useAIContext}
-                  onCheckedChange={setUseAIContext}
-                />
-                <Label htmlFor="use-ai-context" className="text-sm cursor-pointer">
-                  Use my avatar appearance in images
-                </Label>
-              </div>
+              <Button variant="outline" size="sm" onClick={generateImage} disabled={isGenerating}>
+                <Wand2 className="h-4 w-4 mr-1" /> Regenerate
+              </Button>
             )}
-
-            {/* Image Style Selection */}
-            {!disabled && (
-              <div className="space-y-2 mb-4">
-                <Label className="flex items-center gap-2">
-                  <Palette className="h-4 w-4" />
-                  Image Style
-                </Label>
-                <Select value={imageStyle} onValueChange={setImageStyle}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose art style" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {styleOptions.map((style) => (
-                      <SelectItem key={style.value} value={style.value}>
-                        {style.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            
-            {(generatedImage || isGenerating || imagePrompt) && (
-              <ImagePromptInput
-                imagePrompt={imagePrompt}
-                onChange={setImagePrompt}
-                disabled={disabled || isGenerating}
-              />
-            )}
-            {!disabled && (generatedImage || imagePrompt) && !isGenerating && (
-              <div className="flex justify-end">
-                <Button variant="outline" size="sm" onClick={generateImage} disabled={isGenerating}>
-                  <Wand2 className="h-4 w-4 mr-1" /> Regenerate
-                </Button>
-              </div>
-            )}
-            {imageError && !isGenerating && (
-              <p className="text-xs text-red-500 mt-1 text-center">
-                There was an issue with the image. Please try regenerating.
+          </div>
+          {imageError && (
+            <p className="text-xs text-destructive text-center">
+              There was an issue with the image. Please try regenerating.
+            </p>
+          )}
+        </div>
+      ) : (
+        /* Empty State Placeholder */
+        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-b from-muted/80 to-muted/40 border border-border/50">
+          <div className="flex flex-col items-center justify-center py-10 px-4 text-center space-y-3">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <ImagePlus className="h-6 w-6 text-primary/60" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-foreground/80">No image generated yet</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Tap 'Generate' to visualize this dream
               </p>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+            </div>
+          </div>
+          {/* Generate Button inside placeholder */}
+          <div className="px-4 pb-4">
+            {!disabled && isFeatureEnabled ? (
+              <Button
+                onClick={generateImage}
+                className="w-full gap-2"
+                variant="aurora"
+              >
+                <Wand2 className="h-4 w-4" />
+                Generate Image
+              </Button>
+            ) : !disabled ? (
+              <Button
+                onClick={() => {}}
+                variant="outline"
+                className="w-full gap-2"
+              >
+                <Lock className="h-4 w-4" />
+                Subscribe to Generate
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Prompt input when image exists */}
+      {generatedImage && !isGenerating && (
+        <ImagePromptInput
+          imagePrompt={imagePrompt}
+          onChange={setImagePrompt}
+          disabled={disabled || isGenerating}
+        />
+      )}
+
+      {/* Use Avatar Toggle */}
+      {!disabled && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border/50">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+              <span className="text-sm">👤</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium">Use Avatar</p>
+              <p className="text-xs text-muted-foreground">Include your likeness</p>
+            </div>
+          </div>
+          <Switch
+            checked={useAIContext}
+            onCheckedChange={setUseAIContext}
+          />
+        </div>
+      )}
+
+      {/* Visual Style - Horizontal Thumbnails */}
+      {!disabled && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visual Style</p>
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {styleOptions.map((style) => (
+              <button
+                key={style.value}
+                onClick={() => setImageStyle(style.value)}
+                className={cn(
+                  "flex-shrink-0 flex flex-col items-center gap-1.5 group",
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-[72px] h-[72px] rounded-xl border-2 transition-all flex items-center justify-center text-xl",
+                    "bg-muted/50",
+                    imageStyle === style.value
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-border/50 hover:border-primary/30"
+                  )}
+                >
+                  {imageStyle === style.value && (
+                    <div className="absolute">
+                      <Check className="h-4 w-4 text-primary" />
+                    </div>
+                  )}
+                  <span className="text-lg opacity-60">
+                    {style.value === 'surreal' && '🌀'}
+                    {style.value === 'realistic' && '📷'}
+                    {style.value === 'hyper_realism' && '🔍'}
+                    {style.value === 'abstract' && '🎨'}
+                    {style.value === 'impressionist' && '🖌️'}
+                    {style.value === 'fantasy' && '🐉'}
+                    {style.value === 'minimalist' && '◻️'}
+                    {style.value === 'vintage' && '📜'}
+                    {style.value === 'cyberpunk' && '🤖'}
+                    {style.value === 'watercolor' && '💧'}
+                    {style.value === 'oil_painting' && '🖼️'}
+                    {style.value === 'digital_art' && '💻'}
+                    {style.value === 'sketch' && '✏️'}
+                  </span>
+                </div>
+                <span className={cn(
+                  "text-[10px] leading-tight",
+                  imageStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
+                )}>
+                  {style.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
