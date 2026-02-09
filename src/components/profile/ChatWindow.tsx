@@ -189,7 +189,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       {/* Input */}
       <div
         className="flex-shrink-0 px-4 py-2 border-t border-border bg-background"
-        style={{ paddingBottom: `calc(8px + env(safe-area-inset-bottom, 0px))` }}
+        style={{ paddingBottom: `calc(4.5rem + env(safe-area-inset-bottom, 0px))` }}
       >
         <div className="flex items-center gap-2">
           <Button
