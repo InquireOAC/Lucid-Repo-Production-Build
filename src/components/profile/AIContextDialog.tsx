@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -97,6 +97,26 @@ const AIContextDialog = ({
     }
   };
 
+  const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
+    try {
+      const prompt = "Create a stylized character portrait of the person in this reference photo. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be semi-realistic digital art suitable for a profile picture.";
+      
+      const result = await supabase.functions.invoke("generate-dream-image", {
+        body: { prompt, referenceImageUrl: rawPhotoUrl },
+      });
+
+      if (result.error || !result.data) {
+        console.error("Avatar generation error:", result.error);
+        return null;
+      }
+
+      return result.data?.imageUrl || result.data?.image_url || null;
+    } catch (error) {
+      console.error("Error generating character avatar:", error);
+      return null;
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
@@ -105,11 +125,23 @@ const AIContextDialog = ({
       let photoUrl = contextData.photo_url;
 
       if (photoFile) {
-        photoUrl = await uploadPhoto(photoFile);
-        if (!photoUrl) {
+        // Step 1: Upload raw photo
+        const rawPhotoUrl = await uploadPhoto(photoFile);
+        if (!rawPhotoUrl) {
           toast.error('Failed to upload photo');
           setIsLoading(false);
           return;
+        }
+
+        // Step 2: Generate character avatar from the raw photo
+        toast.info('Generating your avatar...');
+        const generatedAvatarUrl = await generateCharacterAvatar(rawPhotoUrl);
+        
+        if (generatedAvatarUrl) {
+          photoUrl = generatedAvatarUrl;
+        } else {
+          toast.warning('Avatar generation failed, using original photo');
+          photoUrl = rawPhotoUrl;
         }
       }
 
@@ -153,7 +185,12 @@ const AIContextDialog = ({
           {/* Avatar Preview */}
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
-              {photoPreview ? (
+              {isLoading ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  <span className="text-xs text-muted-foreground">Generating...</span>
+                </div>
+              ) : photoPreview ? (
                 <img
                   src={photoPreview}
                   alt="Dream Avatar"
@@ -210,11 +247,16 @@ const AIContextDialog = ({
 
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading}>
-              {isLoading ? 'Saving...' : 'Save Avatar'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating Avatar...
+                </>
+              ) : 'Save Avatar'}
             </Button>
           </div>
         </div>

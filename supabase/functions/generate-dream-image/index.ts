@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { prompt } = await req.json()
+    const { prompt, referenceImageUrl } = await req.json()
     
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Invalid prompt')
@@ -43,11 +43,44 @@ serve(async (req) => {
       throw new Error(`Prompt too long. Maximum ${MAX_PROMPT_LENGTH} characters allowed.`)
     }
 
-    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}`)
+    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}`)
 
     const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleApiKey) {
       throw new Error('GOOGLE_AI_API_KEY not configured')
+    }
+
+    // Build parts array - text prompt + optional reference image
+    const parts: any[] = [{ text: prompt }]
+
+    if (referenceImageUrl) {
+      try {
+        console.log("Fetching reference image:", referenceImageUrl.substring(0, 100))
+        const imgResponse = await fetch(referenceImageUrl)
+        if (imgResponse.ok) {
+          const imgBuffer = await imgResponse.arrayBuffer()
+          const imgBytes = new Uint8Array(imgBuffer)
+          // Convert to base64
+          let binary = ''
+          for (let i = 0; i < imgBytes.length; i++) {
+            binary += String.fromCharCode(imgBytes[i])
+          }
+          const base64Data = btoa(binary)
+          const contentType = imgResponse.headers.get('content-type') || 'image/jpeg'
+          
+          parts.push({
+            inline_data: {
+              mime_type: contentType,
+              data: base64Data
+            }
+          })
+          console.log("Reference image added to request, size:", imgBytes.length)
+        } else {
+          console.warn("Failed to fetch reference image:", imgResponse.status)
+        }
+      } catch (imgErr) {
+        console.warn("Error fetching reference image, continuing without it:", imgErr)
+      }
     }
 
     const response = await fetch(
@@ -56,7 +89,7 @@ serve(async (req) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
+          contents: [{ parts }],
           generationConfig: {
             responseModalities: ["TEXT", "IMAGE"],
           },
