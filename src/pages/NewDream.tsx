@@ -135,7 +135,7 @@ const NewDream = () => {
 
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold gradient-text">New Dream</h1>
+          <h1 className="text-lg font-semibold white-text">New Dream</h1>
           <Button
             variant="aurora"
             size="sm"
