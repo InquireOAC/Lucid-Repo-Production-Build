@@ -56,6 +56,7 @@ const ProfileHeader = ({
         bannerImage={bannerImage}
         isOwnProfile={isOwnProfile}
         onBannerUpdated={(url) => setBannerImage(url)}
+        onBannerRemoved={() => setBannerImage(null)}
       />
       
       {/* Profile Content - X/Twitter style */}

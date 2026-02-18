@@ -31,7 +31,7 @@ const VideoCard = ({ video, onCardClick }: VideoCardProps) => {
               className="w-full h-48 object-cover rounded-t-xl"
             />
           ) : (
-            <div className="w-full h-48 bg-gradient-to-br from-dream-purple to-dream-pink rounded-t-xl flex items-center justify-center">
+            <div className="w-full h-48 bg-[hsl(270,40%,15%)] rounded-t-xl flex items-center justify-center">
               <PlayCircle className="w-16 h-16 text-white/80" />
             </div>
           )}
@@ -51,7 +51,7 @@ const VideoCard = ({ video, onCardClick }: VideoCardProps) => {
 
         <div className="p-4 space-y-3">
           <div>
-            <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-dream-pink transition-colors">
+            <h3 className="text-lg font-semibold text-white line-clamp-2 group-hover:text-white/80 transition-colors">
               {video.title}
             </h3>
             <p className="text-sm text-white/70 mt-1">

@@ -13,7 +13,10 @@ export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imag
       appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
     }
 
-    if (appearanceDetails.length > 0) {
+    // If user has a reference photo, inject explicit character-compositing instructions
+    if (aiContext.photo_url) {
+      personalizedPrompt = `${basePrompt}. The reference image provided shows the main character of this dream — compose this character naturally as the dreamer and protagonist of the scene, maintaining their exact appearance and likeness`;
+    } else if (appearanceDetails.length > 0) {
       const personDescription = `featuring a person with ${appearanceDetails.join(', ')}`;
       personalizedPrompt = `${basePrompt}. ${personDescription}`;
     }
@@ -59,26 +62,32 @@ export const cleanPromptForNonPersonalized = (prompt: string, dreamContent: stri
  * Add selected image style to the prompt
  */
 const addImageStyleToPrompt = (prompt: string, imageStyle?: string): string => {
+  if (imageStyle === 'realistic') {
+    return `${prompt}. Render as a photorealistic photograph: ultra high resolution, shot on DSLR camera, 8K detail, natural cinematic lighting, sharp focus, no painterly or artistic effects, hyperrealistic`;
+  }
+  
+  if (imageStyle === 'hyper_realism') {
+    return `${prompt}. Render as an extreme hyperrealistic photograph: 8K ultra-high resolution, shot on a professional DSLR with 85mm prime lens, perfect exposure, razor-sharp detail, photographic realism indistinguishable from a real photograph, studio-quality natural lighting`;
+  }
+
   if (imageStyle && imageStyle !== 'surreal') {
     const styleMap: { [key: string]: string } = {
-      realistic: 'photorealistic',
-      abstract: 'abstract art',
-      impressionist: 'impressionist painting',
-      fantasy: 'fantasy art',
-      minimalist: 'minimalist',
-      vintage: 'vintage photography',
-      cyberpunk: 'cyberpunk',
-      watercolor: 'watercolor painting',
-      oil_painting: 'oil painting',
-      digital_art: 'digital art',
-      sketch: 'pencil sketch',
+      abstract: 'abstract art with bold shapes and non-representational forms',
+      impressionist: 'impressionist painting with visible brushstrokes and soft light',
+      fantasy: 'epic fantasy art with rich detail and magical atmosphere',
+      minimalist: 'minimalist design with clean lines and limited palette',
+      vintage: 'vintage photography with film grain and muted tones',
+      cyberpunk: 'cyberpunk digital art with neon lights and futuristic dystopia',
+      watercolor: 'delicate watercolor painting with transparent washes',
+      oil_painting: 'classical oil painting with rich impasto texture',
+      digital_art: 'polished digital art with vibrant colors',
+      sketch: 'detailed pencil sketch with expressive linework',
     };
     
     const styleDescription = styleMap[imageStyle] || imageStyle;
-    return `${prompt}. Render in ${styleDescription} artistic style`;
-  } else if (!imageStyle || imageStyle === 'surreal') {
-    return `${prompt}. Render in surreal artistic style`;
+    return `${prompt}. Render in ${styleDescription} style`;
   }
   
-  return prompt;
+  // Default: surreal
+  return `${prompt}. Render in surreal dreamlike artistic style with vivid colors and fantastical atmosphere`;
 };

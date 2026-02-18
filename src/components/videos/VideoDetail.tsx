@@ -54,7 +54,7 @@ const VideoDetail = ({
                   referrerPolicy="strict-origin-when-cross-origin"
                 />
               );
-            })() : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-dream-purple to-dream-pink">
+            })() : <div className="w-full h-full flex items-center justify-center bg-[hsl(270,40%,15%)]">
                 <p className="text-white">Video not available</p>
               </div>}
           </div>
@@ -63,7 +63,7 @@ const VideoDetail = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-dream-pink font-medium text-center">
+                <p className="text-white/90 font-medium text-center">
                   {video.dreamer_story_name}
                 </p>
               </div>

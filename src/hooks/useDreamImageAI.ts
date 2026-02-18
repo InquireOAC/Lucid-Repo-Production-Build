@@ -28,10 +28,13 @@ export function useDreamImageAI() {
     return buildPersonalizedPrompt(basePrompt, null, imageStyle);
   }, []);
 
-  const generateDreamImageFromAI = useCallback(async (prompt: string, referenceImageUrl?: string) => {
+  const generateDreamImageFromAI = useCallback(async (prompt: string, referenceImageUrl?: string, imageStyle?: string) => {
     const body: Record<string, string> = { prompt };
     if (referenceImageUrl) {
       body.referenceImageUrl = referenceImageUrl;
+    }
+    if (imageStyle) {
+      body.imageStyle = imageStyle;
     }
     const result = await supabase.functions.invoke("generate-dream-image", { body });
     if (result.error || !result.data) {
