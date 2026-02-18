@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { prompt, referenceImageUrl } = await req.json()
+    const { prompt, referenceImageUrl, imageStyle } = await req.json()
     
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Invalid prompt')
@@ -43,15 +43,18 @@ serve(async (req) => {
       throw new Error(`Prompt too long. Maximum ${MAX_PROMPT_LENGTH} characters allowed.`)
     }
 
-    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}`)
+    const isPhotoRealistic = imageStyle === 'realistic' || imageStyle === 'hyper_realism'
+
+    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, style: ${imageStyle}, photoRealistic: ${isPhotoRealistic}`)
 
     const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
     if (!googleApiKey) {
       throw new Error('GOOGLE_AI_API_KEY not configured')
     }
 
-    // Build parts array - text prompt + optional reference image
-    const parts: any[] = [{ text: prompt }]
+    // Build parts array
+    // For photorealistic + reference: put reference image FIRST with explicit character label
+    const parts: any[] = []
 
     if (referenceImageUrl) {
       try {
@@ -60,13 +63,17 @@ serve(async (req) => {
         if (imgResponse.ok) {
           const imgBuffer = await imgResponse.arrayBuffer()
           const imgBytes = new Uint8Array(imgBuffer)
-          // Convert to base64
           let binary = ''
           for (let i = 0; i < imgBytes.length; i++) {
             binary += String.fromCharCode(imgBytes[i])
           }
           const base64Data = btoa(binary)
           const contentType = imgResponse.headers.get('content-type') || 'image/jpeg'
+          
+          if (isPhotoRealistic) {
+            // For photorealistic: label it explicitly as a character reference FIRST
+            parts.push({ text: '[CHARACTER REFERENCE] The person shown in the following image is the main character to compose into this dream scene. Maintain their exact facial features, likeness, and appearance.' })
+          }
           
           parts.push({
             inline_data: {
@@ -82,6 +89,9 @@ serve(async (req) => {
         console.warn("Error fetching reference image, continuing without it:", imgErr)
       }
     }
+
+    // Add the prompt text after the reference image
+    parts.push({ text: prompt })
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${googleApiKey}`,

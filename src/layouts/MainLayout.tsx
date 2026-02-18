@@ -69,7 +69,7 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       <div className={cn(
         "p-2 rounded-full transition-all duration-300 relative",
         isActive 
-          ? "bg-gradient-to-r from-aurora-purple via-aurora-violet to-aurora-blue text-white shadow-lg shadow-aurora-purple/40" 
+          ? "bg-[hsl(210,100%,55%)] text-white shadow-lg shadow-blue-500/40" 
           : "text-white/50"
       )}>
         {icon}

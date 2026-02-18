@@ -77,7 +77,7 @@ export const useImageGeneration = ({
 
       // 3. Generate image from prompt via edge function
       console.log("Step 2: Generating image from AI...");
-      const openaiUrl = await generateDreamImageFromAI(generatedPromptText, referenceImageUrl);
+      const openaiUrl = await generateDreamImageFromAI(generatedPromptText, referenceImageUrl, imageStyle);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
       console.log("AI image generated:", openaiUrl);
 
