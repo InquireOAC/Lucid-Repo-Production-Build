@@ -349,9 +349,9 @@
    TEXT EFFECTS
    ========================================== */
 
-/* Electric blue text - no gradient */
+/* Aurora accent text */
 .gradient-text {
-  color: hsl(210, 100%, 70%);
+  color: hsl(270, 80%, 75%);
 }
 
 /* Magic glow text */

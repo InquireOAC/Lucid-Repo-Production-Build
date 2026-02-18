@@ -44,6 +44,7 @@ const FollowersModal = ({ title, open, onOpenChange, users, loading }: Followers
                   <SymbolAvatar
                     symbol={user.avatar_symbol}
                     color={user.avatar_color}
+                    avatarUrl={user.avatar_url}
                     fallbackLetter={fallbackLetter}
                     size={28}
                   />

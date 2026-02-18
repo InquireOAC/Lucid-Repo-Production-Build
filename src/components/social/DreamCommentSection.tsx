@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useDreamComments } from "@/hooks/useDreamComments";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import FlagButton from "@/components/moderation/FlagButton";
 import { useBlockedUsers } from "@/hooks/useBlockedUsers";
 import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
@@ -55,9 +55,13 @@ export default function DreamCommentSection({ dreamId, user }) {
       <div className="space-y-3">
         {visibleComments.map(c => (
           <div key={c.id} className="flex gap-2 items-start">
-            <Avatar className="h-6 w-6">
-              <AvatarImage src={c.profiles?.profile_picture} />
-            </Avatar>
+            <SymbolAvatar
+              symbol={c.profiles?.avatar_symbol}
+              color={c.profiles?.avatar_color}
+              avatarUrl={c.profiles?.avatar_url || c.profiles?.profile_picture}
+              fallbackLetter={(c.profiles?.username || "U")[0].toUpperCase()}
+              size={24}
+            />
             <div className="flex-1">
               <div className="flex gap-2 items-center">
                 <span className="font-semibold text-xs">{c.profiles?.username}</span>

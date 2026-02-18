@@ -22,6 +22,7 @@ interface SymbolAvatarProps {
   fallbackLetter?: string;
   size?: number;
   className?: string;
+  avatarUrl?: string | null;
 }
 
 const fallbackColor = "#9b87f5";
@@ -32,7 +33,24 @@ export default function SymbolAvatar({
   fallbackLetter = "U",
   size = 40,
   className = "",
+  avatarUrl,
 }: SymbolAvatarProps) {
+  // If the user has set a photo/dream avatar as their avatar, display it
+  if (avatarUrl) {
+    return (
+      <div
+        className={`flex items-center justify-center rounded-full overflow-hidden border-2 border-dream-lavender ${className}`}
+        style={{ width: size, height: size, flexShrink: 0 }}
+      >
+        <img
+          src={avatarUrl}
+          alt="avatar"
+          className="w-full h-full object-cover"
+        />
+      </div>
+    );
+  }
+
   const SymbolIcon =
     symbol && SymbolComponents[symbol.toLowerCase()]
       ? SymbolComponents[symbol.toLowerCase()]

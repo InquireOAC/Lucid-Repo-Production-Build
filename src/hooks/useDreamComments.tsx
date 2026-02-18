@@ -11,7 +11,7 @@ export function useDreamComments(dreamId: string|undefined) {
     setIsLoading(true);
     const { data, error } = await supabase
       .from("comments")
-      .select("*, profiles:user_id(username, profile_picture)")
+      .select("*, profiles:user_id(username, profile_picture, avatar_url, avatar_symbol, avatar_color)")
       .eq("dream_id", dreamId)
       .order("created_at", { ascending: true });
     if (!error) setComments(data);

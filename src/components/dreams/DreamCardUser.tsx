@@ -6,12 +6,13 @@ interface DreamCardUserProps {
   profile?: {
     username?: string;
     display_name?: string;
+    avatar_url?: string;
     avatar_symbol?: string;
     avatar_color?: string;
     id?: string;
   };
-  avatarSymbol?: string; // NEW: explicit prop
-  avatarColor?: string;  // NEW: explicit prop
+  avatarSymbol?: string;
+  avatarColor?: string;
   onUserClick: (e: React.MouseEvent) => void;
 }
 
@@ -23,9 +24,9 @@ const DreamCardUser = ({
 }: DreamCardUserProps) => {
   const username = profile?.username || "";
   const displayName = profile?.display_name || "";
-  // Prefer explicit avatarSymbol/avatarColor prop, then fallback to profile.
   const symbol = avatarSymbol ?? profile?.avatar_symbol ?? undefined;
   const color = avatarColor ?? profile?.avatar_color ?? undefined;
+  const avatarUrl = profile?.avatar_url ?? undefined;
 
   let nameToShow: string;
   if (username && username !== "Anonymous User" && username.trim() !== "") {
@@ -45,6 +46,7 @@ const DreamCardUser = ({
       <SymbolAvatar
         symbol={symbol}
         color={color}
+        avatarUrl={avatarUrl}
         fallbackLetter={nameToShow.charAt(0).toUpperCase()}
         size={28}
         className="mr-2"

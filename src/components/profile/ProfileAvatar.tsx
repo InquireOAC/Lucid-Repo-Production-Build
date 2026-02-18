@@ -7,6 +7,7 @@ import SymbolAvatar from "./SymbolAvatar";
 interface ProfileAvatarProps {
   avatarSymbol?: string | null;
   avatarColor?: string | null;
+  avatarUrl?: string | null;
   username?: string;
   isOwnProfile: boolean;
   onEdit: () => void;
@@ -15,6 +16,7 @@ interface ProfileAvatarProps {
 export default function ProfileAvatar({
   avatarSymbol,
   avatarColor,
+  avatarUrl,
   username,
   isOwnProfile,
   onEdit,
@@ -26,6 +28,7 @@ export default function ProfileAvatar({
       <SymbolAvatar
         symbol={avatarSymbol}
         color={avatarColor}
+        avatarUrl={avatarUrl}
         fallbackLetter={fallbackLetter}
         size={96}
         className="shadow-lg border-4 border-dream-lavender"
@@ -37,7 +40,7 @@ export default function ProfileAvatar({
           className="absolute bottom-0 right-0 rounded-full bg-dream-purple/90 shadow-md p-1 h-8 w-8 border-none flex items-center justify-center"
           onClick={onEdit}
           style={{
-            background: "#9b87f5",  // Primary purple
+            background: "#9b87f5",
             border: "none",
           }}
         >

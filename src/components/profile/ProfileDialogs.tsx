@@ -30,6 +30,8 @@ interface ProfileDialogsProps {
   setAvatarSymbol: (v: string) => void;
   avatarColor: string | null;
   setAvatarColor: (v: string) => void;
+  avatarUrl: string | null;
+  setAvatarUrl: (v: string | null) => void;
   handleUpdateProfile: () => void;
   userId?: string;
   socialLinks: any;
@@ -72,6 +74,8 @@ const ProfileDialogs = ({
   setAvatarSymbol,
   avatarColor,
   setAvatarColor,
+  avatarUrl,
+  setAvatarUrl,
   handleUpdateProfile,
   userId,
   socialLinks,
@@ -104,6 +108,8 @@ const ProfileDialogs = ({
       setAvatarSymbol={setAvatarSymbol}
       avatarColor={avatarColor}
       setAvatarColor={setAvatarColor}
+      avatarUrl={avatarUrl}
+      setAvatarUrl={setAvatarUrl}
       handleUpdateProfile={handleUpdateProfile}
     />
     <SocialLinksDialog

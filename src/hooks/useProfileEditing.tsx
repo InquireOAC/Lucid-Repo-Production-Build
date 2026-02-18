@@ -7,9 +7,9 @@ export function useProfileEditing(user: any) {
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
   const [bio, setBio] = useState("");
-  // Remove avatarUrl logic, instead use symbol and color
   const [avatarSymbol, setAvatarSymbol] = useState<string | null>(null);
   const [avatarColor, setAvatarColor] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [socialLinks, setSocialLinks] = useState({
     twitter: "",
     instagram: "",
@@ -17,7 +17,6 @@ export function useProfileEditing(user: any) {
     website: ""
   });
 
-  // On successful update, update local state immediately so UI reflects the new value
   const handleUpdateProfile = async () => {
     if (!user) return;
     try {
@@ -29,13 +28,11 @@ export function useProfileEditing(user: any) {
           bio,
           avatar_symbol: avatarSymbol,
           avatar_color: avatarColor,
+          avatar_url: avatarUrl,
           updated_at: new Date().toISOString()
         })
         .eq("id", user.id);
       if (error) throw error;
-      // UI: since these are updated, set them in local state to trigger re-render
-      setAvatarSymbol(avatarSymbol);
-      setAvatarColor(avatarColor);
       toast.success("Profile updated successfully!");
     } catch (error: any) {
       toast.error(error.message || "Error updating profile");
@@ -59,8 +56,6 @@ export function useProfileEditing(user: any) {
     }
   };
 
-  // No avatarUrl/setAvatarUrl/handleAvatarChange logic anymore
-
   return {
     displayName,
     setDisplayName,
@@ -72,6 +67,8 @@ export function useProfileEditing(user: any) {
     setAvatarSymbol,
     avatarColor,
     setAvatarColor,
+    avatarUrl,
+    setAvatarUrl,
     socialLinks,
     setSocialLinks,
     handleUpdateProfile,
