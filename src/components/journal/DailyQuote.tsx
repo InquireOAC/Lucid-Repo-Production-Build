@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-
+import { Moon } from "lucide-react";
 
 const inspirationalDreamQuotes = [
 "Dreams are illustrations from the book your soul is writing about you.",
@@ -35,8 +35,8 @@ const DailyQuote = () => {
 
   return (
     <h1 className="text-3xl md:text-4xl font-bold gradient-text flex items-center gap-2">
-      
-      <span className="italic">{dailyQuote}</span>
+      <Moon className="animate-float" />
+      <span className="italic text-violet-200">{dailyQuote}</span>
     </h1>);
 
 };
