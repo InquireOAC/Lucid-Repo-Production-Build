@@ -205,7 +205,7 @@ const DreamCard = ({
           <Button
             variant="outline"
             size={isJournalView ? "sm" : "sm"}
-            className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
+            className="bg-primary/10 hover:bg-primary/20 border-primary/30 hover:border-primary/50 text-slate-300"
             onClick={(e) => handleButtonClick(e, onEdit)}>
 
                 Edit
@@ -215,7 +215,7 @@ const DreamCard = ({
           <Button
             variant="outline"
             size={isJournalView ? "sm" : "sm"}
-            className="bg-primary/10 hover:bg-primary/20 border-primary/30 hover:border-primary/50 text-slate-300"
+            className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
             onClick={(e) => handleButtonClick(e, onTogglePublic)}>
 
                 {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
