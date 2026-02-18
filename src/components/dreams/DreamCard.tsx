@@ -179,7 +179,7 @@ const DreamCard = ({
           {mappedTags.slice(0, isJournalView ? 3 : mappedTags.length).map((tag) =>
           <Badge
             key={tag.id}
-            className="text-xs cursor-pointer bg-primary/15 hover:bg-primary/25 text-primary border-primary/30 transition-all duration-200"
+            className="text-xs cursor-pointer bg-primary/15 hover:bg-primary/25 border-primary/30 transition-all duration-200 text-slate-300"
             onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}>
 
                 {tag.name}
@@ -205,7 +205,7 @@ const DreamCard = ({
           <Button
             variant="outline"
             size={isJournalView ? "sm" : "sm"}
-            className="bg-primary/10 hover:bg-primary/20 border-primary/30 hover:border-primary/50 text-slate-300"
+            className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
             onClick={(e) => handleButtonClick(e, onEdit)}>
 
                 Edit
