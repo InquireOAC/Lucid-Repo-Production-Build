@@ -33,7 +33,7 @@ const DailyQuote = () => {
 
   return (
     <h1 className="text-3xl md:text-4xl font-bold white-text flex items-center gap-2">
-      <span className="italic text-xl">{dailyQuote}</span>
+      <span className="italic text-xl py-0 my-[10px]">{dailyQuote}</span>
     </h1>);
 
 };
