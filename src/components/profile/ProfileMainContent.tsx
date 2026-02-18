@@ -44,6 +44,8 @@ interface ProfileMainContentProps {
   setAvatarSymbol: (value: string) => void;
   avatarColor: string | null;
   setAvatarColor: (value: string) => void;
+  avatarUrl: string | null;
+  setAvatarUrl: (value: string | null) => void;
   handleUpdateProfile: () => void;
   userId?: string;
   socialLinks: any;
@@ -99,6 +101,8 @@ const ProfileMainContent = ({
   setAvatarSymbol,
   avatarColor,
   setAvatarColor,
+  avatarUrl,
+  setAvatarUrl,
   handleUpdateProfile,
   userId,
   socialLinks,
@@ -177,6 +181,8 @@ const ProfileMainContent = ({
         setAvatarSymbol={setAvatarSymbol}
         avatarColor={avatarColor}
         setAvatarColor={setAvatarColor}
+        avatarUrl={avatarUrl}
+        setAvatarUrl={setAvatarUrl}
         handleUpdateProfile={handleUpdateProfile}
         userId={userId}
         socialLinks={socialLinks}

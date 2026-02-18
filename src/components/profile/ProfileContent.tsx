@@ -59,6 +59,8 @@ const ProfileContent = () => {
     setAvatarSymbol,
     avatarColor,
     setAvatarColor,
+    avatarUrl,
+    setAvatarUrl,
     socialLinks,
     setSocialLinks,
     dreamCount,
@@ -227,6 +229,8 @@ const ProfileContent = () => {
           setAvatarSymbol={setAvatarSymbol}
           avatarColor={avatarColor}
           setAvatarColor={setAvatarColor}
+          avatarUrl={avatarUrl}
+          setAvatarUrl={setAvatarUrl}
           handleUpdateProfile={handleUpdateProfile}
           userId={user?.id}
           socialLinks={socialLinks}

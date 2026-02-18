@@ -40,7 +40,9 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
 
   const {
     displayName, setDisplayName, username, setUsername, bio, setBio,
-    avatarSymbol, setAvatarSymbol, avatarColor, setAvatarColor, socialLinks, setSocialLinks,
+    avatarSymbol, setAvatarSymbol, avatarColor, setAvatarColor,
+    avatarUrl, setAvatarUrl,
+    socialLinks, setSocialLinks,
     handleUpdateProfile, handleUpdateSocialLinks
   } = useProfileEditing(user);
   const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdentifier);
@@ -62,6 +64,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
         setBio(profile.bio || "");
         setAvatarSymbol(profile.avatar_symbol || "");
         setAvatarColor(profile.avatar_color || "");
+        setAvatarUrl(profile.avatar_url || null);
 
         if (profile.social_links) {
           setSocialLinks({
@@ -146,6 +149,8 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     setAvatarSymbol,
     avatarColor,
     setAvatarColor,
+    avatarUrl,
+    setAvatarUrl,
     socialLinks,
     setSocialLinks,
     dreamCount,

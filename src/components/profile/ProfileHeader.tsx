@@ -69,6 +69,7 @@ const ProfileHeader = ({
               <ProfileAvatar
                 avatarSymbol={profile?.avatar_symbol}
                 avatarColor={profile?.avatar_color}
+                avatarUrl={profile?.avatar_url}
                 username={profile?.username}
                 isOwnProfile={isOwnProfile}
                 onEdit={onEditProfileClick}
