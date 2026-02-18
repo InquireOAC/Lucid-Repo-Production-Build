@@ -11,8 +11,8 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue } from
+"@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import { VoiceRecorder } from "@/components/dreams/VoiceRecorder";
@@ -39,7 +39,7 @@ const NewDream = () => {
     analysis: "",
     generatedImage: "",
     imagePrompt: "",
-    lucid: false,
+    lucid: false
   });
 
   const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
@@ -48,8 +48,8 @@ const NewDream = () => {
   const CHARACTER_LIMIT = 3000;
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  {
     const { name, value } = e.target;
     if (name === "content" && value.length > CHARACTER_LIMIT) return;
     setFormData((p) => ({ ...p, [name]: value }));
@@ -58,9 +58,9 @@ const NewDream = () => {
   const handleTagSelect = (tagId: string) => {
     setFormData((p) => ({
       ...p,
-      tags: p.tags.includes(tagId)
-        ? p.tags.filter((id) => id !== tagId)
-        : [...p.tags, tagId],
+      tags: p.tags.includes(tagId) ?
+      p.tags.filter((id) => id !== tagId) :
+      [...p.tags, tagId]
     }));
   };
 
@@ -68,7 +68,7 @@ const NewDream = () => {
     setRecordedAudio(audioBlob);
     const localAudioUrl = URL.createObjectURL(audioBlob);
     setAudioUrl(localAudioUrl);
-    setFormData(p => ({
+    setFormData((p) => ({
       ...p,
       content: (p.content + '\n\n🎵 Audio recorded').trim()
     }));
@@ -113,7 +113,7 @@ const NewDream = () => {
         analysis: formData.analysis,
         generatedImage: formData.generatedImage,
         imagePrompt: formData.imagePrompt,
-        audioUrl: uploadedAudioUrl || undefined,
+        audioUrl: uploadedAudioUrl || undefined
       });
       navigate("/");
     } catch (error) {
@@ -131,8 +131,8 @@ const NewDream = () => {
             variant="ghost"
             size="icon"
             onClick={() => navigate("/")}
-            className="text-white/70 hover:text-white"
-          >
+            className="text-white/70 hover:text-white">
+
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-semibold gradient-text">New Dream</h1>
@@ -141,8 +141,8 @@ const NewDream = () => {
             size="sm"
             onClick={handleSubmit}
             disabled={isSubmitting || isUploading || !formData.title.trim()}
-            className="gap-2"
-          >
+            className="gap-2">
+
             <Save className="h-4 w-4" />
             Save
           </Button>
@@ -163,8 +163,8 @@ const NewDream = () => {
             placeholder="Title your dream..."
             value={formData.title}
             onChange={handleChange}
-            className="text-xl font-medium bg-transparent border-0 border-b border-primary/20 rounded-none px-0 focus:border-primary/50 placeholder:text-muted-foreground/50"
-          />
+            className="text-xl font-medium bg-transparent border-0 border-b border-primary/20 rounded-none px-0 focus:border-primary/50 placeholder:text-muted-foreground/50" />
+
         </div>
 
         {/* Input Mode Toggle */}
@@ -174,8 +174,8 @@ const NewDream = () => {
             variant={inputMode === 'text' ? "aurora" : "outline"}
             size="sm"
             onClick={() => setInputMode('text')}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <FileText className="h-4 w-4" />
             Text
           </Button>
@@ -184,8 +184,8 @@ const NewDream = () => {
             variant={inputMode === 'voice' ? "aurora" : "outline"}
             size="sm"
             onClick={() => setInputMode('voice')}
-            className="flex items-center gap-2"
-          >
+            className="flex items-center gap-2">
+
             <Mic className="h-4 w-4" />
             Voice
           </Button>
@@ -193,70 +193,70 @@ const NewDream = () => {
 
         {/* Content Area */}
         <div className="space-y-4">
-          {inputMode === 'voice' ? (
-            <div className="space-y-4">
+          {inputMode === 'voice' ?
+          <div className="space-y-4">
               {/* Voice Recorder */}
               <div className="luminous-card p-6 rounded-2xl">
                 <VoiceRecorder
-                  onRecordingComplete={handleVoiceRecording}
-                  onClear={() => {
-                    setRecordedAudio(null);
-                    if (audioUrl && audioUrl.startsWith('blob:')) {
-                      URL.revokeObjectURL(audioUrl);
-                      setAudioUrl('');
-                    }
-                  }}
-                  disabled={isUploading || isSubmitting}
-                />
+                onRecordingComplete={handleVoiceRecording}
+                onClear={() => {
+                  setRecordedAudio(null);
+                  if (audioUrl && audioUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(audioUrl);
+                    setAudioUrl('');
+                  }
+                }}
+                disabled={isUploading || isSubmitting} />
+
               </div>
 
               {/* Show recording preview */}
-              {audioUrl && (
-                <div className="glass-card p-4 rounded-xl">
-                  <AudioPlayer 
-                    audioUrl={audioUrl} 
-                    title="Dream Recording"
-                    compact
-                  />
+              {audioUrl &&
+            <div className="glass-card p-4 rounded-xl">
+                  <AudioPlayer
+                audioUrl={audioUrl}
+                title="Dream Recording"
+                compact />
+
                 </div>
-              )}
+            }
 
               {/* Optional notes */}
               <div className="space-y-2">
                 <Label className="text-muted-foreground">Additional Notes (Optional)</Label>
                 <Textarea
-                  name="content"
-                  placeholder="Add any extra details..."
-                  value={formData.content}
-                  onChange={handleChange}
-                  className="dream-input resize-none min-h-[100px]"
-                  maxLength={CHARACTER_LIMIT}
-                />
+                name="content"
+                placeholder="Add any extra details..."
+                value={formData.content}
+                onChange={handleChange}
+                className="dream-input resize-none min-h-[100px]"
+                maxLength={CHARACTER_LIMIT} />
+
               </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
+            </div> :
+
+          <div className="space-y-2">
               <div className="flex justify-between items-center">
                 <Label className="text-muted-foreground">Describe your dream</Label>
                 <span className={cn(
-                  "text-xs",
-                  formData.content.length > CHARACTER_LIMIT * 0.9 
-                    ? 'text-destructive' 
-                    : 'text-muted-foreground'
-                )}>
+                "text-xs",
+                formData.content.length > CHARACTER_LIMIT * 0.9 ?
+                'text-destructive' :
+                'text-muted-foreground'
+              )}>
                   {formData.content.length}/{CHARACTER_LIMIT}
                 </span>
               </div>
               <Textarea
-                name="content"
-                placeholder="Close your eyes and let the dream flow back to you..."
-                value={formData.content}
-                onChange={handleChange}
-                className="dream-input resize-none min-h-[200px] text-base leading-relaxed"
-                maxLength={CHARACTER_LIMIT}
-              />
+              name="content"
+              placeholder="Close your eyes and let the dream flow back to you..."
+              value={formData.content}
+              onChange={handleChange}
+              className="dream-input resize-none min-h-[200px] text-base leading-relaxed"
+              maxLength={CHARACTER_LIMIT} />
+
             </div>
-          )}
+          }
         </div>
 
         {/* Metadata Section */}
@@ -271,15 +271,15 @@ const NewDream = () => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input w-full h-9 text-sm"
-            />
+              className="dream-input w-full h-9 text-sm" />
+
           </div>
           <div className="space-y-2">
             <Label className="text-muted-foreground">Mood</Label>
             <Select
               value={formData.mood}
-              onValueChange={(value) => setFormData(p => ({ ...p, mood: value }))}
-            >
+              onValueChange={(value) => setFormData((p) => ({ ...p, mood: value }))}>
+
               <SelectTrigger className="dream-input w-full h-9 text-sm">
                 <SelectValue placeholder="How did it feel?" />
               </SelectTrigger>
@@ -305,20 +305,20 @@ const NewDream = () => {
             <Badge
               variant={formData.lucid ? "lucid" : "outline"}
               className="cursor-pointer transition-all hover:scale-105"
-              onClick={() => setFormData(p => ({ ...p, lucid: !p.lucid }))}
-            >
+              onClick={() => setFormData((p) => ({ ...p, lucid: !p.lucid }))}>
+
               ✦ Lucid
             </Badge>
-            {tags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant={formData.tags.includes(tag.id) ? "aurora" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105"
-                onClick={() => handleTagSelect(tag.id)}
-              >
+            {tags.map((tag) =>
+            <Badge
+              key={tag.id}
+              variant={formData.tags.includes(tag.id) ? "aurora" : "outline"}
+              className="cursor-pointer transition-all hover:scale-105"
+              onClick={() => handleTagSelect(tag.id)}>
+
                 {tag.name}
               </Badge>
-            ))}
+            )}
           </div>
         </div>
 
@@ -326,24 +326,24 @@ const NewDream = () => {
         <div className="space-y-4">
           <div className="featured-card p-6 rounded-2xl space-y-4">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold gold-text">Transform Your Dream</h3>
+              <h3 className="font-semibold white-text">Transform Your Dream</h3>
             </div>
             
             <div className="space-y-3">
               <DreamAnalysis
                 dreamContent={formData.content}
                 existingAnalysis={formData.analysis}
-                onAnalysisComplete={(analysis) => setFormData(p => ({ ...p, analysis }))}
-              />
+                onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))} />
+
               
               <DreamImageGenerator
                 dreamContent={formData.content}
                 existingImage={formData.generatedImage}
                 existingPrompt={formData.imagePrompt}
-                onImageGenerated={(image, prompt) => 
-                  setFormData(p => ({ ...p, generatedImage: image, imagePrompt: prompt }))
-                }
-              />
+                onImageGenerated={(image, prompt) =>
+                setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
+                } />
+
             </div>
           </div>
         </div>
@@ -354,14 +354,14 @@ const NewDream = () => {
             variant="luminous"
             className="w-full h-12 text-lg font-semibold"
             onClick={handleSubmit}
-            disabled={isSubmitting || isUploading || !formData.title.trim()}
-          >
+            disabled={isSubmitting || isUploading || !formData.title.trim()}>
+
             {isSubmitting ? "Saving..." : "Save Dream"}
           </Button>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default NewDream;
