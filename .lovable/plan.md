@@ -1,34 +1,39 @@
 
 
-## Enhance Voice Recording with AI Transcription
+## Custom Thumbnails for Technique Cards
 
 ### What Changes
-When a user records their voice in the dream entry form, the recording will automatically be sent to OpenAI for transcription. The transcribed text becomes the dream description, and the audio recording is also kept and saved alongside it.
+Both the `TechniqueCard` (used on Insights) and `TechniqueGridCard` (used on Explore) will be redesigned with visually rich, color-coded thumbnail backgrounds that prominently show the technique type and difficulty level. Cards remain tappable for navigation.
 
-### User Experience Flow
-1. User taps "Voice" mode and records their dream
-2. After stopping the recording, a "Transcribing..." loading state appears
-3. The transcribed text auto-populates the dream description field
-4. The audio recording preview remains visible for playback
-5. User can edit the transcribed text before saving
-6. Both the text description and audio file are saved with the dream
+### Design Details
 
-### Technical Details
+Each card gets a **gradient background strip** color-coded by difficulty:
+- **Beginner** -- emerald/green tones (`from-emerald-500/20 to-emerald-700/10`)
+- **Intermediate** -- amber/gold tones (`from-amber-500/20 to-amber-700/10`)
+- **Advanced** -- purple/rose tones (`from-purple-500/20 to-rose-700/10`)
 
-**1. Update `VoiceRecorder` component (`src/components/dreams/VoiceRecorder.tsx`)**
-- Add a new `onTranscriptionComplete` callback prop
-- After recording stops and `onRecordingComplete` fires, automatically call the `voice-to-text` edge function
-- Add a "Transcribing..." loading state with spinner
-- Convert the audio blob to base64 and send it to the edge function
-- Pass the transcribed text back via the new callback
+Visual enhancements:
+- A **difficulty badge pill** in the top-right corner (e.g., "Beginner" + dot rating)
+- An **effectiveness indicator** shown as small star icons (1-3 stars)
+- The emoji icon rendered larger with a frosted glass circle backdrop
+- The technique name and acronym (if any) remain prominent
+- Subtle colored border that matches the difficulty gradient
 
-**2. Update `NewDream` page (`src/pages/NewDream.tsx`)**
-- Add `onTranscriptionComplete` handler that sets `formData.content` to the transcribed text (replacing the placeholder "Audio recorded" text)
-- Show transcription loading state
-- Remove the "Audio recorded" placeholder logic from `handleVoiceRecording`
+### Technical Changes
 
-**3. Update `DreamEntryForm` component (`src/components/DreamEntryForm.tsx`)**
-- Same changes as NewDream: handle transcription callback, set content from transcription, remove placeholder text
+**File: `src/components/insights/TechniqueCard.tsx`** (list-style card on Insights page)
+- Add a difficulty-based gradient overlay on the left edge or as a top banner
+- Add a difficulty badge pill (top-right) with colored background matching difficulty
+- Add effectiveness stars below or beside the difficulty dots
+- Increase icon backdrop with a frosted circle (`bg-white/5 backdrop-blur-sm rounded-full`)
 
-**4. The existing `voice-to-text` edge function is already deployed and configured** - it uses OpenAI's `gpt-4o-transcribe` model and accepts base64 audio. No backend changes needed.
+**File: `src/components/explore/TechniqueGridCard.tsx`** (grid card on Explore page)
+- Add the same difficulty-based gradient as the card background
+- Add a small difficulty label pill at the top of the card
+- Add effectiveness stars below the difficulty dots
+- Apply a subtle matching colored border
+
+**Helper:** Create a small utility function (inline or shared) to map difficulty to gradient classes and badge colors, keeping both cards consistent.
+
+No database changes, no edge functions, no new routes needed.
 
