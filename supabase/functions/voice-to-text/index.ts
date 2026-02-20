@@ -8,34 +8,14 @@ const corsHeaders = {
 
 const MAX_AUDIO_SIZE = 25 * 1024 * 1024; // 25MB limit
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
+// Decode base64 string to Uint8Array
+function decodeBase64(base64String: string): Uint8Array {
+  const binaryString = atob(base64String);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
   }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
+  return bytes;
 }
 
 serve(async (req) => {
@@ -44,7 +24,7 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json();
+    const { audio, mimeType: clientMimeType } = await req.json();
     
     // Input validation
     if (!audio || typeof audio !== 'string') {
@@ -57,15 +37,28 @@ serve(async (req) => {
       throw new Error(`Audio file too large. Maximum ${MAX_AUDIO_SIZE / 1024 / 1024}MB allowed.`);
     }
 
-    console.log(`Processing voice-to-text, estimated size: ${(estimatedSize / 1024 / 1024).toFixed(2)}MB`);
+    // Determine MIME type and file extension
+    const mimeType = clientMimeType || 'audio/webm';
+    let fileExtension = 'webm';
+    if (mimeType.includes('mp4') || mimeType.includes('m4a')) {
+      fileExtension = 'mp4';
+    } else if (mimeType.includes('ogg')) {
+      fileExtension = 'ogg';
+    } else if (mimeType.includes('aac')) {
+      fileExtension = 'aac';
+    } else if (mimeType.includes('wav')) {
+      fileExtension = 'wav';
+    }
 
-    // Process audio in chunks to prevent memory issues
-    const binaryAudio = processBase64Chunks(audio);
+    console.log(`Processing voice-to-text, estimated size: ${(estimatedSize / 1024 / 1024).toFixed(2)}MB, mimeType: ${mimeType}, ext: ${fileExtension}`);
+
+    // Decode audio from base64
+    const binaryAudio = decodeBase64(audio);
     
     // Prepare form data for OpenAI transcription
     const formData = new FormData();
-    const blob = new Blob([binaryAudio], { type: 'audio/webm' });
-    formData.append('file', blob, 'audio.webm');
+    const blob = new Blob([binaryAudio], { type: mimeType });
+    formData.append('file', blob, `audio.${fileExtension}`);
     formData.append('model', 'gpt-4o-transcribe');
 
     console.log('Sending to OpenAI Whisper API...');
