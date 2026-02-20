@@ -22,24 +22,24 @@ const Explore: React.FC = () => {
             placeholder="Search users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 rounded-full border-primary/15 bg-card/60 backdrop-blur-md"
-          />
+            className="pl-9 rounded-full border-primary/15 bg-card/60 backdrop-blur-md" />
+
         </div>
 
         <UserSearchResults query={searchQuery} />
 
         {/* Techniques */}
         <div>
-          <h2 className="text-base font-semibold text-foreground mb-3">Techniques</h2>
+          <h2 className="text-base font-semibold text-foreground mb-3">Lucid Dreaming Techniques</h2>
           <div className="grid grid-cols-2 gap-3">
-            {techniques.map((tech, i) => (
-              <TechniqueGridCard key={i} technique={tech} index={i} />
-            ))}
+            {techniques.map((tech, i) =>
+            <TechniqueGridCard key={i} technique={tech} index={i} />
+            )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Explore;
