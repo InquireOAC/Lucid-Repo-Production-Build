@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Star } from "lucide-react";
 import type { Technique } from "./techniqueData";
+import { getDifficultyStyles } from "@/utils/techniqueStyles";
 
 interface TechniqueCardProps {
   technique: Technique;
@@ -9,12 +11,28 @@ interface TechniqueCardProps {
 
 const TechniqueCard: React.FC<TechniqueCardProps> = ({ technique, index }) => {
   const navigate = useNavigate();
+  const styles = getDifficultyStyles(technique.difficulty);
 
   return (
     <div
       onClick={() => navigate(`/insights/technique/${index}`)}
-      className="relative flex items-center justify-between rounded-2xl border border-primary/10 bg-card/60 backdrop-blur-md p-5 min-h-[140px] cursor-pointer transition-all duration-300 hover:border-primary/25 hover:bg-card/80 overflow-hidden group"
+      className={`relative flex items-center justify-between rounded-2xl border ${styles.border} bg-gradient-to-r ${styles.gradient} backdrop-blur-md p-5 min-h-[140px] cursor-pointer transition-all duration-300 hover:brightness-110 overflow-hidden group`}
     >
+      {/* Difficulty badge pill */}
+      <div className={`absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-full ${styles.badgeBg} text-[10px] font-semibold uppercase tracking-wider z-10`}>
+        <span>{technique.difficulty}</span>
+        <div className="flex gap-0.5">
+          {[1, 2, 3].map((dot) => (
+            <div
+              key={dot}
+              className={`w-1.5 h-1.5 rounded-full ${
+                dot <= technique.difficultyRating ? "bg-current opacity-100" : "bg-current opacity-25"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Left content */}
       <div className="flex-1 min-w-0 pr-4 z-10">
         <h3 className="text-base font-bold text-foreground leading-tight">
@@ -28,34 +46,31 @@ const TechniqueCard: React.FC<TechniqueCardProps> = ({ technique, index }) => {
         <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
           {technique.shortDescription}
         </p>
-        <div className="flex items-center gap-2 mt-3">
-          <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider font-medium">
-            {technique.difficulty}
+        {/* Effectiveness stars */}
+        <div className="flex items-center gap-1 mt-3">
+          {[1, 2, 3].map((star) => (
+            <Star
+              key={star}
+              className={`w-3.5 h-3.5 ${
+                star <= technique.effectiveness
+                  ? "text-primary fill-primary"
+                  : "text-muted-foreground/25"
+              }`}
+            />
+          ))}
+          <span className="text-[10px] text-muted-foreground/60 ml-1 uppercase tracking-wider">
+            effectiveness
           </span>
-          <div className="flex gap-0.5">
-            {[1, 2, 3].map((dot) => (
-              <div
-                key={dot}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  dot <= technique.difficultyRating
-                    ? "bg-primary"
-                    : "bg-muted-foreground/20"
-                }`}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* Right icon with sparkle decorations */}
-      <div className="relative shrink-0 flex items-center justify-center w-20 h-20">
-        <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
-          {technique.icon}
-        </span>
-        {/* Sparkle dots */}
-        <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary/30 animate-pulse" />
-        <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-accent/25 animate-pulse delay-300" />
-        <div className="absolute top-3 left-0 w-1 h-1 rounded-full bg-primary/20 animate-pulse delay-700" />
+      {/* Right icon with frosted backdrop */}
+      <div className="relative shrink-0 flex items-center justify-center">
+        <div className={`w-20 h-20 rounded-full ${styles.iconBg} bg-white/5 backdrop-blur-sm flex items-center justify-center`}>
+          <span className="text-5xl group-hover:scale-110 transition-transform duration-300">
+            {technique.icon}
+          </span>
+        </div>
       </div>
     </div>
   );

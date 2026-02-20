@@ -1,6 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { Star } from "lucide-react";
 import type { Technique } from "@/components/insights/techniqueData";
+import { getDifficultyStyles } from "@/utils/techniqueStyles";
 
 interface TechniqueGridCardProps {
   technique: Technique;
@@ -9,27 +11,54 @@ interface TechniqueGridCardProps {
 
 const TechniqueGridCard: React.FC<TechniqueGridCardProps> = ({ technique, index }) => {
   const navigate = useNavigate();
+  const styles = getDifficultyStyles(technique.difficulty);
 
   return (
     <div
       onClick={() => navigate(`/insights/technique/${index}`)}
-      className="flex flex-col items-center justify-center rounded-2xl border border-primary/10 bg-card/60 backdrop-blur-md p-4 h-[130px] cursor-pointer transition-all duration-300 hover:border-primary/25 hover:bg-card/80 group"
+      className={`relative flex flex-col items-center justify-center rounded-2xl border ${styles.border} bg-gradient-to-br ${styles.gradient} backdrop-blur-md p-4 h-[160px] cursor-pointer transition-all duration-300 hover:brightness-110 group`}
     >
-      <span className="text-[40px] leading-none group-hover:scale-110 transition-transform duration-300">
-        {technique.icon}
-      </span>
-      <h3 className="text-[13px] font-bold text-foreground text-center mt-2 leading-tight line-clamp-2">
+      {/* Difficulty pill */}
+      <div className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full ${styles.badgeBg} text-[9px] font-semibold uppercase tracking-wider`}>
+        {technique.difficulty}
+      </div>
+
+      {/* Frosted icon */}
+      <div className={`w-16 h-16 rounded-full ${styles.iconBg} bg-white/5 backdrop-blur-sm flex items-center justify-center mb-2`}>
+        <span className="text-[36px] leading-none group-hover:scale-110 transition-transform duration-300">
+          {technique.icon}
+        </span>
+      </div>
+
+      <h3 className="text-[13px] font-bold text-foreground text-center leading-tight line-clamp-2">
         {technique.name}
       </h3>
-      <div className="flex gap-0.5 mt-2">
-        {[1, 2, 3].map((dot) => (
-          <div
-            key={dot}
-            className={`w-1.5 h-1.5 rounded-full ${
-              dot <= technique.difficultyRating ? "bg-primary" : "bg-muted-foreground/20"
-            }`}
-          />
-        ))}
+
+      {/* Difficulty dots + effectiveness stars */}
+      <div className="flex items-center gap-2 mt-2">
+        <div className="flex gap-0.5">
+          {[1, 2, 3].map((dot) => (
+            <div
+              key={dot}
+              className={`w-1.5 h-1.5 rounded-full ${
+                dot <= technique.difficultyRating ? "bg-primary" : "bg-muted-foreground/20"
+              }`}
+            />
+          ))}
+        </div>
+        <div className="w-px h-3 bg-muted-foreground/20" />
+        <div className="flex gap-0.5">
+          {[1, 2, 3].map((star) => (
+            <Star
+              key={star}
+              className={`w-2.5 h-2.5 ${
+                star <= technique.effectiveness
+                  ? "text-primary fill-primary"
+                  : "text-muted-foreground/25"
+              }`}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
