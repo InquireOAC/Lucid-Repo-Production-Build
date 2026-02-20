@@ -598,7 +598,7 @@ const DreamEntryForm = ({
             <Button
               type="submit"
               disabled={externalIsSubmitting || isSubmitting || isUploading}
-              className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90"
+              className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90 text-white"
             >
               {isUploading ? "Uploading Audio..." : 
                (externalIsSubmitting || isSubmitting) ? "Saving..." : 
