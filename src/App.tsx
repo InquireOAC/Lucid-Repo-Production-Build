@@ -15,6 +15,7 @@ import Chat from './pages/Chat';
 import Learn from './pages/Learn';
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
+import Explore from './pages/Explore';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
@@ -40,6 +41,7 @@ function App() {
                   <Route path="profile/:userId" element={<Profile />} />
                   <Route path="profile/:username" element={<Profile />} />
                   <Route path="auth" element={<Auth />} />
+                  <Route path="explore" element={<Explore />} />
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
                   <Route path="chat" element={<Chat />} />

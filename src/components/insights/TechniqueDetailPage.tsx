@@ -41,7 +41,7 @@ const TechniqueDetailPage: React.FC = () => {
       {/* Back button */}
       <div className="p-4">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate("/explore")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
