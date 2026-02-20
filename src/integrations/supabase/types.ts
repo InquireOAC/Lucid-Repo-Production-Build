@@ -662,6 +662,33 @@ export type Database = {
           },
         ]
       }
+      dream_symbol_analyses: {
+        Row: {
+          created_at: string
+          dream_count: number
+          id: string
+          last_analyzed_at: string
+          symbols: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream_count?: number
+          id?: string
+          last_analyzed_at?: string
+          symbols?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dream_count?: number
+          id?: string
+          last_analyzed_at?: string
+          symbols?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_tags: {
         Row: {
           color: string
