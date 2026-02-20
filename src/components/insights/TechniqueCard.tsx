@@ -1,66 +1,63 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import type { Technique } from "./techniqueData";
 
-export interface Technique {
-  name: string;
-  acronym?: string;
-  difficulty: "Beginner" | "Intermediate" | "Advanced";
-  icon: string;
-  description: string;
-  steps: string[];
+interface TechniqueCardProps {
+  technique: Technique;
+  index: number;
 }
 
-const difficultyVariant = {
-  Beginner: "aurora" as const,
-  Intermediate: "gold" as const,
-  Advanced: "lucid" as const,
-};
-
-const TechniqueCard: React.FC<{ technique: Technique }> = ({ technique }) => {
-  const [open, setOpen] = useState(false);
+const TechniqueCard: React.FC<TechniqueCardProps> = ({ technique, index }) => {
+  const navigate = useNavigate();
 
   return (
-    <Card
-      variant="glass"
-      className="cursor-pointer transition-all hover:border-primary/30"
-      onClick={() => setOpen(!open)}
+    <div
+      onClick={() => navigate(`/insights/technique/${index}`)}
+      className="relative flex items-center justify-between rounded-2xl border border-primary/10 bg-card/60 backdrop-blur-md p-5 min-h-[140px] cursor-pointer transition-all duration-300 hover:border-primary/25 hover:bg-card/80 overflow-hidden group"
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-3xl">{technique.icon}</span>
-            <div>
-              <CardTitle className="text-base leading-tight">
-                {technique.name}
-                {technique.acronym && (
-                  <span className="text-primary ml-1.5 text-sm font-normal">({technique.acronym})</span>
-                )}
-              </CardTitle>
-              <Badge variant={difficultyVariant[technique.difficulty]} className="mt-1 text-[10px]">
-                {technique.difficulty}
-              </Badge>
-            </div>
-          </div>
-          {open ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground mt-1 shrink-0" />
+      {/* Left content */}
+      <div className="flex-1 min-w-0 pr-4 z-10">
+        <h3 className="text-base font-bold text-foreground leading-tight">
+          {technique.name}
+          {technique.acronym && (
+            <span className="text-primary ml-1.5 text-sm font-normal">
+              ({technique.acronym})
+            </span>
           )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{technique.description}</p>
-        {open && (
-          <ol className="mt-3 space-y-2 list-decimal list-inside text-sm text-foreground/80">
-            {technique.steps.map((step, i) => (
-              <li key={i} className="leading-relaxed">{step}</li>
+        </h3>
+        <p className="text-sm text-muted-foreground mt-1.5 line-clamp-2">
+          {technique.shortDescription}
+        </p>
+        <div className="flex items-center gap-2 mt-3">
+          <span className="text-[10px] text-muted-foreground/70 uppercase tracking-wider font-medium">
+            {technique.difficulty}
+          </span>
+          <div className="flex gap-0.5">
+            {[1, 2, 3].map((dot) => (
+              <div
+                key={dot}
+                className={`w-1.5 h-1.5 rounded-full ${
+                  dot <= technique.difficultyRating
+                    ? "bg-primary"
+                    : "bg-muted-foreground/20"
+                }`}
+              />
             ))}
-          </ol>
-        )}
-      </CardContent>
-    </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Right icon with sparkle decorations */}
+      <div className="relative shrink-0 flex items-center justify-center w-20 h-20">
+        <span className="text-6xl group-hover:scale-110 transition-transform duration-300">
+          {technique.icon}
+        </span>
+        {/* Sparkle dots */}
+        <div className="absolute top-0 right-0 w-2 h-2 rounded-full bg-primary/30 animate-pulse" />
+        <div className="absolute bottom-1 left-1 w-1.5 h-1.5 rounded-full bg-accent/25 animate-pulse delay-300" />
+        <div className="absolute top-3 left-0 w-1 h-1 rounded-full bg-primary/20 animate-pulse delay-700" />
+      </div>
+    </div>
   );
 };
 

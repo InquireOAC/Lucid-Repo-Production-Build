@@ -15,6 +15,7 @@ import Chat from './pages/Chat';
 import Learn from './pages/Learn';
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
+import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
@@ -44,6 +45,7 @@ function App() {
                   <Route path="chat" element={<Chat />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="insights" element={<Insights />} />
+                  <Route path="insights/technique/:id" element={<TechniqueDetailPage />} />
                   <Route path="learn" element={<Learn />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
