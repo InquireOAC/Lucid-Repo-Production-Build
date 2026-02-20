@@ -2,6 +2,7 @@ import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { Heart, MessageCircle, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface FeaturedDreamProps {
   dream: DreamEntry;
@@ -69,9 +70,13 @@ const FeaturedDream = ({
             }}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-aurora-purple to-aurora-violet flex items-center justify-center text-white text-sm font-medium">
-              {displayName[0]?.toUpperCase()}
-            </div>
+            <SymbolAvatar
+              symbol={(userProfile as any)?.avatar_symbol}
+              color={(userProfile as any)?.avatar_color}
+              avatarUrl={(userProfile as any)?.avatar_url}
+              fallbackLetter={displayName[0]?.toUpperCase() || "?"}
+              size={32}
+            />
             <span className="text-sm text-muted-foreground">@{username || "anonymous"}</span>
           </button>
           
