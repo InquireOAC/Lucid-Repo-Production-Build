@@ -12,25 +12,37 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
   try {
     console.log("Starting HTML to Image conversion with html-to-image");
     
-    // Process any images in the element first
+    // Wait for all images in the element to be fully loaded
     const images = Array.from(element.querySelectorAll('img'));
     
     if (images.length > 0) {
-      console.log(`Processing ${images.length} images in share card`);
+      console.log(`Waiting for ${images.length} images to be ready...`);
       
       // Set gradient backgrounds on all image containers as fallbacks
       images.forEach(img => {
         if (img.alt === 'Lucid Repo Logo') return;
-        
         if (img.parentElement) {
           img.parentElement.style.background = 
             'linear-gradient(to right, #6344A5, #8976BF)';
         }
       });
       
-      // Give time for images to load
-      console.log("Waiting for images to load completely...");
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Poll until all images report complete, max 5 seconds
+      const maxWait = 5000;
+      const interval = 100;
+      let waited = 0;
+      while (waited < maxWait) {
+        const allReady = images.every(img => img.complete && img.naturalWidth > 0);
+        if (allReady) {
+          console.log("All images confirmed ready");
+          break;
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+        waited += interval;
+      }
+      if (waited >= maxWait) {
+        console.warn("Image load timeout reached, proceeding anyway");
+      }
     }
     
     console.log("Generating high-resolution PNG base64 from HTML element");
