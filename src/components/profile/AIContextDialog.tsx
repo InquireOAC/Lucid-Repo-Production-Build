@@ -123,14 +123,28 @@ const AIContextDialog = ({
     }
   };
 
+  const getAvatarStylePrompt = (style: string): string => {
+    const avatarPrompts: Record<string, string> = {
+      realistic: `Generate an ultra-realistic, photographic portrait of the person in this reference photo. This must look like a real DSLR photograph — not a painting, illustration, or digital art. Use natural studio lighting, shallow depth of field, accurate skin texture with pores and subtle imperfections, realistic hair strands, and true-to-life eye reflections. The background should be a simple, softly blurred studio backdrop. Capture their exact likeness, facial structure, skin tone, and features. 8K resolution, professional headshot quality.`,
+      hyper_realism: `Generate an extreme hyperrealistic portrait of the person in this reference photo, indistinguishable from a professional DSLR photograph. 85mm f/1.4 prime lens, individual pores visible, subsurface scattering showing blood flow beneath skin, iris fiber detail, wet cornea reflections, studio-quality motivated lighting, cinema-grade color science, subtle film grain. Capture their exact likeness perfectly.`,
+      digital_art: `Create a AAA concept-art quality portrait of the person in this reference photo. Polished, professional, ArtStation-trending caliber. Clean vector-sharp edges, volumetric rim lighting with subsurface scattering on skin, vibrant saturated colors. Capture their exact likeness and facial features in a cinematic digital art style suitable for a profile avatar.`,
+      surreal: `Create a surreal dreamscape portrait of the person in this reference photo in a Salvador Dalí meets Magritte style. Melting forms, impossible geometry around them, hyper-detailed textures, chromatic otherworldly lighting with bioluminescent glows. Capture their exact likeness within a fantastical, vivid atmosphere with deep perspective.`,
+      fantasy: `Create an epic fantasy portrait of the person in this reference photo. Rich painterly detail, golden-hour rim lighting with dramatic volumetric god-rays. Ornate details, magical particle effects (floating embers, ethereal wisps). Jewel-tone palette (deep emeralds, royal purples, burnished golds). Capture their exact likeness as a fantasy character.`,
+      cyberpunk: `Create a cyberpunk portrait of the person in this reference photo. Neon-drenched Blade Runner aesthetic: holographic HUD overlays, rain-slick reflections, volumetric fog with pink/cyan neon scatter. Materials: brushed chrome accents, glowing circuit traces. Deep contrast with pitch-black shadows and intense neon highlights. Capture their exact likeness.`,
+      watercolor: `Create a traditional watercolor portrait of the person in this reference photo on cold-press paper. Visible paper grain, pigment granulation, wet-on-wet bleeding edges where colors organically merge. Transparent layered glazes, unpainted white paper highlights for the brightest areas. Delicate flowing edges. Capture their exact likeness and features.`,
+      sketch: `Create a professional graphite sketch portrait of the person in this reference photo. Varied pencil pressure (2H to 6B), cross-hatching for shadow depth, visible paper tooth texture. Smudged soft gradients in shadow areas, raw construction lines left visible for authenticity. High contrast between white highlights and deep graphite blacks. Capture their exact likeness.`,
+      oil_painting: `Create a museum-quality oil painting portrait of the person in this reference photo. Thick impasto brushstrokes, visible canvas weave, Rembrandt-style chiaroscuro with dramatic single-source lighting. Glazed luminous skin tones, visible palette knife marks, rich saturated pigments. Classical golden-ratio composition. Capture their exact likeness.`,
+      impressionist: `Create a Monet/Renoir-style impressionist portrait of the person in this reference photo. Broken color dabs with visible confident brushstrokes, en plein air golden-hour glow. Chromatic shadows in purple and blue hues — never black. Thick impasto texture, diffused soft edges, shimmering luminous atmosphere. Capture their likeness through impressionist technique.`,
+      abstract: `Create a bold abstract portrait of the person in this reference photo. Kandinsky/Rothko influence: saturated color fields, geometric and organic forms, strong compositional tension. Textured mixed-media feel with layered paint and expressive energy. Capture recognizable elements of their likeness through abstract interpretation.`,
+      minimalist: `Create a Japanese-inspired minimalist portrait of the person in this reference photo. Vast intentional negative space, strictly 2-3 colors maximum. Single focal element with clean geometric forms and zen-like tranquility. Every element must justify its presence. Capture their essential likeness with absolute economy of detail.`,
+      vintage: `Create a 1970s analog film portrait of the person in this reference photo. Kodak Portra 400 color science, visible film grain, slight warm amber light leaks from frame edges. Muted desaturated tones with lifted blacks, soft vignette, period-accurate soft focus falloff and warm flare. Capture their exact likeness in vintage aesthetic.`,
+    };
+    return avatarPrompts[style] || avatarPrompts.digital_art;
+  };
+
   const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
     try {
-      const styleLabel = avatarStyleOptions.find((s) => s.value === selectedStyle)?.label || "Digital Art";
-      const isPhotoRealistic = selectedStyle === "realistic" || selectedStyle === "hyper_realism";
-      
-      const prompt = isPhotoRealistic
-        ? `Generate an ultra-realistic, photographic portrait of the person in this reference photo. This must look like a real DSLR photograph — not a painting, illustration, or digital art. Use natural studio lighting, shallow depth of field, accurate skin texture with pores and subtle imperfections, realistic hair strands, and true-to-life eye reflections. The background should be a simple, softly blurred studio backdrop. Capture their exact likeness, facial structure, skin tone, and features. Output should be indistinguishable from a real photo. 8K resolution, professional headshot quality.`
-        : `Create a stylized character portrait of the person in this reference photo in a ${styleLabel} art style. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be suitable for a profile picture.`;
+      const prompt = getAvatarStylePrompt(selectedStyle);
 
       const result = await supabase.functions.invoke("generate-dream-image", {
         body: { prompt, referenceImageUrl: rawPhotoUrl, imageStyle: selectedStyle }
