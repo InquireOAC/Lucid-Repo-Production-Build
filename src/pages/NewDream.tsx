@@ -138,7 +138,7 @@ const NewDream = () => {
 
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold white-text">New Dream</h1>
+          <h1 className="text-lg font-semibold white-text">What did you dream?</h1>
           <Button
             variant="aurora"
             size="sm"
@@ -153,10 +153,6 @@ const NewDream = () => {
       </div>
 
       <div className="px-4 py-6 pb-24 space-y-8 max-w-2xl mx-auto">
-        {/* Magic intro */}
-        <div className="text-center space-y-2">
-          <span className="text-sm text-muted-foreground">What did you dream?</span>
-        </div>
 
         {/* Title Input */}
         <div className="space-y-2">
