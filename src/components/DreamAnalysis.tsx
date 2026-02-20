@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Brain, Lock } from "lucide-react";
+import { Loader2, Brain, Lock, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { showSubscriptionPrompt } from "@/lib/stripe";
+import { AnalysisSections } from "@/components/dreams/AnalysisSections";
 
 interface DreamAnalysisProps {
   dreamContent: string;
@@ -33,23 +33,8 @@ const DreamAnalysis = ({
 
   const isAppCreator = user?.email === "inquireoac@gmail.com";
   const hasUsedFreeTrial = hasUsedFeature('analysis');
-
-  // Check if user has active subscription from subscription context
   const hasActiveSubscription = subscription?.status === 'active';
-
-  // Determine if feature is enabled based on subscription status
-  // User can use feature if: they're app creator, haven't used free trial yet, or have active subscription
   const isFeatureEnabled = isAppCreator || !hasUsedFreeTrial || hasActiveSubscription;
-
-  console.log('DreamAnalysis - Feature check:', {
-    disabled,
-    hasUsedFreeTrial,
-    isAppCreator,
-    hasActiveSubscription,
-    subscriptionStatus: subscription?.status,
-    isFeatureEnabled,
-    subscriptionLoading
-  });
 
   const generateAnalysis = async () => {
     if (!user || disabled) return;
@@ -59,44 +44,28 @@ const DreamAnalysis = ({
       return;
     }
 
-    // Check if user can use the feature before proceeding
     if (!isFeatureEnabled) {
-      console.log('User cannot use analysis feature - showing subscription prompt');
       showSubscriptionPrompt('analysis');
       return;
     }
 
     try {
-      console.log('Starting dream analysis generation...');
-
       setIsGenerating(true);
       setShowInfo(false);
 
-      console.log('Calling analyze-dream function...');
-
-      // Call directly to the analyze-dream function
       const { data, error } = await supabase.functions.invoke('analyze-dream', {
-        body: {
-          dreamContent,
-          task: 'analyze_dream'
-        }
+        body: { dreamContent, task: 'analyze_dream' }
       });
 
-      if (error) {
-        console.error('Analysis error:', error);
-        throw new Error(error.message || 'Failed to generate analysis');
-      }
+      if (error) throw new Error(error.message || 'Failed to generate analysis');
 
       if (data?.analysis) {
-        console.log('Analysis generated successfully');
         setAnalysis(data.analysis);
         onAnalysisComplete(data.analysis);
 
-        // Record the feature usage only after successful generation
         const usageRecorded = await recordFeatureUsage('analysis');
         console.log('Analysis usage recorded:', usageRecorded);
 
-        // Show appropriate success message
         if (!isAppCreator && !hasUsedFreeTrial && !hasActiveSubscription) {
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
@@ -119,8 +88,25 @@ const DreamAnalysis = ({
     }
   };
 
-  // Show loading state while subscription is being checked
   if (subscriptionLoading && !subscription) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center text-lg">
+            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
+            Dream Analysis
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground text-center py-2">
+            Checking subscription status...
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (showInfo && !analysis && !isGenerating) {
     return (
       <Card>
         <CardHeader>
@@ -132,101 +118,76 @@ const DreamAnalysis = ({
         <CardContent>
           <div className="text-center space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
-              Checking subscription status...
+              {disabled
+                ? "Only the dream owner can analyze this dream."
+                : !isFeatureEnabled
+                ? "You've used your free analysis. Subscribe to analyze more dreams."
+                : "Get a professional multi-layered interpretation of your dream — symbols, emotions, subconscious messages, and a personal reflection invitation."}
             </p>
-          </div>
-        </CardContent>
-      </Card>);
-
-  }
-
-  if (showInfo && !analysis && !isGenerating) {
-    return (
-      <Card>
-        <CardHeader>
-          
-
-
-
-
-        </CardHeader>
-        <CardContent>
-          <div className="text-center space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              {disabled ?
-              "Only the dream owner can analyze this dream." :
-              !isFeatureEnabled ?
-              "You've used your free analysis. Subscribe to analyze more dreams." :
-              "Generate an AI-powered analysis of your dream's symbolism and meaning. (Free trial available)"
-              }
-            </p>
-            {!disabled && isFeatureEnabled &&
-            <Button
-              onClick={generateAnalysis}
-              className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90 bg-violet-800 hover:bg-violet-700 text-white">
-
-                 
+            {!disabled && isFeatureEnabled && (
+              <Button
+                onClick={generateAnalysis}
+                className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90 text-white"
+              >
+                <Brain className="h-4 w-4 mr-2" />
                 Analyze Dream
               </Button>
-            }
-            {!disabled && !isFeatureEnabled &&
-            <Button
-              onClick={() => showSubscriptionPrompt('analysis')}
-              variant="outline"
-              className="border-dream-purple text-dream-purple hover:bg-dream-purple hover:text-white">
-
-                <Lock className="h-4 w-4 mr-2" /> 
+            )}
+            {!disabled && !isFeatureEnabled && (
+              <Button
+                onClick={() => showSubscriptionPrompt('analysis')}
+                variant="outline"
+                className="border-dream-purple text-dream-purple hover:bg-dream-purple hover:text-white"
+              >
+                <Lock className="h-4 w-4 mr-2" />
                 Subscribe to Analyze
               </Button>
-            }
+            )}
           </div>
         </CardContent>
-      </Card>);
-
+      </Card>
+    );
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center text-lg">
-          <Brain className="h-5 w-5 mr-2 text-dream-purple" />
-          Dream Analysis
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isGenerating ?
-        <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Analyzing your dream...
-            </p>
-          </div> :
-
-        <>
-            <Textarea
-            value={analysis}
-            onChange={(e) => setAnalysis(e.target.value)}
-            className="min-h-[120px] mb-3"
-            placeholder="Dream analysis will appear here..."
-            disabled={disabled} />
-
-            {!disabled && isFeatureEnabled &&
-          <div className="flex justify-end">
-                <Button
-              variant="outline"
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center text-lg">
+            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
+            Dream Analysis
+          </CardTitle>
+          {!disabled && isFeatureEnabled && !isGenerating && analysis && (
+            <Button
+              variant="ghost"
               size="sm"
               onClick={generateAnalysis}
-              disabled={isGenerating}>
-
-                  Regenerate
-                </Button>
-              </div>
-          }
-          </>
-        }
+              disabled={isGenerating}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+              Regenerate
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {isGenerating ? (
+          <div className="flex flex-col items-center justify-center py-10 space-y-3">
+            <div className="relative">
+              <Brain className="h-10 w-10 text-dream-purple opacity-20" />
+              <Loader2 className="h-10 w-10 animate-spin text-dream-purple absolute inset-0" />
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Exploring the depths of your dream…
+            </p>
+          </div>
+        ) : analysis ? (
+          <AnalysisSections text={analysis} />
+        ) : null}
       </CardContent>
-    </Card>);
-
+    </Card>
+  );
 };
 
 export default DreamAnalysis;

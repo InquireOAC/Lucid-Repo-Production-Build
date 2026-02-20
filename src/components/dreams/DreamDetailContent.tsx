@@ -1,10 +1,11 @@
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { DreamTag } from "@/types/dream";
-import { Heart } from "lucide-react";
+import { Heart, Brain } from "lucide-react";
 import FlagButton from "@/components/moderation/FlagButton";
 import { AudioPlayer } from "./AudioPlayer";
+import { AnalysisSections } from "./AnalysisSections";
 import {
   Carousel,
   CarouselContent,
@@ -174,7 +175,7 @@ const DreamDetailContent = ({
             <img src={generatedImage} alt="Dream visualization" className="rounded-md w-full h-auto" />
             {isLikeAnimating && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Heart className="h-16 w-16 text-red-500 fill-red-500" style={{ animation: 'heartPulse 0.6s ease-out' }} />
+                <Heart className="h-16 w-16 text-destructive fill-destructive" style={{ animation: 'heartPulse 0.6s ease-out' }} />
               </div>
             )}
           </div>
@@ -189,11 +190,14 @@ const DreamDetailContent = ({
         </div>
       )}
 
-      {/* Paginated Analysis */}
+      {/* Analysis — structured sections */}
       {analysis && (
-        <div className="mt-4 p-3 bg-muted/40 rounded-md">
-          <h3 className="text-sm font-medium mb-1">Dream Analysis</h3>
-          <PaginatedText text={analysis} className="text-sm text-muted-foreground" />
+        <div className="mt-4 space-y-2">
+          <div className="flex items-center gap-2 mb-3">
+            <Brain className="h-4 w-4 text-dream-purple" />
+            <h3 className="text-sm font-semibold">Dream Analysis</h3>
+          </div>
+          <AnalysisSections text={analysis} />
         </div>
       )}
 
