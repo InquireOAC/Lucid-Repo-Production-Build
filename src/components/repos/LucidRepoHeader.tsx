@@ -41,7 +41,7 @@ const LucidRepoHeader = ({
         <div className="flex items-center justify-center gap-2">
           
         </div>
-        <p className="text-muted-foreground">Explore dreams from around the world</p>
+        
       </div>
 
       {/* Mode Toggle */}
