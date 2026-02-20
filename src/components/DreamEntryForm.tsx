@@ -450,14 +450,14 @@ const DreamEntryForm = ({
             </div>
           )}
           
-          <div className="space-y-2">
-            <Label>Date</Label>
+          <div className="flex items-center gap-3">
+            <Label className="text-sm shrink-0">Date</Label>
             <Input
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input w-fit max-w-48"
+              className="dream-input w-fit max-w-40 h-9 text-sm"
               required
             />
           </div>
