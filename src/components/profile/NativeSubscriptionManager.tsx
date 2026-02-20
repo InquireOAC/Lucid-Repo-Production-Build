@@ -1,8 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Loader2, Smartphone, RotateCcw, AlertCircle } from "lucide-react";
+import { Loader2, RotateCcw, AlertCircle, Sparkles, Check, Crown } from "lucide-react";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 
 interface NativeSubscriptionManagerProps {
@@ -17,124 +16,132 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center pb-4">
-        <Smartphone className="h-12 w-12 mx-auto text-dream-purple mb-2" />
-        <h3 className="text-lg font-medium">Mobile Subscription</h3>
-        <p className="text-sm text-muted-foreground">
-          Subscribe through the App Store to access premium features
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="text-center pb-2">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+          <Crown className="h-6 w-6 text-primary" />
+        </div>
+        <h3 className="text-lg font-semibold">Unlock Premium</h3>
+        <p className="text-sm text-muted-foreground mt-1">
+          Access all dream analysis & image generation features
         </p>
       </div>
 
       {currentPlan && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-          <p className="text-green-800 text-sm font-medium">
-            Current Plan: {currentPlan}
-          </p>
-          <p className="text-green-600 text-xs mt-1">
-            Manage your subscription through the App Store Settings
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
+          <p className="text-sm font-medium">Current Plan: {currentPlan}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Manage via App Store Settings
           </p>
         </div>
       )}
 
-      <div className="space-y-4">
+      {/* Products */}
+      <div className="space-y-3">
         {isLoading ? (
           <div className="text-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-            <p className="text-muted-foreground">Loading subscription options...</p>
+            <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin mx-auto mb-3" />
+            <p className="text-sm text-muted-foreground">Loading plans...</p>
           </div>
         ) : products.length === 0 ? (
-          <div className="text-center py-8">
-            <AlertCircle className="h-12 w-12 mx-auto text-orange-500 mb-4" />
-            <p className="text-muted-foreground mb-2">
-              No subscription products available.
+          <div className="text-center py-6">
+            <AlertCircle className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+            <p className="text-sm text-muted-foreground mb-3">
+              No plans available right now.
             </p>
-            <p className="text-xs text-muted-foreground mb-4">
-              Please ensure your RevenueCat offerings are configured with these exact product IDs:<br/>
-              • <code className="bg-gray-100 px-1 rounded">com.lucidrepo.limited.monthly</code> (Basic)<br/>
-              • <code className="bg-gray-100 px-1 rounded">com.lucidrepo.unlimited.monthly</code> (Premium)
-            </p>
-            <div className="text-xs text-muted-foreground mb-4 space-y-1">
-              <p>✓ Check that offerings are published in RevenueCat</p>
-              <p>✓ Verify entitlements are attached to products</p>
-              <p>✓ Ensure App Store Connect products are approved</p>
-            </div>
             <Button 
               variant="outline" 
               onClick={() => window.location.reload()}
               size="sm"
             >
-              Retry Loading
+              Retry
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {products.map((product) => (
-              <Card key={product.id} className="p-4 space-y-4">
-                <div>
-                  <h4 className="text-lg font-medium">{product.name}</h4>
-                  <p className="text-2xl font-bold text-dream-purple">{product.price}</p>
-                  <p className="text-sm text-muted-foreground">Monthly subscription</p>
-                  <p className="text-xs text-muted-foreground">
-                    ID: {product.packageObject.product.identifier}
-                  </p>
-                </div>
-                
-                <ul className="space-y-2 text-sm">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="mr-2">•</span>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                
-                <Button
-                  className="w-full"
-                  onClick={() => purchaseSubscription(product.id)}
-                  disabled={isLoading}
+          <div className="grid gap-3">
+            {products.map((product) => {
+              const isPremium = product.name.toLowerCase().includes('premium');
+              return (
+                <div 
+                  key={product.id} 
+                  className={`relative overflow-hidden rounded-xl border p-4 space-y-3 transition-all ${
+                    isPremium 
+                      ? 'border-primary/40 bg-primary/5' 
+                      : 'border-border/50 bg-card/50'
+                  }`}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Processing...
-                    </>
-                  ) : (
-                    `Subscribe via App Store`
+                  {isPremium && (
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
                   )}
-                </Button>
-              </Card>
-            ))}
+                  
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
+                        <h4 className="font-semibold">{product.name}</h4>
+                      </div>
+                      {isPremium && (
+                        <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                          Most Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-2xl font-bold">{product.price}<span className="text-sm font-normal text-muted-foreground">/mo</span></p>
+                  </div>
+                  
+                  <ul className="space-y-1.5">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-2 text-sm">
+                        <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  
+                  <Button
+                    className={`w-full ${isPremium ? 'bg-primary hover:bg-primary/90' : ''}`}
+                    variant={isPremium ? 'default' : 'outline'}
+                    onClick={() => purchaseSubscription(product.id)}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      'Subscribe'
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      <div className="pt-4 border-t">
+      {/* Restore */}
+      <div className="pt-3 border-t border-border/50">
         <Button
-          variant="outline"
-          className="w-full"
+          variant="ghost"
+          className="w-full text-muted-foreground hover:text-foreground"
           onClick={restorePurchases}
           disabled={isLoading}
+          size="sm"
         >
-          <RotateCcw className="h-4 w-4 mr-2" />
+          <RotateCcw className="h-3.5 w-3.5 mr-2" />
           Restore Purchases
         </Button>
-        <p className="text-xs text-muted-foreground text-center mt-2">
-          Tap this if you've already purchased a subscription
-        </p>
       </div>
 
-      <div className="pt-4 border-t">
-        <p className="text-xs text-muted-foreground text-center">
-          Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your iTunes account settings.{" "}
-          <button
-            onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
-            className="text-dream-purple underline hover:text-dream-purple/80"
-          >
-            Terms of Service
-          </button>
-        </p>
-      </div>
+      {/* Legal */}
+      <p className="text-[11px] text-muted-foreground/70 text-center leading-relaxed">
+        Auto-renews unless canceled 24hrs before period end. Manage in App Store settings.{" "}
+        <button
+          onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
+          className="text-primary/70 underline hover:text-primary"
+        >
+          Terms
+        </button>
+      </p>
     </div>
   );
 };
