@@ -1,51 +1,58 @@
 
 
-## Fix Share Card Image Loading
+# Explore Page Redesign
 
-### Problem
-When tapping "Save" on the share card, the dream image hasn't finished loading in the DOM yet, so `html-to-image` captures the card without it. Tapping Save a second time works because the image has loaded by then.
+## Overview
+The Explore page currently feels disconnected from the app's cosmic aurora aesthetic. This redesign brings it in line with the Journal, Lucid Repo, and Profile pages by adding the cosmic background, a refined header with a subtle tagline, polished section headers with icons, upgraded technique and meditation cards with glass effects and glow interactions, and better visual hierarchy throughout.
 
-**Root causes:**
-1. The dialog opens and the preview card renders, but the `<img>` inside it starts loading only at that point
-2. `handleSaveCard` uses `waitForImageLoad()` which creates a **separate** `new Image()` object -- this preloads the image in memory but doesn't guarantee the actual DOM `<img>` element has rendered
-3. The 500ms delay after preload is unreliable
-4. The Save button is never disabled while images are still loading
+## Design Changes
 
-### Solution
+### 1. Page Header
+- Replace the plain "Explore" text with a styled header featuring a Compass icon and a muted tagline: "Discover techniques and deepen your practice"
+- Add proper `pt-safe-top` spacing consistent with other pages
 
-**In `ShareButton.tsx`:**
+### 2. Search Bar
+- Add a subtle glow ring on focus (`focus:ring-primary/30`) to match the cosmic input style used elsewhere
+- Keep the existing rounded-full glass style
 
-1. **Track actual DOM image load** -- Use the `onLoad` callback already on the preview `<img>` to set `imageLoaded = true`, and reset it to `false` when the dialog opens
-2. **Disable the Save button** until all images (dream image + logo) have loaded in the DOM
-3. **Replace `waitForImageLoad`** with a proper poll/promise that waits for the actual DOM images inside `previewCardRef` to report `complete === true`
-4. **Add a loading indicator** on the Save button while images are loading
+### 3. Techniques Section
+- Replace the plain "Techniques" text header with a section header featuring a `Wand2` icon (consistent with the app's preference for context-specific icons over sparkles)
+- Upgrade difficulty badges with subtle glow effects
+- Make technique cards use `glass-card` base styling with a colored top-edge accent line per difficulty level (emerald/amber/purple) instead of full gradient backgrounds
+- Add `luminous-hover` interaction class for a lift-and-glow effect on tap/hover
 
-**In `shareUtils.ts` (`elementToPngBase64`):**
+### 4. Meditation Section
+- Replace static cards with interactive `glass-card` styled tiles
+- Add a `Brain` icon to the section header
+- Give each meditation card a soft pulsing glow border on hover (`animate-magic-glow` on hover)
+- Slightly increase card height and add a subtle gradient accent along the top edge
 
-5. **Replace the blind 2-second timeout** with a proper check that all `<img>` elements inside the target element have `complete === true` and `naturalWidth > 0`, with a timeout fallback (max 5 seconds)
+### 5. New "Quick Tips" Banner
+- Add a small featured-card banner between Techniques and Meditation with a rotating daily tip about lucid dreaming (hardcoded array, changes based on day-of-week)
+- Uses the `featured-card` variant for visual prominence
 
-### Files to Change
+## Technical Details
 
-| File | Changes |
-|------|---------|
-| `src/components/share/ShareButton.tsx` | Reset `imageLoaded` on dialog open; disable Save until loaded; replace `waitForImageLoad` with DOM-based image readiness check; show loading state on button |
-| `src/utils/shareUtils.ts` | Replace blind `setTimeout(2000)` in `elementToPngBase64` with a proper image-complete polling loop (checks every 100ms, max 5s) |
+### Files Modified
 
-### Technical Detail
+**`src/pages/Explore.tsx`**
+- Add imports for `Wand2`, `Brain`, `Compass`, `Lightbulb` from lucide-react
+- Wrap content sections with proper cosmic-themed section headers using icon + text combos
+- Add a daily tip banner section between techniques and meditation
+- Add a hardcoded `dailyTips` array and select one based on `new Date().getDay()`
 
-The new image-ready check in `elementToPngBase64`:
-```text
-- Query all <img> elements in the target element
-- For each, check img.complete && img.naturalWidth > 0
-- If not all ready, wait 100ms and re-check
-- Timeout after 5 seconds and proceed anyway (graceful degradation)
-```
+**`src/components/explore/TechniqueGridCard.tsx`**
+- Replace the gradient background with `glass-card` base class
+- Add a 3px colored top-border accent line matching difficulty (emerald/amber/purple)
+- Add `luminous-hover` class for interactive glow on hover
+- Slightly increase icon size from 36px to 40px for better visual weight
 
-The Save button state:
-```text
-- When dialog opens: imageLoaded = false
-- <img onLoad> sets imageLoaded = true
-- Save button: disabled={isSaving || (!imageLoaded && !!normalizedDream.generatedImage)}
-- Button label shows "Loading image..." while waiting
-```
+**No new files or dependencies required.**
+
+## Visual Result
+- Every section gains the glass/glow treatment consistent with Journal and Lucid Repo pages
+- Technique cards feel more premium with glass morphism instead of flat color fills
+- Section headers gain icon companions for better scanability
+- The daily tip banner adds a touch of content richness and visual variety
+- Meditation cards gain interactivity cues even though they remain informational for now
 
