@@ -241,7 +241,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   
                   {/* Title & Date */}
                   <div style={{ marginBottom: '14px' }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.2, color: '#e2e8f0', fontFamily: "'EB Garamond', serif", letterSpacing: '0.5px', textAlign: 'left' }}>
+                    <h2 style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.2, color: '#e2e8f0', fontFamily: "'EB Garamond', serif", letterSpacing: '0.5px', textAlign: 'left' }}>
                       {normalizedDream.title}
                     </h2>
                     <p style={{ fontSize: '11px', color: 'rgba(139,92,246,0.6)', marginTop: '6px', textAlign: 'left', fontFamily: 'monospace', letterSpacing: '1px' }}>
@@ -282,10 +282,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   
                   {/* Dream Visualization */}
                   {normalizedDream.generatedImage && (
-                    <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 auto', minHeight: 0 }}>
                       <div style={{
                         width: '100%',
-                        height: '240px',
+                        height: '100%',
+                        maxHeight: '200px',
                         overflow: 'hidden',
                         borderRadius: '12px',
                         position: 'relative',
@@ -318,17 +319,17 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   {/* Separator line */}
                   <div style={{
                     height: '1px',
+                    flexShrink: 0,
                     background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), rgba(96,165,250,0.3), transparent)',
-                    marginBottom: '12px',
-                    marginTop: 'auto',
+                    marginBottom: '10px',
                   }} />
 
-                  {/* Footer with logo */}
-                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  {/* Footer with logo and app store */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
                     <img
                       src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
                       alt="Lucid Repo Logo"
-                      style={{ height: '44px', width: 'auto', opacity: 0.9 }}
+                      style={{ height: '36px', width: 'auto', opacity: 0.9 }}
                       onLoad={() => setLogoLoaded(true)}
                       onError={() => setLogoLoaded(true)}
                     />
