@@ -47,14 +47,13 @@ serve(async (req) => {
 
     console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, style: ${imageStyle}, photoRealistic: ${isPhotoRealistic}`)
 
-    const googleApiKey = Deno.env.get('GOOGLE_AI_API_KEY')
-    if (!googleApiKey) {
-      throw new Error('GOOGLE_AI_API_KEY not configured')
+    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
+    if (!lovableApiKey) {
+      throw new Error('LOVABLE_API_KEY not configured')
     }
 
-    // Build parts array
-    // For photorealistic + reference: put reference image FIRST with explicit character label
-    const parts: any[] = []
+    // Build messages array for OpenAI-compatible API
+    const contentParts: any[] = []
 
     if (referenceImageUrl) {
       try {
@@ -69,21 +68,25 @@ serve(async (req) => {
           }
           const base64Data = btoa(binary)
           const contentType = imgResponse.headers.get('content-type') || 'image/jpeg'
-          
-          // Always label the reference image explicitly
-          parts.push({ text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment from this image — those come from the dream scene description below.' })
-          
-          parts.push({
-            inline_data: {
-              mime_type: contentType,
-              data: base64Data
+
+          contentParts.push({
+            type: 'text',
+            text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment from this image — those come from the dream scene description below.'
+          })
+
+          contentParts.push({
+            type: 'image_url',
+            image_url: {
+              url: `data:${contentType};base64,${base64Data}`
             }
           })
           console.log("Reference image added to request, size:", imgBytes.length)
 
-          // For photorealistic styles, add anti-composite instructions as a separate text part
           if (isPhotoRealistic) {
-            parts.push({ text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.` })
+            contentParts.push({
+              type: 'text',
+              text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.`
+            })
           }
         } else {
           console.warn("Failed to fetch reference image:", imgResponse.status)
@@ -93,50 +96,65 @@ serve(async (req) => {
       }
     }
 
-    // Add the prompt text after the reference image and directives
-    parts.push({ text: prompt })
+    // Add the prompt text
+    contentParts.push({ type: 'text', text: prompt })
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${googleApiKey}`,
+      'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${lovableApiKey}`,
+        },
         body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            responseModalities: ["TEXT", "IMAGE"],
-          },
+          model: 'google/gemini-3-pro-image-preview',
+          messages: [
+            {
+              role: 'user',
+              content: contentParts,
+            }
+          ],
+          modalities: ['image', 'text'],
         }),
       }
     )
 
-    const data = await response.json()
-    
-    if (data.error) {
-      console.error("Gemini API error:", data.error)
-      throw new Error(data.error.message || 'Gemini API error')
-    }
-
-    // Extract base64 image from response
-    const candidates = data.candidates
-    if (!candidates || candidates.length === 0) {
-      throw new Error('No candidates returned from Gemini')
-    }
-
-    let imageBase64: string | null = null
-    let mimeType = 'image/png'
-
-    for (const part of candidates[0].content.parts) {
-      if (part.inlineData) {
-        imageBase64 = part.inlineData.data
-        mimeType = part.inlineData.mimeType || 'image/png'
-        break
+    if (!response.ok) {
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.')
       }
+      if (response.status === 402) {
+        throw new Error('AI credits exhausted. Please add credits to continue generating images.')
+      }
+      const errorText = await response.text()
+      console.error("AI Gateway error:", response.status, errorText)
+      throw new Error(`AI Gateway error: ${response.status}`)
     }
 
-    if (!imageBase64) {
-      throw new Error('No image data returned from Gemini')
+    const data = await response.json()
+
+    // Extract base64 image from OpenAI-compatible response
+    const images = data.choices?.[0]?.message?.images
+    if (!images || images.length === 0) {
+      console.error("No images in response:", JSON.stringify(data).substring(0, 500))
+      throw new Error('No image data returned from AI')
     }
+
+    // image_url.url is a data URL like "data:image/png;base64,..."
+    const dataUrl = images[0].image_url?.url
+    if (!dataUrl) {
+      throw new Error('No image URL in response')
+    }
+
+    // Parse the data URL
+    const matches = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
+    if (!matches) {
+      throw new Error('Invalid image data URL format')
+    }
+
+    const mimeType = matches[1]
+    const imageBase64 = matches[2]
 
     console.log("Image generated, uploading to storage...")
 
@@ -150,7 +168,6 @@ serve(async (req) => {
     const ext = mimeType.includes('png') ? 'png' : 'jpg'
     const fileName = `${user.id}/${Date.now()}.${ext}`
 
-    // Use service role client for storage upload
     const adminSupabase = createClient(supabaseUrl, serviceRoleKey)
 
     const { error: uploadError } = await adminSupabase.storage
