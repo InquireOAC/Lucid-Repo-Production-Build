@@ -69,16 +69,16 @@ function SectionCard({ section, index }: SectionCardProps) {
 
   return (
     <div
-      className="rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm p-4 space-y-2"
+      className="rounded-xl border border-border/50 bg-card/40 backdrop-blur-sm p-3 space-y-1.5 h-full"
       style={{ animationDelay: `${index * 60}ms` }}
     >
       {section.title && (
         <div className="flex items-center gap-2">
-          <Icon className={`h-4 w-4 flex-shrink-0 ${config.color}`} />
-          <h4 className="text-sm font-semibold tracking-wide text-foreground">{section.title}</h4>
+          <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${config.color}`} />
+          <h4 className="text-xs font-semibold tracking-wide text-foreground">{section.title}</h4>
         </div>
       )}
-      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+      <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap line-clamp-6">
         {section.body}
       </p>
     </div>
