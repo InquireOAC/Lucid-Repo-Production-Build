@@ -1,49 +1,19 @@
 
+# Fix Toast on Dream Open and Fix Avatar/Username Display
 
-# Fix Avatar Deletion and Redesign Reference Photo UI
+## Problem 1: "Dream updated successfully" toast on open
+When you open a dream from the journal, the `handleDreamDetailUpdate` function wraps even minor updates (like comment count changes) into a full payload that includes `title`, `content`, etc. The toast logic in `useJournalActions` sees `title` in the update and shows "Dream updated successfully" even though nothing was actually edited.
 
-## Problem 1: Cannot Delete Saved Avatar
-The Face photo's `onClear` handler only clears `photoFile` and `rawPhotoPreview`, but does NOT clear `contextData.photo_url` or `photoPreview`. Since the `PhotoUploadSection` displays `preview || existingUrl`, the saved avatar URL from the database always shows and cannot be removed. The same issue exists for generated avatars -- `photoPreview` (which holds the generated avatar URL) is never cleared either.
+**Fix in `src/pages/Journal.tsx`**: Change `handleDreamDetailUpdate` to only pass the actual changed fields to `handleEditDream`, instead of rebuilding the entire dream payload. For comment-count-only updates, skip calling `handleEditDream` entirely and just update local state.
 
-## Problem 2: UI Layout
-The current 3-column grid with tiny 64x64 upload boxes feels cramped. The upload sections need clearer visual hierarchy and better touch targets.
+## Problem 2: Avatar shows generic star and username shows "@anon"
+Journal entries are fetched from the database using `select("*")` without joining the `profiles` table. So `dream.profiles` is always empty/undefined. The DreamDetail component falls back to a generic SymbolAvatar and "@anon".
 
-## Changes to `src/components/profile/AIContextDialog.tsx`
+**Fix in `src/components/DreamDetail.tsx`**: When viewing your own dream (detected via `isOwner`), use the current user's profile from `AuthContext` instead of relying on `dream.profiles`. The auth context already has `profile` with `username`, `display_name`, `avatar_symbol`, `avatar_color`, and `avatar_url`.
 
-### Fix 1: Allow deleting saved avatar from Face section
-Update the Face `onClear` handler to also clear:
-- `contextData.photo_url` (the saved DB URL)
-- `photoPreview` (the generated avatar display URL)
+## Files Changed
 
-This ensures the avatar preview circle also clears, and when the user saves, `photo_url` will be set to `null` in the database.
-
-### Fix 2: Redesign the PhotoUploadSection component
-Replace the cramped 3-column grid with a vertical stack of card-style rows. Each reference photo gets a horizontal card with:
-- A larger thumbnail (80x80 rounded) on the left
-- Label, description text, and upload/clear actions on the right
-- Descriptions: Face = "Required -- used for likeness", Outfit = "Optional -- clothing reference", Accessory = "Optional -- jewelry, glasses, etc."
-- Clear button positioned as a small icon on the thumbnail corner (existing pattern)
-- Upload area uses a tappable card-style layout instead of a tiny dashed box
-
-### Layout structure per row:
-```text
-+------------------------------------------+
-| [80x80 image/upload]  Face *             |
-|                        Used for likeness  |
-|                        [Upload / Clear]   |
-+------------------------------------------+
-```
-
-### Fix 3: Add delete confirmation for generated avatar
-When clearing the Face photo and a generated avatar exists, show a confirmation toast or simply clear it immediately (since it hasn't been saved yet if `generatedAvatarUrl` is set, or will be nulled on next save if from DB).
-
-## Technical Details
-
-**Single file changed:** `src/components/profile/AIContextDialog.tsx`
-
-- Face `onClear`: Add `setContextData(prev => ({ ...prev, photo_url: undefined }))` and `setPhotoPreview(null)`
-- Outfit/Accessory `onClear`: Already clear `contextData` fields (correct), but also need to persist null on save -- this already works since `handleSave` reads from `contextData`
-- Redesign `PhotoUploadSection` to use a horizontal card layout with larger thumbnails and helper text
-- Add a `description` prop to `PhotoUploadSection` for contextual help text
-- Change grid from `grid-cols-3` to a vertical `space-y-3` stack of cards
-
+| File | Change |
+|------|--------|
+| `src/pages/Journal.tsx` | Rewrite `handleDreamDetailUpdate` to pass only actual changed fields; skip edit call for comment-count-only updates |
+| `src/components/DreamDetail.tsx` | Use `profile` from AuthContext for own dreams instead of relying on `dream.profiles` |
