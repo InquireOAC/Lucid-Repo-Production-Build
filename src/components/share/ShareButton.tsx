@@ -198,95 +198,141 @@ const ShareButton: React.FC<ShareButtonProps> = ({
               <div 
                 className="w-full h-full overflow-hidden"
                 style={{
-                  padding: '16px', 
+                  padding: '20px', 
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
-                  background: 'linear-gradient(to bottom, #6344A5, #8976BF)',
-                  borderRadius: '12px'
+                  background: 'linear-gradient(160deg, #0a0a1a 0%, #1a0e2e 30%, #0d1b2a 60%, #0a0a1a 100%)',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(139, 92, 246, 0.3)',
                 }}
               >
-                {/* App Name at the top */}
-                <div className="flex items-center justify-center mb-3">
-                  <h1 className="text-base font-bold text-white tracking-tight">
-                    Lucid Repo
-                  </h1>
-                </div>
-                
-                {/* Title & Date */}
-                <div className="mb-3">
-                  <h2 className="text-lg font-bold leading-tight text-white text-left line-clamp-2">
-                    {normalizedDream.title}
-                  </h2>
-                  <p className="text-xs text-white/50 mt-1 text-left">
-                    {normalizedDream.date 
-                      ? new Intl.DateTimeFormat('en-US', { 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        }).format(new Date(normalizedDream.date))
-                      : "Unknown Date"}
-                  </p>
-                </div>
-                
-                {/* Dream Story */}
-                <div className="mb-3 bg-white/20 p-3 rounded-lg">
-                  <p className="text-sm leading-normal text-white text-left line-clamp-6">
-                    {normalizedDream.content.length > 200 
-                      ? normalizedDream.content.substring(0, 200) + "..." 
-                      : normalizedDream.content}
-                  </p>
-                </div>
-                
-                {/* Dream Analysis */}
-                {normalizedDream.analysis && (
-                  <div className="mb-3">
-                    <div className="border-l-2 border-purple-300 pl-2">
-                      <p className="text-xs italic text-white/90 text-left line-clamp-3">
-                        {normalizedDream.analysis.length > 120 
-                          ? normalizedDream.analysis.substring(0, 120) + "..." 
-                          : normalizedDream.analysis}
-                      </p>
-                    </div>
+                {/* Starfield overlay */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundImage: 'radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 100%), radial-gradient(1px 1px at 80% 10%, rgba(255,255,255,0.3) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 50% 60%, rgba(139,92,246,0.5) 0%, transparent 100%), radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.25) 0%, transparent 100%), radial-gradient(1px 1px at 10% 90%, rgba(139,92,246,0.3) 0%, transparent 100%), radial-gradient(1px 1px at 40% 15%, rgba(255,255,255,0.35) 0%, transparent 100%), radial-gradient(1.5px 1.5px at 90% 45%, rgba(96,165,250,0.4) 0%, transparent 100%)',
+                  borderRadius: '16px',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }} />
+
+                {/* Aurora glow at top */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '80%',
+                  height: '120px',
+                  background: 'radial-gradient(ellipse at center, rgba(139,92,246,0.25) 0%, rgba(59,130,246,0.1) 50%, transparent 80%)',
+                  borderRadius: '16px',
+                  pointerEvents: 'none',
+                  zIndex: 0,
+                }} />
+
+                {/* Content layer */}
+                <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  
+                  {/* App Name */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '10px', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(139,92,246,0.7)', fontFamily: 'monospace' }}>✦ Dream Journal ✦</span>
                   </div>
-                )}
-                
-                {/* Dream Visualization - with proper image loading */}
-                {normalizedDream.generatedImage && (
-                  <div className="mb-3 flex items-center justify-center">
-                    <div className="w-full overflow-hidden rounded-lg shadow-lg relative bg-[#8976BF]" style={{ height: '256px' }}>
-                      <img 
-                        src={normalizedDream.generatedImage}
-                        alt="Dream Visualization"
-                        className="w-full h-full object-contain"
-                        style={{ 
-                          borderRadius: '8px',
-                          backgroundColor: '#8976BF'
-                        }}
-                        crossOrigin="anonymous"
-                        onLoad={() => {
-                          console.log("Preview image loaded");
-                          setImageLoaded(true);
-                        }}
-                        onError={(e) => {
-                          console.error("Preview image failed to load:", e);
-                          setImageLoaded(true);
-                        }}
-                      />
-                    </div>
+                  
+                  {/* Title & Date */}
+                  <div style={{ marginBottom: '14px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 700, lineHeight: 1.2, color: '#e2e8f0', fontFamily: "'EB Garamond', serif", letterSpacing: '0.5px', textAlign: 'left' }}>
+                      {normalizedDream.title}
+                    </h2>
+                    <p style={{ fontSize: '11px', color: 'rgba(139,92,246,0.6)', marginTop: '6px', textAlign: 'left', fontFamily: 'monospace', letterSpacing: '1px' }}>
+                      {normalizedDream.date 
+                        ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(normalizedDream.date))
+                        : "Unknown Date"}
+                    </p>
                   </div>
-                )}
-                
-                {/* Footer with logo */}
-                <div className="flex justify-center items-center mt-auto">
-                  <img
-                    src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
-                    alt="Lucid Repo Logo"
-                    className="object-contain"
-                    style={{ height: '49px', width: 'auto' }}
-                    onLoad={() => setLogoLoaded(true)}
-                    onError={() => setLogoLoaded(true)}
-                  />
+                  
+                  {/* Dream Story */}
+                  <div style={{
+                    marginBottom: '14px',
+                    padding: '14px',
+                    borderRadius: '12px',
+                    background: 'rgba(139,92,246,0.08)',
+                    border: '1px solid rgba(139,92,246,0.15)',
+                    backdropFilter: 'blur(10px)',
+                  }}>
+                    <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'rgba(226,232,240,0.85)', textAlign: 'left', fontFamily: "'Lora', serif" }}>
+                      {normalizedDream.content.length > 200 
+                        ? normalizedDream.content.substring(0, 200) + "..." 
+                        : normalizedDream.content}
+                    </p>
+                  </div>
+                  
+                  {/* Dream Analysis */}
+                  {normalizedDream.analysis && (
+                    <div style={{ marginBottom: '14px' }}>
+                      <div style={{ borderLeft: '2px solid rgba(139,92,246,0.5)', paddingLeft: '10px' }}>
+                        <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'rgba(196,181,253,0.8)', textAlign: 'left', lineHeight: 1.5, fontFamily: "'Lora', serif" }}>
+                          {normalizedDream.analysis.length > 120 
+                            ? normalizedDream.analysis.substring(0, 120) + "..." 
+                            : normalizedDream.analysis}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Dream Visualization */}
+                  {normalizedDream.generatedImage && (
+                    <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <div style={{
+                        width: '100%',
+                        height: '240px',
+                        overflow: 'hidden',
+                        borderRadius: '12px',
+                        position: 'relative',
+                        border: '1px solid rgba(139,92,246,0.25)',
+                        boxShadow: '0 0 30px rgba(139,92,246,0.15), 0 0 60px rgba(59,130,246,0.05)',
+                      }}>
+                        <img 
+                          src={normalizedDream.generatedImage}
+                          alt="Dream Visualization"
+                          style={{ 
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '12px',
+                          }}
+                          crossOrigin="anonymous"
+                          onLoad={() => {
+                            console.log("Preview image loaded");
+                            setImageLoaded(true);
+                          }}
+                          onError={(e) => {
+                            console.error("Preview image failed to load:", e);
+                            setImageLoaded(true);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Separator line */}
+                  <div style={{
+                    height: '1px',
+                    background: 'linear-gradient(90deg, transparent, rgba(139,92,246,0.4), rgba(96,165,250,0.3), transparent)',
+                    marginBottom: '12px',
+                    marginTop: 'auto',
+                  }} />
+
+                  {/* Footer with logo */}
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <img
+                      src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
+                      alt="Lucid Repo Logo"
+                      style={{ height: '44px', width: 'auto', opacity: 0.9 }}
+                      onLoad={() => setLogoLoaded(true)}
+                      onError={() => setLogoLoaded(true)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
