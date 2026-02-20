@@ -1,39 +1,73 @@
 
 
-# Upgrade All Image Style Descriptions for High-Quality Generation
+# Multi-Reference Avatar: Face, Outfit, and Accessory Uploads
 
-## Problem
+## Overview
 
-The style descriptions used in prompt building are too short and generic (e.g., "delicate watercolor painting with transparent washes"). This gives the AI model insufficient guidance, resulting in inconsistent or low-quality stylistic output. The "realistic" and "hyper_realism" styles already have detailed multi-line descriptions, but all other styles are one-liners.
+Upgrade the Dream Avatar dialog to accept 3 separate reference images (face photo, outfit photo, accessory photo) that are all sent to the AI image generator to produce a full-body and portrait avatar with accurate likeness, clothing, and accessories.
 
 ## Changes
 
-### 1. `src/utils/promptBuildingUtils.ts` -- Upgrade `addImageStyleToPrompt`
+### 1. Database Migration -- Add new columns to `ai_context`
 
-Replace every one-liner style description in the `styleMap` with detailed, multi-line style directives similar to what "realistic" and "hyper_realism" already have. Each style will get specific rendering instructions covering medium, technique, lighting, color palette, and texture:
+Add two new nullable columns to store the outfit and accessory reference photo URLs:
 
-| Style | Current Description | Upgraded Description (summary) |
-|-------|-------------------|-------------------------------|
-| surreal | "surreal dreamlike artistic style with vivid colors" | Detailed Salvador Dali-inspired: melting forms, impossible geometry, hyper-detailed textures, chromatic lighting, cinematic composition |
-| digital_art | "polished digital art with vibrant colors" | AAA concept art quality: clean vector edges, volumetric lighting, subsurface scattering, 4K render, ArtStation-trending quality |
-| fantasy | "epic fantasy art with rich detail and magical atmosphere" | Epic fantasy illustration: golden-hour rim lighting, ornate details, atmospheric depth, magical particle effects, painterly brushwork |
-| cyberpunk | "cyberpunk digital art with neon lights and futuristic dystopia" | Neon-drenched cyberpunk: holographic HUD overlays, rain-slick reflections, volumetric fog with neon scatter, chrome/carbon materials, Blade Runner aesthetic |
-| watercolor | "delicate watercolor painting with transparent washes" | Traditional watercolor on cold-press paper: visible paper grain, pigment granulation, wet-on-wet bleeding edges, transparent layered glazes, unpainted white highlights |
-| oil_painting | "classical oil painting with rich impasto texture" | Museum-quality oil painting: thick impasto brushstrokes, canvas weave texture, Rembrandt-style chiaroscuro, glazed luminous skin tones, visible palette knife marks |
-| sketch | "detailed pencil sketch with expressive linework" | Professional graphite sketch: varied pencil pressure (2H-6B range), cross-hatching for shadow depth, paper tooth texture, smudged soft gradients, raw construction lines |
-| impressionist | "impressionist painting with visible brushstrokes and soft light" | Monet/Renoir style: broken color dabs, en plein air natural light, chromatic shadow theory, thick visible brushstrokes, diffused edges |
-| abstract | "abstract art with bold shapes and non-representational forms" | Bold abstract composition: geometric and organic forms, Kandinsky/Rothko influence, saturated color fields, strong compositional tension, textured mixed-media feel |
-| minimalist | "minimalist design with clean lines and limited palette" | Japanese-inspired minimalism: vast negative space, 2-3 color palette max, single focal element, clean geometric forms, zen-like tranquility |
-| vintage | "vintage photography with film grain and muted tones" | 1970s analog film: Kodak Portra/Ektachrome color science, visible film grain, slight light leaks, warm muted tones, soft vignette, period-accurate lens characteristics |
+```text
+ALTER TABLE ai_context ADD COLUMN outfit_photo_url TEXT;
+ALTER TABLE ai_context ADD COLUMN accessory_photo_url TEXT;
+```
 
-### 2. `src/components/profile/AIContextDialog.tsx` -- Upgrade avatar style prompts
+### 2. `src/components/profile/AIContextDialog.tsx` -- Multi-image upload UI
 
-Update the non-realistic avatar prompt in `generateCharacterAvatar` to include the same style-specific detail. Instead of the generic `"Create a stylized character portrait ... in a ${styleLabel} art style"`, use a lookup of detailed per-style avatar prompts matching the descriptions above. This ensures avatar generation gets the same quality guidance as dream images.
+- Add state for `outfitFile`, `outfitPreview`, `accessoryFile`, `accessoryPreview`
+- Replace the single "Reference Photo" upload area with 3 labeled upload sections:
+  - **Face Photo** (required) -- existing upload, relabeled
+  - **Outfit Photo** (optional) -- new upload for clothing/outfit reference
+  - **Accessory Photo** (optional) -- new upload for accessories (jewelry, glasses, hats, etc.)
+- Each section shows a thumbnail preview when a file is selected
+- The "Generate Character" button remains but now requires at least the face photo
+- Remove the text-based "Clothing Style" input field since outfit is now image-based
+- Update `handleSave` to persist all 3 URLs to the `ai_context` table
+- Update `loadAIContext` to load and display existing outfit/accessory photos
 
-### Files Changed
+### 3. `src/components/profile/AIContextDialog.tsx` -- Updated prompt construction
+
+Update `generateCharacterAvatar` to:
+- Upload all provided photos (face, outfit, accessory) to Supabase storage
+- Pass all image URLs to the edge function via new body parameters: `outfitImageUrl` and `accessoryImageUrl`
+- Update prompts to request a **full-body portrait** that incorporates:
+  - The person's face/identity from the face photo
+  - The clothing/outfit from the outfit photo (if provided)
+  - The accessories from the accessory photo (if provided)
+
+### 4. `supabase/functions/generate-dream-image/index.ts` -- Accept multiple reference images
+
+Update the edge function to:
+- Accept `outfitImageUrl` and `accessoryImageUrl` in addition to existing `referenceImageUrl`
+- For each provided image, fetch it, convert to base64, and add as a labeled content part:
+  - Face image tagged as `[CHARACTER_IDENTITY_REFERENCE]` (existing behavior)
+  - Outfit image tagged as `[OUTFIT_REFERENCE]` with instruction: "Extract ONLY the clothing, garments, and outfit from this image. Dress the character in this exact outfit."
+  - Accessory image tagged as `[ACCESSORY_REFERENCE]` with instruction: "Extract ONLY the accessories (jewelry, glasses, hats, bags, etc.) from this image. Add these exact accessories to the character."
+- The main prompt will be updated to request a full-body composition when outfit/accessory references are present
+
+### 5. `src/utils/aiContextUtils.ts` -- Pass new URLs to dream image generation
+
+Update `getUserAIContext` return type and consumers to also return `outfit_photo_url` and `accessory_photo_url` so they can be passed during dream image generation when AI context is enabled.
+
+## Files Changed
 
 | File | Action |
 |------|--------|
-| `src/utils/promptBuildingUtils.ts` | Upgrade all style descriptions in `addImageStyleToPrompt` with detailed multi-line rendering directives |
-| `src/components/profile/AIContextDialog.tsx` | Upgrade avatar generation prompt with per-style detailed descriptions |
+| Database migration | Add `outfit_photo_url` and `accessory_photo_url` columns to `ai_context` |
+| `src/components/profile/AIContextDialog.tsx` | Multi-image upload UI + updated prompt logic |
+| `supabase/functions/generate-dream-image/index.ts` | Accept and process multiple reference images |
+| `src/utils/aiContextUtils.ts` | Return new photo URLs for dream generation |
+
+## Technical Details
+
+- Each uploaded image goes through the same `uploadPhoto` helper (stored in `dream-images` bucket under `ai-context-photos/`)
+- The edge function processes images sequentially: face first, then outfit, then accessory -- each as a separate labeled content part in the messages array
+- Max file size remains 5MB per image
+- Outfit and accessory uploads are optional -- if not provided, behavior falls back to current face-only generation
+- The prompt will dynamically adjust: if all 3 images are provided, it requests a "full-body portrait wearing the exact outfit and accessories shown"; if only face, it generates a portrait as before
 
