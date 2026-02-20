@@ -307,6 +307,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
 
   const PhotoUploadSection = ({
     label,
+    description,
     required,
     file,
     preview,
@@ -315,6 +316,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
     onClear,
   }: {
     label: string;
+    description: string;
     required?: boolean;
     file: File | null;
     preview: string | null;
@@ -324,42 +326,38 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
   }) => {
     const displayUrl = preview || existingUrl;
     return (
-      <div>
-        <Label className="text-xs">
-          {label} {required && <span className="text-destructive">*</span>}
-        </Label>
-        <div className="mt-1.5 flex items-center gap-3">
-          {displayUrl ? (
-            <div className="relative">
-              <img
-                src={displayUrl}
-                alt={label}
-                className="w-16 h-16 object-cover rounded-lg border border-muted"
-              />
-              <button
-                type="button"
-                onClick={onClear}
-                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </div>
-          ) : (
-            <label className="flex items-center justify-center w-16 h-16 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors">
-              <Upload className="h-4 w-4 text-muted-foreground" />
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={onFileChange}
-              />
-            </label>
-          )}
-          {!displayUrl && (
-            <span className="text-xs text-muted-foreground">
-              {file ? file.name : `Upload ${label.toLowerCase()}`}
-            </span>
-          )}
+      <div className="flex items-center gap-4 rounded-xl border border-border/60 bg-muted/30 p-3">
+        {displayUrl ? (
+          <div className="relative flex-shrink-0">
+            <img
+              src={displayUrl}
+              alt={label}
+              className="w-20 h-20 object-cover rounded-lg border border-border"
+            />
+            <button
+              type="button"
+              onClick={onClear}
+              className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <label className="flex-shrink-0 flex items-center justify-center w-20 h-20 border-2 border-dashed border-muted-foreground/25 rounded-lg cursor-pointer hover:border-primary/40 hover:bg-muted/50 transition-colors">
+            <Upload className="h-5 w-5 text-muted-foreground/60" />
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={onFileChange}
+            />
+          </label>
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">
+            {label} {required && <span className="text-destructive">*</span>}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         </div>
       </div>
     );
@@ -395,9 +393,10 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
           {/* Reference Photo Uploads */}
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference Photos</p>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-3">
               <PhotoUploadSection
                 label="Face"
+                description="Required — used for likeness"
                 required
                 file={photoFile}
                 preview={rawPhotoPreview}
@@ -407,10 +406,13 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                   setPhotoFile(null);
                   setRawPhotoPreview(null);
                   setGeneratedAvatarUrl(null);
+                  setPhotoPreview(null);
+                  setContextData((prev) => ({ ...prev, photo_url: undefined }));
                 }}
               />
               <PhotoUploadSection
                 label="Outfit"
+                description="Optional — clothing reference"
                 file={outfitFile}
                 preview={outfitFile ? outfitPreview : null}
                 existingUrl={contextData.outfit_photo_url}
@@ -423,6 +425,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
               />
               <PhotoUploadSection
                 label="Accessory"
+                description="Optional — jewelry, glasses, etc."
                 file={accessoryFile}
                 preview={accessoryFile ? accessoryPreview : null}
                 existingUrl={contextData.accessory_photo_url}
