@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const MAX_PROMPT_LENGTH = 6000
+const MAX_PROMPT_LENGTH = 15000
 
 async function fetchImageAsBase64(url: string): Promise<{ base64: string; contentType: string } | null> {
   try {
