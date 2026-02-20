@@ -11,6 +11,7 @@ export function useProfileStats(user: any, userId?: string) {
     if (!user) return;
     
     const targetUserId = userId || user.id;
+    if (!/^[0-9a-fA-F-]{36}$/.test(targetUserId)) return;
     
     try {
       // Get dream count

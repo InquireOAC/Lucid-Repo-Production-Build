@@ -7,11 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
  * Returns conversation partner profile objects.
  */
 export function useConversations(user: any) {
-  const [conversations, setConversations] = useState([]);
-
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const fetchConversations = async () => {
     if (!user) return;
-
+    setIsLoading(true);
     try {
       // Fetch messages sent or received by the user
       const { data: messages, error } = await supabase
@@ -70,6 +70,9 @@ export function useConversations(user: any) {
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
+      setConversations([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -113,6 +116,7 @@ export function useConversations(user: any) {
 
   return {
     conversations,
+    isLoading,
     fetchConversations,
     handleStartConversation
   };
