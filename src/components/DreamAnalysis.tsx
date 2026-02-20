@@ -165,7 +165,7 @@ const DreamAnalysis = ({
               onClick={generateAnalysis}
               className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90 bg-violet-800 hover:bg-violet-700 text-white">
 
-                <Brain className="h-4 w-4 mr-2" /> 
+                 
                 Analyze Dream
               </Button>
             }
