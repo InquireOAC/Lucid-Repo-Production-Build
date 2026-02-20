@@ -1,6 +1,9 @@
+
 import { useEffect } from 'react';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
+
+const REALITY_CHECK_BASE_ID = 300;
 
 export const useNotificationManager = () => {
   const initializeNotifications = async () => {
@@ -13,7 +16,6 @@ export const useNotificationManager = () => {
       const permission = await LocalNotifications.requestPermissions();
       if (permission.display !== 'granted') {
         console.warn('Notification permission not granted');
-        return;
       }
     } catch (error) {
       console.error('Error initializing notifications:', error);
@@ -22,72 +24,58 @@ export const useNotificationManager = () => {
 
   const scheduleRealityCheckReminders = async () => {
     if (!Capacitor.isNativePlatform()) {
-      // Web fallback - use browser notifications
       scheduleWebNotifications();
       return;
     }
 
     try {
-      // Cancel existing notifications
-      await LocalNotifications.cancel({
-        notifications: [
-          { id: 1 },
-          { id: 2 },
-          { id: 3 },
-          { id: 4 },
-          { id: 5 }
-        ]
-      });
+      // Cancel existing reality check notifications only
+      const idsToCancel = Array.from({ length: 5 }, (_, i) => ({ id: REALITY_CHECK_BASE_ID + i }));
+      await LocalNotifications.cancel({ notifications: idsToCancel });
 
       const now = new Date();
       const notifications = [];
 
-      // Schedule 5 random notifications throughout the day
       for (let i = 0; i < 5; i++) {
-        const hour = 8 + Math.floor(Math.random() * 12); // Between 8 AM and 8 PM
+        const hour = 8 + Math.floor(Math.random() * 12);
         const minute = Math.floor(Math.random() * 60);
-        
+
         const notificationTime = new Date(now);
         notificationTime.setHours(hour, minute, 0, 0);
-        
-        // If the time has passed today, schedule for tomorrow
+
         if (notificationTime <= now) {
           notificationTime.setDate(notificationTime.getDate() + 1);
         }
 
         notifications.push({
-          id: i + 1,
+          id: REALITY_CHECK_BASE_ID + i,
           title: 'Reality Check! 👁️',
           body: 'Am I dreaming right now? Check your hands!',
           schedule: { at: notificationTime },
           sound: undefined,
           attachments: undefined,
           actionTypeId: '',
-          extra: null
+          extra: { type: 'reality_check' }
         });
       }
 
-      await LocalNotifications.schedule({
-        notifications
-      });
-
-      console.log('Reality check notifications scheduled');
+      await LocalNotifications.schedule({ notifications });
+      console.log('Reality check notifications scheduled (IDs:', REALITY_CHECK_BASE_ID, '-', REALITY_CHECK_BASE_ID + 4, ')');
     } catch (error) {
-      console.error('Error scheduling notifications:', error);
+      console.error('Error scheduling reality check notifications:', error);
     }
   };
 
   const scheduleWebNotifications = () => {
     if ('Notification' in window && Notification.permission === 'granted') {
-      // Schedule web notifications using setTimeout
       const scheduleNext = () => {
-        const delay = (2 + Math.random() * 4) * 60 * 60 * 1000; // 2-6 hours
+        const delay = (2 + Math.random() * 4) * 60 * 60 * 1000;
         setTimeout(() => {
           new Notification('Reality Check! 👁️', {
             body: 'Am I dreaming right now? Check your hands!',
             icon: '/favicon.ico'
           });
-          scheduleNext(); // Schedule the next one
+          scheduleNext();
         }, delay);
       };
       scheduleNext();
@@ -96,7 +84,6 @@ export const useNotificationManager = () => {
 
   const scheduleWBTBAlarm = async (wakeUpTime: Date) => {
     if (!Capacitor.isNativePlatform()) {
-      // Web fallback
       const now = new Date();
       const delay = wakeUpTime.getTime() - now.getTime();
       if (delay > 0) {
@@ -120,7 +107,7 @@ export const useNotificationManager = () => {
           sound: undefined,
           attachments: undefined,
           actionTypeId: '',
-          extra: null
+          extra: { type: 'wbtb' }
         }]
       });
     } catch (error) {
@@ -130,7 +117,6 @@ export const useNotificationManager = () => {
 
   const scheduleAchievementNotification = async (achievementName: string, icon: string) => {
     if (!Capacitor.isNativePlatform()) {
-      // Web fallback
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('Achievement Unlocked! 🏆', {
           body: `${icon} ${achievementName}`,
@@ -146,11 +132,11 @@ export const useNotificationManager = () => {
           id: Math.floor(Date.now() / 1000),
           title: 'Achievement Unlocked! 🏆',
           body: `${icon} ${achievementName}`,
-          schedule: { at: new Date(Date.now() + 1000) }, // 1 second delay
+          schedule: { at: new Date(Date.now() + 1000) },
           sound: undefined,
           attachments: undefined,
           actionTypeId: '',
-          extra: null
+          extra: { type: 'achievement' }
         }]
       });
     } catch (error) {
@@ -168,7 +154,6 @@ export const useNotificationManager = () => {
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
-      // Request web notification permission
       requestWebNotificationPermission();
     }
   }, []);
