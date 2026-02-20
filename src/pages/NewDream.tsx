@@ -352,7 +352,7 @@ const NewDream = () => {
         <div className="pt-4">
           <Button
             variant="luminous"
-            className="w-full h-12 text-lg font-semibold"
+            className="w-full h-12 text-lg font-semibold text-secondary-foreground"
             onClick={handleSubmit}
             disabled={isSubmitting || isUploading || !formData.title.trim()}>
 
