@@ -1,82 +1,51 @@
 
 
-## Fix and Enhance Notifications for iOS
+## Fix Share Card Image Loading
 
-### Problems to Fix
+### Problem
+When tapping "Save" on the share card, the dream image hasn't finished loading in the DOM yet, so `html-to-image` captures the card without it. Tapping Save a second time works because the image has loaded by then.
 
-1. **ID Conflict**: Both Morning Reminder and Wake Timer use notification ID `1`, so enabling one cancels the other on iOS.
-2. **Wake Timer has no platform check**: It calls Capacitor APIs directly without checking if running on web, causing crashes in the browser.
-3. **Wake Timer uses clunky inputs**: Two separate number fields instead of a native time picker.
-4. **No custom message support**: Users can't personalize their notification text.
-5. **Cancellation reliability**: Need to ensure each notification type can be independently stopped without affecting the other.
+**Root causes:**
+1. The dialog opens and the preview card renders, but the `<img>` inside it starts loading only at that point
+2. `handleSaveCard` uses `waitForImageLoad()` which creates a **separate** `new Image()` object -- this preloads the image in memory but doesn't guarantee the actual DOM `<img>` element has rendered
+3. The 500ms delay after preload is unreliable
+4. The Save button is never disabled while images are still loading
 
-### Changes
+### Solution
 
-#### 1. Assign unique notification IDs
+**In `ShareButton.tsx`:**
 
-| Feature | ID |
-|---------|----|
-| Morning Reminder | `100` |
-| Wake Timer | `200` |
-| Reality Checks | `300`-`304` |
+1. **Track actual DOM image load** -- Use the `onLoad` callback already on the preview `<img>` to set `imageLoaded = true`, and reset it to `false` when the dialog opens
+2. **Disable the Save button** until all images (dream image + logo) have loaded in the DOM
+3. **Replace `waitForImageLoad`** with a proper poll/promise that waits for the actual DOM images inside `previewCardRef` to report `complete === true`
+4. **Add a loading indicator** on the Save button while images are loading
 
-This ensures enabling/disabling one feature never interferes with another.
+**In `shareUtils.ts` (`elementToPngBase64`):**
 
-#### 2. Fix `notificationUtils.ts`
-- Change morning reminder notification ID from `1` to `100`.
-- Add `message` field to `NotificationSettings` so users can customize the notification body.
-- Update `cancelAllNotifications` to only cancel morning reminder IDs (not wake timer ones).
-- Add a dedicated `cancelMorningReminder()` function.
+5. **Replace the blind 2-second timeout** with a proper check that all `<img>` elements inside the target element have `complete === true` and `naturalWidth > 0`, with a timeout fallback (max 5 seconds)
 
-#### 3. Fix `WakeTimerDialog.tsx`
-- Add `Capacitor.isNativePlatform()` check before calling `LocalNotifications`.
-- Add web fallback using browser `Notification` API + `setTimeout`.
-- Replace two separate hours/minutes number inputs with a single `<input type="time">`.
-- Change notification ID from `1` to `200`.
-- Add custom message input field.
-- Add a dedicated cancel function that only cancels ID `200`.
-- Match the app's cosmic aurora styling.
+### Files to Change
 
-#### 4. Enhance `NotificationsDialog.tsx`
-- Add a custom message input (default: "Remember to log your dream from last night!").
-- Pass the custom message through to `saveNotificationSettings`.
-- Style to match the app's aesthetic.
+| File | Changes |
+|------|---------|
+| `src/components/share/ShareButton.tsx` | Reset `imageLoaded` on dialog open; disable Save until loaded; replace `waitForImageLoad` with DOM-based image readiness check; show loading state on button |
+| `src/utils/shareUtils.ts` | Replace blind `setTimeout(2000)` in `elementToPngBase64` with a proper image-complete polling loop (checks every 100ms, max 5s) |
 
-#### 5. Update `useNotificationManager.tsx`
-- Use IDs `300`-`304` for reality check notifications instead of `1`-`5`.
-- Add platform check before scheduling.
+### Technical Detail
 
-### Files to Modify
-
-| File | What Changes |
-|------|-------------|
-| `src/utils/notificationUtils.ts` | Use ID `100`, add `message` field, add `cancelMorningReminder()`, update reschedule to use custom message |
-| `src/components/profile/NotificationsDialog.tsx` | Add custom message input, pass to save, improve styling |
-| `src/components/profile/WakeTimerDialog.tsx` | Platform check, web fallback, time input, ID `200`, custom message, cancel fix, styling |
-| `src/hooks/useNotificationManager.tsx` | Use IDs `300`+ for reality checks, add platform safety |
-
-### Technical Details
-
-**Updated NotificationSettings interface:**
+The new image-ready check in `elementToPngBase64`:
 ```text
-{
-  enabled: boolean
-  time: string       // "HH:MM"
-  message: string    // custom notification body text
-}
+- Query all <img> elements in the target element
+- For each, check img.complete && img.naturalWidth > 0
+- If not all ready, wait 100ms and re-check
+- Timeout after 5 seconds and proceed anyway (graceful degradation)
 ```
 
-**Updated WakeTimer storage (key: `wakeTimer`):**
+The Save button state:
 ```text
-{
-  enabled: boolean
-  time: string       // "HH:MM" (single time input)
-  message: string    // custom body text
-}
+- When dialog opens: imageLoaded = false
+- <img onLoad> sets imageLoaded = true
+- Save button: disabled={isSaving || (!imageLoaded && !!normalizedDream.generatedImage)}
+- Button label shows "Loading image..." while waiting
 ```
-
-**iOS-specific handling preserved:**
-- The existing iOS reschedule-on-delivery pattern stays, but uses ID `100` and the custom message.
-- Wake timer uses the same iOS non-repeat + reschedule pattern with ID `200`.
-- Each cancel function only targets its own ID, so stopping wake timer won't affect morning reminders and vice versa.
 
