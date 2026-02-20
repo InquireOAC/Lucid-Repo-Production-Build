@@ -96,10 +96,14 @@ export function AnalysisSections({ text, className }: AnalysisSectionsProps) {
   if (!sections.length) return null;
 
   return (
-    <div className={`space-y-3 ${className ?? ""}`}>
-      {sections.map((section, i) => (
-        <SectionCard key={i} section={section} index={i} />
-      ))}
+    <div className={`relative ${className ?? ""}`}>
+      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+        {sections.map((section, i) => (
+          <div key={i} className="snap-start flex-shrink-0 w-[80vw] max-w-[300px]">
+            <SectionCard section={section} index={i} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
