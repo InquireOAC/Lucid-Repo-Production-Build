@@ -1,39 +1,82 @@
 
 
-## Custom Thumbnails for Technique Cards
+## Fix and Enhance Notifications for iOS
 
-### What Changes
-Both the `TechniqueCard` (used on Insights) and `TechniqueGridCard` (used on Explore) will be redesigned with visually rich, color-coded thumbnail backgrounds that prominently show the technique type and difficulty level. Cards remain tappable for navigation.
+### Problems to Fix
 
-### Design Details
+1. **ID Conflict**: Both Morning Reminder and Wake Timer use notification ID `1`, so enabling one cancels the other on iOS.
+2. **Wake Timer has no platform check**: It calls Capacitor APIs directly without checking if running on web, causing crashes in the browser.
+3. **Wake Timer uses clunky inputs**: Two separate number fields instead of a native time picker.
+4. **No custom message support**: Users can't personalize their notification text.
+5. **Cancellation reliability**: Need to ensure each notification type can be independently stopped without affecting the other.
 
-Each card gets a **gradient background strip** color-coded by difficulty:
-- **Beginner** -- emerald/green tones (`from-emerald-500/20 to-emerald-700/10`)
-- **Intermediate** -- amber/gold tones (`from-amber-500/20 to-amber-700/10`)
-- **Advanced** -- purple/rose tones (`from-purple-500/20 to-rose-700/10`)
+### Changes
 
-Visual enhancements:
-- A **difficulty badge pill** in the top-right corner (e.g., "Beginner" + dot rating)
-- An **effectiveness indicator** shown as small star icons (1-3 stars)
-- The emoji icon rendered larger with a frosted glass circle backdrop
-- The technique name and acronym (if any) remain prominent
-- Subtle colored border that matches the difficulty gradient
+#### 1. Assign unique notification IDs
 
-### Technical Changes
+| Feature | ID |
+|---------|----|
+| Morning Reminder | `100` |
+| Wake Timer | `200` |
+| Reality Checks | `300`-`304` |
 
-**File: `src/components/insights/TechniqueCard.tsx`** (list-style card on Insights page)
-- Add a difficulty-based gradient overlay on the left edge or as a top banner
-- Add a difficulty badge pill (top-right) with colored background matching difficulty
-- Add effectiveness stars below or beside the difficulty dots
-- Increase icon backdrop with a frosted circle (`bg-white/5 backdrop-blur-sm rounded-full`)
+This ensures enabling/disabling one feature never interferes with another.
 
-**File: `src/components/explore/TechniqueGridCard.tsx`** (grid card on Explore page)
-- Add the same difficulty-based gradient as the card background
-- Add a small difficulty label pill at the top of the card
-- Add effectiveness stars below the difficulty dots
-- Apply a subtle matching colored border
+#### 2. Fix `notificationUtils.ts`
+- Change morning reminder notification ID from `1` to `100`.
+- Add `message` field to `NotificationSettings` so users can customize the notification body.
+- Update `cancelAllNotifications` to only cancel morning reminder IDs (not wake timer ones).
+- Add a dedicated `cancelMorningReminder()` function.
 
-**Helper:** Create a small utility function (inline or shared) to map difficulty to gradient classes and badge colors, keeping both cards consistent.
+#### 3. Fix `WakeTimerDialog.tsx`
+- Add `Capacitor.isNativePlatform()` check before calling `LocalNotifications`.
+- Add web fallback using browser `Notification` API + `setTimeout`.
+- Replace two separate hours/minutes number inputs with a single `<input type="time">`.
+- Change notification ID from `1` to `200`.
+- Add custom message input field.
+- Add a dedicated cancel function that only cancels ID `200`.
+- Match the app's cosmic aurora styling.
 
-No database changes, no edge functions, no new routes needed.
+#### 4. Enhance `NotificationsDialog.tsx`
+- Add a custom message input (default: "Remember to log your dream from last night!").
+- Pass the custom message through to `saveNotificationSettings`.
+- Style to match the app's aesthetic.
+
+#### 5. Update `useNotificationManager.tsx`
+- Use IDs `300`-`304` for reality check notifications instead of `1`-`5`.
+- Add platform check before scheduling.
+
+### Files to Modify
+
+| File | What Changes |
+|------|-------------|
+| `src/utils/notificationUtils.ts` | Use ID `100`, add `message` field, add `cancelMorningReminder()`, update reschedule to use custom message |
+| `src/components/profile/NotificationsDialog.tsx` | Add custom message input, pass to save, improve styling |
+| `src/components/profile/WakeTimerDialog.tsx` | Platform check, web fallback, time input, ID `200`, custom message, cancel fix, styling |
+| `src/hooks/useNotificationManager.tsx` | Use IDs `300`+ for reality checks, add platform safety |
+
+### Technical Details
+
+**Updated NotificationSettings interface:**
+```text
+{
+  enabled: boolean
+  time: string       // "HH:MM"
+  message: string    // custom notification body text
+}
+```
+
+**Updated WakeTimer storage (key: `wakeTimer`):**
+```text
+{
+  enabled: boolean
+  time: string       // "HH:MM" (single time input)
+  message: string    // custom body text
+}
+```
+
+**iOS-specific handling preserved:**
+- The existing iOS reschedule-on-delivery pattern stays, but uses ID `100` and the custom message.
+- Wake timer uses the same iOS non-repeat + reschedule pattern with ID `200`.
+- Each cancel function only targets its own ID, so stopping wake timer won't affect morning reminders and vice versa.
 
