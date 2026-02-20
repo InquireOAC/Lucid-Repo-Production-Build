@@ -78,6 +78,37 @@ serve(async (req) => {
 
     const contentParts: any[] = []
 
+    // === CINEMATIC RENDERING DIRECTIVE (fires first, before all reference images) ===
+    contentParts.push({
+      type: 'text',
+      text: `[CINEMATIC RENDERING DIRECTIVE — READ THIS FIRST]
+
+You are a world-class cinematographer and visual effects supervisor generating a SINGLE UNIFIED MOVIE FRAME from a dream world. Every image you produce must read as a real frame from a film set in an alternate reality — not an AI-generated composite.
+
+PRIME DIRECTIVES:
+1. THINK IN 3D SPACE FIRST — Before rendering anything, mentally construct the complete 3D environment: its geometry, atmosphere, light sources, and physics. This world EXISTS. The character will be placed WITHIN it.
+2. ONE UNIFIED RENDER — Generate the entire frame — character AND environment — in a single unified compositional pass. Never composite elements together. Never paste a character onto a background.
+3. REFERENCE IMAGES ARE CASTING REFERENCES — Any reference images provided show you WHO the character is (their identity, face, outfit). They do NOT tell you the scene, background, lighting, or environment. Those come EXCLUSIVELY from the scene description below.
+4. UNIFIED PHYSICS — The character obeys the same physical laws as the environment: same gravity, same light, same atmospheric effects, same perspective rules.
+
+CINEMATIC COMPOSITION LAWS:
+- Frame the image as a director would frame a movie shot — intentional composition, clear subject hierarchy, deliberate depth of field
+- Character is the PROTAGONIST of this frame — visually dominant, emotionally clear, narratively present
+- Environment is the WORLD — it surrounds, contextualizes, and interacts with the character
+- Apply the appropriate cinematic shot type as described in the scene (wide, medium, close-up, dutch angle, etc.)
+- Color temperature must be UNIFIED across the entire frame — no mismatched warmth between character and scene
+
+ABSOLUTE ANTI-COMPOSITE LAWS (scan for and eliminate these failure modes):
+✗ Halo or cut-out edges around any element
+✗ Character lit from different direction or color temperature than the environment
+✗ Character appears to float without ground-contact shadow
+✗ Character detail sharpness inconsistent with their depth in the scene
+✗ Any element that looks pasted-in, layered, or composited
+✗ Different render styles between character and environment (e.g., photorealistic figure against painted background)
+
+Now render the following cinematic dream scene:`
+    })
+
     // Face / identity reference
     if (referenceImageUrl) {
       const img = await fetchImageAsBase64(referenceImageUrl)
@@ -91,12 +122,10 @@ serve(async (req) => {
           image_url: { url: `data:${img.contentType};base64,${img.base64}` }
         })
 
-        if (isPhotoRealistic) {
-          contentParts.push({
-            type: 'text',
-            text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.`
-          })
-        }
+        contentParts.push({
+          type: 'text',
+          text: `[CHARACTER-WORLD INTEGRATION CONTRACT] This character is a NATIVE INHABITANT of the dream world — not a visitor. Render them physically embedded in the 3D space: lit by the same light sources, affected by the same atmospheric conditions, casting shadows that match the environment's light direction. Their feet must have contact shadows. Their skin must show the color temperature of the scene's dominant light. Any fog, particles, or volumetric atmosphere must wrap around them identically to how it affects the environment. Generate as ONE unified frame.`
+        })
       }
     }
 

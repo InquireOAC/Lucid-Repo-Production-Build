@@ -1,7 +1,7 @@
 import { dreamContainsCharacters } from "./characterDetectionUtils";
 
 /**
- * Build personalized prompt with visual fingerprint + cinematic integration
+ * Build personalized prompt with visual fingerprint + full cinematic integration
  */
 export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imageStyle?: string): string => {
   let personalizedPrompt = basePrompt;
@@ -11,45 +11,51 @@ export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imag
     const hasPhoto = !!aiContext.photo_url;
 
     if (hasPhoto && hasFingerprint) {
-      // Full cinematic integration with visual fingerprint
       personalizedPrompt = `${basePrompt}.
 
-CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY):
-- FACE: Exact same facial structure, eye shape, nose, lips, jawline as reference
-- SKIN: Precise tone, texture, markings matching reference exactly
-- HAIR: Exact color, texture, style, length as reference
-- BODY: Same build, proportions as reference
+CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY — OVERRIDE ALL DEFAULTS):
+- FACE: Exact same facial structure, eye shape, nose, lips, jawline, brow ridge as reference photo
+- SKIN: Precise tone, texture, markings, subsurface scattering matching reference exactly
+- HAIR: Exact color, texture, style, length, parting as reference
+- BODY: Same build, proportions, posture as reference
 
 VISUAL FINGERPRINT OF THE DREAMER:
 ${aiContext.visual_fingerprint}
 
-${aiContext.clothing_style ? `CLOTHING: The character wears ${aiContext.clothing_style} style clothing.` : ''}
+${aiContext.clothing_style ? `CLOTHING: The character wears ${aiContext.clothing_style} style clothing, adapted to the dream world's aesthetic.` : ''}
 
-CHARACTER-ENVIRONMENT INTEGRATION (MANDATORY):
-1. FIRST: Generate the complete dream environment as a full 3D space with depth, atmosphere, and lighting
-2. THEN: Place the camera within this space at the appropriate angle
-3. FINALLY: Render the character STANDING INSIDE this 3D space — NOT pasted on top
+UNIFIED WORLD RENDERING (MANDATORY — NO EXCEPTIONS):
+The character is NOT a visitor to this scene — they are a NATIVE INHABITANT born from the same dream physics as the environment.
 
-INTEGRATION CHECKLIST:
-- Lighting: Character lit by the SAME light sources as the environment (sun, moon, fire, neon, etc.)
-- Atmosphere: Any haze, fog, particles, or volumetric effects affect BOTH the character AND the scene equally
-- Grounding: Feet interact with the ground surface naturally — cast realistic shadows that match environment lighting direction
-- Depth: Character has correct atmospheric perspective (slight haze at distance, sharp detail up close)
-- Single pass: Generate character + environment together in one unified composition — NEVER composite separately
+INTEGRATION LAWS:
+1. ENVIRONMENT FIRST: Mentally construct the complete 3D dream environment with all its light sources, atmosphere, and physics
+2. CHARACTER PLACEMENT: Place the character at their marked position WITHIN this pre-built 3D space
+3. UNIFIED PASS: Render the entire frame — character AND environment — in one single generative pass. NEVER composite separately.
 
-FAILURE INDICATORS (avoid these):
-- Cut-out edges around the character
-- Mismatched lighting direction between character and background
-- Character appears "floating" above the ground
-- Different color temperature on character vs environment
-- Sharp character edges against soft/blurry background`;
+PHYSICS CONTRACT:
+- Light: Character is illuminated by the IDENTICAL light sources as the surrounding environment (same direction, same color temperature, same intensity falloff)
+- Shadow: Character casts contact shadows on surfaces. Environment elements cast shadows ON the character. All shadows point the same direction.
+- Atmosphere: Fog, haze, particles, rain, smoke, magical energy — these volumetric effects pass THROUGH and AROUND the character identically to how they affect the environment
+- Perspective: Character sits at the correct atmospheric depth — same aerial haze, same focus falloff as objects at equivalent distance
+- Ground contact: Feet press into surfaces naturally. Correct displacement, weight, and shadow underfoot.
+
+ANTI-COMPOSITE CHECKLIST (scan for these failure modes and AVOID them):
+✗ Cut-out or halo edges around the character
+✗ Character lit from different direction than the environment  
+✗ Character color temperature doesn't match scene (e.g., warm character in cool moonlit scene)
+✗ Character appears "floating" without ground contact shadow
+✗ Sharp character detail against soft/blurry environment at same depth
+✗ Character looks photographed separately and placed into scene`;
 
     } else if (hasPhoto) {
-      // Photo but no fingerprint yet — basic reference
-      personalizedPrompt = `${basePrompt}. The reference image provided shows the main character of this dream — compose this character naturally as the dreamer and protagonist of the scene, maintaining their exact appearance and likeness.${aiContext.clothing_style ? ` The character wears ${aiContext.clothing_style} style clothing.` : ''}`;
+      personalizedPrompt = `${basePrompt}.
+
+CHARACTER IDENTITY REFERENCE: The provided reference image shows the DREAMER — the protagonist and central character of this scene. Replicate their exact facial features, hair, skin tone, and body proportions precisely.${aiContext.clothing_style ? ` They wear ${aiContext.clothing_style} style clothing adapted to the dream world.` : ''}
+
+UNIFIED WORLD RENDERING: Render the character as a native inhabitant of this dream environment. Same lighting, same atmospheric effects, same physics — one unified composition, never composited.`;
 
     } else if (aiContext.clothing_style) {
-      personalizedPrompt = `${basePrompt}. Featuring a person wearing ${aiContext.clothing_style} style clothing`;
+      personalizedPrompt = `${basePrompt}. Featuring a person wearing ${aiContext.clothing_style} style clothing, rendered as a unified part of the scene environment.`;
     }
   }
 
@@ -90,169 +96,189 @@ export const cleanPromptForNonPersonalized = (prompt: string, dreamContent: stri
 };
 
 /**
- * Add selected image style to the prompt
+ * Add selected image style to the prompt with full cinematic composition directives
  */
 const addImageStyleToPrompt = (prompt: string, imageStyle?: string): string => {
   if (imageStyle === 'realistic') {
     return `${prompt}.
 
-PHOTOREALISM REQUIREMENTS:
-- Render as a photorealistic photograph: ultra high resolution, 8K detail
-- Camera: Shot on cinema camera (ARRI Alexa or RED) with prime lens (50mm-85mm), natural shallow depth of field, subtle bokeh
-- Skin: Visible pores, subsurface scattering, micro-wrinkles, natural skin imperfections — NO airbrushing or smoothing
-- Lighting: Motivated light sources with natural falloff, soft shadow edges, correct color temperature
-- Materials: Authentic fabric weave, leather grain, metal reflections — every material must look physically correct
-- Atmosphere: Natural lens flare, subtle chromatic aberration, film-like color grading
-- NO painterly, artistic, or stylized effects whatsoever — pure photographic realism`;
+PHOTOREALISM — CINEMATIC REQUIREMENTS:
+- Medium: Photorealistic digital photograph indistinguishable from a real film still
+- Camera: ARRI Alexa or RED Digital Cinema camera, 50-85mm prime lens, f/2.8 natural depth of field
+- Composition Directive: Classic cinematic frame — rule of thirds, motivated foreground element, character in midground, deep background with atmospheric perspective
+- Shot Type: Medium or medium-wide establishing shot with the character as the clear visual anchor
+- Lighting: Single motivated key light with soft fill and subtle rim separation. Natural shadow falloff. Correct inverse-square law. Color temperature unified across the full frame.
+- Skin: Visible pores, subsurface scattering, micro-wrinkles, authentic skin imperfections — zero airbrushing
+- Materials: Thread-level fabric weave, authentic leather grain, physically-based metal reflections
+- Atmosphere: Subtle lens characteristics — natural chromatic aberration edges, cinema color science, motivated lens flare
+- Exposure: One stop under for cinematic drama. Lifted blacks, rich shadow detail.
+- NO painterly, artistic, or stylized effects — pure photographic realism`;
   }
   
   if (imageStyle === 'hyper_realism') {
     return `${prompt}.
 
-EXTREME HYPERREALISM REQUIREMENTS:
-- Render as an extreme hyperrealistic photograph indistinguishable from reality
-- Camera: Professional DSLR with 85mm f/1.4 prime lens, perfect exposure, razor-sharp detail at 8K
-- Skin: Individual pores visible, subsurface scattering showing blood flow beneath skin, micro-wrinkles, tiny hairs, natural oil sheen
-- Eyes: Visible iris fibers, catchlights reflecting environment, wet surface reflection on cornea
-- Lighting: Studio-quality motivated sources, physically accurate shadow falloff, correct inverse-square law behavior
-- Materials: Thread-level fabric detail, leather pore texture, accurate specular highlights on every surface
-- Environment: Atmospheric depth, dust motes in light beams, correct aerial perspective
-- Post-processing: Cinema-grade color science, subtle film grain, natural vignetting`;
+EXTREME HYPERREALISM — CINEMATIC REQUIREMENTS:
+- Medium: Extreme hyperrealistic image indistinguishable from high-end commercial photography
+- Camera: Phase One 150MP medium format, 85mm f/1.4, tack sharp at center, gentle natural falloff at edges
+- Composition Directive: Tight medium shot or medium close-up. Character occupies the golden-ratio focal point. Strong foreground-background depth separation.
+- Shot Type: Hero portrait or environmental portrait — character dominant, world visible and rich behind them
+- Lighting: Studio-quality three-point lighting from motivated world sources. Physically accurate shadow geometry and penumbra.
+- Skin: Individual pores, subsurface blood-flow scattering, micro-hairs, natural oil sheen. Iris fibers visible. Cornea wet-surface reflection showing environment.
+- Materials: Thread-level fabric detail, leather pore texture, specular accuracy on every surface type
+- Atmosphere: Dust motes in light beams, correct aerial perspective, atmospheric depth haze
+- Post: Cinema-grade color science, whisper of natural film grain, gentle vignette`;
   }
 
   if (imageStyle === 'abstract') {
     return `${prompt}.
 
-ABSTRACT ART REQUIREMENTS:
-- Bold abstract composition with geometric and organic forms
-- Kandinsky/Rothko influence: saturated color fields with strong compositional tension
-- Non-representational shapes that evoke emotion through color and form
-- Textured mixed-media feel: layered paint, collage elements, visible artistic process
-- High contrast between color blocks with deliberate compositional balance
-- Raw, expressive energy — bold strokes, drips, splatters where appropriate`;
+ABSTRACT ART — CINEMATIC COMPOSITION:
+- Medium: Large-format abstract painting — acrylic, oil, and mixed media on canvas
+- Composition Directive: Dynamic diagonal composition. Primary color field occupies the upper-left golden-ratio zone. Secondary tension in the lower-right. Strong visual flow from edge to center.
+- Shot equivalent: The composition reads as a dramatic wide shot — vast color fields create environmental scale
+- Style: Kandinsky meets Rothko — emotional color fields with geometric and organic form tension
+- Color Story: 2-3 bold saturated primaries with one unexpected accent. High contrast between color blocks.
+- Texture: Layered impasto, visible artistic process — palette knife ridges, brush drag marks, collage elements
+- Character representation: Abstracted into form and color — recognizable as human presence through gestural suggestion, not literal rendering
+- Energy: Raw, expressive, emotionally resonant — the painting captures the feeling of the dream, not a photograph of it`;
   }
 
   if (imageStyle === 'impressionist') {
     return `${prompt}.
 
-IMPRESSIONIST PAINTING REQUIREMENTS:
-- Monet/Renoir style: broken color dabs applied with visible, confident brushstrokes
-- En plein air natural light: warm golden-hour glow or soft diffused daylight
-- Chromatic shadow theory: shadows rendered in purple, blue, and complementary hues — never black
-- Thick visible brushstrokes with impasto texture, paint ridges catching light
-- Diffused, soft edges on all forms — no hard outlines
-- Shimmering, luminous atmosphere that captures a fleeting moment in time`;
+IMPRESSIONIST PAINTING — CINEMATIC COMPOSITION:
+- Medium: En plein air oil painting on primed linen — Monet-Renoir school, late 19th century
+- Composition Directive: S-curve or Z-path composition drawing the eye from foreground foliage through midground figure to luminous background. Classic impressionist depth structure.
+- Shot equivalent: Wide establishing shot with the figure in the golden-ratio midground — the character is part of the landscape, not separate from it
+- Light: Golden-hour or soft cloudy-day natural light. Warm key, cool chromatic shadows. Backlit rim that dissolves the figure into the atmosphere.
+- Brushwork: Confident broken-color dabs with visible impasto texture. Thick paint ridges catching sidelight. No hard outlines — all edges are color-meetings.
+- Shadow theory: Shadows rendered in purple, blue, and complementary hues — never raw black or grey
+- Atmosphere: Shimmering, luminous, fleeting — the image captures one irreplaceable moment of natural light
+- Character integration: The figure's brushwork matches the environment exactly — same stroke size, same paint thickness, same softness of edge`;
   }
 
   if (imageStyle === 'fantasy') {
     return `${prompt}.
 
-EPIC FANTASY ART REQUIREMENTS:
-- Epic fantasy illustration with rich, painterly detail and magical atmosphere
-- Golden-hour rim lighting with dramatic volumetric god-rays and atmospheric haze
-- Ornate, intricate details on armor, architecture, flora — every surface tells a story
-- Magical particle effects: floating embers, glowing runes, ethereal wisps of energy
-- Deep atmospheric perspective with layered depth: foreground detail fading to misty backgrounds
-- Color palette: rich jewel tones (deep emeralds, royal purples, burnished golds) with luminous accents`;
+EPIC FANTASY ART — CINEMATIC COMPOSITION:
+- Medium: Epic fantasy illustration — AAA concept art quality, ArtStation-caliber, painterly digital
+- Composition Directive: HERO SHOT — low camera angle (15-25° below eye-level) looking slightly up at the character. Character silhouetted against a luminous sky or dramatic background. Rule of thirds with character on vertical third line.
+- Shot Type: Rising-angle medium shot. Character dominates the lower-center frame. Environment sweeps dramatically upward and outward behind them.
+- Lighting: Three-point cinematic setup — warm volumetric god-rays as key light, cool atmospheric fill, intense golden rim light separating character from background
+- Atmosphere: Layered depth — detailed foreground flora/stone, character in crisp midground, background fades through 3-4 atmospheric layers into mist
+- Details: Ornate, intricate surfaces on armor, architecture, flora. Magical particle effects — glowing embers, ethereal wisps, floating runes.
+- Color palette: Rich jewel tones (deep emerald, royal sapphire, burnished gold) with one luminous accent color on the character
+- Character integration: Character is LIT by the same god-rays and atmospheric light as the environment. Rim light comes from the same source as the background glow.`;
   }
 
   if (imageStyle === 'minimalist') {
     return `${prompt}.
 
-MINIMALIST DESIGN REQUIREMENTS:
-- Japanese-inspired minimalism with vast, intentional negative space
-- Strictly limited palette: 2-3 colors maximum, carefully chosen for harmony
-- Single focal element with absolute clarity — remove everything non-essential
-- Clean geometric forms with precise, deliberate edges
-- Zen-like tranquility and meditative stillness in the composition
-- Every element must justify its presence — if in doubt, remove it`;
+MINIMALIST DESIGN — CINEMATIC COMPOSITION:
+- Medium: Japanese-influenced minimalist digital illustration or fine art print
+- Composition Directive: Extreme negative space composition. The subject occupies maximum 15% of the frame area. Placed precisely on a golden-ratio intersection point. Vast intentional emptiness surrounds them.
+- Shot equivalent: Ultra-wide establishing shot where the environment's scale dwarfs and contextualizes the character
+- Color: 2-3 hues maximum. One dominant field (60%), one secondary (30%), one precise accent (10%). Each color chosen for maximum emotional resonance.
+- Forms: Single clear focal element with absolute clarity. Clean geometric shapes. Precise, deliberate edges. No decoration without purpose.
+- Atmosphere: Zen stillness. Meditative silence. The emptiness IS the composition — it creates meaning through absence.
+- Character integration: Figure rendered as a clean simplified silhouette or minimal form — same graphic language as the environment, never photorealistic against a flat background
+- The image should feel like a single breath held in perfect stillness`;
   }
 
   if (imageStyle === 'vintage') {
     return `${prompt}.
 
-VINTAGE PHOTOGRAPHY REQUIREMENTS:
-- 1970s analog film aesthetic: Kodak Portra 400 / Ektachrome color science
-- Visible film grain throughout with natural dithering and noise patterns
-- Slight light leaks: warm amber/magenta bleeding in from frame edges
-- Warm, muted tones with slightly desaturated colors and lifted blacks
-- Soft vignette darkening corners naturally
-- Period-accurate lens characteristics: soft focus falloff, subtle barrel distortion, warm flare`;
+VINTAGE PHOTOGRAPHY — CINEMATIC COMPOSITION:
+- Medium: 1970s analog 35mm or medium format film photograph
+- Film stock: Kodak Portra 400 or Ektachrome — warm color science, lifted blacks, soft shadow rolloff
+- Composition Directive: Classic photojournalism or editorial framing — off-center subject, environmental storytelling context, authentic human moment captured mid-action or mid-expression
+- Shot Type: Environmental portrait — character clearly part of their world, not posed against it
+- Camera characteristics: Slight barrel distortion from period lens, soft focus falloff at frame edges, natural vignette, subtle focus breathing
+- Color: Warm muted tones with slightly desaturated palette. Amber/cream highlights, shadowed areas with slight color shift toward magenta or cyan.
+- Film artifacts: Visible grain throughout (natural dithering), subtle light leaks (warm amber at one edge), occasional minor chromatic aberration
+- Character integration: Lit by the existing light of the environment — window light, lamplight, daylight. No studio flash. Natural, motivated illumination only.`;
   }
 
   if (imageStyle === 'cyberpunk') {
     return `${prompt}.
 
-CYBERPUNK DIGITAL ART REQUIREMENTS:
-- Neon-drenched cyberpunk cityscape aesthetic: Blade Runner meets Ghost in the Shell
-- Holographic HUD overlays, floating kanji/data streams, translucent UI elements
-- Rain-slick reflections on every surface: wet asphalt mirroring neon signs
-- Volumetric fog with neon light scatter: pink, cyan, and electric blue atmospheric haze
-- Materials: brushed chrome, carbon fiber, scarred leather, glowing circuit traces
-- Deep contrast: pitch-black shadows punctuated by intense neon highlights`;
+CYBERPUNK DIGITAL ART — CINEMATIC COMPOSITION:
+- Medium: High-fidelity cyberpunk concept art — Blade Runner 2049 meets Ghost in the Shell aesthetic
+- Composition Directive: LOW-ANGLE DUTCH TILT — camera positioned below eye-level (20-30° tilt), angled slightly upward. Character looms in the frame. Creates psychological tension and urban menace.
+- Shot Type: Low-angle medium or medium-wide shot. Character in sharp foreground, neon cityscape layers receding behind them in sharp vertical lines.
+- Lighting: Neon environment IS the lighting rig. Pink-magenta, electric cyan, and acid-green neon signs as the motivating key lights. Each neon source casts a distinct colored shadow. Character rim-lit by the closest neon panel.
+- Rain: Wet-slick surfaces on every horizontal plane. Rain-beaded character surfaces. Neon signs reflected in puddles and wet asphalt.
+- Atmosphere: Volumetric neon-scatter fog — colored light bleeding through rain and smoke. Holographic HUD data-streams as environmental elements. Kanji and data floating in mid-air.
+- Materials: Carbon fiber, scarred leather, brushed chrome, glowing circuit-trace patterns
+- Color: Pitch-black shadows punctuated by intense neon highlights. Deep contrast ratio. Character details emerge from darkness.
+- Character integration: The neon light physically wraps around the character — rim lights, reflected color pools on wet surfaces beneath them`;
   }
 
   if (imageStyle === 'watercolor') {
     return `${prompt}.
 
-WATERCOLOR PAINTING REQUIREMENTS:
-- Traditional watercolor on cold-press paper with visible paper grain texture
-- Pigment granulation in washes: natural mineral pigment settling patterns
-- Wet-on-wet bleeding edges where colors organically merge and feather
-- Transparent layered glazes building depth — light comes through the paint, not from it
-- Unpainted white paper highlights: leave the brightest areas as raw paper
-- Delicate color transitions with soft, flowing edges and occasional controlled drips`;
+WATERCOLOR PAINTING — CINEMATIC COMPOSITION:
+- Medium: Traditional watercolor on 300gsm cold-press cotton rag paper — professional studio quality
+- Composition Directive: Atmospheric perspective composition. Foreground in richest pigment and detail, midground figure rendered with controlled precision, background dissolves into luminous wet washes. Classic watercolorist's depth structure.
+- Shot equivalent: Wide medium shot — character clearly present in the midground, environment breathes around them
+- Technique: Wet-on-wet for atmospheric backgrounds, wet-on-dry for character and foreground detail. Controlled blooms where deliberate. Granulation in mineral pigment washes.
+- Light: The paper IS the light source — white paper reserved for the brightest highlights. Paint applied in transparent glazes, building depth. Light comes THROUGH the paint, not from it.
+- Color bleeding: Organic color transitions where washes meet — deliberate feathering and soft edge merging
+- Paper texture: Cold-press tooth visible in lighter wash areas. Natural pigment settling patterns. Occasional controlled drips at lower edges.
+- Character integration: Figure painted with same watercolor language as the environment — same paper texture, same edge softness, same pigment granulation. The character is born from the same washes as the world.`;
   }
 
   if (imageStyle === 'oil_painting') {
     return `${prompt}.
 
-OIL PAINTING REQUIREMENTS:
-- Museum-quality oil painting with thick impasto brushstrokes and visible canvas weave
-- Rembrandt-style chiaroscuro: dramatic light-to-dark contrast with a single dominant light source
-- Glazed, luminous skin tones built through multiple transparent paint layers
-- Visible palette knife marks and brushwork texture catching sidelight
-- Rich, saturated pigments: cadmium reds, ultramarine blues, yellow ochre, raw umber
-- Classical composition with golden ratio proportions and considered focal depth`;
+OIL PAINTING — CINEMATIC COMPOSITION:
+- Medium: Large-format museum-quality oil painting on primed linen canvas
+- Composition Directive: Classical master composition — rule of thirds with strong diagonal light structure. Primary focal point (character) placed on intersection of thirds. Supporting environmental elements frame and direct the eye inward. Deep perspective recession.
+- Shot equivalent: Medium to medium-wide — character in the golden-ratio primary zone, rich environmental context surrounding them
+- Lighting: Rembrandt chiaroscuro — single dominant light source creating dramatic light-to-dark contrast across 70% of the frame. Rich shadow fill. Luminous light areas with detailed shadow that retains full tonal information.
+- Paint application: Thick impasto in light areas (palette knife marks visible). Thinner, more fluid glazes in shadow. Visible canvas weave in the darkest areas. Brushwork direction follows form.
+- Pigments: Old Master palette — cadmium red, ultramarine, yellow ochre, raw umber, titanium white, ivory black. Rich, saturated, historically authentic.
+- Character integration: Figure and environment painted in identical medium, technique, and light. No difference in impasto thickness or brushwork between character and background at same distance. Unified optical space.`;
   }
 
   if (imageStyle === 'digital_art') {
     return `${prompt}.
 
-DIGITAL ART REQUIREMENTS:
-- AAA concept art quality: polished, professional, ArtStation-trending caliber
-- Clean vector-sharp edges with smooth color gradients and anti-aliased forms
-- Volumetric lighting with visible light shafts, rim lights, and subsurface scattering on skin
-- 4K render quality: crisp details at every scale, no artifacts or noise
-- Vibrant, saturated color palette with complementary color theory applied
-- Cinematic composition with dramatic camera angles and intentional depth of field`;
+DIGITAL ART — CINEMATIC COMPOSITION:
+- Medium: Professional concept art at AAA video game or film production quality — ArtStation trending caliber
+- Composition Directive: Cinematic widescreen composition (implied 2.39:1 anamorphic ratio). Character placed on primary golden-ratio vertical. Strong foreground element creates depth. Background layers recede through 3+ atmospheric depth planes.
+- Shot Type: Medium or medium-wide cinematic establishing shot — character as clear protagonist, world as immersive context
+- Camera: Low-angle with subtle perspective distortion — character gains heroic presence. Environment appears to expand upward and outward.
+- Lighting: Volumetric three-point cinematic setup — warm key light from one motivated world source, cool atmospheric fill from opposite, intense rim light separating character from background. Visible light shafts and god rays where appropriate.
+- Technical: 4K render quality. Clean anti-aliased edges. Smooth gradient transitions. Subsurface scattering on skin. Physically-based material responses.
+- Color: Vibrant saturated palette with intentional complementary color tension. One hero accent color on the character that appears nowhere else in the scene.
+- Character integration: Character rendered at the same fidelity, lighting language, and artistic style as every other element in the frame. No difference in render quality between figure and environment.`;
   }
 
   if (imageStyle === 'sketch') {
     return `${prompt}.
 
-PENCIL SKETCH REQUIREMENTS:
-- Professional graphite sketch with varied pencil pressure ranging from 2H (light) to 6B (dark)
-- Cross-hatching and parallel hatching for shadow depth and tonal gradation
-- Visible paper tooth texture: rough drawing paper grain showing through lighter strokes
-- Smudged soft gradients in shadow areas using blending stumps
-- Raw construction lines and gesture marks left visible for artistic authenticity
-- High contrast between stark white highlights and deep graphite blacks`;
+PENCIL SKETCH — CINEMATIC COMPOSITION:
+- Medium: Professional graphite sketch on smooth bristol or hot-press paper — master draftsman quality
+- Composition Directive: Classic academic drawing composition — strong light-dark value structure creates depth. Character is the lightest, most detailed element. Background rendered in progressively looser, lighter strokes to create atmospheric recession.
+- Shot equivalent: Medium shot with clear depth — foreground objects in darkest, heaviest mark-making; character in midground with precise rendering; background in light gestural lines
+- Mark-making: Variable pencil pressure across the full range — 2H for light atmospheric background tones, HB for midtones, 4B-6B for deepest shadows and character emphasis. Cross-hatching and parallel hatching for shadow modeling.
+- Texture: Paper tooth visible through lighter strokes. Smudged gradients in broad shadow areas using blending stump. Erased highlights in key areas.
+- Line quality: Confident primary contour lines. Secondary construction marks left visible for authenticity. Gesture lines indicate movement and form.
+- Character integration: Figure drawn with same mark-making language as environment — no stylistic difference between the rendering of the character and the surrounding world. Sketch is ONE unified drawing, not a figure placed on a background.`;
   }
 
-  if (imageStyle && !['surreal'].includes(imageStyle)) {
-    // Fallback for any unknown style
-    return `${prompt}. Render in ${imageStyle} style with high detail and professional quality`;
-  }
-  
-  // Default: surreal
+  // Default: surreal (and fallback for unknown styles)
   return `${prompt}.
 
-SURREAL DREAMSCAPE REQUIREMENTS:
-- Salvador Dalí meets Magritte: melting forms, impossible geometry, paradoxical spaces
-- Hyper-detailed textures on surreal objects: photorealistic rendering of impossible things
-- Chromatic, otherworldly lighting: bioluminescent glows, prismatic light refractions
-- Fantastical atmosphere with floating elements, scale distortion, and dream logic
-- Vivid, saturated colors with unexpected color combinations that feel emotionally resonant
-- Cinematic composition with deep perspective drawing the eye into impossible vanishing points`;
+SURREAL DREAMSCAPE — CINEMATIC COMPOSITION:
+- Medium: Hyper-detailed surrealist digital painting — Salvador Dalí meets Magritte, executed with photorealistic precision on impossible subjects
+- Composition Directive: IMPOSSIBLE PERSPECTIVE composition — rule of thirds violated deliberately to create dream logic. Multiple vanishing points that shouldn't coexist. Horizon lines that bend, split, or recede in paradoxical directions. Character placed at the impossible intersection.
+- Shot Type: Wide establishing shot that reveals the full impossible architecture of the dream world. Camera angle feels simultaneously intimate and vertiginous.
+- Visual paradox: Objects rendered with photorealistic detail while existing in physically impossible configurations. Scale distortion — familiar objects at wrong sizes. Gravity suggestions contradicted by floating elements.
+- Lighting: Otherworldly light sources that defy physics — bioluminescent glow from impossible directions, prismatic light refractions without a source, shadows that point toward their objects instead of away
+- Atmosphere: Layered impossible depth — foreground crisp and hyper-detailed, midground where the character exists with full clarity, background dissolving into chromatic abstraction
+- Color story: Vivid, saturated, emotionally destabilizing — color combinations that feel simultaneously wrong and deeply resonant. Colors that don't exist in the real world.
+- Character integration: The character is AS IMPOSSIBLE as the environment — rendered with the same hyper-realistic technique applied to the same dream-logic physics. They belong in this world because they ARE this world.`;
 };
