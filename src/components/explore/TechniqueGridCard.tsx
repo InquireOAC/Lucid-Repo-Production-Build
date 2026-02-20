@@ -23,12 +23,10 @@ const TechniqueGridCard: React.FC<TechniqueGridCardProps> = ({ technique, index 
         {technique.difficulty}
       </div>
 
-      {/* Frosted icon */}
-      <div className={`w-16 h-16 rounded-full ${styles.iconBg} bg-white/5 backdrop-blur-sm flex items-center justify-center mb-2`}>
-        <span className="text-[36px] leading-none group-hover:scale-110 transition-transform duration-300">
-          {technique.icon}
-        </span>
-      </div>
+      {/* Icon */}
+      <span className="text-[36px] leading-none group-hover:scale-110 transition-transform duration-300 mb-2">
+        {technique.icon}
+      </span>
 
       <h3 className="text-[13px] font-bold text-foreground text-center leading-tight line-clamp-2">
         {technique.name}
