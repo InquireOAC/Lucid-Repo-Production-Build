@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send, ArrowLeft, Image } from "lucide-react";
+import { Send, ArrowLeft, CloudMoon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import DreamShareSelector from "./DreamShareSelector";
@@ -198,7 +198,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             variant="ghost"
             className="h-9 w-9 rounded-full text-muted-foreground hover:text-foreground"
           >
-            <Image className="h-5 w-5" />
+            <CloudMoon className="h-5 w-5" />
           </Button>
           <Input
             value={newMessage}
