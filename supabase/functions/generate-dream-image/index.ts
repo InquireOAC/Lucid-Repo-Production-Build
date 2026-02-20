@@ -9,6 +9,30 @@ const corsHeaders = {
 
 const MAX_PROMPT_LENGTH = 6000
 
+async function fetchImageAsBase64(url: string): Promise<{ base64: string; contentType: string } | null> {
+  try {
+    console.log("Fetching image:", url.substring(0, 100))
+    const response = await fetch(url)
+    if (!response.ok) {
+      console.warn("Failed to fetch image:", response.status)
+      return null
+    }
+    const buffer = await response.arrayBuffer()
+    const bytes = new Uint8Array(buffer)
+    let binary = ''
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i])
+    }
+    const base64 = btoa(binary)
+    const contentType = response.headers.get('content-type') || 'image/jpeg'
+    console.log("Image fetched, size:", bytes.length)
+    return { base64, contentType }
+  } catch (err) {
+    console.warn("Error fetching image:", err)
+    return null
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -33,7 +57,7 @@ serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { prompt, referenceImageUrl, imageStyle } = await req.json()
+    const { prompt, referenceImageUrl, imageStyle, outfitImageUrl, accessoryImageUrl } = await req.json()
     
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Invalid prompt')
@@ -45,54 +69,64 @@ serve(async (req) => {
 
     const isPhotoRealistic = imageStyle === 'realistic' || imageStyle === 'hyper_realism'
 
-    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, style: ${imageStyle}, photoRealistic: ${isPhotoRealistic}`)
+    console.log(`Generating image for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, hasOutfit: ${!!outfitImageUrl}, hasAccessory: ${!!accessoryImageUrl}, style: ${imageStyle}`)
 
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')
     if (!lovableApiKey) {
       throw new Error('LOVABLE_API_KEY not configured')
     }
 
-    // Build messages array for OpenAI-compatible API
     const contentParts: any[] = []
 
+    // Face / identity reference
     if (referenceImageUrl) {
-      try {
-        console.log("Fetching reference image:", referenceImageUrl.substring(0, 100))
-        const imgResponse = await fetch(referenceImageUrl)
-        if (imgResponse.ok) {
-          const imgBuffer = await imgResponse.arrayBuffer()
-          const imgBytes = new Uint8Array(imgBuffer)
-          let binary = ''
-          for (let i = 0; i < imgBytes.length; i++) {
-            binary += String.fromCharCode(imgBytes[i])
-          }
-          const base64Data = btoa(binary)
-          const contentType = imgResponse.headers.get('content-type') || 'image/jpeg'
+      const img = await fetchImageAsBase64(referenceImageUrl)
+      if (img) {
+        contentParts.push({
+          type: 'text',
+          text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment from this image — those come from the dream scene description below.'
+        })
+        contentParts.push({
+          type: 'image_url',
+          image_url: { url: `data:${img.contentType};base64,${img.base64}` }
+        })
 
+        if (isPhotoRealistic) {
           contentParts.push({
             type: 'text',
-            text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment from this image — those come from the dream scene description below.'
+            text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.`
           })
-
-          contentParts.push({
-            type: 'image_url',
-            image_url: {
-              url: `data:${contentType};base64,${base64Data}`
-            }
-          })
-          console.log("Reference image added to request, size:", imgBytes.length)
-
-          if (isPhotoRealistic) {
-            contentParts.push({
-              type: 'text',
-              text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.`
-            })
-          }
-        } else {
-          console.warn("Failed to fetch reference image:", imgResponse.status)
         }
-      } catch (imgErr) {
-        console.warn("Error fetching reference image, continuing without it:", imgErr)
+      }
+    }
+
+    // Outfit reference
+    if (outfitImageUrl) {
+      const img = await fetchImageAsBase64(outfitImageUrl)
+      if (img) {
+        contentParts.push({
+          type: 'text',
+          text: '[OUTFIT_REFERENCE] The following image is the OUTFIT REFERENCE. Extract ONLY the clothing, garments, and outfit from this image. Dress the character in this EXACT outfit — replicate the style, color, fabric, and fit precisely.'
+        })
+        contentParts.push({
+          type: 'image_url',
+          image_url: { url: `data:${img.contentType};base64,${img.base64}` }
+        })
+      }
+    }
+
+    // Accessory reference
+    if (accessoryImageUrl) {
+      const img = await fetchImageAsBase64(accessoryImageUrl)
+      if (img) {
+        contentParts.push({
+          type: 'text',
+          text: '[ACCESSORY_REFERENCE] The following image is the ACCESSORY REFERENCE. Extract ONLY the accessories (jewelry, glasses, hats, bags, watches, etc.) from this image. Add these EXACT accessories to the character.'
+        })
+        contentParts.push({
+          type: 'image_url',
+          image_url: { url: `data:${img.contentType};base64,${img.base64}` }
+        })
       }
     }
 
@@ -134,20 +168,17 @@ serve(async (req) => {
 
     const data = await response.json()
 
-    // Extract base64 image from OpenAI-compatible response
     const images = data.choices?.[0]?.message?.images
     if (!images || images.length === 0) {
       console.error("No images in response:", JSON.stringify(data).substring(0, 500))
       throw new Error('No image data returned from AI')
     }
 
-    // image_url.url is a data URL like "data:image/png;base64,..."
     const dataUrl = images[0].image_url?.url
     if (!dataUrl) {
       throw new Error('No image URL in response')
     }
 
-    // Parse the data URL
     const matches = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
     if (!matches) {
       throw new Error('Invalid image data URL format')
@@ -158,7 +189,6 @@ serve(async (req) => {
 
     console.log("Image generated, uploading to storage...")
 
-    // Decode base64 and upload to Supabase Storage
     const binaryString = atob(imageBase64)
     const bytes = new Uint8Array(binaryString.length)
     for (let i = 0; i < binaryString.length; i++) {

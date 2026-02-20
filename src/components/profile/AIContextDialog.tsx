@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2, Sparkles } from "lucide-react";
+import { Upload, Loader2, Sparkles, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,15 +19,15 @@ import styleSketch from "@/assets/styles/sketch.jpg";
 import styleOilPainting from "@/assets/styles/oil_painting.jpg";
 
 const avatarStyleOptions = [
-{ value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
-{ value: "surreal", label: "Surreal", thumb: styleSurreal },
-{ value: "fantasy", label: "Fantasy", thumb: styleFantasy },
-{ value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
-{ value: "realistic", label: "Realistic", thumb: styleRealistic },
-{ value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
-{ value: "sketch", label: "Sketch", thumb: styleSketch },
-{ value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting }];
-
+  { value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
+  { value: "surreal", label: "Surreal", thumb: styleSurreal },
+  { value: "fantasy", label: "Fantasy", thumb: styleFantasy },
+  { value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
+  { value: "realistic", label: "Realistic", thumb: styleRealistic },
+  { value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
+  { value: "sketch", label: "Sketch", thumb: styleSketch },
+  { value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting },
+];
 
 interface AIContextDialogProps {
   open: boolean;
@@ -38,19 +37,28 @@ interface AIContextDialogProps {
 interface AIContextData {
   name?: string;
   photo_url?: string;
-  clothing_style?: string;
+  outfit_photo_url?: string;
+  accessory_photo_url?: string;
 }
 
-const AIContextDialog = ({
-  open,
-  onOpenChange
-}: AIContextDialogProps) => {
+const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
   const { user } = useAuth();
   const [contextData, setContextData] = useState<AIContextData>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Face photo
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [rawPhotoPreview, setRawPhotoPreview] = useState<string | null>(null);
+
+  // Outfit photo
+  const [outfitFile, setOutfitFile] = useState<File | null>(null);
+  const [outfitPreview, setOutfitPreview] = useState<string | null>(null);
+
+  // Accessory photo
+  const [accessoryFile, setAccessoryFile] = useState<File | null>(null);
+  const [accessoryPreview, setAccessoryPreview] = useState<string | null>(null);
+
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [generatedAvatarUrl, setGeneratedAvatarUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState("digital_art");
@@ -63,11 +71,11 @@ const AIContextDialog = ({
 
   const loadAIContext = async () => {
     try {
-      const { data, error } = await supabase.
-      from('ai_context').
-      select('*').
-      eq('user_id', user?.id).
-      maybeSingle();
+      const { data, error } = await supabase
+        .from('ai_context')
+        .select('*')
+        .eq('user_id', user?.id)
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading AI context:', error);
@@ -78,25 +86,35 @@ const AIContextDialog = ({
         setContextData({
           name: data.name,
           photo_url: data.photo_url,
-          clothing_style: data.clothing_style
+          outfit_photo_url: (data as any).outfit_photo_url || undefined,
+          accessory_photo_url: (data as any).accessory_photo_url || undefined,
         });
         setPhotoPreview(data.photo_url || null);
+        setOutfitPreview((data as any).outfit_photo_url || null);
+        setAccessoryPreview((data as any).accessory_photo_url || null);
       }
     } catch (error) {
       console.error('Error loading AI context:', error);
     }
   };
 
-  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    setFile: (f: File | null) => void,
+    setPreview: (p: string | null) => void
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error('Photo must be smaller than 5MB');
         return;
       }
-      setPhotoFile(file);
-      setRawPhotoPreview(URL.createObjectURL(file));
-      setGeneratedAvatarUrl(null);
+      setFile(file);
+      setPreview(URL.createObjectURL(file));
+      // Reset generated avatar when face photo changes
+      if (setFile === setPhotoFile) {
+        setGeneratedAvatarUrl(null);
+      }
     }
   };
 
@@ -106,15 +124,15 @@ const AIContextDialog = ({
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       const filePath = `ai-context-photos/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage.
-      from('dream-images').
-      upload(filePath, file);
+      const { error: uploadError } = await supabase.storage
+        .from('dream-images')
+        .upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.
-      from('dream-images').
-      getPublicUrl(filePath);
+      const { data } = supabase.storage
+        .from('dream-images')
+        .getPublicUrl(filePath);
 
       return data.publicUrl;
     } catch (error) {
@@ -142,13 +160,26 @@ const AIContextDialog = ({
     return avatarPrompts[style] || avatarPrompts.digital_art;
   };
 
-  const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
+  const generateCharacterAvatar = async (rawPhotoUrl: string, outfitUrl?: string, accessoryUrl?: string): Promise<string | null> => {
     try {
-      const prompt = getAvatarStylePrompt(selectedStyle);
+      const hasOutfitOrAccessory = !!outfitUrl || !!accessoryUrl;
+      let prompt = getAvatarStylePrompt(selectedStyle);
 
-      const result = await supabase.functions.invoke("generate-dream-image", {
-        body: { prompt, referenceImageUrl: rawPhotoUrl, imageStyle: selectedStyle }
-      });
+      if (hasOutfitOrAccessory) {
+        prompt += ` Generate a FULL-BODY portrait showing the character from head to toe.`;
+        if (outfitUrl) {
+          prompt += ` Dress the character in the EXACT outfit shown in the outfit reference image.`;
+        }
+        if (accessoryUrl) {
+          prompt += ` Add the EXACT accessories shown in the accessory reference image.`;
+        }
+      }
+
+      const body: Record<string, string> = { prompt, referenceImageUrl: rawPhotoUrl, imageStyle: selectedStyle };
+      if (outfitUrl) body.outfitImageUrl = outfitUrl;
+      if (accessoryUrl) body.accessoryImageUrl = accessoryUrl;
+
+      const result = await supabase.functions.invoke("generate-dream-image", { body });
 
       if (result.error || !result.data) {
         console.error("Avatar generation error:", result.error);
@@ -169,12 +200,22 @@ const AIContextDialog = ({
     try {
       const rawPhotoUrl = await uploadPhoto(photoFile);
       if (!rawPhotoUrl) {
-        toast.error('Failed to upload photo');
+        toast.error('Failed to upload face photo');
         return;
       }
 
+      let outfitUrl: string | undefined;
+      let accessoryUrl: string | undefined;
+
+      if (outfitFile) {
+        outfitUrl = (await uploadPhoto(outfitFile)) || undefined;
+      }
+      if (accessoryFile) {
+        accessoryUrl = (await uploadPhoto(accessoryFile)) || undefined;
+      }
+
       toast.info('Generating your character...');
-      const avatarUrl = await generateCharacterAvatar(rawPhotoUrl);
+      const avatarUrl = await generateCharacterAvatar(rawPhotoUrl, outfitUrl, accessoryUrl);
 
       if (avatarUrl) {
         setGeneratedAvatarUrl(avatarUrl);
@@ -203,38 +244,55 @@ const AIContextDialog = ({
     try {
       const photoUrl = generatedAvatarUrl || contextData.photo_url;
 
-      const dataToSave = {
+      // Upload outfit/accessory if new files but keep existing URLs otherwise
+      let outfitPhotoUrl = contextData.outfit_photo_url || null;
+      let accessoryPhotoUrl = contextData.accessory_photo_url || null;
+
+      if (outfitFile) {
+        outfitPhotoUrl = await uploadPhoto(outfitFile);
+      }
+      if (accessoryFile) {
+        accessoryPhotoUrl = await uploadPhoto(accessoryFile);
+      }
+
+      const dataToSave: Record<string, any> = {
         name: contextData.name || null,
         photo_url: photoUrl || null,
-        clothing_style: contextData.clothing_style || null,
+        outfit_photo_url: outfitPhotoUrl,
+        accessory_photo_url: accessoryPhotoUrl,
         user_id: user.id,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabase.
-      from('ai_context').
-      upsert(dataToSave, { onConflict: 'user_id' });
+      const { error } = await supabase
+        .from('ai_context')
+        .upsert(dataToSave, { onConflict: 'user_id' });
 
       if (error) throw error;
 
-      setContextData((prev) => ({ ...prev, photo_url: photoUrl }));
+      setContextData((prev) => ({
+        ...prev,
+        photo_url: photoUrl,
+        outfit_photo_url: outfitPhotoUrl || undefined,
+        accessory_photo_url: accessoryPhotoUrl || undefined,
+      }));
       setPhotoPreview(photoUrl || null);
       setPhotoFile(null);
       setRawPhotoPreview(null);
+      setOutfitFile(null);
+      setAccessoryFile(null);
       setGeneratedAvatarUrl(null);
       toast.success('Dream Avatar saved successfully!');
 
-      // Trigger visual fingerprint analysis if we have a photo
       if (photoUrl) {
         try {
           toast.info('Analyzing your photo for better likeness...');
           await supabase.functions.invoke('analyze-character-image', {
-            body: { photoUrl }
+            body: { photoUrl },
           });
           toast.success('Photo analysis complete! Your dream images will now have better likeness.');
         } catch (fingerprintError) {
           console.error('Fingerprint analysis failed (non-blocking):', fingerprintError);
-          // Non-blocking — avatar is already saved
         }
       }
     } catch (error: any) {
@@ -247,13 +305,73 @@ const AIContextDialog = ({
 
   const avatarDisplay = generatedAvatarUrl || photoPreview;
 
+  const PhotoUploadSection = ({
+    label,
+    required,
+    file,
+    preview,
+    existingUrl,
+    onFileChange,
+    onClear,
+  }: {
+    label: string;
+    required?: boolean;
+    file: File | null;
+    preview: string | null;
+    existingUrl?: string;
+    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onClear: () => void;
+  }) => {
+    const displayUrl = preview || existingUrl;
+    return (
+      <div>
+        <Label className="text-xs">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        <div className="mt-1.5 flex items-center gap-3">
+          {displayUrl ? (
+            <div className="relative">
+              <img
+                src={displayUrl}
+                alt={label}
+                className="w-16 h-16 object-cover rounded-lg border border-muted"
+              />
+              <button
+                type="button"
+                onClick={onClear}
+                className="absolute -top-1.5 -right-1.5 bg-destructive text-destructive-foreground rounded-full w-5 h-5 flex items-center justify-center"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </div>
+          ) : (
+            <label className="flex items-center justify-center w-16 h-16 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors">
+              <Upload className="h-4 w-4 text-muted-foreground" />
+              <input
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={onFileChange}
+              />
+            </label>
+          )}
+          {!displayUrl && (
+            <span className="text-xs text-muted-foreground">
+              {file ? file.name : `Upload ${label.toLowerCase()}`}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Your Dream Avatar</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Upload a reference photo so AI can generate dream images that look like you.
+            Upload reference photos so AI can generate dream images that look like you.
           </p>
         </DialogHeader>
 
@@ -261,99 +379,116 @@ const AIContextDialog = ({
           {/* Avatar Preview */}
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
-              {isGenerating ?
-              <div className="flex flex-col items-center gap-2">
+              {isGenerating ? (
+                <div className="flex flex-col items-center gap-2">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground">Generating...</span>
-                </div> :
-              avatarDisplay ?
-              <img
-                src={avatarDisplay}
-                alt="Dream Avatar"
-                className="w-full h-full object-cover" /> :
-
-
-              <span className="text-muted-foreground text-xs text-center px-2">No avatar yet</span>
-              }
+                </div>
+              ) : avatarDisplay ? (
+                <img src={avatarDisplay} alt="Dream Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-muted-foreground text-xs text-center px-2">No avatar yet</span>
+              )}
             </div>
           </div>
 
-          {/* Photo Upload */}
-          <div>
-            <Label>Reference Photo</Label>
-            <div className="mt-2">
-              <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:border-muted-foreground/50 transition-colors">
-                <div className="flex flex-col items-center">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    {photoFile ? photoFile.name : 'Upload photo (max 5MB)'}
-                  </span>
-                </div>
-                <input
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handlePhotoUpload} />
-
-              </label>
+          {/* Reference Photo Uploads */}
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference Photos</p>
+            <div className="grid grid-cols-3 gap-3">
+              <PhotoUploadSection
+                label="Face"
+                required
+                file={photoFile}
+                preview={rawPhotoPreview}
+                existingUrl={contextData.photo_url}
+                onFileChange={(e) => handleFileUpload(e, setPhotoFile, setRawPhotoPreview)}
+                onClear={() => {
+                  setPhotoFile(null);
+                  setRawPhotoPreview(null);
+                  setGeneratedAvatarUrl(null);
+                }}
+              />
+              <PhotoUploadSection
+                label="Outfit"
+                file={outfitFile}
+                preview={outfitFile ? outfitPreview : null}
+                existingUrl={contextData.outfit_photo_url}
+                onFileChange={(e) => handleFileUpload(e, setOutfitFile, setOutfitPreview)}
+                onClear={() => {
+                  setOutfitFile(null);
+                  setOutfitPreview(null);
+                  setContextData((prev) => ({ ...prev, outfit_photo_url: undefined }));
+                }}
+              />
+              <PhotoUploadSection
+                label="Accessory"
+                file={accessoryFile}
+                preview={accessoryFile ? accessoryPreview : null}
+                existingUrl={contextData.accessory_photo_url}
+                onFileChange={(e) => handleFileUpload(e, setAccessoryFile, setAccessoryPreview)}
+                onClear={() => {
+                  setAccessoryFile(null);
+                  setAccessoryPreview(null);
+                  setContextData((prev) => ({ ...prev, accessory_photo_url: undefined }));
+                }}
+              />
             </div>
-            {rawPhotoPreview &&
-            <div className="mt-3 flex items-center gap-3">
-                <img
-                src={rawPhotoPreview}
-                alt="Reference photo"
-                className="w-24 h-24 object-cover rounded-lg border border-muted" />
 
-                <Button
+            {/* Generate Button */}
+            {(rawPhotoPreview || photoFile) && (
+              <Button
                 onClick={handleGenerateCharacter}
                 disabled={isGenerating}
                 variant="luminous"
-                size="sm" className="text-secondary-foreground">
-
-                  {isGenerating ?
-                <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating...
-                    </> :
-
-                <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      {generatedAvatarUrl ? 'Regenerate' : 'Generate Character'}
-                    </>
-                }
-                </Button>
-              </div>
-            }
+                size="sm"
+                className="w-full text-secondary-foreground"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    {generatedAvatarUrl ? 'Regenerate Character' : 'Generate Character'}
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {/* Visual Style Selector */}
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avatar Style</p>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {avatarStyleOptions.map((style) =>
-              <button
-                key={style.value}
-                onClick={() => setSelectedStyle(style.value)}
-                className="flex-shrink-0 flex flex-col items-center gap-1.5">
-
+              {avatarStyleOptions.map((style) => (
+                <button
+                  key={style.value}
+                  onClick={() => setSelectedStyle(style.value)}
+                  className="flex-shrink-0 flex flex-col items-center gap-1.5"
+                >
                   <div
-                  className={cn(
-                    "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
-                    selectedStyle === style.value ?
-                    "border-primary ring-2 ring-primary/20" :
-                    "border-border/50 hover:border-primary/30"
-                  )}>
-
+                    className={cn(
+                      "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
+                      selectedStyle === style.value
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border/50 hover:border-primary/30"
+                    )}
+                  >
                     <img src={style.thumb} alt={style.label} className="w-full h-full object-cover" />
                   </div>
-                  <span className={cn(
-                  "text-[10px] leading-tight",
-                  selectedStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
-                )}>
+                  <span
+                    className={cn(
+                      "text-[10px] leading-tight",
+                      selectedStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
+                    )}
+                  >
                     {style.label}
                   </span>
                 </button>
-              )}
+              ))}
             </div>
           </div>
 
@@ -364,19 +499,8 @@ const AIContextDialog = ({
               id="name"
               value={contextData.name || ''}
               onChange={(e) => setContextData((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="How you'd like to be referred to" />
-
-          </div>
-
-          {/* Clothing Style */}
-          <div>
-            <Label htmlFor="clothing_style">Clothing Style</Label>
-            <Input
-              id="clothing_style"
-              value={contextData.clothing_style || ''}
-              onChange={(e) => setContextData((prev) => ({ ...prev, clothing_style: e.target.value }))}
-              placeholder="e.g., casual, alternative, streetwear" />
-
+              placeholder="How you'd like to be referred to"
+            />
           </div>
 
           {/* Actions */}
@@ -385,18 +509,20 @@ const AIContextDialog = ({
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading || isGenerating}>
-              {isLoading ?
-              <>
+              {isLoading ? (
+                <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
-                </> :
-              'Save Avatar'}
+                </>
+              ) : (
+                'Save Avatar'
+              )}
             </Button>
           </div>
         </div>
       </DialogContent>
-    </Dialog>);
-
+    </Dialog>
+  );
 };
 
 export default AIContextDialog;

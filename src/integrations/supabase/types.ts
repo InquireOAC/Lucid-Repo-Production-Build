@@ -79,6 +79,7 @@ export type Database = {
       }
       ai_context: {
         Row: {
+          accessory_photo_url: string | null
           aesthetic_preferences: string[] | null
           age_range: string | null
           build: string | null
@@ -90,6 +91,7 @@ export type Database = {
           height: string | null
           id: string
           name: string | null
+          outfit_photo_url: string | null
           photo_url: string | null
           pronouns: string | null
           skin_tone: string | null
@@ -98,6 +100,7 @@ export type Database = {
           visual_fingerprint: string | null
         }
         Insert: {
+          accessory_photo_url?: string | null
           aesthetic_preferences?: string[] | null
           age_range?: string | null
           build?: string | null
@@ -109,6 +112,7 @@ export type Database = {
           height?: string | null
           id?: string
           name?: string | null
+          outfit_photo_url?: string | null
           photo_url?: string | null
           pronouns?: string | null
           skin_tone?: string | null
@@ -117,6 +121,7 @@ export type Database = {
           visual_fingerprint?: string | null
         }
         Update: {
+          accessory_photo_url?: string | null
           aesthetic_preferences?: string[] | null
           age_range?: string | null
           build?: string | null
@@ -128,6 +133,7 @@ export type Database = {
           height?: string | null
           id?: string
           name?: string | null
+          outfit_photo_url?: string | null
           photo_url?: string | null
           pronouns?: string | null
           skin_tone?: string | null
