@@ -18,10 +18,6 @@ const TechniqueGridCard: React.FC<TechniqueGridCardProps> = ({ technique, index 
       onClick={() => navigate(`/insights/technique/${index}`)}
       className={`relative flex flex-col items-center justify-center rounded-2xl border ${styles.border} bg-gradient-to-br ${styles.gradient} backdrop-blur-md p-4 h-[160px] cursor-pointer transition-all duration-300 hover:brightness-110 group`}
     >
-      {/* Difficulty pill */}
-      <div className={`absolute top-2.5 left-2.5 px-2 py-0.5 rounded-full ${styles.badgeBg} text-[9px] font-semibold uppercase tracking-wider`}>
-        {technique.difficulty}
-      </div>
 
       {/* Icon */}
       <span className="text-[36px] leading-none group-hover:scale-110 transition-transform duration-300 mb-2">
