@@ -128,46 +128,44 @@ const MasonryDreamCard = ({
         )}
         
         {/* Footer */}
-        <div className="pt-3 border-t border-primary/10 space-y-0">
-          <div className="flex items-center justify-between">
+        <div className="pt-3 border-t border-primary/10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onUserClick(username);
+            }}
+            className="flex items-center gap-2.5 hover:opacity-80 transition-opacity min-w-0 w-full mb-2"
+          >
+            <SymbolAvatar
+              symbol={(userProfile as any)?.avatar_symbol}
+              color={(userProfile as any)?.avatar_color}
+              avatarUrl={(userProfile as any)?.avatar_url}
+              fallbackLetter={displayName[0]?.toUpperCase() || "?"}
+              size={32}
+            />
+            <span className="text-sm font-medium text-foreground truncate">
+              @{username || "anon"}
+            </span>
+          </button>
+          
+          <div className="flex items-center gap-3 text-muted-foreground pl-1">
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onUserClick(username);
+                onLike(dream.id);
               }}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-1 mr-3"
+              className={cn(
+                "flex items-center gap-1 transition-colors text-xs",
+                isLiked ? "text-aurora-gold" : "hover:text-aurora-gold"
+              )}
             >
-              <SymbolAvatar
-                symbol={(userProfile as any)?.avatar_symbol}
-                color={(userProfile as any)?.avatar_color}
-                avatarUrl={(userProfile as any)?.avatar_url}
-                fallbackLetter={displayName[0]?.toUpperCase() || "?"}
-                size={28}
-              />
-              <span className="text-xs text-muted-foreground truncate">
-                @{username || "anon"}
-              </span>
+              <Heart className={cn("h-3 w-3", isLiked && "fill-current")} />
+              <span>{dream.like_count || 0}</span>
             </button>
             
-            <div className="flex items-center gap-3 flex-shrink-0 text-muted-foreground">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onLike(dream.id);
-                }}
-                className={cn(
-                  "flex items-center gap-1 transition-colors text-xs",
-                  isLiked ? "text-aurora-gold" : "hover:text-aurora-gold"
-                )}
-              >
-                <Heart className={cn("h-3.5 w-3.5", isLiked && "fill-current")} />
-                <span>{dream.like_count || 0}</span>
-              </button>
-              
-              <div className="flex items-center gap-1 text-xs">
-                <MessageCircle className="h-3.5 w-3.5" />
-                <span>{dream.comment_count || 0}</span>
-              </div>
+            <div className="flex items-center gap-1 text-xs">
+              <MessageCircle className="h-3 w-3" />
+              <span>{dream.comment_count || 0}</span>
             </div>
           </div>
         </div>
