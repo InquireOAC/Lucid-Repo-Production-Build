@@ -102,7 +102,7 @@ const DreamCard = ({
 
   return (
     <Card
-      className="hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer luminous-card oniri-hover border-primary/10 group"
+      className="hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer featured-card oniri-hover border-primary/10 group"
       onClick={handleCardClick}>
 
       <div className="geometric-bg absolute inset-0 rounded-lg opacity-20"></div>
