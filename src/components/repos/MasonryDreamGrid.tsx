@@ -2,6 +2,7 @@ import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { Heart, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface MasonryDreamGridProps {
   dreams: DreamEntry[];
@@ -136,9 +137,13 @@ const MasonryDreamCard = ({
               }}
               className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-1 mr-3"
             >
-              <div className="w-7 h-7 flex-shrink-0 rounded-full bg-gradient-to-br from-aurora-purple to-aurora-violet flex items-center justify-center text-white text-xs font-medium">
-                {displayName[0]?.toUpperCase()}
-              </div>
+              <SymbolAvatar
+                symbol={(userProfile as any)?.avatar_symbol}
+                color={(userProfile as any)?.avatar_color}
+                avatarUrl={(userProfile as any)?.avatar_url}
+                fallbackLetter={displayName[0]?.toUpperCase() || "?"}
+                size={28}
+              />
               <span className="text-xs text-muted-foreground truncate">
                 @{username || "anon"}
               </span>
