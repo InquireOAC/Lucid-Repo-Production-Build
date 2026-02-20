@@ -126,10 +126,14 @@ const AIContextDialog = ({
   const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
     try {
       const styleLabel = avatarStyleOptions.find((s) => s.value === selectedStyle)?.label || "Digital Art";
-      const prompt = `Create a stylized character portrait of the person in this reference photo in a ${styleLabel} art style. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be suitable for a profile picture.`;
+      const isPhotoRealistic = selectedStyle === "realistic" || selectedStyle === "hyper_realism";
+      
+      const prompt = isPhotoRealistic
+        ? `Generate an ultra-realistic, photographic portrait of the person in this reference photo. This must look like a real DSLR photograph — not a painting, illustration, or digital art. Use natural studio lighting, shallow depth of field, accurate skin texture with pores and subtle imperfections, realistic hair strands, and true-to-life eye reflections. The background should be a simple, softly blurred studio backdrop. Capture their exact likeness, facial structure, skin tone, and features. Output should be indistinguishable from a real photo. 8K resolution, professional headshot quality.`
+        : `Create a stylized character portrait of the person in this reference photo in a ${styleLabel} art style. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be suitable for a profile picture.`;
 
       const result = await supabase.functions.invoke("generate-dream-image", {
-        body: { prompt, referenceImageUrl: rawPhotoUrl }
+        body: { prompt, referenceImageUrl: rawPhotoUrl, imageStyle: selectedStyle }
       });
 
       if (result.error || !result.data) {
