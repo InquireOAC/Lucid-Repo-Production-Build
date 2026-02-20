@@ -100,6 +100,108 @@ const DreamCard = ({
     hasAudio: !!(dream.audio_url || dream.audioUrl)
   });
 
+  // Journal view with image-hero layout
+  if (isJournalView && dream.generatedImage) {
+    return (
+      <Card
+        className="hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer featured-card oniri-hover border-primary/10 group overflow-hidden relative"
+        onClick={handleCardClick}>
+        
+        {/* Hero image */}
+        <div className="relative w-full h-52">
+          <img
+            src={dream.generatedImage}
+            alt="Dream visualization"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+          
+          {/* Lucid badge overlay */}
+          {dream.lucid && (
+            <div className="absolute top-2 left-2">
+              <Badge className="text-xs bg-aurora-violet/90 text-white border-none">
+                ✦ Lucid
+              </Badge>
+            </div>
+          )}
+        </div>
+        
+        {/* Floating content card */}
+        <div className="relative -mt-10 mx-3 mb-3 rounded-xl bg-card/95 backdrop-blur-sm p-4 shadow-[0_4px_20px_rgba(0,0,0,0.5)] border border-primary/10">
+          <h3 className="font-bold text-base leading-tight text-white mb-1">{dream.title}</h3>
+          <p className="text-xs text-white/60 mb-2">{formattedDate}</p>
+          <p className="line-clamp-2 text-xs text-white/80 mb-2">{dream.content}</p>
+
+          {/* Audio Player */}
+          {(dream.audio_url || dream.audioUrl) && (
+            <div className="mb-2">
+              <div className="flex items-center gap-2 mb-2 text-white/70">
+                <Volume2 className="h-3 w-3" />
+                <span className="font-medium text-xs">Voice Recording</span>
+              </div>
+              <AudioPlayer audioUrl={dream.audio_url || dream.audioUrl} title="Dream Recording" compact />
+            </div>
+          )}
+          
+          {/* Tags */}
+          {mappedTags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {mappedTags.slice(0, 3).map((tag) => (
+                <Badge
+                  key={tag.id}
+                  className="text-xs cursor-pointer bg-primary/15 hover:bg-primary/25 border-primary/30 transition-all duration-200 text-slate-200"
+                  onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}>
+                  {tag.name}
+                </Badge>
+              ))}
+              {mappedTags.length > 3 && (
+                <Badge className="text-xs bg-primary/10 text-primary/70 border-primary/20">
+                  +{mappedTags.length - 3}
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {showSharedBadge && (dream.is_public || dream.isPublic) && (
+            <Badge className="mb-2 text-xs bg-primary/20 text-primary border-primary/30">Public</Badge>
+          )}
+
+          {showActions && (
+            <div className="flex gap-2 mb-2">
+              {onEdit && (
+                <Button variant="outline" size="sm" className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50" onClick={(e) => handleButtonClick(e, onEdit)}>Edit</Button>
+              )}
+              {onTogglePublic && (
+                <Button variant="outline" size="sm" className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50" onClick={(e) => handleButtonClick(e, onTogglePublic)}>
+                  {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
+                </Button>
+              )}
+              {onDelete && (
+                <Button variant="destructive" size="sm" className="bg-destructive/20 hover:bg-destructive/30 text-destructive-foreground border-destructive/30" onClick={(e) => handleButtonClick(e, onDelete)}>Delete</Button>
+              )}
+            </div>
+          )}
+          
+          <div className="flex items-center gap-4 text-white/60 text-xs">
+            <div className="flex items-center gap-2">
+              <Heart className={`h-3 w-3 ${dream.liked ? 'fill-red-400 text-red-400' : 'text-white/60'}`} />
+              <span className="text-white/70">{dream.likeCount || dream.like_count || 0}</span>
+            </div>
+            <Button variant="ghost" size="sm" className="h-auto p-1 hover:text-blue-300 text-white/60 hover:bg-white/10 text-xs" onClick={(e) => handleButtonClick(e, () => onComment?.(dream.id))}>
+              <MessageCircle className="mr-1 h-3 w-3" />
+              {dream.commentCount || dream.comment_count || 0}
+            </Button>
+            {onShare && (
+              <Button variant="ghost" size="sm" className="h-auto p-1 hover:text-green-300 text-white/60 hover:bg-white/10 text-xs" onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}>
+                <Share2 className="mr-1 h-3 w-3" />Share
+              </Button>
+            )}
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Card
       className="hover:shadow-xl hover:shadow-primary/20 transition-all duration-300 cursor-pointer featured-card oniri-hover border-primary/10 group"
@@ -113,7 +215,6 @@ const DreamCard = ({
             <DreamCardUser
               profile={dream.profiles}
               onUserClick={handleUserClick} />
-
             }
             <h3 className={`font-bold leading-tight text-white ${
             isJournalView ? 'text-base mb-1' : 'text-lg'}`
@@ -125,7 +226,6 @@ const DreamCard = ({
             </p>
           </div>
           
-          {/* Flag button for inappropriate content - only show if not journal view and user is logged in and not own dream */}
           {!isJournalView && currentUser && currentUser.id !== dream.user_id &&
           <div className="flex items-center" onClick={(e) => e.stopPropagation()}>
               <FlagButton
@@ -133,7 +233,6 @@ const DreamCard = ({
               contentId={dream.id}
               contentOwnerId={dream.user_id}
               size="sm" />
-
             </div>
           }
         </div>
@@ -144,7 +243,6 @@ const DreamCard = ({
         isJournalView ? 'text-xs' : 'text-sm'}`
         }>{dream.content}</p>
 
-        {/* Audio Player */}
         {(dream.audio_url || dream.audioUrl) &&
         <div className={`${isJournalView ? "mb-2" : "mb-3"}`}>
             <div className="flex items-center gap-2 mb-2 text-white/70">
@@ -157,7 +255,6 @@ const DreamCard = ({
             audioUrl={dream.audio_url || dream.audioUrl}
             title="Dream Recording"
             compact={isJournalView} />
-
           </div>
         }
         
@@ -169,7 +266,6 @@ const DreamCard = ({
             className={`w-full object-cover rounded-lg shadow-lg ${
             isJournalView ? 'h-24' : 'h-48'}`
             } />
-
             <div className="absolute inset-0 rounded-lg bg-gradient-to-t from-black/20 to-transparent"></div>
           </div>
         }
@@ -181,7 +277,6 @@ const DreamCard = ({
             key={tag.id}
             className="text-xs cursor-pointer bg-primary/15 hover:bg-primary/25 border-primary/30 transition-all duration-200 text-slate-200"
             onClick={(e) => handleButtonClick(e, () => onTagClick?.(tag.id))}>
-
                 {tag.name}
               </Badge>
           )}
@@ -207,7 +302,6 @@ const DreamCard = ({
             size={isJournalView ? "sm" : "sm"}
             className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
             onClick={(e) => handleButtonClick(e, onEdit)}>
-
                 Edit
               </Button>
           }
@@ -217,7 +311,6 @@ const DreamCard = ({
             size={isJournalView ? "sm" : "sm"}
             className="bg-primary/10 hover:bg-primary/20 text-primary border-primary/30 hover:border-primary/50"
             onClick={(e) => handleButtonClick(e, onTogglePublic)}>
-
                 {dream.is_public || dream.isPublic ? 'Private' : 'Public'}
               </Button>
           }
@@ -227,7 +320,6 @@ const DreamCard = ({
             size={isJournalView ? "sm" : "sm"}
             className="bg-destructive/20 hover:bg-destructive/30 text-destructive-foreground border-destructive/30"
             onClick={(e) => handleButtonClick(e, onDelete)}>
-
                 Delete
               </Button>
           }
@@ -237,19 +329,16 @@ const DreamCard = ({
         <div className={`flex items-center gap-4 text-white/60 ${
         isJournalView ? 'text-xs' : 'text-sm'}`
         }>
-          {/* Display-only like counter - visible to ALL users */}
           <div className="flex items-center gap-2">
             <Heart className={`${isJournalView ? 'h-3 w-3' : 'h-4 w-4'} ${dream.liked ? 'fill-red-400 text-red-400' : 'text-white/60'}`} />
             <span className="text-white/70">{dream.likeCount || dream.like_count || 0}</span>
           </div>
           
-          {/* Comment counter - clickable to open comments */}
           <Button
             variant="ghost"
             size="sm"
             className={`h-auto p-1 hover:text-blue-300 text-white/60 hover:bg-white/10 ${isJournalView ? 'text-xs' : ''}`}
             onClick={(e) => handleButtonClick(e, () => onComment?.(dream.id))}>
-
             <MessageCircle className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
             {dream.commentCount || dream.comment_count || 0}
           </Button>
@@ -260,7 +349,6 @@ const DreamCard = ({
             size="sm"
             className={`h-auto p-1 hover:text-green-300 text-white/60 hover:bg-white/10 ${isJournalView ? 'text-xs' : ''}`}
             onClick={(e) => handleButtonClick(e, () => onShare(dream.id))}>
-
               <Share2 className={`mr-1 ${isJournalView ? 'h-3 w-3' : 'h-4 w-4'}`} />
               Share
             </Button>
