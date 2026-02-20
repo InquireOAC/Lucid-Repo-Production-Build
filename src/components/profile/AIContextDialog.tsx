@@ -205,6 +205,20 @@ const AIContextDialog = ({
       setRawPhotoPreview(null);
       setGeneratedAvatarUrl(null);
       toast.success('Dream Avatar saved successfully!');
+
+      // Trigger visual fingerprint analysis if we have a photo
+      if (photoUrl) {
+        try {
+          toast.info('Analyzing your photo for better likeness...');
+          await supabase.functions.invoke('analyze-character-image', {
+            body: { photoUrl }
+          });
+          toast.success('Photo analysis complete! Your dream images will now have better likeness.');
+        } catch (fingerprintError) {
+          console.error('Fingerprint analysis failed (non-blocking):', fingerprintError);
+          // Non-blocking — avatar is already saved
+        }
+      }
     } catch (error: any) {
       console.error('Error saving Dream Avatar:', error);
       toast.error(`Failed to save Dream Avatar: ${error.message}`);

@@ -95,6 +95,7 @@ export type Database = {
           skin_tone: string | null
           updated_at: string
           user_id: string
+          visual_fingerprint: string | null
         }
         Insert: {
           aesthetic_preferences?: string[] | null
@@ -113,6 +114,7 @@ export type Database = {
           skin_tone?: string | null
           updated_at?: string
           user_id: string
+          visual_fingerprint?: string | null
         }
         Update: {
           aesthetic_preferences?: string[] | null
@@ -131,6 +133,7 @@ export type Database = {
           skin_tone?: string | null
           updated_at?: string
           user_id?: string
+          visual_fingerprint?: string | null
         }
         Relationships: []
       }
