@@ -1,19 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
-import LucidRepoDreamList from "./LucidRepoDreamList";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
-import VideoGrid from "@/components/videos/VideoGrid";
-import VideoDetail from "@/components/videos/VideoDetail";
 import FeaturedDream from "@/components/repos/FeaturedDream";
 import MasonryDreamGrid from "@/components/repos/MasonryDreamGrid";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
-import { useVideoEntries } from "@/hooks/useVideoEntries";
-import { VideoEntry } from "@/types/video";
 import { Moon } from "lucide-react";
 
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
@@ -23,10 +18,6 @@ const LucidRepoContainer = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTags, setActiveTags] = useState<string[]>([]);
   const [hasInitialized, setHasInitialized] = useState(false);
-  const [mode, setMode] = useState<"dreams" | "videos">("dreams");
-  const [selectedVideo, setSelectedVideo] = useState<VideoEntry | null>(null);
-
-  const { videos: videoEntries, isLoading: videosLoading } = useVideoEntries();
 
   function refreshLikedDreams() {
     fetchPublicDreams();
@@ -99,20 +90,6 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
-  const handleOpenVideo = (video: VideoEntry) => {
-    setSelectedVideo(video);
-  };
-
-  const handleCloseVideo = () => {
-    setSelectedVideo(null);
-  };
-
-  const filteredVideos = videoEntries.filter(video =>
-    video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    video.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    video.dreamer_story_name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   // Get featured dream (most popular with image)
   const featuredDream = filteredDreams.find(d => 
     (d.generatedImage || d.image_url) && (d.like_count || 0) > 0
@@ -137,57 +114,44 @@ const LucidRepoContainer = () => {
         activeTags={activeTags} 
         onTagClick={handleTagClick} 
         onClearTags={handleClearTags}
-        mode={mode}
-        setMode={setMode}
       />
       
-      {mode === "dreams" ? (
-        <>
-          {isLoading || tagsLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Moon className="h-10 w-10 text-aurora-purple animate-float" />
-              <p className="mt-4 text-muted-foreground">Loading dreams...</p>
-            </div>
-          ) : filteredDreams.length === 0 ? (
-            <div className="text-center py-20">
-              <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium mb-2">No dreams found</h3>
-              <p className="text-muted-foreground">
-                {searchQuery ? "Try a different search term" : "Be the first to share a dream!"}
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* Featured Dream */}
-              {featuredDream && (
-                <FeaturedDream
-                  dream={featuredDream}
-                  tags={filteredDreamTags}
-                  onLike={handleDreamLikeFromCard}
-                  onOpenDream={handleOpenDream}
-                  onUserClick={handleNavigateToProfile}
-                  currentUser={user}
-                />
-              )}
-              
-              {/* Masonry Grid */}
-              <MasonryDreamGrid
-                dreams={gridDreams}
-                tags={filteredDreamTags}
-                onLike={handleDreamLikeFromCard}
-                onOpenDream={handleOpenDream}
-                onUserClick={handleNavigateToProfile}
-                onTagClick={handleTagClick}
-                currentUser={user}
-              />
-            </>
-          )}
-        </>
+      {isLoading || tagsLoading ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <Moon className="h-10 w-10 text-aurora-purple animate-float" />
+          <p className="mt-4 text-muted-foreground">Loading dreams...</p>
+        </div>
+      ) : filteredDreams.length === 0 ? (
+        <div className="text-center py-20">
+          <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-medium mb-2">No dreams found</h3>
+          <p className="text-muted-foreground">
+            {searchQuery ? "Try a different search term" : "Be the first to share a dream!"}
+          </p>
+        </div>
       ) : (
-        <VideoGrid 
-          videos={filteredVideos}
-          onOpenVideo={handleOpenVideo}
-        />
+        <>
+          {featuredDream && (
+            <FeaturedDream
+              dream={featuredDream}
+              tags={filteredDreamTags}
+              onLike={handleDreamLikeFromCard}
+              onOpenDream={handleOpenDream}
+              onUserClick={handleNavigateToProfile}
+              currentUser={user}
+            />
+          )}
+          
+          <MasonryDreamGrid
+            dreams={gridDreams}
+            tags={filteredDreamTags}
+            onLike={handleDreamLikeFromCard}
+            onOpenDream={handleOpenDream}
+            onUserClick={handleNavigateToProfile}
+            onTagClick={handleTagClick}
+            currentUser={user}
+          />
+        </>
       )}
 
       {selectedDream && (
@@ -198,14 +162,6 @@ const LucidRepoContainer = () => {
           onUpdate={handleDreamUpdate} 
           isAuthenticated={!!user} 
           onLike={() => handleDreamLike(selectedDream.id)} 
-        />
-      )}
-
-      {selectedVideo && (
-        <VideoDetail
-          video={selectedVideo}
-          isOpen={!!selectedVideo}
-          onClose={handleCloseVideo}
         />
       )}
 
