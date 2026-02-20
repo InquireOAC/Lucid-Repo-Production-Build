@@ -148,6 +148,7 @@ const DreamDetail = ({
             const displayName = profile.display_name || username || "Anonymous";
             const avatarSymbol = profile.avatar_symbol;
             const avatarColor = profile.avatar_color;
+            const avatarUrl = profile.avatar_url;
             return (
               <div className="flex flex-col gap-3 mb-1">
                 <button
@@ -161,6 +162,7 @@ const DreamDetail = ({
                   <SymbolAvatar
                     symbol={avatarSymbol}
                     color={avatarColor}
+                    avatarUrl={avatarUrl}
                     fallbackLetter={displayName[0]?.toUpperCase() || "?"}
                     size={32}
                   />
