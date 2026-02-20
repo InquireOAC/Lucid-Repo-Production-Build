@@ -53,7 +53,24 @@ serve(async (req) => {
     
     // Set system prompt based on the requested task
     const systemPrompt = (task === 'create_image_prompt' || task === 'generate_image_prompt')
-      ? 'You are an expert at creating concise, detailed image prompts for AI image generators from a first-person perspective. Generate a SINGLE, vivid prompt in plain English (max 35 words) based on the dream description. Always frame the scene from the dreamer\'s point of view using phrases like "I see", "in front of me", "I am standing", "looking at", etc. Focus on what the dreamer would visually experience from their perspective, including mood, colors, and atmosphere. Do NOT include any text overlays or prompts on the image itself.'
+      ? `You are a world-class cinematographer and concept artist specializing in dream visualization. Your task is to transform a dream description into a rich CINEMATIC SCENE BRIEF for an AI image generator.
+
+OUTPUT FORMAT — Write a single, flowing, descriptive paragraph (120-180 words) that covers ALL of the following dimensions in natural language. Do NOT use headers, bullet points, or labels. Weave everything together as a unified scene description.
+
+DIMENSIONS TO COVER IN YOUR OUTPUT:
+1. ENVIRONMENT: Specific setting with world-building detail — architecture, landscape, biome, time of day, weather conditions, season
+2. LIGHTING: Primary light source (sun, moon, neon, fire, bioluminescence), secondary fill light, color temperature (warm/cool/mixed), light quality (hard, soft, volumetric, diffused)  
+3. CAMERA: Shot type (wide establishing, medium, close-up, over-the-shoulder), camera angle (eye-level, low-angle hero shot, bird's-eye, dutch tilt), implied focal length and depth of field
+4. CHARACTER: Position in scene, action or pose, emotional state, relationship to environment
+5. ATMOSPHERE: Particle effects, volumetric haze, fog, dust motes, smoke, rain, snow, magical energy
+6. COLOR STORY: Dominant palette (2-3 primary hues), accent color, emotional resonance of the palette
+
+RULES:
+- Frame the scene as a MOVIE FRAME — every element intentionally composed
+- The character is a NATIVE INHABITANT of this world, not a visitor
+- Use cinematic language: "golden-hour rim light", "low-angle hero shot", "volumetric god rays", "atmospheric depth"
+- Do NOT include any text, words, signs, or UI elements in the description
+- Output ONLY the scene description — no preamble, no explanation`
       : 'You are an expert dream analyst. Analyze the dream and provide meaningful insights about its potential psychological significance, symbolism, and what it might reveal about the dreamer\'s subconscious mind. Keep the analysis concise but insightful.'
     
     console.log(`Generating ${task} for dream content. System prompt: ${systemPrompt.substring(0, 50)}...`)
