@@ -85,18 +85,18 @@ const LucidRepoHeader = ({
             <button
               key={tag.id}
               onClick={() => onTagClick(tag.id)}
-              className={`px-3 py-1 rounded-full text-sm transition-all ${
-                activeTags.includes(tag.id) ?
-                'bg-gradient-to-r from-aurora-purple to-aurora-violet text-white' :
-                'bg-secondary/30 text-muted-foreground hover:bg-secondary/50'}`
-              }>
+            className={`px-2.5 py-0.5 rounded-full text-xs transition-all ${
+              activeTags.includes(tag.id) ?
+              'bg-gradient-to-r from-aurora-purple to-aurora-violet text-white' :
+              'bg-secondary/30 text-muted-foreground hover:bg-secondary/50'}`
+            }>
               {tag.name}
             </button>
           )}
           {activeTags.length > 0 &&
             <button
               onClick={onClearTags}
-              className="px-3 py-1 rounded-full text-sm bg-destructive/20 text-destructive hover:bg-destructive/30 transition-all">
+            className="px-2.5 py-0.5 rounded-full text-xs bg-destructive/20 text-destructive hover:bg-destructive/30 transition-all">
               Clear
             </button>
           }
