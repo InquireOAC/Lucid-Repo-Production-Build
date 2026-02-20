@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, Sparkles, Compass } from "lucide-react";
+import { Book, Moon, User, Compass } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -35,7 +35,6 @@ const MainLayout = () => {
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/explore" icon={<Compass />} label="Explore" />
-          <NavTab to="/insights" icon={<Sparkles />} label="Insights" />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
       </div>
