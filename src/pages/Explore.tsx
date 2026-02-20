@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import { Search, Compass, Wand2, Brain, Lightbulb } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import UserSearchResults from "@/components/explore/UserSearchResults";
 import TechniqueGridCard from "@/components/explore/TechniqueGridCard";
@@ -13,10 +13,21 @@ const meditations = [
   { icon: "🔔", name: "Mindful Awareness", description: "Cultivate present-moment attention that carries into your dream state." },
 ];
 
+const dailyTips = [
+  "Keep a dream journal by your bed — writing immediately after waking dramatically improves recall.",
+  "Perform reality checks throughout the day: try pushing your finger through your palm.",
+  "Set an intention before sleep: 'Tonight I will realize I'm dreaming.'",
+  "Wake up 5 hours after sleeping, stay up briefly, then go back to sleep for vivid lucid dreams (WBTB).",
+  "Look for recurring dream signs in your journal — they're your gateway to lucidity.",
+  "Meditate for even 5 minutes before bed to sharpen your dream awareness.",
+  "Visualize a recent dream as you fall asleep, but imagine becoming lucid within it.",
+];
+
 const difficultyOrder = ["Beginner", "Intermediate", "Advanced"] as const;
 
 const Explore: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const todayTip = dailyTips[new Date().getDay()];
 
   const grouped = useMemo(() => {
     return difficultyOrder.map((level) => ({
@@ -30,7 +41,11 @@ const Explore: React.FC = () => {
   return (
     <div className="min-h-screen pt-safe-top">
       <div className="p-4 pb-2">
-        <h1 className="text-xl font-bold">Explore</h1>
+        <div className="flex items-center gap-2">
+          <Compass className="w-5 h-5 text-primary" />
+          <h1 className="text-xl font-bold text-foreground">Explore</h1>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1 ml-7">Discover techniques and deepen your practice</p>
       </div>
 
       <div className="px-4 space-y-5">
@@ -41,7 +56,7 @@ const Explore: React.FC = () => {
             placeholder="Search users..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 rounded-full border-primary/15 bg-card/60 backdrop-blur-md"
+            className="pl-9 rounded-full border-primary/15 bg-card/60 backdrop-blur-md focus:ring-primary/30"
           />
         </div>
 
@@ -49,7 +64,10 @@ const Explore: React.FC = () => {
 
         {/* Techniques grouped by difficulty */}
         <div className="space-y-4">
-          <h2 className="text-base font-semibold text-foreground">Techniques</h2>
+          <div className="flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Techniques</h2>
+          </div>
           {grouped.map(({ level, items }) => {
             const styles = getDifficultyStyles(level);
             return (
@@ -71,14 +89,30 @@ const Explore: React.FC = () => {
           })}
         </div>
 
+        {/* Daily Tip Banner */}
+        <div className="featured-card rounded-2xl p-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-primary/10 shrink-0">
+              <Lightbulb className="w-4 h-4 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xs font-semibold text-foreground mb-1">Quick Tip</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">{todayTip}</p>
+            </div>
+          </div>
+        </div>
+
         {/* Meditation Section */}
         <div className="space-y-3">
-          <h2 className="text-base font-semibold text-foreground">Meditation</h2>
+          <div className="flex items-center gap-2">
+            <Brain className="w-4 h-4 text-primary" />
+            <h2 className="text-base font-semibold text-foreground">Meditation</h2>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             {meditations.map((m, i) => (
               <div
                 key={i}
-                className="flex flex-col items-center rounded-2xl border border-primary/15 bg-gradient-to-br from-primary/10 to-accent/5 backdrop-blur-md p-4 h-[150px] justify-center"
+                className="glass-card flex flex-col items-center rounded-2xl p-4 h-[160px] justify-center border-t-[3px] border-t-primary/40 hover:border-t-primary/70 transition-all duration-300 hover:shadow-[0_0_15px_hsla(var(--primary)/0.15)]"
               >
                 <span className="text-[32px] leading-none mb-2">{m.icon}</span>
                 <h3 className="text-[13px] font-bold text-foreground text-center leading-tight">{m.name}</h3>

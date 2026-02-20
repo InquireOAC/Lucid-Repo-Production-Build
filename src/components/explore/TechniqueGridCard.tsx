@@ -2,7 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Star } from "lucide-react";
 import type { Technique } from "@/components/insights/techniqueData";
-import { getDifficultyStyles } from "@/utils/techniqueStyles";
+
+const difficultyAccent: Record<string, string> = {
+  Beginner: "border-t-emerald-500/50",
+  Intermediate: "border-t-amber-500/50",
+  Advanced: "border-t-purple-500/50",
+};
 
 interface TechniqueGridCardProps {
   technique: Technique;
@@ -11,16 +16,14 @@ interface TechniqueGridCardProps {
 
 const TechniqueGridCard: React.FC<TechniqueGridCardProps> = ({ technique, index }) => {
   const navigate = useNavigate();
-  const styles = getDifficultyStyles(technique.difficulty);
+  const accent = difficultyAccent[technique.difficulty] || "border-t-primary/50";
 
   return (
     <div
       onClick={() => navigate(`/insights/technique/${index}`)}
-      className={`relative flex flex-col items-center justify-center rounded-2xl border ${styles.border} bg-gradient-to-br ${styles.gradient} backdrop-blur-md p-4 h-[160px] cursor-pointer transition-all duration-300 hover:brightness-110 group`}
+      className={`glass-card luminous-hover relative flex flex-col items-center justify-center rounded-2xl border-t-[3px] ${accent} p-4 h-[160px] cursor-pointer transition-all duration-300 group`}
     >
-
-      {/* Icon */}
-      <span className="text-[36px] leading-none group-hover:scale-110 transition-transform duration-300 mb-2">
+      <span className="text-[40px] leading-none group-hover:scale-110 transition-transform duration-300 mb-2">
         {technique.icon}
       </span>
 
@@ -28,7 +31,6 @@ const TechniqueGridCard: React.FC<TechniqueGridCardProps> = ({ technique, index 
         {technique.name}
       </h3>
 
-      {/* Difficulty dots + effectiveness stars */}
       <div className="flex items-center gap-2 mt-2">
         <div className="flex gap-0.5">
           {[1, 2, 3].map((dot) => (
