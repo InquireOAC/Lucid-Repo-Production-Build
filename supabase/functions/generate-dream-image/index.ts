@@ -167,16 +167,34 @@ serve(async (req) => {
     }
 
     const data = await response.json()
+    console.log("AI response keys:", Object.keys(data).join(', '))
+    console.log("Choice message keys:", JSON.stringify(Object.keys(data.choices?.[0]?.message || {})))
 
-    const images = data.choices?.[0]?.message?.images
-    if (!images || images.length === 0) {
-      console.error("No images in response:", JSON.stringify(data).substring(0, 500))
-      throw new Error('No image data returned from AI')
+    // Handle both response formats:
+    // 1. message.images array (older format)
+    // 2. message.content array with image_url parts (Gemini native format)
+    let dataUrl: string | null = null
+
+    const message = data.choices?.[0]?.message
+
+    // Format 1: message.images[]
+    if (message?.images && message.images.length > 0) {
+      dataUrl = message.images[0]?.image_url?.url ?? null
     }
 
-    const dataUrl = images[0].image_url?.url
+    // Format 2: message.content[] with parts
+    if (!dataUrl && Array.isArray(message?.content)) {
+      for (const part of message.content) {
+        if (part.type === 'image_url' && part.image_url?.url) {
+          dataUrl = part.image_url.url
+          break
+        }
+      }
+    }
+
     if (!dataUrl) {
-      throw new Error('No image URL in response')
+      console.error("No images in response:", JSON.stringify(data).substring(0, 800))
+      throw new Error('No image data returned from AI')
     }
 
     const matches = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
