@@ -1,100 +1,69 @@
 
-# Dream Image Generation Upgrade: Visual Fingerprint + Cinematic Character Compositing
 
-## What Lucid Engine Does Better
+# Technique Cards Redesign: Oniri-Style Layout + Dedicated Detail Pages
 
-After analyzing [Lucid Engine](/projects/befcf051-a84a-49de-9e27-949eb46970a6), here are the key techniques it uses that Lucid Repo is missing:
+## Overview
 
-1. **Visual Fingerprint**: Before generating any image, Lucid Engine runs the reference photo through an AI analysis step (`analyze-character-image`) that produces an extremely detailed text description of the person's face, hair, skin, body, and distinctive features. This "fingerprint" is then injected into every generation prompt, giving Gemini a textual anchor alongside the image.
+Redesign the technique cards on the Insights page to match the Oniri reference images, and add dedicated detail pages for each technique when tapped.
 
-2. **Anti-Composite Instructions**: Lucid Engine explicitly tells Gemini to generate the environment FIRST as a 3D space, THEN render the character INSIDE it -- not pasted on top. It includes failure indicators (cut-out edges, mismatched lighting) and success indicators (matching shadows, atmospheric depth).
+## Current vs. Target
 
-3. **Shot Framing Awareness**: Depending on the dream content, it adjusts how large the character should appear (15-35% for wide shots, 60-90% for close-ups).
+**Current**: Small accordion-style cards with emoji + title on left, chevron to expand inline steps.
 
-4. **Labeled Image Categories**: Reference images are explicitly labeled as `[CHARACTER_IDENTITY]` vs `[ENVIRONMENT_STYLE]` so Gemini knows what to extract from each image.
-
-5. **Photorealism Enhancement Block**: For realistic styles, it includes a massive block covering skin pores, material authenticity, camera optics (ARRI Alexa, Zeiss lenses), and lighting physics.
-
-## Current Gaps in Lucid Repo
-
-- No visual fingerprint -- the reference photo is passed as raw bytes with a one-line label
-- No anti-composite or spatial integration instructions
-- No shot framing detection
-- The character reference label is minimal: just "[CHARACTER REFERENCE] maintain their likeness"
-- Prompt max length is only 2000 chars -- too small for rich prompts
-- No visual fingerprint caching in the database
+**Target (from reference)**:
+- **List view**: Large rectangular cards (~140px tall) with a dark glass background. Title and short description on the left side, a large decorative emoji/icon on the right side. No expand/collapse -- tapping navigates to a detail page.
+- **Detail page**: Full-screen page with a large icon/illustration at the top, centered technique name, subtitle, difficulty + effectiveness dot indicators, a rich multi-paragraph description, and the step-by-step tutorial. Back button in top-left.
 
 ---
 
-## Implementation Plan
+## Changes
 
-### Step 1: Add Visual Fingerprint Generation + Caching
+### 1. Redesign `TechniqueCard.tsx`
 
-**New edge function: `supabase/functions/analyze-character-image/index.ts`**
+Remove the accordion expand/collapse behavior. Make each card a navigation target instead.
 
-When a user uploads/updates their AI context photo, generate a detailed visual fingerprint using the Lovable AI Gateway (Gemini 2.5 Flash). Store it in the `ai_context` table in a new `visual_fingerprint` text column.
+New card layout:
+- Height: ~140px, glass background with subtle border
+- Left side: technique name (bold, white), short 1-line description below (muted)
+- Right side: large emoji icon (~64px) with subtle sparkle decorations via CSS
+- Full card is clickable, navigates to `/insights/technique/:index`
+- No chevron, no inline steps
 
-The fingerprint prompt will analyze:
-- Facial structure and proportions
-- Eye, nose, mouth details
-- Hair color, texture, style
-- Skin tone and distinctive marks
-- Body type and build
+### 2. Update `Technique` data model
 
-**Database migration**: Add `visual_fingerprint` text column to `ai_context` table.
+Add new fields to each technique object:
+- `effectiveness`: 1-3 rating (matching Oniri's dot indicators)
+- `difficultyRating`: 1-3 numeric (for dot display)
+- `longDescription`: A richer multi-paragraph description for the detail page
+- `shortDescription`: The brief one-liner shown on the card in the list
 
-**Trigger**: Call this function automatically when `photo_url` is set/updated in the AI Context dialog. Also callable manually via a "Re-analyze" button.
+### 3. New Component: `TechniqueDetailPage.tsx`
 
-### Step 2: Rewrite Prompt Building with Cinematic Integration
+A full-screen page rendered at route `/insights/technique/:id`.
 
-**`src/utils/promptBuildingUtils.ts`** -- Major rewrite of `buildPersonalizedPrompt`:
+Layout (top to bottom):
+- Back button (top-left arrow)
+- Large centered emoji icon (~120px) with decorative sparkle dots around it
+- Technique name (centered, bold, large)
+- Subtitle in muted purple text (the short description)
+- Two pill badges side by side: "Difficulty" with filled/empty dots, "Effectiveness" with filled/empty dots
+- Long description paragraphs
+- Step-by-step instructions section styled as a card with numbered steps
+- Bottom safe area padding
 
-When a reference photo exists AND visual fingerprint is available:
+### 4. Update `TechniqueLibrary.tsx`
 
-```
-CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY)
-- FACE: Exact same facial structure, eye shape, nose, lips, jawline
-- SKIN: Precise tone, texture, markings
-- HAIR: Exact color, texture, style, length
-- BODY: Same build, proportions
+- Remove the header text ("Technique Library" / "Tap any card...")
+- Just render the list of redesigned cards with proper spacing
+- Pass navigation handler or use react-router `useNavigate`
 
-VISUAL FINGERPRINT:
-[cached fingerprint text from ai_context]
+### 5. Add Route in `App.tsx`
 
-CHARACTER-ENVIRONMENT INTEGRATION (MANDATORY):
-1. FIRST: Generate the complete dream environment
-2. THEN: Place the camera within this space
-3. FINALLY: Render the character STANDING INSIDE this 3D space
+Add: `<Route path="insights/technique/:id" element={<TechniqueDetailPage />} />`
 
-INTEGRATION CHECKLIST:
-- Lighting: Character lit by SAME sources as environment
-- Atmosphere: Haze/particles affect both character and scene
-- Grounding: Feet cast natural shadows
-- Single pass: Generate character + environment together
-```
+### 6. Update `Insights.tsx`
 
-For **photorealistic** styles, append the enhanced photorealism block:
-- Skin pores, subsurface scattering, micro-wrinkles
-- Camera optics (cinema camera, prime lens, natural bokeh)
-- Lighting physics (motivated sources, shadow falloff)
-- Material authenticity
-
-### Step 3: Upgrade Edge Function with Better Structure
-
-**`supabase/functions/generate-dream-image/index.ts`** changes:
-
-1. Increase `MAX_PROMPT_LENGTH` from 2000 to 6000 to accommodate rich prompts
-2. Always label the reference image with `[CHARACTER_IDENTITY_REFERENCE]` prefix text
-3. For photorealistic styles, add explicit anti-composite instructions in a separate text part before the prompt
-4. Structure parts as: `[Label] -> [Image] -> [Full prompt with fingerprint + integration rules]`
-
-### Step 4: Wire Visual Fingerprint into Generation Flow
-
-**`src/hooks/useDreamImageAI.ts`** -- When building the prompt, fetch the visual fingerprint from `ai_context` alongside `photo_url` and pass it into `buildPersonalizedPrompt`.
-
-**`src/utils/aiContextUtils.ts`** -- Update `getUserAIContext` query to also select `visual_fingerprint`.
-
-**`src/components/profile/AIContextDialog.tsx`** -- After saving/updating the reference photo, call the new `analyze-character-image` edge function to generate the fingerprint. Show a brief "Analyzing your photo..." state.
+The Techniques tab just shows the card list -- no changes needed beyond what TechniqueLibrary handles.
 
 ---
 
@@ -102,12 +71,9 @@ For **photorealistic** styles, append the enhanced photorealism block:
 
 | File | Action |
 |------|--------|
-| `supabase migration` | Add `visual_fingerprint` text column to `ai_context` |
-| `supabase/functions/analyze-character-image/index.ts` | New edge function -- AI vision analysis of reference photo |
-| `src/utils/promptBuildingUtils.ts` | Major rewrite with fingerprint injection, anti-composite rules, photorealism block |
-| `supabase/functions/generate-dream-image/index.ts` | Increase prompt limit, labeled image parts, structured request |
-| `src/utils/aiContextUtils.ts` | Include `visual_fingerprint` in query |
-| `src/hooks/useDreamImageAI.ts` | Pass fingerprint to prompt builder |
-| `src/hooks/useImageGeneration.ts` | Pass fingerprint through generation flow |
-| `src/components/profile/AIContextDialog.tsx` | Trigger fingerprint generation on photo upload |
-| `supabase/config.toml` | Register new edge function |
+| `src/components/insights/TechniqueCard.tsx` | Rewrite -- large card layout, no accordion, onClick navigates |
+| `src/components/insights/TechniqueLibrary.tsx` | Update -- pass technique index, remove header |
+| `src/components/insights/TechniqueDetailPage.tsx` | New -- full detail page with back nav, ratings, steps |
+| `src/components/insights/techniqueData.ts` | New -- extract technique data with added fields (effectiveness, longDescription) |
+| `src/App.tsx` | Add route for `/insights/technique/:id` |
+
