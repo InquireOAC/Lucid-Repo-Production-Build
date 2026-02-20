@@ -2,13 +2,11 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, XCircle, RefreshCw, ShieldAlert, AlertCircle } from "lucide-react";
+import { Loader2, CreditCard, RefreshCw, AlertCircle, Sparkles, Check, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
 
-// Type definitions
 interface SubscriptionStatus {
   subscribed: boolean;
   subscription_tier?: string;
@@ -39,20 +37,15 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   
-  // Check if we just returned from a checkout session
   useEffect(() => {
     const sessionId = searchParams.get('session_id');
     const canceled = searchParams.get('canceled');
     
     if (sessionId) {
-      toast.success("Subscription activated!", {
-        description: "Your subscription has been successfully activated.",
-      });
+      toast.success("Subscription activated!");
       checkSubscriptionStatus();
     } else if (canceled) {
-      toast.info("Subscription process canceled", {
-        description: "You canceled the subscription process.",
-      });
+      toast.info("Subscription process canceled");
     }
   }, [searchParams]);
 
@@ -63,7 +56,6 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
     }
   }, [user]);
 
-  // Fetch products from Stripe, always using strict hardcoded features per plan name
   const fetchProducts = async () => {
     try {
       setProductsLoading(true);
@@ -75,12 +67,12 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
       });
 
       if (error) {
-        setConfigError("Unable to fetch subscription plans. Using default plans.");
+        setConfigError("Unable to fetch plans.");
         setApiError(error.message || "API call failed");
         throw error;
       }
       if (data?.error) {
-        setConfigError("Stripe API error. Using default plans.");
+        setConfigError("Stripe API error.");
         setApiError(data.errorDetails || data.error);
         throw new Error(data.error);
       }
@@ -92,21 +84,20 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         throw new Error("Invalid products data");
       }
     } catch (error) {
-      // Fallback defaults
       setProducts([
         {
           id: 'price_basic',
-          name: 'Basic',
+          name: 'Dreamer',
           price: '$4.99/month',
           features: [
-            "Unlimited Dream Analysis", // updated!
+            "Unlimited Dream Analysis",
             "10 Dream Art Generations",
             "Priority Support"
           ],
         },
         {
           id: 'price_premium',
-          name: 'Premium',
+          name: 'Mystic',
           price: '$15.99/month',
           features: [
             "Unlimited Dream Analysis",
@@ -115,40 +106,28 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
           ],
         }
       ]);
-      toast.error("Failed to load subscription plans", {
-        description: "Using default plans. Please try again later.",
-      });
     } finally {
       setProductsLoading(false);
     }
   };
 
-  // Check subscription status
   const checkSubscriptionStatus = async () => {
     try {
       setCheckingStatus(true);
       
-      // Get subscription status from Supabase
       const { data: customerData, error: customerError } = await supabase
         .from("stripe_customers")
         .select("customer_id")
         .eq("user_id", user?.id)
         .maybeSingle();
       
-      if (customerError) {
-        console.error("Error fetching customer:", customerError);
-        throw customerError;
-      }
+      if (customerError) throw customerError;
       
       if (!customerData?.customer_id) {
-        console.log("No customer record found");
         setSubscriptionStatus({ subscribed: false });
         return;
       }
       
-      console.log("Found customer ID:", customerData.customer_id);
-      
-      // Get the subscription details
       const { data: subscriptionData, error: subscriptionError } = await supabase
         .from("stripe_subscriptions")
         .select("*")
@@ -156,157 +135,92 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         .eq("status", "active")
         .maybeSingle();
       
-      if (subscriptionError) {
-        console.error("Error fetching subscription:", subscriptionError);
-        throw subscriptionError;
-      }
+      if (subscriptionError) throw subscriptionError;
       
       if (subscriptionData) {
-        console.log("Active subscription found:", subscriptionData);
-        // Get plans info to determine credit limits
-        const analysisLimit = subscriptionData.price_id === "price_premium" ? 999999
-                              : subscriptionData.price_id === "price_basic" ? 999999
-                              : 0;
-        const imageLimit = subscriptionData.price_id === "price_premium" ? 999999
-                            : subscriptionData.price_id === "price_basic" ? 10
-                            : 0;
+        const analysisLimit = 999999;
+        const imageLimit = subscriptionData.price_id === "price_premium" ? 999999 : 10;
 
         setSubscriptionStatus({
           subscribed: true,
-          subscription_tier: subscriptionData.price_id === "price_premium" ? "Premium" : "Basic",
+          subscription_tier: subscriptionData.price_id === "price_premium" ? "Mystic" : "Dreamer",
           subscription_end: new Date(subscriptionData.current_period_end * 1000).toLocaleDateString(),
           cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
-          analysisCredits: {
-            used: subscriptionData.dream_analyses_used || 0,
-            total: analysisLimit
-          },
-          imageCredits: {
-            used: subscriptionData.image_generations_used || 0,
-            total: imageLimit
-          }
+          analysisCredits: { used: subscriptionData.dream_analyses_used || 0, total: analysisLimit },
+          imageCredits: { used: subscriptionData.image_generations_used || 0, total: imageLimit }
         });
       } else {
-        console.log("No active subscription found");
         setSubscriptionStatus({ subscribed: false });
       }
     } catch (error) {
       console.error("Error checking subscription:", error);
-      toast.error("Failed to check subscription status");
       setSubscriptionStatus({ subscribed: false });
     } finally {
       setCheckingStatus(false);
     }
   };
 
-  // Handle subscription checkout
   const handleSubscribe = async (priceId: string) => {
     try {
       setLoading(true);
       setApiError(null);
       
-      console.log("Creating checkout session for price:", priceId);
       const { data, error } = await supabase.functions.invoke('create-checkout-session', {
         body: { action: 'createSession', priceId }
       });
       
       if (error) {
-        console.error("Error creating checkout session:", error);
         setApiError(error.message);
         throw error;
       }
       
       if (data?.url) {
-        console.log("Redirecting to checkout:", data.url);
         window.location.href = data.url;
       } else {
         throw new Error("No checkout URL returned");
       }
     } catch (error: any) {
-      console.error("Error creating checkout session:", error);
-      toast.error("Failed to start subscription process", {
-        description: error.message || "Please try again later."
-      });
+      toast.error("Failed to start checkout", { description: error.message });
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle managing subscription
   const handleManageSubscription = async () => {
     try {
       setLoading(true);
-      
-      console.log("Creating portal session");
-      const { data, error } = await supabase.functions.invoke('create-portal-session', {
-        body: {}
-      });
-      
-      if (error) {
-        console.error("Error opening customer portal:", error);
-        throw error;
-      }
-      
-      if (data?.url) {
-        console.log("Redirecting to portal:", data.url);
-        window.location.href = data.url;
-      } else {
-        throw new Error("No portal URL returned");
-      }
+      const { data, error } = await supabase.functions.invoke('create-portal-session', { body: {} });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+      else throw new Error("No portal URL returned");
     } catch (error) {
-      console.error("Error opening customer portal:", error);
-      toast.error("Failed to open subscription management portal");
+      toast.error("Failed to open subscription portal");
     } finally {
       setLoading(false);
     }
   };
 
-  // Handle external link
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
-  // Loading state
   if (checkingStatus || productsLoading) {
-    return <SubscriptionLoadingState />;
+    return (
+      <div className="flex flex-col items-center justify-center py-10 gap-3">
+        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        <span className="text-sm text-muted-foreground">Loading plans...</span>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6 max-w-full">
-      {configError && (
-        <Alert variant="destructive" className="mb-4 bg-amber-50">
-          <ShieldAlert className="h-4 w-4" />
-          <AlertTitle>Configuration Issue</AlertTitle>
-          <AlertDescription>
-            {configError}
-          </AlertDescription>
-        </Alert>
+    <div className="space-y-5 max-w-full">
+      {(configError || apiError) && (
+        <div className="flex items-center gap-2 text-xs text-destructive bg-destructive/10 rounded-lg p-3">
+          <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+          <span>{configError || apiError}</span>
+        </div>
       )}
-      
-      {apiError && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>API Error</AlertTitle>
-          <AlertDescription>
-            {apiError}
-          </AlertDescription>
-        </Alert>
-      )}
-    
-      <div className="flex justify-end">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            fetchProducts();
-            checkSubscriptionStatus();
-          }}
-          disabled={loading}
-          className="text-xs"
-        >
-          <RefreshCw className={`h-3 w-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
       
       {subscriptionStatus?.subscribed ? (
         <ActiveSubscription 
@@ -323,64 +237,47 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         />
       )}
 
-      <div className="pt-4 border-t">
-        <p className="text-xs text-muted-foreground text-center">
-          Subscriptions will automatically renew unless canceled within 24-hours before the end of the current period. You can cancel anytime with your iTunes account settings.{" "}
-          <button
-            onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
-            className="text-dream-purple underline hover:text-dream-purple/80"
-          >
-            Terms of Service
-          </button>
-        </p>
-      </div>
+      <p className="text-[11px] text-muted-foreground/70 text-center leading-relaxed">
+        Auto-renews unless canceled 24hrs before period end.{" "}
+        <button
+          onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
+          className="text-primary/70 underline hover:text-primary"
+        >
+          Terms
+        </button>
+      </p>
     </div>
   );
 };
 
-// Component for loading state
-const SubscriptionLoadingState = () => (
-  <div className="flex justify-center items-center py-8">
-    <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
-    <span className="ml-2">Loading subscription options...</span>
-  </div>
-);
-
-// Component for active subscription
+// Active subscription view
 interface ActiveSubscriptionProps {
   subscriptionStatus: SubscriptionStatus;
   handleManageSubscription: () => Promise<void>;
   loading: boolean;
 }
 
-const ActiveSubscription = ({ 
-  subscriptionStatus, 
-  handleManageSubscription, 
-  loading 
-}: ActiveSubscriptionProps) => (
-  <div className="bg-card/50 border rounded-lg p-4 space-y-4 max-w-full">
-    <div className="flex items-center justify-between">
-      <h3 className="text-lg font-medium">
-        {subscriptionStatus.subscription_tier} Plan
-      </h3>
-      <span className="text-sm text-muted-foreground">
-        Renews: {subscriptionStatus.subscription_end}
-      </span>
+const ActiveSubscription = ({ subscriptionStatus, handleManageSubscription, loading }: ActiveSubscriptionProps) => (
+  <div className="space-y-4">
+    <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-primary/5 p-5">
+      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+      <div className="relative">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-lg font-semibold">{subscriptionStatus.subscription_tier} Plan</h3>
+          <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full font-medium">Active</span>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          {subscriptionStatus.cancelAtPeriodEnd 
+            ? `Expires ${subscriptionStatus.subscription_end}` 
+            : `Renews ${subscriptionStatus.subscription_end}`}
+        </p>
+      </div>
     </div>
     
     {subscriptionStatus.cancelAtPeriodEnd && (
-      <div className="bg-amber-500/10 text-amber-600 rounded-md p-3 text-sm">
-        Your subscription will end on {subscriptionStatus.subscription_end}. 
-        You can renew your subscription in the subscription management portal.
+      <div className="text-xs text-amber-500 bg-amber-500/10 rounded-lg p-3">
+        Your subscription will end on {subscriptionStatus.subscription_end}.
       </div>
-    )}
-    
-    {subscriptionStatus.analysisCredits && (
-      <CreditBar
-        label="Dream Analysis"
-        used={subscriptionStatus.analysisCredits.used}
-        total={subscriptionStatus.analysisCredits.total}
-      />
     )}
     
     {subscriptionStatus.imageCredits && (
@@ -393,21 +290,17 @@ const ActiveSubscription = ({
     
     <Button 
       variant="outline" 
-      className="w-full mt-4" 
+      className="w-full border-primary/20 hover:bg-primary/5" 
       onClick={handleManageSubscription}
       disabled={loading}
     >
-      {loading ? (
-        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-      ) : (
-        <CreditCard className="h-4 w-4 mr-2" />
-      )}
+      {loading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CreditCard className="h-4 w-4 mr-2" />}
       Manage Subscription
     </Button>
   </div>
 );
 
-// Credit bar component
+// Credit bar
 interface CreditBarProps {
   label: string;
   used: number;
@@ -415,27 +308,21 @@ interface CreditBarProps {
 }
 
 const CreditBar = ({ label, used, total }: CreditBarProps) => (
-  <div className="space-y-1">
+  <div className="rounded-lg border border-border/50 p-3 space-y-2">
     <div className="flex justify-between text-sm">
-      <span>{label}</span>
-      <span>
-        {used}/{total === 999999 ? '∞' : total}
-      </span>
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium">{used}/{total === 999999 ? '∞' : total}</span>
     </div>
-    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
       <div 
-        className="h-full bg-dream-purple" 
-        style={{ 
-          width: `${total === 999999 
-            ? 100 
-            : Math.min(100, (used / total) * 100)}%` 
-        }}
+        className="h-full bg-primary rounded-full transition-all" 
+        style={{ width: `${total === 999999 ? 100 : Math.min(100, (used / total) * 100)}%` }}
       />
     </div>
   </div>
 );
 
-// Component for no subscription
+// No subscription - plan selection
 interface NoSubscriptionProps {
   products: Product[];
   productsLoading: boolean;
@@ -443,25 +330,22 @@ interface NoSubscriptionProps {
   loading: boolean;
 }
 
-const NoSubscription = ({ 
-  products, 
-  productsLoading, 
-  handleSubscribe, 
-  loading 
-}: NoSubscriptionProps) => (
-  <div className="space-y-6 overflow-y-auto">
-    <div className="text-center pb-4">
-      <XCircle className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-      <h3 className="text-lg font-medium">No Active Subscription</h3>
-      <p className="text-sm text-muted-foreground">
-        Subscribe to access premium dream analysis and image generation features.
+const NoSubscription = ({ products, productsLoading, handleSubscribe, loading }: NoSubscriptionProps) => (
+  <div className="space-y-5">
+    <div className="text-center pb-1">
+      <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-3">
+        <Crown className="h-6 w-6 text-primary" />
+      </div>
+      <h3 className="text-lg font-semibold">Unlock Premium</h3>
+      <p className="text-sm text-muted-foreground mt-1">
+        Dream analysis & image generation at your fingertips
       </p>
     </div>
     
-    <div className="grid gap-4 md:grid-cols-2">
+    <div className="grid gap-3">
       {productsLoading ? (
-        <div className="col-span-2 flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-dream-purple" />
+        <div className="flex justify-center py-8">
+          <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
         </div>
       ) : (
         products.map((product) => (
@@ -477,7 +361,7 @@ const NoSubscription = ({
   </div>
 );
 
-// Product card component with updated monthly display
+// Product card
 interface ProductCardProps {
   product: Product;
   handleSubscribe: (priceId: string) => Promise<void>;
@@ -486,15 +370,13 @@ interface ProductCardProps {
 
 const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) => {
   const [localLoading, setLocalLoading] = React.useState(false);
-  const [localError, setLocalError] = React.useState<string | null>(null);
+  const isPremium = product.name.toLowerCase().includes("premium") || product.name.toLowerCase().includes("mystic");
 
   const onSubscribeClick = async () => {
-    setLocalError(null);
     setLocalLoading(true);
     try {
       await handleSubscribe(product.id);
-    } catch (err: any) {
-      setLocalError(err?.message || "Unable to start subscription.");
+    } catch (err) {
       console.error("Subscription error", err);
     } finally {
       setLocalLoading(false);
@@ -503,44 +385,50 @@ const ProductCard = ({ product, handleSubscribe, loading }: ProductCardProps) =>
 
   return (
     <div 
-      className={`border rounded-lg p-4 space-y-4 ${
-        product.name.toLowerCase().includes("premium") ? "border-dream-purple relative overflow-hidden" : ""
+      className={`relative overflow-hidden rounded-xl border p-4 space-y-3 transition-all ${
+        isPremium ? 'border-primary/40 bg-primary/5' : 'border-border/50 bg-card/50'
       }`}
     >
-      {product.name.toLowerCase().includes("premium") && (
-        <div className="absolute top-2 right-2 bg-dream-purple text-white text-xs py-1 px-2 rounded-full">
-          Popular
-        </div>
+      {isPremium && (
+        <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
       )}
-      <h4 className="text-lg font-medium">{product.name}</h4>
-      <p className="text-2xl font-bold">{product.price}</p>
-      <p className="text-sm text-muted-foreground">Monthly subscription</p>
-      <ul className="space-y-2 text-sm">
+      
+      <div className="relative">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
+            <h4 className="font-semibold">{product.name}</h4>
+          </div>
+          {isPremium && (
+            <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+              Most Popular
+            </span>
+          )}
+        </div>
+        <p className="text-2xl font-bold">{product.price}</p>
+      </div>
+      
+      <ul className="space-y-1.5">
         {product.features.map((feature, index) => (
-          <li key={index} className="flex items-start">
-            <span className="mr-2">•</span>
+          <li key={index} className="flex items-center gap-2 text-sm">
+            <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
             <span>{feature}</span>
           </li>
         ))}
       </ul>
+      
       <Button
-        className={`w-full ${
-          product.name.toLowerCase().includes("premium")
-            ? "bg-dream-purple hover:bg-dream-purple/90"
-            : ""
-        } flex justify-center items-center relative`}
+        className={`w-full ${isPremium ? 'bg-primary hover:bg-primary/90' : ''}`}
+        variant={isPremium ? 'default' : 'outline'}
         onClick={onSubscribeClick}
         disabled={loading || localLoading}
-        style={{ zIndex: 10 }}
       >
-        {(loading || localLoading) && (
-          <span className="absolute left-2 animate-spin w-4 h-4 border-2 border-t-transparent border-white rounded-full" />
+        {(loading || localLoading) ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          'Subscribe'
         )}
-        <span className={loading || localLoading ? "ml-5" : ""}>Subscribe</span>
       </Button>
-      {localError && (
-        <div className="text-red-500 text-xs text-center">{localError}</div>
-      )}
     </div>
   );
 };
