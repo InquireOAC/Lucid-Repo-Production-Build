@@ -157,7 +157,7 @@ const DreamImageGenerator = ({
             className="w-full gap-2"
             variant="aurora">
 
-                <Wand2 className="h-4 w-4" />
+                
                 Generate Image
               </Button> :
           !disabled ?
