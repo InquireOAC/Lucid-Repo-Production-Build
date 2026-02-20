@@ -68,9 +68,12 @@ const NewDream = () => {
     setRecordedAudio(audioBlob);
     const localAudioUrl = URL.createObjectURL(audioBlob);
     setAudioUrl(localAudioUrl);
+  };
+
+  const handleTranscriptionComplete = (text: string) => {
     setFormData((p) => ({
       ...p,
-      content: (p.content + '\n\n🎵 Audio recorded').trim()
+      content: p.content ? (p.content + '\n\n' + text).trim() : text
     }));
   };
 
@@ -199,6 +202,7 @@ const NewDream = () => {
               <div className="luminous-card p-6 rounded-2xl">
                 <VoiceRecorder
                 onRecordingComplete={handleVoiceRecording}
+                onTranscriptionComplete={handleTranscriptionComplete}
                 onClear={() => {
                   setRecordedAudio(null);
                   if (audioUrl && audioUrl.startsWith('blob:')) {

@@ -149,11 +149,12 @@ const DreamEntryForm = ({
     // Create a local URL for immediate playback
     const localAudioUrl = URL.createObjectURL(audioBlob);
     setAudioUrl(localAudioUrl);
-    
-    // Simply update the content to show audio was recorded
+  };
+
+  const handleTranscriptionComplete = (text: string) => {
     setFormData(p => ({
       ...p,
-      content: (p.content + '\n\n🎵 New audio recorded').trim()
+      content: p.content ? (p.content + '\n\n' + text).trim() : text
     }));
   };
 
@@ -369,6 +370,7 @@ const DreamEntryForm = ({
               <div className="bg-gradient-to-br from-primary/5 via-secondary/5 to-primary/10 rounded-xl p-6 border border-primary/10">
                 <VoiceRecorder
                   onRecordingComplete={handleVoiceRecording}
+                  onTranscriptionComplete={handleTranscriptionComplete}
                   onClear={() => {
                     setRecordedAudio(null);
                     if (audioUrl && audioUrl.startsWith('blob:')) {
