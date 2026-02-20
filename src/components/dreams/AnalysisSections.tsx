@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { BookOpen, Sparkles, Heart, MessageCircle, Lightbulb, Brain } from "lucide-react";
 
 const SECTION_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
@@ -92,18 +92,57 @@ interface AnalysisSectionsProps {
 
 export function AnalysisSections({ text, className }: AnalysisSectionsProps) {
   const sections = parseAnalysisSections(text);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const children = Array.from(el.children) as HTMLElement[];
+      if (!children.length) return;
+      const scrollLeft = el.scrollLeft;
+      const gap = 12; // gap-3 = 12px
+      let closest = 0;
+      let minDist = Infinity;
+      children.forEach((child, i) => {
+        const dist = Math.abs(child.offsetLeft - scrollLeft);
+        if (dist < minDist) { minDist = dist; closest = i; }
+      });
+      setActiveIndex(closest);
+    };
+    el.addEventListener("scroll", handleScroll, { passive: true });
+    return () => el.removeEventListener("scroll", handleScroll);
+  }, [sections.length]);
 
   if (!sections.length) return null;
 
   return (
     <div className={`relative ${className ?? ""}`}>
-      <div className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none">
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-none"
+      >
         {sections.map((section, i) => (
           <div key={i} className="snap-start flex-shrink-0 w-[80vw] max-w-[300px]">
             <SectionCard section={section} index={i} />
           </div>
         ))}
       </div>
+      {sections.length > 1 && (
+        <div className="flex justify-center gap-1.5 pt-2">
+          {sections.map((_, i) => (
+            <span
+              key={i}
+              className={`inline-block rounded-full transition-all duration-200 ${
+                i === activeIndex
+                  ? "bg-primary w-2 h-2"
+                  : "bg-muted-foreground/30 w-1.5 h-1.5"
+              }`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
