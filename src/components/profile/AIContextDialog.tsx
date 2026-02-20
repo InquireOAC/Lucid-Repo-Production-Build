@@ -20,15 +20,15 @@ import styleSketch from "@/assets/styles/sketch.jpg";
 import styleOilPainting from "@/assets/styles/oil_painting.jpg";
 
 const avatarStyleOptions = [
-  { value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
-  { value: "surreal", label: "Surreal", thumb: styleSurreal },
-  { value: "fantasy", label: "Fantasy", thumb: styleFantasy },
-  { value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
-  { value: "realistic", label: "Realistic", thumb: styleRealistic },
-  { value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
-  { value: "sketch", label: "Sketch", thumb: styleSketch },
-  { value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting },
-];
+{ value: "digital_art", label: "Digital Art", thumb: styleDigitalArt },
+{ value: "surreal", label: "Surreal", thumb: styleSurreal },
+{ value: "fantasy", label: "Fantasy", thumb: styleFantasy },
+{ value: "cyberpunk", label: "Cyberpunk", thumb: styleCyberpunk },
+{ value: "realistic", label: "Realistic", thumb: styleRealistic },
+{ value: "watercolor", label: "Watercolor", thumb: styleWatercolor },
+{ value: "sketch", label: "Sketch", thumb: styleSketch },
+{ value: "oil_painting", label: "Oil Painting", thumb: styleOilPainting }];
+
 
 interface AIContextDialogProps {
   open: boolean;
@@ -63,11 +63,11 @@ const AIContextDialog = ({
 
   const loadAIContext = async () => {
     try {
-      const { data, error } = await supabase
-        .from('ai_context')
-        .select('*')
-        .eq('user_id', user?.id)
-        .maybeSingle();
+      const { data, error } = await supabase.
+      from('ai_context').
+      select('*').
+      eq('user_id', user?.id).
+      maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading AI context:', error);
@@ -78,7 +78,7 @@ const AIContextDialog = ({
         setContextData({
           name: data.name,
           photo_url: data.photo_url,
-          clothing_style: data.clothing_style,
+          clothing_style: data.clothing_style
         });
         setPhotoPreview(data.photo_url || null);
       }
@@ -106,15 +106,15 @@ const AIContextDialog = ({
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
       const filePath = `ai-context-photos/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('dream-images')
-        .upload(filePath, file);
+      const { error: uploadError } = await supabase.storage.
+      from('dream-images').
+      upload(filePath, file);
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('dream-images')
-        .getPublicUrl(filePath);
+      const { data } = supabase.storage.
+      from('dream-images').
+      getPublicUrl(filePath);
 
       return data.publicUrl;
     } catch (error) {
@@ -125,11 +125,11 @@ const AIContextDialog = ({
 
   const generateCharacterAvatar = async (rawPhotoUrl: string): Promise<string | null> => {
     try {
-      const styleLabel = avatarStyleOptions.find(s => s.value === selectedStyle)?.label || "Digital Art";
+      const styleLabel = avatarStyleOptions.find((s) => s.value === selectedStyle)?.label || "Digital Art";
       const prompt = `Create a stylized character portrait of the person in this reference photo in a ${styleLabel} art style. Make it a clean, artistic avatar-style illustration that captures their likeness, facial features, and overall appearance. The style should be suitable for a profile picture.`;
-      
+
       const result = await supabase.functions.invoke("generate-dream-image", {
-        body: { prompt, referenceImageUrl: rawPhotoUrl },
+        body: { prompt, referenceImageUrl: rawPhotoUrl }
       });
 
       if (result.error || !result.data) {
@@ -193,13 +193,13 @@ const AIContextDialog = ({
         updated_at: new Date().toISOString()
       };
 
-      const { error } = await supabase
-        .from('ai_context')
-        .upsert(dataToSave, { onConflict: 'user_id' });
+      const { error } = await supabase.
+      from('ai_context').
+      upsert(dataToSave, { onConflict: 'user_id' });
 
       if (error) throw error;
 
-      setContextData(prev => ({ ...prev, photo_url: photoUrl }));
+      setContextData((prev) => ({ ...prev, photo_url: photoUrl }));
       setPhotoPreview(photoUrl || null);
       setPhotoFile(null);
       setRawPhotoPreview(null);
@@ -243,20 +243,20 @@ const AIContextDialog = ({
           {/* Avatar Preview */}
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
-              {isGenerating ? (
-                <div className="flex flex-col items-center gap-2">
+              {isGenerating ?
+              <div className="flex flex-col items-center gap-2">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
                   <span className="text-xs text-muted-foreground">Generating...</span>
-                </div>
-              ) : avatarDisplay ? (
-                <img
-                  src={avatarDisplay}
-                  alt="Dream Avatar"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <span className="text-muted-foreground text-xs text-center px-2">No avatar yet</span>
-              )}
+                </div> :
+              avatarDisplay ?
+              <img
+                src={avatarDisplay}
+                alt="Dream Avatar"
+                className="w-full h-full object-cover" /> :
+
+
+              <span className="text-muted-foreground text-xs text-center px-2">No avatar yet</span>
+              }
             </div>
           </div>
 
@@ -275,67 +275,67 @@ const AIContextDialog = ({
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  onChange={handlePhotoUpload}
-                />
+                  onChange={handlePhotoUpload} />
+
               </label>
             </div>
-            {rawPhotoPreview && (
-              <div className="mt-3 flex items-center gap-3">
+            {rawPhotoPreview &&
+            <div className="mt-3 flex items-center gap-3">
                 <img
-                  src={rawPhotoPreview}
-                  alt="Reference photo"
-                  className="w-24 h-24 object-cover rounded-lg border border-muted"
-                />
+                src={rawPhotoPreview}
+                alt="Reference photo"
+                className="w-24 h-24 object-cover rounded-lg border border-muted" />
+
                 <Button
-                  onClick={handleGenerateCharacter}
-                  disabled={isGenerating}
-                  variant="luminous"
-                  size="sm"
-                >
-                  {isGenerating ? (
-                    <>
+                onClick={handleGenerateCharacter}
+                disabled={isGenerating}
+                variant="luminous"
+                size="sm" className="text-secondary-foreground">
+
+                  {isGenerating ?
+                <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
-                    </>
-                  ) : (
-                    <>
+                    </> :
+
+                <>
                       <Sparkles className="mr-2 h-4 w-4" />
                       {generatedAvatarUrl ? 'Regenerate' : 'Generate Character'}
                     </>
-                  )}
+                }
                 </Button>
               </div>
-            )}
+            }
           </div>
 
           {/* Visual Style Selector */}
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Avatar Style</p>
             <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
-              {avatarStyleOptions.map((style) => (
-                <button
-                  key={style.value}
-                  onClick={() => setSelectedStyle(style.value)}
-                  className="flex-shrink-0 flex flex-col items-center gap-1.5"
-                >
+              {avatarStyleOptions.map((style) =>
+              <button
+                key={style.value}
+                onClick={() => setSelectedStyle(style.value)}
+                className="flex-shrink-0 flex flex-col items-center gap-1.5">
+
                   <div
-                    className={cn(
-                      "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
-                      selectedStyle === style.value
-                        ? "border-primary ring-2 ring-primary/20"
-                        : "border-border/50 hover:border-primary/30"
-                    )}
-                  >
+                  className={cn(
+                    "w-[72px] h-[72px] rounded-xl border-2 transition-all overflow-hidden",
+                    selectedStyle === style.value ?
+                    "border-primary ring-2 ring-primary/20" :
+                    "border-border/50 hover:border-primary/30"
+                  )}>
+
                     <img src={style.thumb} alt={style.label} className="w-full h-full object-cover" />
                   </div>
                   <span className={cn(
-                    "text-[10px] leading-tight",
-                    selectedStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
-                  )}>
+                  "text-[10px] leading-tight",
+                  selectedStyle === style.value ? "text-primary font-semibold" : "text-muted-foreground"
+                )}>
                     {style.label}
                   </span>
                 </button>
-              ))}
+              )}
             </div>
           </div>
 
@@ -345,9 +345,9 @@ const AIContextDialog = ({
             <Input
               id="name"
               value={contextData.name || ''}
-              onChange={e => setContextData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="How you'd like to be referred to"
-            />
+              onChange={(e) => setContextData((prev) => ({ ...prev, name: e.target.value }))}
+              placeholder="How you'd like to be referred to" />
+
           </div>
 
           {/* Clothing Style */}
@@ -356,9 +356,9 @@ const AIContextDialog = ({
             <Input
               id="clothing_style"
               value={contextData.clothing_style || ''}
-              onChange={e => setContextData(prev => ({ ...prev, clothing_style: e.target.value }))}
-              placeholder="e.g., casual, alternative, streetwear"
-            />
+              onChange={(e) => setContextData((prev) => ({ ...prev, clothing_style: e.target.value }))}
+              placeholder="e.g., casual, alternative, streetwear" />
+
           </div>
 
           {/* Actions */}
@@ -367,18 +367,18 @@ const AIContextDialog = ({
               Cancel
             </Button>
             <Button onClick={handleSave} disabled={isLoading || isGenerating}>
-              {isLoading ? (
-                <>
+              {isLoading ?
+              <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
-                </>
-              ) : 'Save Avatar'}
+                </> :
+              'Save Avatar'}
             </Button>
           </div>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>);
+
 };
 
 export default AIContextDialog;
