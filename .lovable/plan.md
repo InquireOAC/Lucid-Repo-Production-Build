@@ -1,98 +1,109 @@
 
-# Cinematic Dream Image Generation Upgrade
+# Dream Analysis — Professional Insight Upgrade
 
 ## The Problem
-The current pipeline generates good images but falls short of truly cinematic quality because:
 
-1. **The base prompt is too thin** — the `analyze-dream` edge function generates a max 35-word prompt. This is far too sparse to convey a cinematic scene with proper composition, lighting, atmosphere, and character-world integration.
-2. **The system prompt in `analyze-dream` is generic** — it creates a simple visual description instead of a full cinematic scene brief.
-3. **Style directives are appended as afterthoughts** — they are bolted on after the base prompt instead of being architecturally woven in from the start.
-4. **Character placement is instructed but not architecturally enforced at the prompt level** — the "anti-composite" directive exists in the edge function for photo-realistic styles only, but not for all styles.
-5. **No cinematic framing language** — no camera direction, shot type, focal length, or composition principle is baked into the foundational prompt.
+The current analysis system prompt is a single flat sentence:
 
-## The Upgrade Plan
+> "You are an expert dream analyst. Analyze the dream and provide meaningful insights about its potential psychological significance, symbolism, and what it might reveal about the dreamer's subconscious mind. Keep the analysis concise but insightful."
 
-### Layer 1 — `analyze-dream` Edge Function (Prompt Architecture)
-Completely rewrite the `create_image_prompt` system prompt from:
-> "35-word plain English prompt from dreamer's POV"
+This produces generic, surface-level text that lacks depth, structure, or personalization. The output is also rendered in a plain `Textarea`, making it hard to read and not visually engaging.
 
-To a **Cinematic Scene Brief** that produces a rich, multi-dimensional prompt covering:
-- **Environment** — specific world-building details, time of day, weather, biome
-- **Lighting** — primary source, secondary fill, atmospheric conditions, color temperature
-- **Camera** — shot type (wide establishing, medium, close), angle (eye level, low, bird's-eye), lens feel
-- **Character** — position within the scene, action, emotional state
-- **Atmosphere** — particles, volumetric light, haze, depth layers
-- **Color story** — dominant palette, accent hues, emotional resonance
+## What the Upgrade Delivers
 
-This is the most critical change — better raw material feeds every downstream step.
+A structured, multi-layered professional dream interpretation — formatted in clearly labeled sections with emotional resonance, narrative insight, and actionable guidance. The UI will render this as a beautiful, readable card rather than a raw text box.
 
-### Layer 2 — `promptBuildingUtils.ts` (Cinematic Integration Layer)
-Upgrade the `buildPersonalizedPrompt` function to:
-- Enforce **Unified World Rendering** — character is a native inhabitant of the scene, not a visitor
-- Add **Cinematic Composition Rules** for every code path (with photo OR without photo)
-- Add a **Style-Specific Character Integration** addendum that adapts the character's visual treatment to the chosen art style (e.g., painterly brushstrokes in oil painting style, neon rim light in cyberpunk)
-- Strengthen the anti-composite directive for ALL styles, not just photorealistic ones
-- Add depth cues: foreground, midground (where character lives), background
+---
 
-### Layer 3 — Style Directives Upgrade
-Upgrade each style block in `addImageStyleToPrompt` to include explicit **cinematic composition principles**:
-- **Surreal**: Rule-of-thirds placement, impossible horizon lines, trompe l'oeil depth
-- **Realistic/Hyper-realism**: Cinematic aspect ratio feel, motivated key light, one-stop-under exposure for drama
-- **Fantasy**: Hero shot composition, rising angle, volumetric god-rays framing the character
-- **Cyberpunk**: Dutch angle, low-angle character shot, neon rim lighting as natural world light
-- **All styles**: Each gets a "Composition Directive" block with shot type recommendation
+## Layer 1 — Analysis Prompt Rewrite (`analyze-dream` Edge Function)
 
-### Layer 4 — `generate-dream-image` Edge Function
-Add a **Cinematic Rendering Directive** as a prepended system-level text part that fires before any reference images:
-- Forces the model to think of the image as a **movie frame** first
-- Instructs the model to treat reference images as casting references, not copy-paste sources
-- Ensures the character is rendered **at home** in the world, not visiting it
+Replace the generic one-liner system prompt with a full professional dream analyst framework covering five expert lenses:
+
+| Section | What it covers |
+|---|---|
+| **Core Narrative** | The dream's central story arc and what emotional journey it maps |
+| **Symbols & Archetypes** | Key symbols, their psychological meanings (Jungian/universal), and personal resonance |
+| **Emotional Undercurrents** | The emotional tone and what unresolved feelings or needs it may surface |
+| **Message / Communication** | What the subconscious might be trying to communicate — the "core message" |
+| **Invitation** | A grounded, actionable reflection prompt or practice the dreamer can take into waking life |
+
+The prompt instructs the model to:
+- Write each section in warm, accessible language (not clinical jargon)
+- Use second person ("Your dream suggests...") to feel personal
+- Ground interpretations in widely recognized dream psychology traditions
+- Always acknowledge that dream meaning is personal and context-specific
+- Output a structured response using clear **section headers** so the UI can parse and render them beautifully
+
+The model will be upgraded from `gpt-4o-mini` to `gpt-4o` for analysis tasks only (image prompt generation stays on mini), since deep qualitative reasoning benefits from the stronger model.
+
+---
+
+## Layer 2 — UI Redesign (`DreamAnalysis.tsx`)
+
+Replace the raw `Textarea` with a structured, readable card layout:
+
+- Parse the AI response into labeled sections using a simple header regex
+- Render each section as a styled card block with an icon and title
+- Use the app's existing `glass-card` and `gradient-text` aesthetic
+- Add a collapsible "Full Analysis" expander for long content on mobile
+- Keep the "Regenerate" button but style it more intentionally
+
+Section icons for visual clarity:
+- Core Narrative → `BookOpen`
+- Symbols → `Sparkles`
+- Emotional Undercurrents → `Heart`
+- Message → `MessageCircle`
+- Invitation → `Lightbulb`
+
+---
+
+## Layer 3 — Detail View Enhancement (`DreamDetailContent.tsx`)
+
+The analysis display in the dream detail modal currently renders in a flat muted box with the `PaginatedText` component. Upgrade this to:
+
+- Use the same structured section rendering as the form component
+- Give the analysis section a more prominent visual treatment with the `Brain` icon as a header
+- Remove the generic `bg-muted/40` box and replace with a subtle glass treatment consistent with the rest of the modal
+
+---
 
 ## Files Changed
 
 | File | Change |
-|------|--------|
-| `supabase/functions/analyze-dream/index.ts` | Rewrite the `create_image_prompt` system prompt to produce a cinematic scene brief instead of a 35-word description |
-| `src/utils/promptBuildingUtils.ts` | Upgrade `buildPersonalizedPrompt` with deeper cinematic character-world integration directives + upgrade all style blocks with composition principles |
-| `supabase/functions/generate-dream-image/index.ts` | Add a leading cinematic rendering directive content part that primes the model for movie-frame thinking |
+|---|---|
+| `supabase/functions/analyze-dream/index.ts` | Rewrite the `analyze_dream` system prompt with 5-section professional framework; upgrade to `gpt-4o` for analysis task |
+| `src/components/DreamAnalysis.tsx` | Replace Textarea with structured section-based renderer; add section icons; improved loading state |
+| `src/components/dreams/DreamDetailContent.tsx` | Upgrade the analysis display block to use the same structured renderer component |
 
-## How the Upgraded Pipeline Flows
+A small shared utility component `AnalysisSections.tsx` will be created in `src/components/dreams/` to hold the section parsing and rendering logic, reused by both `DreamAnalysis.tsx` and `DreamDetailContent.tsx`.
 
-```text
-Dream Text (user input)
-        |
-        v
-analyze-dream edge function
-  [NEW] Cinematic Scene Brief system prompt
-  → Outputs: Rich scene description with environment,
-    lighting, camera angle, atmosphere, color story
-        |
-        v
-buildPersonalizedPrompt (client-side)
-  [UPGRADED] Character woven into scene DNA
-  [NEW] Composition Directive
-  [UPGRADED] Style-specific character integration
-  → Outputs: Full cinematic prompt (up to 6000 chars)
-        |
-        v
-generate-dream-image edge function
-  [NEW] Cinematic Rendering Directive prepended
-  Reference images (face, outfit, accessory)
-  [EXISTING] Anti-composite directive (now all styles)
-  Full prompt
-  → Outputs: Cinematic dream image
+---
+
+## Example Output Structure
+
+The AI will return text formatted like:
+
+```
+**Core Narrative**
+Your dream takes you through a journey of...
+
+**Symbols & Archetypes**
+The water that fills the room represents...
+
+**Emotional Undercurrents**
+There is a pervading sense of anxiety beneath...
+
+**Message**
+Your subconscious may be signaling that...
+
+**Invitation**
+Before sleep tonight, consider writing about...
 ```
 
-## What the Output Will Look Like
+The UI parser splits on `**Section Title**` markers and renders each as a distinct visual block — so even if the model varies its exact formatting slightly, the component degrades gracefully to showing the full text.
 
-Before: Character appears composited into a generic scene
-After: Character is a native of the dream world — same light, same atmosphere, same physics. The image reads as a single unified movie frame from an alternate world.
+---
 
-Key improvements visible in output:
-- Characters cast natural shadows matching the environment's light direction
-- Atmospheric haze or particles affect both character and world equally
-- Camera angle is intentional and cinematically motivated
-- Each style has its own compositional "voice" — fantasy uses hero shots, cyberpunk uses low-angle dutch angles, surreal uses impossible perspectives
-- Color temperature is unified across the entire frame
+## No Database Changes Required
 
-No new dependencies, no database changes, no UI changes needed. This is a pure quality upgrade to the AI pipeline.
+The `analysis` field on `dream_entries` already stores a text string — the richer structured text from the new prompt will store fine in the same column. Existing analyses are preserved as-is.
