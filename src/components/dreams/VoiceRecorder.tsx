@@ -365,7 +365,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     try {
       const base64 = await blobToBase64(blob);
       const { data, error } = await supabase.functions.invoke('voice-to-text', {
-        body: { audio: base64 },
+        body: { audio: base64, mimeType: blob.type || 'audio/webm' },
       });
 
       if (error) throw error;
