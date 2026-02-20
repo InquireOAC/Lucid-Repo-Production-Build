@@ -144,11 +144,11 @@ const DreamAnalysis = ({
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
-            Dream Analysis
-            {!isFeatureEnabled && <Lock className="h-4 w-4 ml-2 text-muted-foreground" />}
-          </CardTitle>
+          
+
+
+
+
         </CardHeader>
         <CardContent>
           <div className="text-center space-y-4 py-2">
