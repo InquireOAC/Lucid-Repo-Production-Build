@@ -1,24 +1,55 @@
 import { dreamContainsCharacters } from "./characterDetectionUtils";
 
 /**
- * Build personalized prompt based on user's AI context and selected style
+ * Build personalized prompt with visual fingerprint + cinematic integration
  */
 export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imageStyle?: string): string => {
   let personalizedPrompt = basePrompt;
 
   if (aiContext) {
-    const appearanceDetails = [];
+    const hasFingerprint = !!aiContext.visual_fingerprint;
+    const hasPhoto = !!aiContext.photo_url;
 
-    if (aiContext.clothing_style) {
-      appearanceDetails.push(`wearing ${aiContext.clothing_style} style clothing`);
-    }
+    if (hasPhoto && hasFingerprint) {
+      // Full cinematic integration with visual fingerprint
+      personalizedPrompt = `${basePrompt}.
 
-    // If user has a reference photo, inject explicit character-compositing instructions
-    if (aiContext.photo_url) {
-      personalizedPrompt = `${basePrompt}. The reference image provided shows the main character of this dream — compose this character naturally as the dreamer and protagonist of the scene, maintaining their exact appearance and likeness`;
-    } else if (appearanceDetails.length > 0) {
-      const personDescription = `featuring a person with ${appearanceDetails.join(', ')}`;
-      personalizedPrompt = `${basePrompt}. ${personDescription}`;
+CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY):
+- FACE: Exact same facial structure, eye shape, nose, lips, jawline as reference
+- SKIN: Precise tone, texture, markings matching reference exactly
+- HAIR: Exact color, texture, style, length as reference
+- BODY: Same build, proportions as reference
+
+VISUAL FINGERPRINT OF THE DREAMER:
+${aiContext.visual_fingerprint}
+
+${aiContext.clothing_style ? `CLOTHING: The character wears ${aiContext.clothing_style} style clothing.` : ''}
+
+CHARACTER-ENVIRONMENT INTEGRATION (MANDATORY):
+1. FIRST: Generate the complete dream environment as a full 3D space with depth, atmosphere, and lighting
+2. THEN: Place the camera within this space at the appropriate angle
+3. FINALLY: Render the character STANDING INSIDE this 3D space — NOT pasted on top
+
+INTEGRATION CHECKLIST:
+- Lighting: Character lit by the SAME light sources as the environment (sun, moon, fire, neon, etc.)
+- Atmosphere: Any haze, fog, particles, or volumetric effects affect BOTH the character AND the scene equally
+- Grounding: Feet interact with the ground surface naturally — cast realistic shadows that match environment lighting direction
+- Depth: Character has correct atmospheric perspective (slight haze at distance, sharp detail up close)
+- Single pass: Generate character + environment together in one unified composition — NEVER composite separately
+
+FAILURE INDICATORS (avoid these):
+- Cut-out edges around the character
+- Mismatched lighting direction between character and background
+- Character appears "floating" above the ground
+- Different color temperature on character vs environment
+- Sharp character edges against soft/blurry background`;
+
+    } else if (hasPhoto) {
+      // Photo but no fingerprint yet — basic reference
+      personalizedPrompt = `${basePrompt}. The reference image provided shows the main character of this dream — compose this character naturally as the dreamer and protagonist of the scene, maintaining their exact appearance and likeness.${aiContext.clothing_style ? ` The character wears ${aiContext.clothing_style} style clothing.` : ''}`;
+
+    } else if (aiContext.clothing_style) {
+      personalizedPrompt = `${basePrompt}. Featuring a person wearing ${aiContext.clothing_style} style clothing`;
     }
   }
 
@@ -63,11 +94,30 @@ export const cleanPromptForNonPersonalized = (prompt: string, dreamContent: stri
  */
 const addImageStyleToPrompt = (prompt: string, imageStyle?: string): string => {
   if (imageStyle === 'realistic') {
-    return `${prompt}. Render as a photorealistic photograph: ultra high resolution, shot on DSLR camera, 8K detail, natural cinematic lighting, sharp focus, no painterly or artistic effects, hyperrealistic`;
+    return `${prompt}.
+
+PHOTOREALISM REQUIREMENTS:
+- Render as a photorealistic photograph: ultra high resolution, 8K detail
+- Camera: Shot on cinema camera (ARRI Alexa or RED) with prime lens (50mm-85mm), natural shallow depth of field, subtle bokeh
+- Skin: Visible pores, subsurface scattering, micro-wrinkles, natural skin imperfections — NO airbrushing or smoothing
+- Lighting: Motivated light sources with natural falloff, soft shadow edges, correct color temperature
+- Materials: Authentic fabric weave, leather grain, metal reflections — every material must look physically correct
+- Atmosphere: Natural lens flare, subtle chromatic aberration, film-like color grading
+- NO painterly, artistic, or stylized effects whatsoever — pure photographic realism`;
   }
   
   if (imageStyle === 'hyper_realism') {
-    return `${prompt}. Render as an extreme hyperrealistic photograph: 8K ultra-high resolution, shot on a professional DSLR with 85mm prime lens, perfect exposure, razor-sharp detail, photographic realism indistinguishable from a real photograph, studio-quality natural lighting`;
+    return `${prompt}.
+
+EXTREME HYPERREALISM REQUIREMENTS:
+- Render as an extreme hyperrealistic photograph indistinguishable from reality
+- Camera: Professional DSLR with 85mm f/1.4 prime lens, perfect exposure, razor-sharp detail at 8K
+- Skin: Individual pores visible, subsurface scattering showing blood flow beneath skin, micro-wrinkles, tiny hairs, natural oil sheen
+- Eyes: Visible iris fibers, catchlights reflecting environment, wet surface reflection on cornea
+- Lighting: Studio-quality motivated sources, physically accurate shadow falloff, correct inverse-square law behavior
+- Materials: Thread-level fabric detail, leather pore texture, accurate specular highlights on every surface
+- Environment: Atmospheric depth, dust motes in light beams, correct aerial perspective
+- Post-processing: Cinema-grade color science, subtle film grain, natural vignetting`;
   }
 
   if (imageStyle && imageStyle !== 'surreal') {

@@ -7,7 +7,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const MAX_PROMPT_LENGTH = 2000
+const MAX_PROMPT_LENGTH = 6000
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -70,10 +70,8 @@ serve(async (req) => {
           const base64Data = btoa(binary)
           const contentType = imgResponse.headers.get('content-type') || 'image/jpeg'
           
-          if (isPhotoRealistic) {
-            // For photorealistic: label it explicitly as a character reference FIRST
-            parts.push({ text: '[CHARACTER REFERENCE] The person shown in the following image is the main character to compose into this dream scene. Maintain their exact facial features, likeness, and appearance.' })
-          }
+          // Always label the reference image explicitly
+          parts.push({ text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment from this image — those come from the dream scene description below.' })
           
           parts.push({
             inline_data: {
@@ -82,6 +80,11 @@ serve(async (req) => {
             }
           })
           console.log("Reference image added to request, size:", imgBytes.length)
+
+          // For photorealistic styles, add anti-composite instructions as a separate text part
+          if (isPhotoRealistic) {
+            parts.push({ text: `[ANTI-COMPOSITE DIRECTIVE] You MUST generate the environment and character in a SINGLE unified pass. Do NOT generate them separately. The character must be LIT by the same light sources as the environment. Shadows must fall in the same direction. Atmospheric effects (fog, haze, particles) must affect BOTH the character and the environment equally. The character must have correct contact shadows where they touch surfaces. FAILURE INDICATORS to avoid: cut-out edges, mismatched lighting, floating appearance, different color temperatures between character and background.` })
+          }
         } else {
           console.warn("Failed to fetch reference image:", imgResponse.status)
         }
@@ -90,7 +93,7 @@ serve(async (req) => {
       }
     }
 
-    // Add the prompt text after the reference image
+    // Add the prompt text after the reference image and directives
     parts.push({ text: prompt })
 
     const response = await fetch(

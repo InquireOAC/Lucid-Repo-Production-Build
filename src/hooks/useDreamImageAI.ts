@@ -22,6 +22,7 @@ export function useDreamImageAI() {
 
     if (userId && useAIContext) {
       const aiContext = await getUserAIContext(userId);
+      // aiContext now includes visual_fingerprint from the query
       return buildPersonalizedPrompt(basePrompt, aiContext, imageStyle);
     }
 

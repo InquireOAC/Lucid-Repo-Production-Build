@@ -1,0 +1,1 @@
+ALTER TABLE public.ai_context ADD COLUMN IF NOT EXISTS visual_fingerprint text;
