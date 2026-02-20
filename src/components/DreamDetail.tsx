@@ -164,9 +164,9 @@ const DreamDetail = ({
                     color={avatarColor}
                     avatarUrl={avatarUrl}
                     fallbackLetter={displayName[0]?.toUpperCase() || "?"}
-                    size={40}
+                    size={60}
                   />
-                  <span className="text-sm font-medium text-muted-foreground">@{username || "anon"}</span>
+                  <span className="text-base font-medium text-muted-foreground">@{username || "anon"}</span>
                 </button>
                 <div>
                   <h2 className="text-lg font-bold text-foreground leading-snug">{dream.title}</h2>
