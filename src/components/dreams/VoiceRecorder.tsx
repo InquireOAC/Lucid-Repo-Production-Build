@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Square, Play, Pause, Trash2, Upload, Radio, Circle, StopCircle } from 'lucide-react';
+import { Mic, Square, Play, Pause, Trash2, Upload, Radio, Circle, StopCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface VoiceRecorderProps {
   onRecordingComplete: (audioBlob: Blob) => void;
+  onTranscriptionComplete?: (text: string) => void;
   onClear?: () => void;
   disabled?: boolean;
   className?: string;
@@ -13,6 +15,7 @@ interface VoiceRecorderProps {
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onRecordingComplete,
+  onTranscriptionComplete,
   onClear,
   disabled = false,
   className,
@@ -23,6 +26,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [recordingTime, setRecordingTime] = useState(0);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -84,6 +88,11 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
 
         // Send the audio blob to parent for processing
         onRecordingComplete(blob);
+
+        // Auto-transcribe the recording
+        if (onTranscriptionComplete) {
+          transcribeAudio(blob);
+        }
       };
 
       mediaRecorder.start(100); // Collect data every 100ms
@@ -328,8 +337,21 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         </div>
       )}
 
+      {/* Transcribing State */}
+      {isTranscribing && (
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 text-primary">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span className="text-sm font-medium">Transcribing your dream...</span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Converting speech to text using AI
+          </p>
+        </div>
+      )}
+
       {/* Instructions */}
-      {!hasRecording && recordingState === 'idle' && (
+      {!hasRecording && recordingState === 'idle' && !isTranscribing && (
         <div className="text-center text-sm text-muted-foreground">
           <p>Tap the red circle to start recording your dream</p>
           <p>Your voice will be automatically transcribed</p>
@@ -337,4 +359,44 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       )}
     </div>
   );
+
+  async function transcribeAudio(blob: Blob) {
+    setIsTranscribing(true);
+    try {
+      const base64 = await blobToBase64(blob);
+      const { data, error } = await supabase.functions.invoke('voice-to-text', {
+        body: { audio: base64 },
+      });
+
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Transcription failed');
+
+      const text = data.text?.trim();
+      if (text) {
+        onTranscriptionComplete?.(text);
+        toast.success('Transcription complete');
+      } else {
+        toast.error('No speech detected in recording');
+      }
+    } catch (err: any) {
+      console.error('Transcription error:', err);
+      toast.error('Failed to transcribe audio: ' + (err.message || 'Unknown error'));
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
 };
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      // Remove the data:audio/...;base64, prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
