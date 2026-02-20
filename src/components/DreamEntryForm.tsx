@@ -450,16 +450,37 @@ const DreamEntryForm = ({
             </div>
           )}
           
-          <div className="flex items-center gap-3">
-            <Label className="text-sm shrink-0">Date</Label>
-            <Input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="dream-input w-fit max-w-40 h-9 text-sm"
-              required
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Date</Label>
+              <Input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                className="dream-input h-9 text-sm"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Mood</Label>
+              <Select
+                name="mood"
+                value={formData.mood}
+                onValueChange={(v) =>
+                  setFormData((p) => ({ ...p, mood: v }))
+                }
+              >
+                <SelectTrigger className="dream-input h-9 text-sm">
+                  <SelectValue placeholder="Select Mood" />
+                </SelectTrigger>
+                <SelectContent>
+                  {["Happy", "Sad", "Neutral", "Anxious", "Angry", "Excited", "Relaxed", "Confused"].map((m) => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -537,40 +558,7 @@ const DreamEntryForm = ({
           </div>
         </div>
 
-        {/* Mood Dropdown */}
-        <div className="space-y-2">
-          <Label>Mood</Label>
-          <Select
-            name="mood"
-            value={formData.mood}
-            onValueChange={(v) =>
-              setFormData((p) => ({
-                ...p,
-                mood: v,
-              }))
-            }
-          >
-            <SelectTrigger className="dream-input">
-              <SelectValue placeholder="Select Mood" />
-            </SelectTrigger>
-            <SelectContent>
-              {[
-                "Happy",
-                "Sad",
-                "Neutral",
-                "Anxious",
-                "Angry",
-                "Excited",
-                "Relaxed",
-                "Confused",
-              ].map((m) => (
-                <SelectItem key={m} value={m}>
-                  {m}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+
 
         {/* Analysis & Image */}
         <div className="space-y-8">
