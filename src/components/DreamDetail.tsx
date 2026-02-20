@@ -36,7 +36,7 @@ const DreamDetail = ({
   isAuthenticated,
   onLike
 }: DreamDetailProps) => {
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
@@ -142,7 +142,9 @@ const DreamDetail = ({
         <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden glass-card border-white/10">
           {/* User avatar and name */}
           {(() => {
-            const profile = (dream as any).profiles || {};
+            const dreamProfile = (dream as any).profiles || {};
+            // Use auth profile for own dreams, fall back to dream.profiles for others
+            const profile = isOwner && authProfile ? authProfile : dreamProfile;
             const username = profile.username;
             const displayName = profile.display_name || username || "Anonymous";
             const avatarSymbol = profile.avatar_symbol;

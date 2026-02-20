@@ -92,21 +92,42 @@ const Journal = () => {
   };
   
   const handleDreamDetailUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    if (selectedDream) {
-      const dreamPayload = {
-        title: updates.title ?? selectedDream.title,
-        content: updates.content ?? selectedDream.content,
-        tags: updates.tags ?? selectedDream.tags ?? [],
-        lucid: typeof updates.lucid === 'boolean' ? updates.lucid : selectedDream.lucid,
-        mood: updates.mood ?? selectedDream.mood ?? "Neutral",
-        analysis: updates.analysis ?? selectedDream.analysis,
-        generatedImage: updates.generatedImage ?? selectedDream.generatedImage,
-        imagePrompt: updates.imagePrompt ?? selectedDream.imagePrompt,
-        audioUrl: updates.audio_url ?? updates.audioUrl ?? selectedDream.audio_url ?? selectedDream.audioUrl,
-      };
-      console.log('Dream detail update with audio:', dreamPayload.audioUrl);
-      handleEditDream(dreamPayload, id);
+    if (!selectedDream) return;
+    
+    // Skip DB call for comment-count-only updates (just update local state)
+    const isCommentCountOnly = Object.keys(updates).every(k => 
+      k === 'comment_count' || k === 'commentCount'
+    );
+    if (isCommentCountOnly) return;
+
+    // Only pass actually changed fields
+    const dreamPayload: Record<string, any> = {};
+    if (updates.title !== undefined) dreamPayload.title = updates.title;
+    if (updates.content !== undefined) dreamPayload.content = updates.content;
+    if (updates.tags !== undefined) dreamPayload.tags = updates.tags;
+    if (updates.lucid !== undefined) dreamPayload.lucid = updates.lucid;
+    if (updates.mood !== undefined) dreamPayload.mood = updates.mood;
+    if (updates.analysis !== undefined) dreamPayload.analysis = updates.analysis;
+    if (updates.generatedImage !== undefined) dreamPayload.generatedImage = updates.generatedImage;
+    if (updates.imagePrompt !== undefined) dreamPayload.imagePrompt = updates.imagePrompt;
+    if (updates.is_public !== undefined || updates.isPublic !== undefined) {
+      dreamPayload.is_public = updates.is_public ?? updates.isPublic;
     }
+    if (updates.audio_url !== undefined || updates.audioUrl !== undefined) {
+      dreamPayload.audioUrl = updates.audio_url ?? updates.audioUrl;
+    }
+
+    if (Object.keys(dreamPayload).length === 0) return;
+
+    // Fill required fields for handleEditDream
+    handleEditDream({
+      title: dreamPayload.title ?? selectedDream.title,
+      content: dreamPayload.content ?? selectedDream.content,
+      tags: dreamPayload.tags ?? selectedDream.tags ?? [],
+      lucid: dreamPayload.lucid ?? selectedDream.lucid,
+      mood: dreamPayload.mood ?? selectedDream.mood ?? "Neutral",
+      ...dreamPayload,
+    }, id);
   };
 
   return (
