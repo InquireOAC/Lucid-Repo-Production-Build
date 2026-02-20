@@ -11,7 +11,7 @@ import { useProfileDialogStates } from "./ProfileDialogStates";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import { useDirectConversation } from "@/hooks/useDirectConversation";
-import { useConversations } from "@/hooks/useConversations";
+
 
 // helper to extract uuid safely
 function extractProfileUuid(profileObj: any): string | undefined {
@@ -76,10 +76,10 @@ const ProfileContent = () => {
     handleUpdateSocialLinks,
     handleStartConversation,
     handleSignOut,
+    fetchConversations,
   } = useProfileData(user, profile, effectiveIdentifier);
 
-  // Get conversations fetch function from useConversations hook
-  const { fetchConversations } = useConversations(user);
+  // UUID of the viewed profile for conversation handling
 
   // Get the UUID of the viewed profile for conversation handling
   const viewedProfileUuid = extractProfileUuid(viewedProfile);
@@ -160,11 +160,11 @@ const ProfileContent = () => {
 
   // Refresh subscription data when subscription dialog opens
   const [subscriptionDialogOpen, setSubscriptionDialogOpen] = useState(false);
-  const { subscription: currentSubscription, isLoading: subscriptionLoading, fetchSubscription: refreshSubscription } = useSubscription(user);
+  const { subscription: currentSubscription, isLoading: subscriptionLoading, fetchSubscription: refreshSubscriptionDialog } = useSubscription(user);
   const handleSubscriptionDialogOpen = (open: boolean) => {
     setSubscriptionDialogOpen(open);
     if (open && user) {
-      refreshSubscription();
+      refreshSubscriptionDialog();
     }
   };
 

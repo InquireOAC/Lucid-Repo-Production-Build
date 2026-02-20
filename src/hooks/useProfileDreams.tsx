@@ -10,7 +10,7 @@ export function useProfileDreams(user: any, userId?: string) {
 
   const fetchPublicDreams = async () => {
     const targetUserId = userId || user?.id;
-    if (!targetUserId) return;
+    if (!targetUserId || !/^[0-9a-fA-F-]{36}$/.test(targetUserId)) return;
     setIsLoading(true);
 
     try {
@@ -49,6 +49,7 @@ export function useProfileDreams(user: any, userId?: string) {
 
     try {
       const targetUserId = userId || user.id;
+      if (!/^[0-9a-fA-F-]{36}$/.test(targetUserId)) return;
 
       // Get liked dream IDs
       const { data: likedData, error: likedError } = await supabase

@@ -21,7 +21,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
   // Fix: always use the UUID of the fetched profile for follow
   const [profileIdToUse, setProfileIdToUse] = useState<string | undefined>(undefined);
 
-  const { dreamCount, followersCount, followingCount, setFollowersCount, setFollowingCount, fetchUserStats } = useProfileStats(user, profileIdentifier);
+  const { dreamCount, followersCount, followingCount, setFollowersCount, setFollowingCount, fetchUserStats } = useProfileStats(user, profileIdToUse);
 
   const {
     isFollowing,
@@ -45,7 +45,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     socialLinks, setSocialLinks,
     handleUpdateProfile, handleUpdateSocialLinks
   } = useProfileEditing(user);
-  const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdentifier);
+  const { publicDreams, likedDreams, fetchPublicDreams, fetchLikedDreams } = useProfileDreams(user, profileIdToUse);
   const { subscription, fetchSubscription, refreshSubscription } = useSubscription(user);
   const { conversations, fetchConversations, handleStartConversation } = useConversations(user);
   
@@ -53,8 +53,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     // Now supports profileIdentifier which could be username or id
     if (profileIdentifier && profileIdentifier !== user?.id && profileIdentifier !== profile?.username) {
       setIsOwnProfile(false);
-      fetchUserProfile(profileIdentifier); // Will set profileIdToUse after fetch
-      // No longer runs checkIfFollowing here, do it after viewedProfile fetch
+      fetchUserProfile(profileIdentifier);
       return;
     } else {
       setIsOwnProfile(true);
@@ -74,19 +73,22 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
             website: profile.social_links?.website || ""
           });
         }
-      }
-    }
-
-    if (user) {
-      fetchUserStats();
-      fetchPublicDreams();
-      fetchLikedDreams();
-
-      if (isOwnProfile) {
-        fetchConversations();
+        // Set profileIdToUse for own profile
+        setProfileIdToUse(profile.id);
       }
     }
   }, [user, profile, profileIdentifier]);
+
+  // Fetch data when profileIdToUse is resolved (either own or viewed profile)
+  useEffect(() => {
+    if (!user || !profileIdToUse) return;
+    fetchUserStats();
+    fetchPublicDreams();
+    fetchLikedDreams();
+    if (isOwnProfile) {
+      fetchConversations();
+    }
+  }, [user, profileIdToUse]);
   
   // When viewedProfile updates, set profileIdToUse
   useEffect(() => {
@@ -168,6 +170,7 @@ export const useProfileData = (user: any, profile: any, profileIdentifier?: stri
     handleUpdateProfile,
     handleUpdateSocialLinks,
     handleStartConversation,
-    handleSignOut
+    handleSignOut,
+    fetchConversations
   };
 };
