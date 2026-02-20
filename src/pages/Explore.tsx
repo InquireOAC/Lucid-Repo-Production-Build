@@ -42,7 +42,6 @@ const Explore: React.FC = () => {
     <div className="min-h-screen pt-safe-top">
       <div className="p-4 pb-2">
         <div className="flex items-center gap-2">
-          <Compass className="w-5 h-5 text-primary" />
           <h1 className="text-xl font-bold text-foreground">Explore</h1>
         </div>
         <p className="text-xs text-muted-foreground mt-1 ml-7">Discover techniques and deepen your practice</p>
@@ -65,7 +64,6 @@ const Explore: React.FC = () => {
         {/* Techniques grouped by difficulty */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
-            <Wand2 className="w-4 h-4 text-primary" />
             <h2 className="text-base font-semibold text-foreground">Techniques</h2>
           </div>
           {grouped.map(({ level, items }) => {
