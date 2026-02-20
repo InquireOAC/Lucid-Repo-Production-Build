@@ -71,20 +71,38 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const waitForDomImages = (): Promise<void> => {
     return new Promise((resolve) => {
       const check = (attempts: number) => {
-        if (!previewCardRef.current || attempts > 50) {
+        if (!previewCardRef.current || attempts > 80) {
           resolve();
           return;
         }
         const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
-        const allReady = imgs.every(img => img.complete && img.naturalWidth > 0);
+        const allReady = imgs.length > 0 && imgs.every(img => img.complete && img.naturalWidth > 0);
         if (allReady) {
-          resolve();
+          // Extra settle time for rendering pipeline
+          setTimeout(() => resolve(), 500);
         } else {
           setTimeout(() => check(attempts + 1), 100);
         }
       };
       check(0);
     });
+  };
+
+  // Convert image to data URL to avoid CORS issues with html-to-image
+  const preloadImageAsDataUrl = async (src: string): Promise<string | null> => {
+    try {
+      const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+      const blob = await response.blob();
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      console.warn("Failed to preload image as data URL:", src);
+      return null;
+    }
   };
 
   const handleSaveCard = async () => {
@@ -95,7 +113,20 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     try {
       console.log("Starting save process...");
       
-      // Wait for all DOM images to be fully rendered
+      // Convert all images to data URLs inline to avoid CORS/fetch issues in html-to-image
+      if (previewCardRef.current) {
+        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
+        for (const img of imgs) {
+          if (img.src && !img.src.startsWith('data:')) {
+            const dataUrl = await preloadImageAsDataUrl(img.src);
+            if (dataUrl) {
+              img.src = dataUrl;
+            }
+          }
+        }
+      }
+      
+      // Wait for all DOM images to be fully rendered after data URL conversion
       await waitForDomImages();
       
       const dataUrl = await elementToPngBase64(previewCardRef.current);
@@ -286,7 +317,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                       <div style={{
                         width: '100%',
                         height: '100%',
-                        maxHeight: '200px',
+                        maxHeight: '280px',
                         overflow: 'hidden',
                         borderRadius: '12px',
                         position: 'relative',
