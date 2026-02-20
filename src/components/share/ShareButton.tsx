@@ -28,6 +28,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
   const previewCardRef = useRef<HTMLDivElement>(null);
 
@@ -51,9 +52,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 
     setIsSharing(true);
     setImageLoaded(false);
+    setLogoLoaded(false);
     
     try {
-      // Show the dialog immediately
       setShowShareDialog(true);
       toast.success("Share card generated!");
     } catch (error) {
@@ -64,25 +65,25 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     }
   };
 
-  const waitForImageLoad = (): Promise<void> => {
-    return new Promise((resolve) => {
-      if (!normalizedDream.generatedImage) {
-        resolve();
-        return;
-      }
+  // Check if all images are ready for capture
+  const allImagesReady = (!normalizedDream.generatedImage || imageLoaded) && logoLoaded;
 
-      const img = new Image();
-      img.onload = () => {
-        console.log("Preview image loaded successfully");
-        setImageLoaded(true);
-        resolve();
+  const waitForDomImages = (): Promise<void> => {
+    return new Promise((resolve) => {
+      const check = (attempts: number) => {
+        if (!previewCardRef.current || attempts > 50) {
+          resolve();
+          return;
+        }
+        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
+        const allReady = imgs.every(img => img.complete && img.naturalWidth > 0);
+        if (allReady) {
+          resolve();
+        } else {
+          setTimeout(() => check(attempts + 1), 100);
+        }
       };
-      img.onerror = () => {
-        console.log("Preview image failed to load");
-        setImageLoaded(true);
-        resolve();
-      };
-      img.src = normalizedDream.generatedImage;
+      check(0);
     });
   };
 
@@ -92,17 +93,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     setIsSaving(true);
     
     try {
-      console.log("Starting save process for mobile...");
+      console.log("Starting save process...");
       
-      // Wait for image to load before generating PNG
-      if (!imageLoaded) {
-        console.log("Waiting for image to load...");
-        await waitForImageLoad();
-        // Give a bit more time for the image to render in the DOM
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
+      // Wait for all DOM images to be fully rendered
+      await waitForDomImages();
       
-      // Generate PNG from the preview card
       const dataUrl = await elementToPngBase64(previewCardRef.current);
       if (!dataUrl) {
         throw new Error("Failed to generate image");
@@ -282,13 +277,15 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   </div>
                 )}
                 
-                {/* Footer with logo - increased by 25px */}
+                {/* Footer with logo */}
                 <div className="flex justify-center items-center mt-auto">
                   <img
                     src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
                     alt="Lucid Repo Logo"
                     className="object-contain"
                     style={{ height: '49px', width: 'auto' }}
+                    onLoad={() => setLogoLoaded(true)}
+                    onError={() => setLogoLoaded(true)}
                   />
                 </div>
               </div>
@@ -297,11 +294,11 @@ const ShareButton: React.FC<ShareButtonProps> = ({
             {/* Save button */}
             <Button 
               onClick={handleSaveCard}
-              disabled={isSaving}
+              disabled={isSaving || !allImagesReady}
               className="w-full flex items-center justify-center gap-2"
             >
               <Save size={18} />
-              <span>{isSaving ? "Saving..." : "Save"}</span>
+              <span>{isSaving ? "Saving..." : !allImagesReady ? "Loading image..." : "Save"}</span>
             </Button>
           </div>
         </DialogContent>
