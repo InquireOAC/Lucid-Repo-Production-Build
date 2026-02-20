@@ -64,18 +64,17 @@ const DreamDetailContent = ({
 
   return (
     <div className="space-y-4 mt-2">
-      {/* Date with Flag Button */}
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-muted-foreground">{formattedDate}</div>
-        {showFlagButton && dreamId && contentOwnerId && (
+      {/* Flag Button */}
+      {showFlagButton && dreamId && contentOwnerId && (
+        <div className="flex justify-end">
           <FlagButton
             contentType="dream"
             contentId={dreamId}
             contentOwnerId={contentOwnerId}
             size="sm"
           />
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Content */}
       <div className="text-sm whitespace-pre-wrap">{content}</div>

@@ -139,41 +139,42 @@ const DreamDetail = ({
   return (
     <>
       <Dialog open onOpenChange={onClose}>
-        <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden glass-card border-white/10">
-          {/* User avatar and name */}
+        <DialogContent className="w-[95vw] max-w-[420px] mx-auto max-h-[90vh] overflow-y-auto overflow-x-hidden glass-card border-white/10 pt-5">
+          {/* Polished header: avatar, username, title, date */}
           {(() => {
             const dreamProfile = (dream as any).profiles || {};
-            // Use auth profile for own dreams, fall back to dream.profiles for others
             const profile = isOwner && authProfile ? authProfile : dreamProfile;
             const username = profile.username;
             const displayName = profile.display_name || username || "Anonymous";
             const avatarSymbol = profile.avatar_symbol;
             const avatarColor = profile.avatar_color;
             return (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClose();
-                  if (username) {
-                    navigate(`/profile/${username}`);
-                  }
-                }}
-                className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-2"
-              >
-                <SymbolAvatar
-                  symbol={avatarSymbol}
-                  color={avatarColor}
-                  fallbackLetter={displayName[0]?.toUpperCase() || "?"}
-                  size={40}
-                />
-                <span className="text-base font-semibold text-foreground/80">@{username || "anon"}</span>
-              </button>
+              <div className="flex flex-col gap-3 mb-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClose();
+                    if (username) navigate(`/profile/${username}`);
+                  }}
+                  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity w-fit"
+                >
+                  <SymbolAvatar
+                    symbol={avatarSymbol}
+                    color={avatarColor}
+                    fallbackLetter={displayName[0]?.toUpperCase() || "?"}
+                    size={32}
+                  />
+                  <span className="text-sm font-medium text-muted-foreground">@{username || "anon"}</span>
+                </button>
+                <div>
+                  <h2 className="text-lg font-bold text-foreground leading-snug">{dream.title}</h2>
+                  {formattedDate && (
+                    <p className="text-xs text-muted-foreground mt-1">{formattedDate}</p>
+                  )}
+                </div>
+              </div>
             );
           })()}
-
-          <DialogHeader>
-            <DialogTitle className="text-xl gradient-text pr-8 break-words">{dream.title}</DialogTitle>
-          </DialogHeader>
 
           <div className="w-full overflow-hidden">
             <DreamDetailContent
