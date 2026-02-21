@@ -5,7 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
 const VALID_TASKS = ['analyze_dream', 'generate_image_prompt', 'create_image_prompt']
@@ -19,7 +19,7 @@ serve(async (req) => {
   try {
     // Verify authentication
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
+    if (!authHeader?.startsWith('Bearer ')) {
       throw new Error('Missing authorization header')
     }
 
@@ -29,10 +29,13 @@ serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } }
     )
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
+    const token = authHeader.replace('Bearer ', '')
+    const { data, error: authError } = await supabase.auth.getClaims(token)
+    if (authError || !data?.claims) {
       throw new Error('Unauthorized')
     }
+
+    const userId = data.claims.sub
 
     const { dreamContent, task = 'analyze_dream' } = await req.json()
 
@@ -49,7 +52,7 @@ serve(async (req) => {
       throw new Error('Invalid task type')
     }
 
-    console.log(`Processing ${task} for user ${user.id}, content length: ${dreamContent.length}`)
+    console.log(`Processing ${task} for user ${userId}, content length: ${dreamContent.length}`)
     
     // Set system prompt based on the requested task
     const systemPrompt = (task === 'create_image_prompt' || task === 'generate_image_prompt')
