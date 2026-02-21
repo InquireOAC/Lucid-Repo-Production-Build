@@ -268,8 +268,14 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center cosmic-background pt-safe-top px-4 pl-safe-left pr-safe-right">
-      <div className="w-full max-w-md glass-card rounded-2xl border border-white/10 p-6">
+    <div className="min-h-screen flex items-center justify-center cosmic-background pt-safe-top px-4 pl-safe-left pr-safe-right overflow-hidden">
+      {/* Animated aurora orbs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[hsla(270,70%,50%,0.08)] blur-[120px] animate-pulse" />
+        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-[hsla(220,80%,60%,0.06)] blur-[100px] animate-pulse [animation-delay:2s]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-[hsla(280,60%,45%,0.05)] blur-[150px] animate-pulse [animation-delay:4s]" />
+      </div>
+      <div className="relative z-10 w-full max-w-md glass-card rounded-2xl border border-white/10 p-6 backdrop-blur-xl">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-white">Lucid Repo</h1>
           <p className="text-sm text-muted-foreground mt-1">Your dream journal awaits</p>
