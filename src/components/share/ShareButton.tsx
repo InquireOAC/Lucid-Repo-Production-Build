@@ -116,7 +116,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       console.log("Starting save process...");
 
       // Small settle delay for DOM to be fully painted with base64 srcs
-      await new Promise((r) => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 500));
 
       const dataUrl = await elementToPngBase64(previewCardRef.current);
       if (!dataUrl) {
@@ -261,7 +261,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     borderRadius: '12px',
                     background: 'rgba(139,92,246,0.08)',
                     border: '1px solid rgba(139,92,246,0.15)',
-                    backdropFilter: 'blur(10px)',
+                    
                   }}>
                     <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'rgba(226,232,240,0.85)', textAlign: 'left', fontFamily: "'Lora', serif" }}>
                       {normalizedDream.content.length > 200

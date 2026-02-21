@@ -57,7 +57,7 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
       quality: 0.95,
       pixelRatio,
       backgroundColor: null,
-      cacheBust: true,
+      cacheBust: false,
     });
     
     console.log("High-resolution PNG base64 generated successfully");
