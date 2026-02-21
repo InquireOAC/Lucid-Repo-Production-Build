@@ -1,109 +1,52 @@
 
-# Dream Analysis — Professional Insight Upgrade
 
-## The Problem
+# Fix: Share Card Images Missing on Mobile
 
-The current analysis system prompt is a single flat sentence:
+## Root Cause
 
-> "You are an expert dream analyst. Analyze the dream and provide meaningful insights about its potential psychological significance, symbolism, and what it might reveal about the dreamer's subconscious mind. Keep the analysis concise but insightful."
+The share card preview contains two images — the dream visualization and the footer logo. When `html-to-image` captures the card, it tries to re-fetch every `<img>` from its `src` URL. On desktop browsers this works, but on mobile (especially iOS WebView / Capacitor) it fails due to:
 
-This produces generic, surface-level text that lacks depth, structure, or personalization. The output is also rendered in a plain `Textarea`, making it hard to read and not visually engaging.
+1. **CORS restrictions** on cross-origin Supabase storage URLs
+2. **Relative path resolution** — the logo at `/lovable-uploads/...` may not resolve inside `html-to-image`'s internal fetch on native platforms
+3. **Timing** — the current `preloadImageAsDataUrl` runs only at save-time, but `html-to-image` may still use stale `src` attributes or race against the DOM update
 
-## What the Upgrade Delivers
+## The Fix
 
-A structured, multi-layered professional dream interpretation — formatted in clearly labeled sections with emotional resonance, narrative insight, and actionable guidance. The UI will render this as a beautiful, readable card rather than a raw text box.
+Convert all images to **base64 data URLs eagerly** when the share dialog opens, not at save time. This way every `<img src>` is already an inline `data:image/...` string and `html-to-image` never needs to fetch anything externally.
 
----
+### Changes to `src/components/share/ShareButton.tsx`
 
-## Layer 1 — Analysis Prompt Rewrite (`analyze-dream` Edge Function)
+1. **Add state for base64 versions** of both the dream image and the logo
+2. **On dialog open** (`handleShareClick`), fetch both images as data URLs using the existing `preloadImageAsDataUrl` helper, and store them in state
+3. **Render the preview card** using these base64 data URLs instead of the original URLs
+4. **Remove the save-time image conversion loop** in `handleSaveCard` (it becomes unnecessary since images are already inline)
+5. **Add a loading state** so the Save button stays disabled until both images are converted to base64
 
-Replace the generic one-liner system prompt with a full professional dream analyst framework covering five expert lenses:
+### Technical Detail
 
-| Section | What it covers |
-|---|---|
-| **Core Narrative** | The dream's central story arc and what emotional journey it maps |
-| **Symbols & Archetypes** | Key symbols, their psychological meanings (Jungian/universal), and personal resonance |
-| **Emotional Undercurrents** | The emotional tone and what unresolved feelings or needs it may surface |
-| **Message / Communication** | What the subconscious might be trying to communicate — the "core message" |
-| **Invitation** | A grounded, actionable reflection prompt or practice the dreamer can take into waking life |
+```text
+Dialog Opens
+  |
+  +-- fetch dream image as data URL --> store in state
+  +-- fetch logo as data URL ----------> store in state
+  |
+  v
+Preview renders with data: URLs in <img src>
+  |
+  v
+Save button enabled (allImagesReady)
+  |
+  v
+html-to-image captures card (no external fetches needed)
+```
 
-The prompt instructs the model to:
-- Write each section in warm, accessible language (not clinical jargon)
-- Use second person ("Your dream suggests...") to feel personal
-- Ground interpretations in widely recognized dream psychology traditions
-- Always acknowledge that dream meaning is personal and context-specific
-- Output a structured response using clear **section headers** so the UI can parse and render them beautifully
+For the logo specifically, we will resolve it to an absolute URL using `window.location.origin` before fetching, to ensure it works on native platforms where relative paths may not resolve.
 
-The model will be upgraded from `gpt-4o-mini` to `gpt-4o` for analysis tasks only (image prompt generation stays on mini), since deep qualitative reasoning benefits from the stronger model.
-
----
-
-## Layer 2 — UI Redesign (`DreamAnalysis.tsx`)
-
-Replace the raw `Textarea` with a structured, readable card layout:
-
-- Parse the AI response into labeled sections using a simple header regex
-- Render each section as a styled card block with an icon and title
-- Use the app's existing `glass-card` and `gradient-text` aesthetic
-- Add a collapsible "Full Analysis" expander for long content on mobile
-- Keep the "Regenerate" button but style it more intentionally
-
-Section icons for visual clarity:
-- Core Narrative → `BookOpen`
-- Symbols → `Sparkles`
-- Emotional Undercurrents → `Heart`
-- Message → `MessageCircle`
-- Invitation → `Lightbulb`
-
----
-
-## Layer 3 — Detail View Enhancement (`DreamDetailContent.tsx`)
-
-The analysis display in the dream detail modal currently renders in a flat muted box with the `PaginatedText` component. Upgrade this to:
-
-- Use the same structured section rendering as the form component
-- Give the analysis section a more prominent visual treatment with the `Brain` icon as a header
-- Remove the generic `bg-muted/40` box and replace with a subtle glass treatment consistent with the rest of the modal
-
----
-
-## Files Changed
+### Files Changed
 
 | File | Change |
 |---|---|
-| `supabase/functions/analyze-dream/index.ts` | Rewrite the `analyze_dream` system prompt with 5-section professional framework; upgrade to `gpt-4o` for analysis task |
-| `src/components/DreamAnalysis.tsx` | Replace Textarea with structured section-based renderer; add section icons; improved loading state |
-| `src/components/dreams/DreamDetailContent.tsx` | Upgrade the analysis display block to use the same structured renderer component |
+| `src/components/share/ShareButton.tsx` | Add eager base64 preloading on dialog open; render with data URLs; remove save-time conversion loop |
 
-A small shared utility component `AnalysisSections.tsx` will be created in `src/components/dreams/` to hold the section parsing and rendering logic, reused by both `DreamAnalysis.tsx` and `DreamDetailContent.tsx`.
+No other files need changes.
 
----
-
-## Example Output Structure
-
-The AI will return text formatted like:
-
-```
-**Core Narrative**
-Your dream takes you through a journey of...
-
-**Symbols & Archetypes**
-The water that fills the room represents...
-
-**Emotional Undercurrents**
-There is a pervading sense of anxiety beneath...
-
-**Message**
-Your subconscious may be signaling that...
-
-**Invitation**
-Before sleep tonight, consider writing about...
-```
-
-The UI parser splits on `**Section Title**` markers and renders each as a distinct visual block — so even if the model varies its exact formatting slightly, the component degrades gracefully to showing the full text.
-
----
-
-## No Database Changes Required
-
-The `analysis` field on `dream_entries` already stores a text string — the richer structured text from the new prompt will store fine in the same column. Existing analyses are preserved as-is.
