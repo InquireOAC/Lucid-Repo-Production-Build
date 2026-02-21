@@ -118,9 +118,25 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       // Small settle delay for DOM to be fully painted with base64 srcs
       await new Promise((r) => setTimeout(r, 500));
 
-      const dataUrl = await elementToPngBase64(previewCardRef.current);
+      // Temporarily unclip dialog overflow so html2canvas sees full element
+      const dialogContent = previewCardRef.current.closest('[class*="DialogContent"], [role="dialog"]') as HTMLElement | null;
+      const originalOverflow = dialogContent?.style.overflow;
+      if (dialogContent) {
+        dialogContent.style.overflow = 'visible';
+      }
+
+      let dataUrl: string | null = null;
+      try {
+        dataUrl = await elementToPngBase64(previewCardRef.current);
+      } finally {
+        // Restore overflow regardless of success/failure
+        if (dialogContent && originalOverflow !== undefined) {
+          dialogContent.style.overflow = originalOverflow;
+        }
+      }
+
       if (!dataUrl) {
-        throw new Error("Failed to generate image");
+        throw new Error("Image capture failed — no data produced");
       }
 
       const base64Data = extractBase64FromDataUrl(dataUrl);
