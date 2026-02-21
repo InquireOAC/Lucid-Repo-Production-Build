@@ -1,30 +1,30 @@
 
 
-# Fix: Use html2canvas on Mobile Instead of html-to-image
+# Fix: Share Card Failing to Save on Mobile
 
 ## Root Cause
 
-`html-to-image` (the `toPng` function) works by embedding the DOM inside an SVG `foreignObject`, then drawing that SVG to a canvas. Mobile Safari has strict size limits on data URLs within SVG foreignObject -- a base64-encoded dream image (often 1-2MB) silently fails to render. The purple gradient you see is actually a **fallback background** that `shareUtils.ts` explicitly sets on image containers (lines 22-28).
+The `html2canvas` call is crashing on mobile due to the complex CSS in the share card (multiple `radial-gradient` background images in the starfield overlay, `box-shadow` with multiple values, etc.). When `html2canvas` throws, the catch block shows "Failed to save share card" -- there is no fallback.
 
-The preview looks correct because the browser renders the base64 `<img>` tags normally. The problem only occurs during the `toPng` capture step.
+Additionally, the card element inside the dialog may be clipped by `overflow-y: auto` on `DialogContent`, which can cause `html2canvas` to produce incomplete or failed output.
 
 ## The Fix
 
-Switch to `html2canvas` for the capture step on mobile. `html2canvas` is already installed in the project and uses a fundamentally different approach -- it parses CSS and draws directly to canvas element-by-element, bypassing the SVG foreignObject limitation entirely.
-
 ### Changes to `src/utils/shareUtils.ts`
 
-1. Import `html2canvas` alongside `toPng`
-2. Detect mobile via user agent (already done)
-3. On mobile: use `html2canvas` to capture the element
-4. On desktop: keep using `toPng` (it produces higher quality output)
-5. Remove the fallback gradient background code (lines 22-28) that overwrites image containers -- this was actively making images disappear
+1. Add a **try-catch with fallback**: try `html2canvas` first on mobile, and if it fails, fall back to `toPng` (which may produce degraded images but at least produces *something*)
+2. Add detailed error logging so we can see what actually fails
+
+### Changes to `src/components/share/ShareButton.tsx`
+
+1. Before capturing, temporarily set `overflow: visible` on the preview card's parent to prevent clipping by the dialog scroll container
+2. After capturing, restore the original overflow
+3. Wrap the entire save flow with better error granularity -- separate "capture failed" from "file write failed" from "share failed"
 
 ### Summary
 
 | File | Change |
 |---|---|
-| `src/utils/shareUtils.ts` | Use `html2canvas` on mobile, keep `toPng` on desktop, remove gradient fallback code |
-
-No other files need changes. The base64 preloading in `ShareButton.tsx` remains as-is and will benefit `html2canvas` too (no cross-origin fetches needed).
+| `src/utils/shareUtils.ts` | Add try/catch fallback: try html2canvas first, fall back to toPng on failure |
+| `src/components/share/ShareButton.tsx` | Temporarily unclip dialog overflow before capture; improve error handling |
 
