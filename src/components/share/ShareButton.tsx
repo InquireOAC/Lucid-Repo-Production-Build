@@ -11,12 +11,30 @@ import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share as CapacitorShare } from "@capacitor/share";
 
+const LOGO_PATH = "/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png";
+
 interface ShareButtonProps {
   dream: DreamEntry;
   variant?: "default" | "outline" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   className?: string;
 }
+
+const preloadImageAsDataUrl = async (src: string): Promise<string | null> => {
+  try {
+    const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
+    const blob = await response.blob();
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = () => resolve(null);
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    console.warn("Failed to preload image as data URL:", src);
+    return null;
+  }
+};
 
 const ShareButton: React.FC<ShareButtonProps> = ({
   dream,
@@ -27,12 +45,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const [isSharing, setIsSharing] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [logoLoaded, setLogoLoaded] = useState(false);
+  const [dreamImageBase64, setDreamImageBase64] = useState<string | null>(null);
+  const [logoBase64, setLogoBase64] = useState<string | null>(null);
+  const [preloading, setPreloading] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
   const previewCardRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced normalization to ensure image is available
   const normalizedDream = {
     ...dream,
     id: dream.id || `dream-${Date.now()}`,
@@ -43,133 +61,94 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     analysis: dream.analysis || "",
     date: dream.date || new Date().toISOString()
   };
-  
-  console.log("Dream in ShareButton:", normalizedDream);
-  console.log("Image URL in ShareButton:", normalizedDream.generatedImage);
 
   const handleShareClick = async () => {
     if (isSharing) return;
-
     setIsSharing(true);
-    setImageLoaded(false);
-    setLogoLoaded(false);
-    
+    setPreloading(true);
+    setDreamImageBase64(null);
+    setLogoBase64(null);
+
     try {
       setShowShareDialog(true);
+
+      // Eagerly preload both images as base64
+      const logoAbsoluteUrl = `${window.location.origin}${LOGO_PATH}`;
+      const promises: Promise<void>[] = [];
+
+      promises.push(
+        preloadImageAsDataUrl(logoAbsoluteUrl).then((data) => {
+          console.log("Logo preloaded:", !!data);
+          setLogoBase64(data);
+        })
+      );
+
+      if (normalizedDream.generatedImage) {
+        promises.push(
+          preloadImageAsDataUrl(normalizedDream.generatedImage).then((data) => {
+            console.log("Dream image preloaded:", !!data);
+            setDreamImageBase64(data);
+          })
+        );
+      }
+
+      await Promise.all(promises);
       toast.success("Share card generated!");
     } catch (error) {
       console.error("Share error:", error);
       toast.error("Failed to generate share card");
     } finally {
       setIsSharing(false);
+      setPreloading(false);
     }
   };
 
-  // Check if all images are ready for capture
-  const allImagesReady = (!normalizedDream.generatedImage || imageLoaded) && logoLoaded;
-
-  const waitForDomImages = (): Promise<void> => {
-    return new Promise((resolve) => {
-      const check = (attempts: number) => {
-        if (!previewCardRef.current || attempts > 80) {
-          resolve();
-          return;
-        }
-        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
-        const allReady = imgs.length > 0 && imgs.every(img => img.complete && img.naturalWidth > 0);
-        if (allReady) {
-          // Extra settle time for rendering pipeline
-          setTimeout(() => resolve(), 500);
-        } else {
-          setTimeout(() => check(attempts + 1), 100);
-        }
-      };
-      check(0);
-    });
-  };
-
-  // Convert image to data URL to avoid CORS issues with html-to-image
-  const preloadImageAsDataUrl = async (src: string): Promise<string | null> => {
-    try {
-      const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
-      const blob = await response.blob();
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result as string);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(blob);
-      });
-    } catch {
-      console.warn("Failed to preload image as data URL:", src);
-      return null;
-    }
-  };
+  // Ready when logo is loaded AND (no dream image OR dream image is loaded)
+  const allImagesReady =
+    !!logoBase64 && (!normalizedDream.generatedImage || !!dreamImageBase64);
 
   const handleSaveCard = async () => {
     if (!previewCardRef.current || isSaving) return;
-    
+
     setIsSaving(true);
-    
+
     try {
       console.log("Starting save process...");
-      
-      // Convert all images to data URLs inline to avoid CORS/fetch issues in html-to-image
-      if (previewCardRef.current) {
-        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
-        for (const img of imgs) {
-          if (img.src && !img.src.startsWith('data:')) {
-            const dataUrl = await preloadImageAsDataUrl(img.src);
-            if (dataUrl) {
-              img.src = dataUrl;
-            }
-          }
-        }
-      }
-      
-      // Wait for all DOM images to be fully rendered after data URL conversion
-      await waitForDomImages();
-      
+
+      // Small settle delay for DOM to be fully painted with base64 srcs
+      await new Promise((r) => setTimeout(r, 300));
+
       const dataUrl = await elementToPngBase64(previewCardRef.current);
       if (!dataUrl) {
         throw new Error("Failed to generate image");
       }
 
-      // Extract base64 and create filename
       const base64Data = extractBase64FromDataUrl(dataUrl);
       const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`;
-      
+
       if (Capacitor.isNativePlatform()) {
-        console.log("Using native sharing capabilities...");
-        
-        // Save file to device filesystem first
         const savedFile = await Filesystem.writeFile({
           path: filename,
           data: base64Data,
           directory: Directory.Cache
         });
-        
-        console.log("File saved to cache:", savedFile.uri);
-        
-        // Use native share sheet to share the image
+
         await CapacitorShare.share({
           title: normalizedDream.title,
           text: `Check out my dream from Lucid Repo: ${normalizedDream.title}`,
           url: savedFile.uri,
           dialogTitle: 'Share Your Dream Card'
         });
-        
+
         toast.success("Share card ready to share!");
       } else {
-        // Fallback for web - download the file
-        console.log("Using web fallback - downloading file");
         const binaryString = atob(base64Data);
         const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
         const blob = new Blob([bytes], { type: 'image/png' });
-        
-        // Create download link
+
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -178,11 +157,10 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        
+
         toast.success("Share card downloaded!");
       }
-      
-      // Close dialog after successful save
+
       setTimeout(() => {
         setShowShareDialog(false);
       }, 500);
@@ -194,42 +172,39 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     }
   };
 
-  // Validate required fields
   if (!normalizedDream.title || !normalizedDream.content) {
     return null;
   }
 
   return (
     <>
-      <Button 
-        onClick={handleShareClick} 
-        variant={variant} 
-        size={size} 
-        disabled={isSharing} 
+      <Button
+        onClick={handleShareClick}
+        variant={variant}
+        size={size}
+        disabled={isSharing}
         className={`flex items-center justify-center gap-2 ${className}`}
       >
         <Share size={18} />
         <span>{isSharing ? "Generating..." : "Share"}</span>
       </Button>
-      
-      {/* Share card preview dialog */}
+
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
         <DialogContent className="max-w-sm max-h-[95vh] overflow-y-auto p-2">
           <DialogHeader className="pb-2">
             <DialogTitle className="text-center">Share Your Dream</DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
-            {/* Full-size preview of the share card */}
-            <div 
+            <div
               ref={previewCardRef}
               className="w-full mx-auto"
               style={{ aspectRatio: '9/16' }}
             >
-              <div 
+              <div
                 className="w-full h-full overflow-hidden"
                 style={{
-                  padding: '20px', 
+                  padding: '20px',
                   display: 'flex',
                   flexDirection: 'column',
                   position: 'relative',
@@ -264,25 +239,22 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 
                 {/* Content layer */}
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  
-                  {/* App Name */}
+
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
                     <span style={{ fontSize: '10px', letterSpacing: '4px', textTransform: 'uppercase', color: 'rgba(139,92,246,0.7)', fontFamily: 'monospace' }}>✦ Dream Journal ✦</span>
                   </div>
-                  
-                  {/* Title & Date */}
+
                   <div style={{ marginBottom: '14px' }}>
                     <h2 style={{ fontSize: '18px', fontWeight: 700, lineHeight: 1.2, color: '#e2e8f0', fontFamily: "'EB Garamond', serif", letterSpacing: '0.5px', textAlign: 'left' }}>
                       {normalizedDream.title}
                     </h2>
                     <p style={{ fontSize: '11px', color: 'rgba(139,92,246,0.6)', marginTop: '6px', textAlign: 'left', fontFamily: 'monospace', letterSpacing: '1px' }}>
-                      {normalizedDream.date 
+                      {normalizedDream.date
                         ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(normalizedDream.date))
                         : "Unknown Date"}
                     </p>
                   </div>
-                  
-                  {/* Dream Story */}
+
                   <div style={{
                     marginBottom: '14px',
                     padding: '14px',
@@ -292,27 +264,26 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     backdropFilter: 'blur(10px)',
                   }}>
                     <p style={{ fontSize: '13px', lineHeight: 1.6, color: 'rgba(226,232,240,0.85)', textAlign: 'left', fontFamily: "'Lora', serif" }}>
-                      {normalizedDream.content.length > 200 
-                        ? normalizedDream.content.substring(0, 200) + "..." 
+                      {normalizedDream.content.length > 200
+                        ? normalizedDream.content.substring(0, 200) + "..."
                         : normalizedDream.content}
                     </p>
                   </div>
-                  
-                  {/* Dream Analysis */}
+
                   {normalizedDream.analysis && (
                     <div style={{ marginBottom: '14px' }}>
                       <div style={{ borderLeft: '2px solid rgba(139,92,246,0.5)', paddingLeft: '10px' }}>
                         <p style={{ fontSize: '11px', fontStyle: 'italic', color: 'rgba(196,181,253,0.8)', textAlign: 'left', lineHeight: 1.5, fontFamily: "'Lora', serif" }}>
-                          {normalizedDream.analysis.length > 120 
-                            ? normalizedDream.analysis.substring(0, 120) + "..." 
+                          {normalizedDream.analysis.length > 120
+                            ? normalizedDream.analysis.substring(0, 120) + "..."
                             : normalizedDream.analysis}
                         </p>
                       </div>
                     </div>
                   )}
-                  
-                  {/* Dream Visualization */}
-                  {normalizedDream.generatedImage && (
+
+                  {/* Dream image — uses preloaded base64 */}
+                  {normalizedDream.generatedImage && dreamImageBase64 && (
                     <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 auto', minHeight: 0 }}>
                       <div style={{
                         width: '100%',
@@ -324,30 +295,20 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                         border: '1px solid rgba(139,92,246,0.25)',
                         boxShadow: '0 0 30px rgba(139,92,246,0.15), 0 0 60px rgba(59,130,246,0.05)',
                       }}>
-                        <img 
-                          src={normalizedDream.generatedImage}
+                        <img
+                          src={dreamImageBase64}
                           alt="Dream Visualization"
-                          style={{ 
+                          style={{
                             width: '100%',
                             height: '100%',
                             objectFit: 'cover',
                             borderRadius: '12px',
                           }}
-                          crossOrigin="anonymous"
-                          onLoad={() => {
-                            console.log("Preview image loaded");
-                            setImageLoaded(true);
-                          }}
-                          onError={(e) => {
-                            console.error("Preview image failed to load:", e);
-                            setImageLoaded(true);
-                          }}
                         />
                       </div>
                     </div>
                   )}
-                  
-                  {/* Separator line */}
+
                   <div style={{
                     height: '1px',
                     flexShrink: 0,
@@ -355,24 +316,23 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     marginBottom: '10px',
                   }} />
 
-                  {/* Footer with logo and app store */}
+                  {/* Footer logo — uses preloaded base64 */}
                   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
-                    <img
-                      src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
-                      alt="Lucid Repo Logo"
-                      style={{ height: '36px', width: 'auto', opacity: 0.9 }}
-                      onLoad={() => setLogoLoaded(true)}
-                      onError={() => setLogoLoaded(true)}
-                    />
+                    {logoBase64 && (
+                      <img
+                        src={logoBase64}
+                        alt="Lucid Repo Logo"
+                        style={{ height: '36px', width: 'auto', opacity: 0.9 }}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
             </div>
-            
-            {/* Save button */}
-            <Button 
+
+            <Button
               onClick={handleSaveCard}
-              disabled={isSaving || !allImagesReady}
+              disabled={isSaving || !allImagesReady || preloading}
               className="w-full flex items-center justify-center gap-2"
             >
               <Save size={18} />
@@ -381,8 +341,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           </div>
         </DialogContent>
       </Dialog>
-      
-      {/* The hidden share card component for fallback */}
+
       <DreamShareCard ref={shareCardRef} dream={normalizedDream} />
     </>
   );
