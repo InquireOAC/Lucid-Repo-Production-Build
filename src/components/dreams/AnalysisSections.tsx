@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { BookOpen, Sparkles, Heart, MessageCircle, Lightbulb, Brain } from "lucide-react";
+import { BookOpen, Sparkles, Heart, MessageCircle, Lightbulb } from "lucide-react";
 
 const SECTION_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
   "Core Narrative": { icon: BookOpen, color: "text-blue-400" },
@@ -9,7 +9,6 @@ const SECTION_CONFIG: Record<string, { icon: React.ElementType; color: string }>
   "Invitation": { icon: Lightbulb, color: "text-emerald-400" },
 };
 
-const FALLBACK_ICON = Brain;
 const FALLBACK_COLOR = "text-muted-foreground";
 
 export interface ParsedSection {
@@ -64,8 +63,7 @@ interface SectionCardProps {
 }
 
 function SectionCard({ section, index }: SectionCardProps) {
-  const config = section.title ? (SECTION_CONFIG[section.title] ?? { icon: FALLBACK_ICON, color: FALLBACK_COLOR }) : { icon: FALLBACK_ICON, color: FALLBACK_COLOR };
-  const Icon = config.icon;
+  const config = section.title ? SECTION_CONFIG[section.title] : undefined;
 
   return (
     <div
@@ -74,7 +72,7 @@ function SectionCard({ section, index }: SectionCardProps) {
     >
       {section.title && (
         <div className="flex items-center gap-2">
-          <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${config.color}`} />
+          {config && (() => { const Icon = config.icon; return <Icon className={`h-3.5 w-3.5 flex-shrink-0 ${config.color}`} />; })()}
           <h4 className="text-xs font-semibold tracking-wide text-foreground">{section.title}</h4>
         </div>
       )}
