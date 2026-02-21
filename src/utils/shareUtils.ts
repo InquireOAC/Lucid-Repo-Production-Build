@@ -1,5 +1,6 @@
 
 import { toPng } from "html-to-image";
+import html2canvas from "html2canvas";
 import { Share } from "@capacitor/share";
 import { Filesystem, Directory, Encoding } from "@capacitor/filesystem";
 import { Capacitor } from "@capacitor/core";
@@ -17,15 +18,6 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
     
     if (images.length > 0) {
       console.log(`Waiting for ${images.length} images to be ready...`);
-      
-      // Set gradient backgrounds on all image containers as fallbacks
-      images.forEach(img => {
-        if (img.alt === 'Lucid Repo Logo') return;
-        if (img.parentElement) {
-          img.parentElement.style.background = 
-            'linear-gradient(to right, #6344A5, #8976BF)';
-        }
-      });
       
       // Poll until all images report complete, max 5 seconds
       const maxWait = 5000;
@@ -47,18 +39,30 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
     
     console.log("Generating PNG base64 from HTML element");
     
-    // Use lower pixel ratio on mobile to avoid canvas memory limits
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const pixelRatio = isMobile ? 2.0 : 4.0;
-    console.log(`Using pixelRatio: ${pixelRatio} (mobile: ${isMobile})`);
+    console.log(`Capture mode: ${isMobile ? 'html2canvas (mobile)' : 'html-to-image (desktop)'}`);
     
-    // Generate PNG base64 using html-to-image
-    const dataUrl = await toPng(element, {
-      quality: 0.95,
-      pixelRatio,
-      backgroundColor: null,
-      cacheBust: false,
-    });
+    let dataUrl: string;
+    
+    if (isMobile) {
+      // html2canvas draws directly to canvas, bypassing SVG foreignObject
+      // size limits that corrupt large base64 images on mobile Safari
+      const canvas = await html2canvas(element, {
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+      });
+      dataUrl = canvas.toDataURL('image/png', 0.95);
+    } else {
+      // html-to-image produces higher quality on desktop
+      dataUrl = await toPng(element, {
+        quality: 0.95,
+        pixelRatio: 4.0,
+        backgroundColor: null,
+        cacheBust: false,
+      });
+    }
     
     console.log("High-resolution PNG base64 generated successfully");
     return dataUrl;
