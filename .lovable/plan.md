@@ -1,33 +1,30 @@
 
 
-# Fix: Share Card Images Still Missing on Mobile
+# Fix: Use html2canvas on Mobile Instead of html-to-image
 
-## Root Cause (the real one this time)
+## Root Cause
 
-The `html-to-image` library's `toPng()` is called with `cacheBust: true`. This option appends a `?timestamp` query parameter to **every** image URL in the cloned DOM -- including the base64 data URLs we carefully preloaded. Appending query params to a `data:image/png;base64,...` string corrupts it, causing images to fail to load during the canvas render.
+`html-to-image` (the `toPng` function) works by embedding the DOM inside an SVG `foreignObject`, then drawing that SVG to a canvas. Mobile Safari has strict size limits on data URLs within SVG foreignObject -- a base64-encoded dream image (often 1-2MB) silently fails to render. The purple gradient you see is actually a **fallback background** that `shareUtils.ts` explicitly sets on image containers (lines 22-28).
 
-Additionally, `backdropFilter: 'blur(10px)'` on the dream content box is not reliably supported by canvas-based rendering on mobile WebKit.
+The preview looks correct because the browser renders the base64 `<img>` tags normally. The problem only occurs during the `toPng` capture step.
 
 ## The Fix
 
-### 1. `src/utils/shareUtils.ts` -- Disable `cacheBust`
+Switch to `html2canvas` for the capture step on mobile. `html2canvas` is already installed in the project and uses a fundamentally different approach -- it parses CSS and draws directly to canvas element-by-element, bypassing the SVG foreignObject limitation entirely.
 
-Change `cacheBust: true` to `cacheBust: false` in the `toPng()` call. Since all images are already inline base64 data URLs, there is nothing to cache-bust. This single change is likely the primary fix.
+### Changes to `src/utils/shareUtils.ts`
 
-Also remove `backdropFilter` workaround: add a `filter` option to `toPng()` that skips problematic nodes if needed.
+1. Import `html2canvas` alongside `toPng`
+2. Detect mobile via user agent (already done)
+3. On mobile: use `html2canvas` to capture the element
+4. On desktop: keep using `toPng` (it produces higher quality output)
+5. Remove the fallback gradient background code (lines 22-28) that overwrites image containers -- this was actively making images disappear
 
-### 2. `src/components/share/ShareButton.tsx` -- Remove `backdropFilter`
-
-Remove the `backdropFilter: 'blur(10px)'` CSS from the dream content box. This property is not reliably rendered by `html-to-image` on mobile and can cause blank areas. The `background: rgba(...)` already provides the visual effect.
-
-### 3. `src/components/share/ShareButton.tsx` -- Increase settle delay
-
-Increase the settle delay from 300ms to 500ms before capturing, to give mobile browsers more time to paint base64 images.
-
-## Summary of Changes
+### Summary
 
 | File | Change |
 |---|---|
-| `src/utils/shareUtils.ts` | Set `cacheBust: false` in `toPng()` options |
-| `src/components/share/ShareButton.tsx` | Remove `backdropFilter` from content box; increase settle delay to 500ms |
+| `src/utils/shareUtils.ts` | Use `html2canvas` on mobile, keep `toPng` on desktop, remove gradient fallback code |
+
+No other files need changes. The base64 preloading in `ShareButton.tsx` remains as-is and will benefit `html2canvas` too (no cross-origin fetches needed).
 
