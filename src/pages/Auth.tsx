@@ -271,7 +271,7 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center cosmic-background pt-safe-top px-4 pl-safe-left pr-safe-right">
       <div className="w-full max-w-md glass-card rounded-2xl border border-white/10 p-6">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold gradient-text">Lucid Repo</h1>
+          <h1 className="text-2xl font-bold text-white">Lucid Repo</h1>
           <p className="text-sm text-muted-foreground mt-1">Your dream journal awaits</p>
         </div>
 
