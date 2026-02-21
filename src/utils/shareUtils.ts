@@ -47,13 +47,27 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
     if (isMobile) {
       // html2canvas draws directly to canvas, bypassing SVG foreignObject
       // size limits that corrupt large base64 images on mobile Safari
-      const canvas = await html2canvas(element, {
-        useCORS: true,
-        scale: 2,
-        backgroundColor: null,
-        logging: false,
-      });
-      dataUrl = canvas.toDataURL('image/png', 0.95);
+      try {
+        console.log("Attempting html2canvas capture on mobile");
+        const canvas = await html2canvas(element, {
+          useCORS: true,
+          scale: 2,
+          backgroundColor: null,
+          logging: false,
+          allowTaint: true,
+        });
+        dataUrl = canvas.toDataURL('image/png', 0.95);
+        console.log("html2canvas capture succeeded");
+      } catch (canvasError) {
+        console.warn("html2canvas failed, falling back to toPng:", canvasError);
+        dataUrl = await toPng(element, {
+          quality: 0.95,
+          pixelRatio: 2.0,
+          backgroundColor: null,
+          cacheBust: false,
+        });
+        console.log("toPng fallback succeeded");
+      }
     } else {
       // html-to-image produces higher quality on desktop
       dataUrl = await toPng(element, {
