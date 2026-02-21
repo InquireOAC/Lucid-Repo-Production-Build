@@ -127,14 +127,14 @@ TONE RULES:
       }),
     })
 
-    const data = await response.json()
+    const result = await response.json()
     
-    if (data.error) {
-      console.error('OpenAI API error:', data.error)
-      throw new Error(data.error.message || 'OpenAI API error')
+    if (result.error) {
+      console.error('OpenAI API error:', result.error)
+      throw new Error(result.error.message || 'OpenAI API error')
     }
     
-    const analysis = data.choices[0].message.content
+    const analysis = result.choices[0].message.content
     console.log(`Successfully generated ${task} result`)
 
     return new Response(
