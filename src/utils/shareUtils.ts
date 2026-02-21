@@ -45,12 +45,17 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
       }
     }
     
-    console.log("Generating high-resolution PNG base64 from HTML element");
+    console.log("Generating PNG base64 from HTML element");
     
-    // Generate PNG base64 using html-to-image with doubled pixel ratio for higher resolution
+    // Use lower pixel ratio on mobile to avoid canvas memory limits
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const pixelRatio = isMobile ? 2.0 : 4.0;
+    console.log(`Using pixelRatio: ${pixelRatio} (mobile: ${isMobile})`);
+    
+    // Generate PNG base64 using html-to-image
     const dataUrl = await toPng(element, {
       quality: 0.95,
-      pixelRatio: 4.0, // Doubled from 2.0 to 4.0 for higher resolution
+      pixelRatio,
       backgroundColor: null,
       cacheBust: true,
     });
