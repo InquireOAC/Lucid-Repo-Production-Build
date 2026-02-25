@@ -1,84 +1,133 @@
 
+# Dream Video Generation: Image-to-Video with Google Veo
 
-# Update Subscription Tiers and Gate Voice-to-Text
+## Overview
 
-## Summary
+Add the ability to generate short animated videos from dream images using Google's Veo model via Vertex AI. Users long-press a dream image to access a context menu with a "Generate Video" option, optionally providing a custom animation prompt. The video auto-plays in dream detail view, while thumbnails remain static images everywhere else (journal, Lucid Repo, profile grids).
 
-Fix the inconsistent image credit limits across the codebase (some places say 10, others 25) and add voice-to-text transcription as a subscription-only feature. Free users can still record audio, but the AI transcription step will be gated.
+## Prerequisites (User Action Required)
 
-## Current State vs. Updated State
+Before implementation, you'll need a Google Cloud project with Vertex AI enabled:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create or select a project
+3. Enable the **Vertex AI API**
+4. Create a **Service Account** with "Vertex AI User" role
+5. Generate a JSON key for the service account
+6. We'll store the key contents as a Supabase secret (`GOOGLE_VERTEX_SA_KEY`)
+7. Note your **Google Cloud Project ID** (stored as `GOOGLE_CLOUD_PROJECT_ID`)
+
+## Database Changes
+
+Add a `video_url` column to the `dream_entries` table to store the generated video URL:
 
 ```text
-+---------------------------+----------+-------------------+-------------------+
-| Feature                   | Free     | Dreamer ($4.99)   | Mystic ($15.99)   |
-+---------------------------+----------+-------------------+-------------------+
-| Dream Analysis            | 1 trial  | Unlimited         | Unlimited         |
-| Dream Image Generation    | 1 trial  | 10/month (FIX)    | Unlimited         |
-| Voice-to-Text (NEW GATE)  | No       | Unlimited         | Unlimited         |
-| Voice Recording (no STT)  | Yes      | Yes               | Yes               |
-| Priority Support          | Yes      | Yes               | Yes               |
-+---------------------------+----------+-------------------+-------------------+
+ALTER TABLE dream_entries ADD COLUMN video_url TEXT DEFAULT NULL;
 ```
 
-## Changes
+A new storage bucket `dream-videos` (public) for storing generated MP4 files.
 
-### 1. Fix Dreamer image credit inconsistencies (standardize to 10)
+## New Edge Function: `generate-dream-video`
 
-Several files currently use 25 for the Dreamer/Basic tier. These all need to be aligned to 10:
+**File: `supabase/functions/generate-dream-video/index.ts`**
 
-**`src/hooks/useSubscription.tsx`**
-- `formatRevenueCatSubscription`: Change `imageTotal = 25` to `imageTotal = 10` for `com.lucidrepo.limited.monthly`
-- `formatSubscriptionData`: Change `imageTotal = 25` to `imageTotal = 10` for the basic RevenueCat price_id
+This function:
+1. Accepts `imageUrl` (the dream image) and an optional `animationPrompt` (user's custom direction)
+2. Authenticates the user and checks subscription (Dreamer/Mystic only)
+3. Calls the Vertex AI Veo API (`predictLongRunning`) with the image + prompt
+4. Polls for completion (Veo is async -- typically takes 30-120 seconds)
+5. Downloads the resulting video, uploads to `dream-videos` bucket
+6. Updates the dream entry's `video_url` column
+7. Returns the public video URL
 
-**`src/lib/stripe.ts`**
-- `checkCreditsForSubscription`: Change the Basic RevenueCat image check from `imageUsed < 25` to `imageUsed < 10`
-- Update the Stripe basic check (already 25 in places) to 10
+```text
+Flow:
+  Client -> Edge Function -> Vertex AI (Veo) -> Poll for result -> Upload to Storage -> Return URL
+```
 
-**`src/hooks/useNativeSubscription.ts`**
-- Change the Basic product features text from `'25 Dream Art Generations'` to `'10 Dream Art Generations'`
+Key API details:
+- Endpoint: `POST https://us-central1-aiplatform.googleapis.com/v1/projects/{PROJECT}/locations/us-central1/publishers/google/models/veo-3.0-generate-preview:predictLongRunning`
+- Auth: Google Service Account JWT token (generated from the SA key)
+- Input: Base64-encoded source image + text prompt
+- Output: Video in GCS, downloaded and re-uploaded to Supabase storage
 
-**`src/utils/subscriptionProductUtils.ts`**
-- Already shows 10 for Dreamer -- no change needed
+## Frontend Changes
 
-**`src/components/profile/StripeSubscriptionManager.tsx`**
-- The fallback products already show 10 -- no change needed
-- The `imageLimit` for non-premium is already `10` -- confirmed correct
+### 1. Long-Press Context Menu on Dream Images
 
-**Database function `check_subscription_credits`**
-- Already returns 10 for `price_basic` image credits -- no change needed
+**Files: `src/components/dreams/DreamDetailContent.tsx`, new component `src/components/dreams/DreamImageContextMenu.tsx`**
 
-### 2. Gate voice-to-text transcription behind subscription
+- Wrap the dream image in the detail view with a long-press handler
+- On long-press (or right-click on desktop), show a context menu with options:
+  - "Generate Video" -- opens the video generation dialog
+  - "Save Image" -- existing save functionality
+  - "Share" -- existing share functionality
+- Only show "Generate Video" for subscribed users (Dreamer/Mystic)
+- Free users see a locked option with "Subscribe to unlock"
 
-**`src/components/dreams/VoiceRecorder.tsx`**
-- Accept new props: `isSubscribed: boolean`
-- When recording stops and `onTranscriptionComplete` is called, check `isSubscribed`
-- If not subscribed, skip the `transcribeAudio()` call and show a toast: "Subscribe to unlock AI voice transcription"
-- Free users can still record and save audio, just no auto-transcription
+### 2. Video Generation Dialog
 
-**`src/components/DreamEntryForm.tsx`** (or wherever VoiceRecorder is rendered)
-- Pass `isSubscribed` prop to VoiceRecorder, derived from `useSubscriptionContext` or `useFeatureUsage`
+**New file: `src/components/dreams/GenerateVideoDialog.tsx`**
 
-### 3. Update feature lists in subscription UIs
+A modal dialog that:
+- Shows a preview of the dream image
+- Has a text input for custom animation prompt (optional, with placeholder like "The scene slowly pans across the dreamscape...")
+- Has a "Generate Video" button
+- Shows a progress state while the video is being generated (with estimated time: ~1-2 minutes)
+- On completion, auto-closes and the video appears in dream detail
 
-**`src/hooks/useNativeSubscription.ts`**
-- Add `'Voice-to-Text Journaling'` to both Basic and Premium feature arrays
+### 3. Video Player in Dream Detail
 
-**`src/utils/subscriptionProductUtils.ts`**
-- Add `'Voice-to-Text Journaling'` to both Mystic and Dreamer feature arrays
+**Modified: `src/components/dreams/DreamDetailContent.tsx`**
 
-**`src/components/profile/StripeSubscriptionManager.tsx`**
-- Add `'Voice-to-Text Journaling'` to the fallback product feature arrays
+- If the dream has a `video_url`, show a video player instead of the static image
+- Use an HTML5 `<video>` element with:
+  - `autoPlay`, `loop`, `muted`, `playsInline` attributes for auto-play behavior
+  - Poster set to the dream image (thumbnail while loading)
+  - Tap to toggle play/pause
+  - The existing double-tap-to-like still works
 
-**`src/components/profile/NativeSubscriptionManager.tsx`**
-- No code changes needed (features come from the products array)
+### 4. Static Thumbnails Everywhere Else
 
-## Files Modified
+**No changes needed** to these components -- they already use `image_url`/`generatedImage` for display:
+- `src/components/dreams/DreamCard.tsx` (journal)
+- `src/components/repos/MasonryDreamGrid.tsx` (Lucid Repo)
+- `src/components/profile/DreamCardItem.tsx` (profile grid)
 
-1. `src/hooks/useSubscription.tsx` -- fix image credits from 25 to 10
-2. `src/lib/stripe.ts` -- fix image credits from 25 to 10
-3. `src/hooks/useNativeSubscription.ts` -- fix features text + add voice-to-text
-4. `src/utils/subscriptionProductUtils.ts` -- add voice-to-text to feature lists
-5. `src/components/profile/StripeSubscriptionManager.tsx` -- add voice-to-text to fallback features
-6. `src/components/dreams/VoiceRecorder.tsx` -- gate transcription behind subscription
-7. `src/components/DreamEntryForm.tsx` -- pass subscription status to VoiceRecorder
+These will continue showing the static dream image as the thumbnail.
 
+### 5. Subscription Gating
+
+Video generation is a premium feature available to Dreamer and Mystic subscribers only:
+- Gate the "Generate Video" option behind subscription check
+- Add "Dream Video Generation" to the feature lists in subscription UI components
+
+## Updated Dream Type
+
+**File: `src/types/dream.ts`**
+
+Add `video_url?: string` to the `DreamEntry` interface.
+
+## File Summary
+
+| File | Action |
+|------|--------|
+| `dream_entries` table | Add `video_url` column (migration) |
+| Storage bucket `dream-videos` | Create (migration) |
+| `supabase/functions/generate-dream-video/index.ts` | New edge function |
+| `supabase/config.toml` | Add function config |
+| `src/types/dream.ts` | Add `video_url` field |
+| `src/components/dreams/DreamImageContextMenu.tsx` | New -- long-press menu |
+| `src/components/dreams/GenerateVideoDialog.tsx` | New -- generation UI |
+| `src/components/dreams/DreamDetailContent.tsx` | Modified -- video player + context menu |
+| `src/utils/subscriptionProductUtils.ts` | Add video feature to lists |
+| `src/components/profile/StripeSubscriptionManager.tsx` | Add video feature to lists |
+| `src/hooks/useNativeSubscription.ts` | Add video feature to lists |
+
+## Technical Considerations
+
+- **Async generation**: Veo takes 30-120 seconds. The edge function will poll internally and return when done. The client shows a loading state.
+- **Video size**: Veo generates ~5-8 second videos. File sizes are typically 2-5MB.
+- **Rate limiting**: Apply the same subscription credit system -- could count as an image generation credit or add a separate `video_generations_used` counter.
+- **Timeout**: Edge functions have a 150-second timeout on Supabase. If Veo takes longer, we may need a webhook/polling pattern where the client polls for status.
+- **Fallback**: If video generation fails, the dream keeps its static image -- no data loss.
