@@ -8,10 +8,12 @@ interface ProfileInfo {
   username?: string | null;
 }
 
-const PAGE_WIDTH = 210;
-const PAGE_HEIGHT = 297;
-const MARGIN = 20;
-const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+// Landscape A4
+const PAGE_WIDTH = 297;
+const PAGE_HEIGHT = 210;
+const HALF_W = PAGE_WIDTH / 2;
+const MARGIN = 14;
+const TEXT_WIDTH = HALF_W - MARGIN * 2;
 
 async function loadImageAsBase64(url: string): Promise<string | null> {
   return new Promise((resolve) => {
@@ -37,55 +39,66 @@ async function loadImageAsBase64(url: string): Promise<string | null> {
   });
 }
 
-function addFooter(doc: jsPDF, pageNum: number, totalPages: number) {
-  doc.setFontSize(9);
-  doc.setTextColor(150, 150, 150);
-  doc.text(`${pageNum} / ${totalPages}`, PAGE_WIDTH / 2, PAGE_HEIGHT - 10, { align: "center" });
+function addPageNumbers(doc: jsPDF, leftNum: number, rightNum: number) {
+  doc.setFontSize(8);
+  doc.setTextColor(180, 180, 180);
+  doc.text(String(leftNum), MARGIN, PAGE_HEIGHT - 8);
+  doc.text(String(rightNum), PAGE_WIDTH - MARGIN, PAGE_HEIGHT - 8, { align: "right" });
+}
+
+function drawSpine(doc: jsPDF) {
+  doc.setDrawColor(200, 195, 210);
+  doc.setLineWidth(0.3);
+  doc.line(HALF_W, 0, HALF_W, PAGE_HEIGHT);
 }
 
 function addCoverPage(doc: jsPDF, profile: ProfileInfo, dreamCount: number, dateRange: string) {
+  // Warm background fill
+  doc.setFillColor(245, 240, 230);
+  doc.rect(0, 0, PAGE_WIDTH, PAGE_HEIGHT, "F");
+
   // Decorative border
   doc.setDrawColor(120, 100, 180);
-  doc.setLineWidth(1.5);
-  doc.roundedRect(12, 12, PAGE_WIDTH - 24, PAGE_HEIGHT - 24, 6, 6);
-  doc.setLineWidth(0.5);
-  doc.roundedRect(15, 15, PAGE_WIDTH - 30, PAGE_HEIGHT - 30, 4, 4);
+  doc.setLineWidth(1.2);
+  doc.roundedRect(10, 10, PAGE_WIDTH - 20, PAGE_HEIGHT - 20, 4, 4);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(13, 13, PAGE_WIDTH - 26, PAGE_HEIGHT - 26, 3, 3);
 
   // Title
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(36);
-  doc.setTextColor(60, 40, 100);
-  doc.text("Dream Journal", PAGE_WIDTH / 2, 100, { align: "center" });
+  doc.setFontSize(40);
+  doc.setTextColor(50, 35, 80);
+  doc.text("Dream Journal", PAGE_WIDTH / 2, 80, { align: "center" });
 
   // Decorative line
   doc.setDrawColor(120, 100, 180);
   doc.setLineWidth(0.8);
-  doc.line(60, 112, PAGE_WIDTH - 60, 112);
+  doc.line(100, 90, PAGE_WIDTH - 100, 90);
 
   // Author
   const authorName = profile.display_name || profile.username || "Dreamer";
   doc.setFont("helvetica", "italic");
-  doc.setFontSize(18);
+  doc.setFontSize(20);
   doc.setTextColor(100, 80, 140);
-  doc.text(authorName, PAGE_WIDTH / 2, 130, { align: "center" });
+  doc.text(authorName, PAGE_WIDTH / 2, 110, { align: "center" });
 
   // Stats
   doc.setFont("helvetica", "normal");
   doc.setFontSize(12);
-  doc.setTextColor(120, 120, 140);
-  doc.text(`${dreamCount} dream${dreamCount !== 1 ? "s" : ""}`, PAGE_WIDTH / 2, 155, { align: "center" });
+  doc.setTextColor(130, 130, 150);
+  doc.text(`${dreamCount} dream${dreamCount !== 1 ? "s" : ""}`, PAGE_WIDTH / 2, 130, { align: "center" });
   if (dateRange) {
-    doc.text(dateRange, PAGE_WIDTH / 2, 165, { align: "center" });
+    doc.text(dateRange, PAGE_WIDTH / 2, 140, { align: "center" });
   }
 
-  // Footer quote
+  // Quote
   doc.setFont("helvetica", "italic");
   doc.setFontSize(10);
   doc.setTextColor(150, 150, 170);
-  doc.text('"Dreams are the royal road to the unconscious."', PAGE_WIDTH / 2, PAGE_HEIGHT - 40, { align: "center" });
+  doc.text('"Dreams are the royal road to the unconscious."', PAGE_WIDTH / 2, PAGE_HEIGHT - 35, { align: "center" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  doc.text("— Sigmund Freud", PAGE_WIDTH / 2, PAGE_HEIGHT - 33, { align: "center" });
+  doc.text("— Sigmund Freud", PAGE_WIDTH / 2, PAGE_HEIGHT - 28, { align: "center" });
 }
 
 export async function exportDreamJournalPdf(
@@ -94,9 +107,7 @@ export async function exportDreamJournalPdf(
   onProgress?: (current: number, total: number) => void
 ): Promise<Blob> {
   const sorted = [...dreams].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const totalPages = sorted.length + 1; // cover + entries
 
-  // Date range
   let dateRange = "";
   if (sorted.length > 0) {
     const earliest = sorted[sorted.length - 1].date;
@@ -106,53 +117,22 @@ export async function exportDreamJournalPdf(
     } catch { /* skip */ }
   }
 
-  const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
 
-  // Cover
+  // Cover page
   addCoverPage(doc, profile, sorted.length, dateRange);
 
-  // Dream entries
+  // Dream spreads
   for (let i = 0; i < sorted.length; i++) {
     const dream = sorted[i];
     onProgress?.(i + 1, sorted.length);
     doc.addPage();
 
-    let y = MARGIN;
+    // Warm paper background for right page
+    doc.setFillColor(248, 244, 237);
+    doc.rect(HALF_W, 0, HALF_W, PAGE_HEIGHT, "F");
 
-    // Title
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(20);
-    doc.setTextColor(40, 30, 70);
-    const titleLines = doc.splitTextToSize(dream.title, CONTENT_WIDTH);
-    doc.text(titleLines, MARGIN, y + 6);
-    y += titleLines.length * 8 + 4;
-
-    // Date & mood
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.setTextColor(120, 120, 140);
-    let meta = "";
-    try { meta = format(new Date(dream.date), "MMMM d, yyyy"); } catch { meta = dream.date; }
-    if (dream.mood) meta += `  •  ${dream.mood}`;
-    if (dream.lucid) meta += "  •  🌟 Lucid";
-    doc.text(meta, MARGIN, y + 4);
-    y += 10;
-
-    // Tags
-    if (dream.tags && dream.tags.length > 0) {
-      doc.setFontSize(9);
-      doc.setTextColor(100, 80, 160);
-      doc.text(dream.tags.map(t => `#${t}`).join("  "), MARGIN, y + 3);
-      y += 8;
-    }
-
-    // Divider
-    doc.setDrawColor(200, 200, 220);
-    doc.setLineWidth(0.3);
-    doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
-    y += 6;
-
-    // Image
+    // Left page: image or decorative placeholder
     const imageUrl = dream.generatedImage || dream.image_url;
     if (imageUrl) {
       const base64 = await loadImageAsBase64(imageUrl);
@@ -160,66 +140,125 @@ export async function exportDreamJournalPdf(
         const img = new Image();
         img.src = base64;
         await new Promise(r => { img.onload = r; img.onerror = r; });
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        let imgW = CONTENT_WIDTH;
-        let imgH = imgW / aspectRatio;
-        const maxImgH = 100;
-        if (imgH > maxImgH) { imgH = maxImgH; imgW = imgH * aspectRatio; }
-        const imgX = MARGIN + (CONTENT_WIDTH - imgW) / 2;
-
-        if (y + imgH > PAGE_HEIGHT - 30) { doc.addPage(); y = MARGIN; }
-        doc.addImage(base64, "JPEG", imgX, y, imgW, imgH);
-        y += imgH + 8;
+        const ar = img.naturalWidth / img.naturalHeight;
+        let imgW = HALF_W;
+        let imgH = imgW / ar;
+        if (imgH < PAGE_HEIGHT) {
+          imgH = PAGE_HEIGHT;
+          imgW = imgH * ar;
+        }
+        const imgX = (HALF_W - imgW) / 2;
+        const imgY = (PAGE_HEIGHT - imgH) / 2;
+        doc.addImage(base64, "JPEG", imgX, imgY, imgW, imgH);
+      } else {
+        drawPlaceholderLeft(doc, dream.title);
       }
+    } else {
+      drawPlaceholderLeft(doc, dream.title);
     }
+
+    // Spine
+    drawSpine(doc);
+
+    // Right page: text content
+    const rightX = HALF_W + MARGIN;
+    let y = MARGIN + 4;
+
+    // Title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.setTextColor(50, 35, 80);
+    const titleLines = doc.splitTextToSize(dream.title, TEXT_WIDTH);
+    doc.text(titleLines, rightX, y + 5);
+    y += titleLines.length * 7 + 4;
+
+    // Date & mood
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(120, 110, 140);
+    let meta = "";
+    try { meta = format(new Date(dream.date), "MMMM d, yyyy"); } catch { meta = dream.date; }
+    if (dream.mood) meta += `  •  ${dream.mood}`;
+    if (dream.lucid) meta += "  •  ✦ Lucid";
+    doc.text(meta, rightX, y + 3);
+    y += 8;
+
+    // Tags
+    if (dream.tags && dream.tags.length > 0) {
+      doc.setFontSize(8);
+      doc.setTextColor(100, 80, 160);
+      doc.setFont("helvetica", "italic");
+      doc.text(dream.tags.map(t => `#${t}`).join("  "), rightX, y + 2);
+      y += 7;
+    }
+
+    // Divider
+    doc.setDrawColor(200, 190, 215);
+    doc.setLineWidth(0.3);
+    doc.line(rightX, y, rightX + TEXT_WIDTH, y);
+    y += 5;
 
     // Content
     if (dream.content) {
-      if (y > PAGE_HEIGHT - 60) { doc.addPage(); y = MARGIN; }
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(50, 50, 60);
-      const contentLines = doc.splitTextToSize(dream.content, CONTENT_WIDTH);
+      doc.setFontSize(10);
+      doc.setTextColor(50, 45, 60);
+      const contentLines = doc.splitTextToSize(dream.content, TEXT_WIDTH);
+      const maxContentY = dream.analysis ? PAGE_HEIGHT - 55 : PAGE_HEIGHT - 20;
       for (const line of contentLines) {
-        if (y > PAGE_HEIGHT - 20) { doc.addPage(); y = MARGIN; }
-        doc.text(line, MARGIN, y);
-        y += 5;
+        if (y > maxContentY) break;
+        doc.text(line, rightX, y);
+        y += 4.5;
       }
-      y += 6;
+      y += 4;
     }
 
     // Analysis
     if (dream.analysis) {
-      if (y > PAGE_HEIGHT - 50) { doc.addPage(); y = MARGIN; }
-      doc.setDrawColor(180, 170, 210);
-      doc.setLineWidth(0.3);
-      doc.line(MARGIN, y, PAGE_WIDTH - MARGIN, y);
-      y += 6;
+      if (y < PAGE_HEIGHT - 40) {
+        doc.setDrawColor(180, 170, 210);
+        doc.setLineWidth(0.3);
+        doc.line(rightX, y, rightX + TEXT_WIDTH, y);
+        y += 5;
 
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.setTextColor(80, 60, 120);
-      doc.text("Dream Analysis", MARGIN, y);
-      y += 7;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(10);
+        doc.setTextColor(80, 60, 120);
+        doc.text("Dream Analysis", rightX, y);
+        y += 6;
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(70, 70, 80);
-      const analysisLines = doc.splitTextToSize(dream.analysis, CONTENT_WIDTH);
-      for (const line of analysisLines) {
-        if (y > PAGE_HEIGHT - 20) { doc.addPage(); y = MARGIN; }
-        doc.text(line, MARGIN, y);
-        y += 4.5;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(70, 65, 80);
+        const analysisLines = doc.splitTextToSize(dream.analysis, TEXT_WIDTH);
+        for (const line of analysisLines) {
+          if (y > PAGE_HEIGHT - 15) break;
+          doc.text(line, rightX, y);
+          y += 4;
+        }
       }
     }
-  }
 
-  // Add page numbers to all pages
-  const pageCount = doc.getNumberOfPages();
-  for (let p = 2; p <= pageCount; p++) {
-    doc.setPage(p);
-    addFooter(doc, p - 1, pageCount - 1);
+    // Page numbers
+    addPageNumbers(doc, i * 2 + 1, i * 2 + 2);
   }
 
   return doc.output("blob");
+}
+
+function drawPlaceholderLeft(doc: jsPDF, title: string) {
+  // Dark gradient-like fill
+  doc.setFillColor(40, 30, 60);
+  doc.rect(0, 0, HALF_W, PAGE_HEIGHT, "F");
+
+  // Lighter overlay shape
+  doc.setFillColor(55, 45, 80);
+  doc.triangle(0, PAGE_HEIGHT, HALF_W, 0, HALF_W, PAGE_HEIGHT, "F");
+
+  // Title overlay
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(22);
+  doc.setTextColor(180, 170, 210);
+  const lines = doc.splitTextToSize(title, HALF_W - 30);
+  doc.text(lines, HALF_W / 2, PAGE_HEIGHT / 2, { align: "center" });
 }
