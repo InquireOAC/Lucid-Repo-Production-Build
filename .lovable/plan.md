@@ -1,73 +1,88 @@
 
 
-# AI-Powered Video Animation Prompts with Image Analysis (Veo 3.0)
+# Admin Unlimited Access + Admin Role Assignment from Dashboard
 
-## Summary
+## Overview
 
-When a user triggers "Generate Video," Gemini 3 Flash Preview will analyze **both** the dream text **and** the dream image (multimodal) to craft an intelligent 4-second cinematic animation prompt. The video generation model is also updated from Veo 2.0 to **Veo 3.0**. The user sees the AI-generated prompt pre-filled and can edit it before generating.
+Two changes:
+1. **Admins get unlimited access to all features** (analysis, image generation, video generation, chat) without needing a subscription -- they are treated as having the highest tier.
+2. **Admins can assign the admin role** (not just moderator) to other users from the Admin Dashboard's User Manager.
 
-## Flow
+## Current State
 
-```text
-User taps "Generate Video"
-  -> Dialog opens, shows "Crafting animation..."
-  -> Edge function receives dream text + image URL
-  -> Gemini 3 Flash analyzes text + image together (multimodal)
-  -> Returns cinematic animation prompt
-  -> Pre-fills textarea (editable)
-  -> User clicks "Generate Video"
-  -> Veo 3.0 generates 4-second video from image + prompt
+- Feature gating currently uses a hardcoded email check (`inquireoac@gmail.com`) scattered across 4 files to bypass subscription checks. This is fragile and only works for one person.
+- The `user_roles` table only has a SELECT RLS policy (users can view their own roles). There is no INSERT policy, so the `UserManager` component's `assignModerator` call only works because it likely runs against an anon key with no RLS enforcement issue -- but assigning admin roles is not implemented in the UI.
+- The `isSubscribed` check in `DreamImageWithVideo` and `DreamDetail` does not account for admin status.
+
+## Database Changes
+
+Add an RLS policy on `user_roles` allowing admins to INSERT new roles:
+
+```sql
+CREATE POLICY "Admins can insert user roles"
+ON public.user_roles
+FOR INSERT
+TO authenticated
+WITH CHECK (public.has_role(auth.uid(), 'admin'));
 ```
 
-## Changes
+Also add a DELETE policy so admins can remove roles:
 
-### 1. New Edge Function: `compose-animation-prompt`
+```sql
+CREATE POLICY "Admins can delete user roles"
+ON public.user_roles
+FOR DELETE
+TO authenticated
+USING (public.has_role(auth.uid(), 'admin'));
+```
 
-**File: `supabase/functions/compose-animation-prompt/index.ts`**
+## Frontend Changes
 
-Uses Lovable AI Gateway with `google/gemini-3-flash-preview` in **multimodal mode** -- sending both the dream narrative text and the dream image as message parts. The system prompt instructs Gemini to:
+### 1. `useUserRole` hook -- already exists, no changes needed
+The hook already fetches the user's role. We'll use `isAdmin` from it.
 
-- Analyze the visual composition, colors, and elements in the image
-- Cross-reference with the dream narrative's emotional arc
-- Produce a 1-2 sentence (max 80 words) animation directive for a 4-second video
-- Focus on subtle camera movements and environmental motion achievable in 4 seconds
-- No scene changes, no complex sequences
+### 2. `useFeatureUsage.ts` -- Replace hardcoded email with admin role check
+- Import and use `useUserRole` (or query `user_roles` table directly to avoid hook dependency issues)
+- Replace all `user.email === "inquireoac@gmail.com"` checks with an `isAdmin` check
+- When `isAdmin` is true: `canUseFeature` returns true, `hasUsedFeature` returns false, `recordFeatureUsage` skips recording
 
-The user message will include both an image part (base64 or URL) and the dream text, leveraging Gemini's native multimodal input.
+### 3. `useImageGeneration.ts` -- Replace hardcoded email with admin check
+- Replace `isAppCreator` email check with admin role check
+- Pass admin status or use the same pattern
 
-### 2. Update `supabase/config.toml`
+### 4. `useChatFeatureAccess.ts` -- Replace hardcoded email with admin check
+- Same pattern: replace email check with admin role
 
-Add entry for the new `compose-animation-prompt` function with `verify_jwt = true`.
+### 5. `DreamAnalysis.tsx` -- Replace hardcoded email with admin check
+- Replace `isAppCreator` email check with admin role
 
-### 3. Update `GenerateVideoDialog.tsx`
+### 6. `DreamDetail.tsx` -- Include admin status in `isSubscribed`
+- Change `const isSubscribed = !!subscription?.subscribed;` to also be true when the user is an admin
+- This ensures admins see "Generate Video" instead of the locked option
 
-- Accept new prop: `dreamContent: string`
-- On dialog open, immediately call `compose-animation-prompt` with `{ dreamContent, imageUrl }`
-- Show loading state: "AI is analyzing your dream..."
-- Pre-fill the textarea with the AI-generated prompt
-- User can edit or accept, then click Generate Video
-- If the AI prompt generation fails, fall back to empty textarea with placeholder
+### 7. `UserManager.tsx` -- Add "Make Admin" button
+- Add a second button or a dropdown/select to assign either "moderator" or "admin" role
+- Show current role badges (admin/moderator) next to users
+- Add ability to query existing roles for search results
 
-### 4. Thread `dreamContent` through components
-
-- **`DreamDetailContent.tsx`**: Already receives `content` prop. Pass it to `DreamImageWithVideo` as `dreamContent`.
-- **`DreamImageWithVideo.tsx`**: Accept `dreamContent` prop, pass it to `GenerateVideoDialog`.
-- **`DreamDetail.tsx`**: Already passes `dream.content` to `DreamDetailContent` -- no change needed.
-
-### 5. Update `generate-dream-video` Edge Function
-
-- Change model from `veo-2.0-generate-001` to `veo-3.0-generate-preview`
-- Remove hardcoded `aspectRatio: "16:9"` to let Veo match the source image's native aspect ratio
-- Keep the same polling and upload logic
+### 8. `DreamImageWithVideo.tsx` -- No changes needed
+Already receives `isSubscribed` as a prop; the fix in `DreamDetail.tsx` covers it.
 
 ## File Summary
 
 | File | Action |
 |------|--------|
-| `supabase/functions/compose-animation-prompt/index.ts` | New -- multimodal Gemini prompt generation |
-| `supabase/config.toml` | Add `compose-animation-prompt` entry |
-| `supabase/functions/generate-dream-video/index.ts` | Update model to Veo 3.0, remove hardcoded aspect ratio |
-| `src/components/dreams/GenerateVideoDialog.tsx` | Add auto-prompt generation on open |
-| `src/components/dreams/DreamImageWithVideo.tsx` | Accept + pass `dreamContent` |
-| `src/components/dreams/DreamDetailContent.tsx` | Pass `content` as `dreamContent` to `DreamImageWithVideo` |
+| `user_roles` RLS policies | Add INSERT and DELETE policies for admins |
+| `src/hooks/useFeatureUsage.ts` | Replace email checks with admin role check |
+| `src/hooks/useImageGeneration.ts` | Replace email check with admin role check |
+| `src/hooks/useChatFeatureAccess.ts` | Replace email check with admin role check |
+| `src/components/DreamAnalysis.tsx` | Replace email check with admin role check |
+| `src/components/DreamDetail.tsx` | Include admin in isSubscribed logic |
+| `src/components/admin/UserManager.tsx` | Add admin role assignment + role display |
+
+## Security Notes
+
+- Admin role assignment is protected server-side by the new RLS policy (`has_role(auth.uid(), 'admin')`)
+- The admin bypass is validated against the `user_roles` database table, not client-side storage or hardcoded credentials
+- The hardcoded email bypass will be fully removed
 
