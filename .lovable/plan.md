@@ -1,64 +1,116 @@
 
 
-# Redesign Dream Entry Modal & Analyze Dream Card
+# Redesign Explore Page -- Premium Informational Vault
 
 ## Overview
 
-Remove the remaining purple styling from the dream entry dialog/page and redesign the "Analyze Dream" card to feel more premium and engaging -- replacing the plain Card with a glass-card style that uses the blue primary scheme.
+Transform the Explore page from a simple technique browser into a premium "Knowledge Vault" for meditation and lucid dreaming -- featuring curated video content, links to peer-reviewed research studies, and a polished vault-glass aesthetic. The user search stays but everything else is rebuilt around two knowledge domains: **Lucid Dreaming** and **Meditation**.
 
-## Changes
+## New Page Structure
 
-### 1. `src/components/DreamAnalysis.tsx` -- Premium Analyze Card
+```text
++---------------------------------------+
+|  Explore              [Search users]  |
+|  Your knowledge vault                 |
++---------------------------------------+
+|  [Lucid Dreaming] [Meditation] (tabs) |
++---------------------------------------+
+|                                       |
+|  --- Featured Video ---               |
+|  [ Large thumbnail card w/ play ]     |
+|                                       |
+|  --- More Videos ---                  |
+|  [ thumb ] [ thumb ] (horiz scroll)   |
+|                                       |
+|  --- Research & Studies ---           |
+|  [ Study card with journal, year,   ] |
+|  [   title, key finding, link icon  ] |
+|  [ Study card ...                   ] |
+|                                       |
+|  --- Techniques ---                   |
+|  [ existing technique cards scroll ]  |
+|                                       |
+|  --- Daily Insight ---                |
+|  [ tip banner ]                       |
+|                                       |
++---------------------------------------+
+```
 
-Replace the plain `<Card>` wrapper with a styled glass-card container. Make the initial state (no analysis yet) more visually engaging with a subtle gradient background and a prominent CTA button.
+## New Files
 
-**Initial state (no analysis):**
-- Replace `<Card>` + `<CardContent>` with a `div` using `glass-card rounded-2xl p-6 border border-primary/10`
-- Add a subtle animated gradient background overlay
-- Replace the gradient button classes `from-dream-purple to-dream-lavender` with `variant="aurora"` (which already uses the blue scheme)
-- Add a small icon + tagline above the button for visual interest (e.g., sparkles icon with "Unlock deeper meaning")
+### 1. `src/data/vaultContent.ts` -- Static curated content
 
-**Loading state:**
-- Replace `text-dream-purple` on spinner/brain icons with `text-primary`
-- Use the same glass-card container
+Contains all the curated data for both tabs:
 
-**Analysis result state:**
-- Remove `<Card>`, `<CardHeader>`, `<CardTitle>` wrappers -- just render the `AnalysisSections` carousel directly with a small regenerate button above it
-- Replace `text-dream-purple` on Brain icon with `text-primary`
+- **Videos**: Array of objects with `title`, `thumbnailUrl`, `youtubeUrl`, `duration`, `author`, `category` ("lucid-dreaming" | "meditation")
+- **Research studies**: Array of objects with `title`, `journal`, `year`, `authors`, `keyFinding`, `doi` (link to the paper), `category`
+- **Daily insights**: Separate tip arrays per category
 
-**Subscribe state:**
-- Replace `border-dream-purple text-dream-purple hover:bg-dream-purple` with `border-primary text-primary hover:bg-primary`
+Includes ~6-8 curated YouTube videos per category (real, well-known lucid dreaming and meditation channels) and ~5-6 real peer-reviewed studies per category (e.g., LaBerge's work, Voss et al., Stumbrys et al. for lucid dreaming; mindfulness/meditation meta-analyses).
 
-### 2. `src/components/DreamEntryForm.tsx` -- Clean up purple references
+### 2. `src/components/explore/FeaturedVideoCard.tsx`
 
-- Line 591: Replace `from-dream-purple to-dream-lavender` on the Save button with `variant="aurora"` (remove className gradient)
-- This is the save button at the bottom of the form
+A large glass-card with:
+- Full-width thumbnail (aspect-ratio 16/9) with rounded corners
+- Play icon overlay with hover animation
+- Title, author, duration badge
+- Opens YouTube link in new tab on click
+- Uses `vault-glass` styling with subtle glow on hover
 
-### 3. `src/pages/NewDream.tsx` -- Clean up Analyze Dream section
+### 3. `src/components/explore/VideoThumbnailCard.tsx`
 
-- The "featured-card" wrapper around "Analyze Dream" section (lines 241-260) -- remove the `<h3>Analyze Dream</h3>` header since DreamAnalysis now has its own premium styling
-- Simplify to just render `<DreamAnalysis>` and `<DreamImageGenerator>` directly in a `space-y-4` container without the extra featured-card wrapping
+Compact horizontal-scroll card:
+- Small thumbnail (w-[200px], aspect 16/9)
+- Title (line-clamp-2), author, duration
+- Opens YouTube link on click
 
-### 4. `src/components/journal/AddDreamDialog.tsx` -- Modal polish
+### 4. `src/components/explore/ResearchStudyCard.tsx`
 
-- Change the `DialogContent` class from `glass-card border-white/10` to include `max-h-[90vh] overflow-hidden flex flex-col` for proper scrolling
-- Add an inner scrollable wrapper like EditDreamDialog already has
+Glass-card for each study:
+- Journal name + year as a subtle badge
+- Study title (bold)
+- Key finding summary (1-2 lines, muted text)
+- External link icon that opens the DOI/URL
+- Left border accent using `border-l-2 border-primary/40`
 
----
+### 5. `src/components/explore/VaultTabContent.tsx`
 
-## Files Modified
+Renders the content for one tab (lucid dreaming or meditation):
+- Featured video section
+- Horizontal video scroll row
+- Research studies list
+- Techniques grid (filtered by relevance to the category)
+- Daily insight banner
 
-| File | What Changes |
-|---|---|
-| `src/components/DreamAnalysis.tsx` | Replace Card components with glass-card divs, swap all `dream-purple`/`dream-lavender` with `primary`/`variant="aurora"`, add engaging initial state with icon |
-| `src/components/DreamEntryForm.tsx` | Save button: replace gradient classes with `variant="aurora"` |
-| `src/pages/NewDream.tsx` | Remove the "Analyze Dream" header wrapper, simplify section layout |
-| `src/components/journal/AddDreamDialog.tsx` | Add scroll support and polish dialog container |
+## Modified Files
 
-## What Stays the Same
+### 6. `src/pages/Explore.tsx` -- Full rewrite
 
-- All functional logic (analysis generation, subscription checks, feature usage)
-- AnalysisSections carousel component unchanged
-- DreamImageGenerator unchanged
-- Voice recording, tags, metadata sections unchanged
+- Keep the user search bar and `UserSearchResults` component
+- Add a tab switcher (two glass-style buttons: "Lucid Dreaming" / "Meditation") using simple `useState`
+- Render `VaultTabContent` for the active tab
+- Update page header: "Explore" with subtitle "Your knowledge vault"
+- Remove the old static `meditations` array and `dailyTips` -- replaced by data in `vaultContent.ts`
+- Keep importing `techniques` for the technique cards section
+
+### 7. `src/components/explore/TechniqueGridCard.tsx` -- No changes
+
+Stays as-is; reused inside VaultTabContent.
+
+## Visual Design Details
+
+- All cards use `glass-card` or `vault-glass` classes already defined in the project
+- Section headers are clean text-only (no icons per the existing pattern)
+- Video thumbnails have a dark overlay + centered `PlayCircle` icon on hover
+- Research cards have a subtle `border-l-2 border-primary/40` accent
+- Tab buttons use `bg-primary/15 text-primary` when active, `bg-card/60 text-muted-foreground` when inactive
+- The featured video card gets a subtle `vault-card-lift` hover effect
+
+## Technical Notes
+
+- All video links open externally (`window.open(url, '_blank')`) -- no embedded players needed
+- Research DOI links similarly open externally
+- Content is fully static (hardcoded in `vaultContent.ts`) -- no database tables or edge functions needed
+- The existing technique data is filtered by a simple mapping: techniques with indices 0-5 show under "Lucid Dreaming", meditation-related ones (index 7) under "Meditation"
+- Tabs use a simple `useState<"lucid-dreaming" | "meditation">` -- no routing changes needed
 
