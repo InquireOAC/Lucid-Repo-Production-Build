@@ -123,11 +123,6 @@ const DreamImageGenerator = ({
             <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
               <Download className="h-4 w-4 mr-1" /> Save
             </Button>
-            {!disabled &&
-          <Button variant="outline" size="sm" onClick={generateImage} disabled={isGenerating}>
-                <Wand2 className="h-4 w-4 mr-1" /> Regenerate
-              </Button>
-          }
           </div>
           {imageError &&
         <p className="text-xs text-destructive text-center">
@@ -174,13 +169,14 @@ const DreamImageGenerator = ({
         </div>)
       }
 
-      {/* Prompt input when image exists */}
-      {generatedImage && !isGenerating &&
+      {/* Prompt Input - always visible when not disabled */}
+      {!disabled && !isGenerating &&
       <ImagePromptInput
         imagePrompt={imagePrompt}
         onChange={setImagePrompt}
-        disabled={disabled || isGenerating} />
-
+        disabled={disabled || isGenerating}
+        onRegenerate={generateImage}
+        isGenerating={isGenerating} />
       }
 
       {/* Use Avatar Toggle */}
