@@ -226,25 +226,32 @@ Deno.serve(async (req) => {
       throw new Error("Video generation timed out after 5 minutes");
     }
 
-    // Extract video data from response
-    const generatedVideos = result.predictions || result.generatedSamples || [];
+    console.log("Veo response structure:", JSON.stringify(result).substring(0, 500));
+
+    // Extract video data - Veo returns various nested formats
+    const generatedVideos =
+      result.generateVideoResponse?.generatedSamples ||
+      result.predictions ||
+      result.generatedSamples ||
+      [];
     if (generatedVideos.length === 0) {
-      throw new Error("No video generated in the response");
+      throw new Error("No video generated in the response. Keys: " + Object.keys(result).join(", "));
     }
 
     const videoData = generatedVideos[0];
     let videoBytes: Uint8Array;
 
-    if (videoData.bytesBase64Encoded) {
+    if (videoData.bytesBase64Encoded || videoData.video?.bytesBase64Encoded) {
       // Video returned as base64
-      const binaryString = atob(videoData.bytesBase64Encoded);
+      const b64 = videoData.bytesBase64Encoded || videoData.video.bytesBase64Encoded;
+      const binaryString = atob(b64);
       videoBytes = new Uint8Array(binaryString.length);
       for (let i = 0; i < binaryString.length; i++) {
         videoBytes[i] = binaryString.charCodeAt(i);
       }
-    } else if (videoData.gcsUri || videoData.video?.uri) {
+    } else if (videoData.gcsUri || videoData.video?.uri || videoData.video?.gcsUri) {
       // Video stored in GCS, need to download it
-      const gcsUri = videoData.gcsUri || videoData.video?.uri;
+      const gcsUri = videoData.gcsUri || videoData.video?.uri || videoData.video?.gcsUri;
       const gcsPath = gcsUri.replace("gs://", "");
       const bucket = gcsPath.split("/")[0];
       const objectPath = gcsPath.split("/").slice(1).join("/");
