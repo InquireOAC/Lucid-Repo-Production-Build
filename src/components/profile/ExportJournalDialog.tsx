@@ -1,7 +1,7 @@
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Share2, Loader2, BookOpen } from "lucide-react";
+import { ArrowLeft, Download, Share2, Loader2, BookOpen, RefreshCw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,6 +23,18 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+
+  const pdfUrl = useMemo(() => {
+    if (!pdfBlob) return null;
+    return URL.createObjectURL(pdfBlob);
+  }, [pdfBlob]);
+
+  // Clean up object URL on unmount / new blob
+  React.useEffect(() => {
+    return () => {
+      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    };
+  }, [pdfUrl]);
 
   const handleGenerate = async () => {
     if (entries.length === 0) {
@@ -100,45 +112,60 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
             <div className="w-10" />
           </div>
 
-          <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10 space-y-6">
-            <BookOpen className="h-16 w-16 text-primary/60" />
-
-            <div className="text-center space-y-2">
-              <h2 className="text-xl font-semibold text-foreground">
-                {entries.length} dream{entries.length !== 1 ? "s" : ""} will be exported
-              </h2>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Generate a beautifully formatted PDF book with your dream entries, images, and analyses.
-              </p>
-            </div>
-
-            {isGenerating ? (
-              <div className="flex flex-col items-center space-y-3">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="text-sm text-muted-foreground">
-                  Processing dream {progress.current} of {progress.total}...
-                </p>
+          {pdfUrl ? (
+            // Preview mode: show embedded PDF with action buttons
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 bg-muted/30">
+                <iframe
+                  src={pdfUrl}
+                  className="w-full h-full border-0"
+                  title="Dream Journal PDF Preview"
+                />
               </div>
-            ) : pdfBlob ? (
-              <div className="flex flex-col gap-3 w-full max-w-xs">
-                <Button onClick={handleDownload} className="w-full">
+              <div className="flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-xl px-4 py-3 flex gap-2"
+                style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
+              >
+                <Button onClick={handleDownload} className="flex-1">
                   <Download className="h-4 w-4 mr-2" />
-                  Download PDF
+                  Download
                 </Button>
-                <Button variant="outline" onClick={handleShare} className="w-full">
+                <Button variant="outline" onClick={handleShare} className="flex-1">
                   <Share2 className="h-4 w-4 mr-2" />
                   Share
                 </Button>
-                <Button variant="ghost" onClick={handleGenerate} className="w-full text-muted-foreground">
-                  Regenerate
+                <Button variant="ghost" size="icon" onClick={handleGenerate} title="Regenerate">
+                  <RefreshCw className="h-4 w-4" />
                 </Button>
               </div>
-            ) : (
-              <Button onClick={handleGenerate} disabled={entries.length === 0} className="w-full max-w-xs">
-                Generate PDF
-              </Button>
-            )}
-          </div>
+            </div>
+          ) : (
+            // Initial / generating state
+            <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10 space-y-6">
+              <BookOpen className="h-16 w-16 text-primary/60" />
+
+              <div className="text-center space-y-2">
+                <h2 className="text-xl font-semibold text-foreground">
+                  {entries.length} dream{entries.length !== 1 ? "s" : ""} will be exported
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-xs">
+                  Generate a beautifully formatted PDF book with your dream entries, images, and analyses.
+                </p>
+              </div>
+
+              {isGenerating ? (
+                <div className="flex flex-col items-center space-y-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">
+                    Processing dream {progress.current} of {progress.total}...
+                  </p>
+                </div>
+              ) : (
+                <Button onClick={handleGenerate} disabled={entries.length === 0} className="w-full max-w-xs">
+                  Generate PDF
+                </Button>
+              )}
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>
