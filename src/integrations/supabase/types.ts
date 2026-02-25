@@ -143,6 +143,35 @@ export type Database = {
         }
         Relationships: []
       }
+      announcement_dismissals: {
+        Row: {
+          announcement_id: string
+          dismissed_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          dismissed_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          dismissed_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_dismissals_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "platform_announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_users: {
         Row: {
           blocked_user_id: string
@@ -1248,6 +1277,83 @@ export type Database = {
             columns: ["path_id"]
             isOneToOne: false
             referencedRelation: "learning_paths"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_announcements: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          link_url: string | null
+          metadata: Json | null
+          priority: string
+          starts_at: string
+          title: string
+          type: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          metadata?: Json | null
+          priority?: string
+          starts_at?: string
+          title: string
+          type?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          link_url?: string | null
+          metadata?: Json | null
+          priority?: string
+          starts_at?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      poll_responses: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          id: string
+          selected_option: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          id?: string
+          selected_option: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          id?: string
+          selected_option?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "poll_responses_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "platform_announcements"
             referencedColumns: ["id"]
           },
         ]

@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, Compass } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
@@ -23,6 +24,11 @@ const MainLayout = () => {
     <div className="flex flex-col min-h-screen cosmic-background">
       {/* Fixed opaque overlay for status bar safe area */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
+      
+      {/* Announcement banner */}
+      <div className="sticky top-0 z-30">
+        <AnnouncementBanner />
+      </div>
       
       {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
       <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
