@@ -260,10 +260,10 @@ const NewDream = () => {
         </div>
 
         {/* Metadata Section */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 items-end">
           <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
+            <Label className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Calendar className="h-3.5 w-3.5" />
               Date
             </Label>
             <Input
@@ -271,16 +271,16 @@ const NewDream = () => {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input w-full h-9 text-sm" />
-
+              className="dream-input w-full h-10 text-sm" />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground">Mood</Label>
+            <Label className="flex items-center gap-2 text-muted-foreground text-xs">
+              Mood
+            </Label>
             <Select
               value={formData.mood}
               onValueChange={(value) => setFormData((p) => ({ ...p, mood: value }))}>
-
-              <SelectTrigger className="dream-input w-full h-9 text-sm">
+              <SelectTrigger className="dream-input w-full h-10 text-sm">
                 <SelectValue placeholder="How did it feel?" />
               </SelectTrigger>
               <SelectContent>
