@@ -6,7 +6,7 @@ import type { Technique } from "@/components/insights/techniqueData";
 const difficultyAccent: Record<string, string> = {
   Beginner: "border-t-emerald-500/50",
   Intermediate: "border-t-amber-500/50",
-  Advanced: "border-t-purple-500/50",
+  Advanced: "border-t-blue-500/50",
 };
 
 interface TechniqueGridCardProps {

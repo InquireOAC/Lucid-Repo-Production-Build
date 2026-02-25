@@ -89,7 +89,7 @@ export const LevelContentView: React.FC<LevelContentViewProps> = ({
       </div>
 
       {level.content.achievement && (
-        <Card className="glass-card border-primary/30 bg-gradient-to-r from-primary/10 to-purple-500/10">
+        <Card className="glass-card border-primary/30 bg-gradient-to-r from-primary/10 to-blue-500/10">
           <CardContent className="pt-6 flex items-center gap-4">
             <Award className="w-10 h-10 text-primary" />
             <div>

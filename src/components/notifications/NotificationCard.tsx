@@ -38,7 +38,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
       case 'comment':
         return <MessageCircle className="h-5 w-5 text-blue-400" />;
       case 'message':
-        return <Mail className="h-5 w-5 text-purple-400" />;
+        return <Mail className="h-5 w-5 text-blue-400" />;
       case 'follow':
         return <User className="h-5 w-5 text-green-400" />;
       default:
@@ -100,7 +100,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
         <div 
           className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center text-white font-medium",
-            notification.user.avatar_color || "bg-gradient-to-br from-purple-400/30 to-pink-400/30"
+            notification.user.avatar_color || "bg-gradient-to-br from-blue-400/30 to-blue-300/30"
           )}
         >
           {notification.user.avatar_symbol}
@@ -109,7 +109,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
     }
     
     return (
-      <div className="w-10 h-10 bg-gradient-to-br from-purple-400/30 to-pink-400/30 rounded-full flex items-center justify-center">
+      <div className="w-10 h-10 bg-gradient-to-br from-blue-400/30 to-blue-300/30 rounded-full flex items-center justify-center">
         <span className="text-white/80 font-medium text-sm">
           {(notification.user?.display_name || notification.user?.username || 'U').charAt(0).toUpperCase()}
         </span>
@@ -122,7 +122,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
       onClick={handleClick}
       className={cn(
         "glass-card p-4 rounded-xl border-white/10 cursor-pointer transition-all duration-200 hover:bg-white/5",
-        !notification.read && "bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-300/20"
+        !notification.read && "bg-gradient-to-r from-blue-500/10 to-blue-400/10 border-blue-300/20"
       )}
     >
       <div className="flex items-start gap-3">
@@ -139,7 +139,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
               {getNotificationText()}
             </p>
             {!notification.read && (
-              <div className="w-2 h-2 bg-purple-400 rounded-full flex-shrink-0" />
+              <div className="w-2 h-2 bg-blue-400 rounded-full flex-shrink-0" />
             )}
           </div>
           
