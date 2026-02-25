@@ -188,8 +188,8 @@ Deno.serve(async (req) => {
       throw new Error("No operation name returned from Veo API");
     }
 
-    // Poll for completion (max ~5 minutes)
-    const pollUrl = `https://${location}-aiplatform.googleapis.com/v1/${operationName}`;
+    // Poll for completion using fetchPredictOperation (max ~5 minutes)
+    const pollUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelId}:fetchPredictOperation`;
     let result = null;
     const maxAttempts = 60; // 60 * 5s = 300s
 
@@ -197,7 +197,12 @@ Deno.serve(async (req) => {
       await new Promise((r) => setTimeout(r, 5000));
 
       const pollRes = await fetch(pollUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ operationName }),
       });
 
       if (!pollRes.ok) {
