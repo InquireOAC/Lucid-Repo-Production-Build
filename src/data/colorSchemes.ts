@@ -4,6 +4,7 @@ export interface ColorScheme {
   description: string;
   requiresSubscription: boolean;
   previewColor: string;
+  secondaryPreviewColor: string;
   darkVars: Record<string, string>;
   lightVars: Record<string, string>;
 }
@@ -15,6 +16,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "The default cosmic blue theme",
     requiresSubscription: false,
     previewColor: "#3B82F6",
+    secondaryPreviewColor: "#8B5CF6",
     darkVars: {
       "--primary": "217 91% 60%",
       "--ring": "217 91% 60%",
@@ -46,6 +48,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "Deep purple aurora vibes",
     requiresSubscription: false,
     previewColor: "#8B5CF6",
+    secondaryPreviewColor: "#6366F1",
     darkVars: {
       "--primary": "263 70% 58%",
       "--ring": "263 70% 58%",
@@ -77,6 +80,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "Lush green dreamscape",
     requiresSubscription: true,
     previewColor: "#10B981",
+    secondaryPreviewColor: "#14B8A6",
     darkVars: {
       "--primary": "160 84% 39%",
       "--ring": "160 84% 39%",
@@ -108,6 +112,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "Warm pink crystal energy",
     requiresSubscription: true,
     previewColor: "#F43F5E",
+    secondaryPreviewColor: "#EC4899",
     darkVars: {
       "--primary": "340 82% 52%",
       "--ring": "340 82% 52%",
@@ -139,6 +144,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "Radiant golden warmth",
     requiresSubscription: true,
     previewColor: "#F59E0B",
+    secondaryPreviewColor: "#F97316",
     darkVars: {
       "--primary": "38 92% 50%",
       "--ring": "38 92% 50%",
@@ -170,6 +176,7 @@ export const colorSchemes: ColorScheme[] = [
     description: "Deep ocean tranquility",
     requiresSubscription: true,
     previewColor: "#14B8A6",
+    secondaryPreviewColor: "#06B6D4",
     darkVars: {
       "--primary": "180 65% 45%",
       "--ring": "180 65% 45%",

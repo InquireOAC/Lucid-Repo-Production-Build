@@ -1,7 +1,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Lock } from "lucide-react";
+import { Lock, Check } from "lucide-react";
 import { useColorScheme } from "@/contexts/ColorSchemeContext";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { toast } from "sonner";
@@ -21,7 +21,7 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
 
   const handleSelect = async (scheme: ColorScheme) => {
     if (scheme.requiresSubscription && !isSubscribed) {
-      toast.error("This color scheme requires a subscription", {
+      toast.error("This palette requires a subscription", {
         description: "Upgrade to unlock premium themes",
       });
       return;
@@ -35,12 +35,12 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md h-auto max-h-[80vh] flex flex-col p-0 pt-10">
         <DialogHeader className="px-6 pb-2 shrink-0">
-          <DialogTitle>Color Scheme</DialogTitle>
-          <p className="text-sm text-muted-foreground">Personalize your app's accent colors</p>
+          <DialogTitle className="text-lg">Choose Your Palette</DialogTitle>
+          <p className="text-sm text-muted-foreground">Set the tone for your dream journal</p>
         </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+          <div className="px-6 pb-6 flex flex-col gap-3">
             {availableSchemes.map((scheme) => {
               const isActive = currentScheme.id === scheme.id;
               const isLocked = scheme.requiresSubscription && !isSubscribed;
@@ -48,35 +48,47 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
               return (
                 <button
                   key={scheme.id}
+                  type="button"
                   onClick={() => handleSelect(scheme)}
                   className={cn(
-                    "relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-200",
+                    "relative w-full text-left p-4 rounded-xl border transition-all duration-200 vault-glass",
                     isActive
-                      ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                      : "border-border hover:border-primary/40 hover:bg-muted/30",
-                    isLocked && "opacity-70"
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-border hover:border-primary/30 hover:shadow-[0_0_15px_hsl(var(--primary)/0.08)]",
+                    !isActive && "vault-card-lift",
+                    isLocked && "opacity-75"
                   )}
                 >
-                  {/* Color preview */}
+                  {/* Gradient bar */}
                   <div
                     className={cn(
-                      "w-12 h-12 rounded-full shadow-lg transition-transform",
-                      isActive && "scale-110"
+                      "h-3 w-full rounded-full mb-3 transition-opacity",
+                      isLocked && "opacity-50"
                     )}
-                    style={{ backgroundColor: scheme.previewColor }}
+                    style={{
+                      background: `linear-gradient(90deg, ${scheme.previewColor}, ${scheme.secondaryPreviewColor})`,
+                    }}
                   />
 
-                  {/* Lock overlay */}
-                  {isLocked && (
-                    <div className="absolute top-2 right-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5">
-                      <Lock className="w-3 h-3 text-muted-foreground" />
-                      <span className="text-[10px] font-medium text-muted-foreground">PRO</span>
+                  {/* Info row */}
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm text-foreground">{scheme.name}</p>
+                      <p className="text-xs text-muted-foreground leading-tight">{scheme.description}</p>
                     </div>
-                  )}
 
-                  <div className="text-center">
-                    <p className="text-sm font-medium">{scheme.name}</p>
-                    <p className="text-xs text-muted-foreground leading-tight">{scheme.description}</p>
+                    {isActive && (
+                      <div className="shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                      </div>
+                    )}
+
+                    {isLocked && !isActive && (
+                      <div className="shrink-0 flex items-center gap-1 bg-background/60 backdrop-blur-sm rounded-full px-2.5 py-1">
+                        <Lock className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] font-semibold text-muted-foreground tracking-wide">PRO</span>
+                      </div>
+                    )}
                   </div>
                 </button>
               );
