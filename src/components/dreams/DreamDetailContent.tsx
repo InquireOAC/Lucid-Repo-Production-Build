@@ -1,11 +1,12 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { DreamTag } from "@/types/dream";
-import { Heart, Brain } from "lucide-react";
+import { Brain } from "lucide-react";
 import FlagButton from "@/components/moderation/FlagButton";
 import { AudioPlayer } from "./AudioPlayer";
 import { AnalysisSections } from "./AnalysisSections";
+import DreamImageWithVideo from "./DreamImageWithVideo";
 import {
   Carousel,
   CarouselContent,
@@ -105,6 +106,10 @@ interface DreamDetailContentProps {
   onLike?: () => void;
   currentUser?: any;
   audioUrl?: string;
+  videoUrl?: string;
+  isOwner?: boolean;
+  isSubscribed?: boolean;
+  onVideoGenerated?: (videoUrl: string) => void;
 }
 
 const DreamDetailContent = ({
@@ -118,24 +123,12 @@ const DreamDetailContent = ({
   contentOwnerId,
   onLike,
   currentUser,
-  audioUrl
+  audioUrl,
+  videoUrl,
+  isOwner,
+  isSubscribed,
+  onVideoGenerated,
 }: DreamDetailContentProps) => {
-  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-  const lastTapRef = useRef<number>(0);
-
-  const handleImageDoubleTap = (e: React.MouseEvent | React.TouchEvent) => {
-    const now = Date.now();
-    const timeSinceLastTap = now - lastTapRef.current;
-    if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
-      e.stopPropagation();
-      if (currentUser && onLike) {
-        onLike();
-        setIsLikeAnimating(true);
-        setTimeout(() => setIsLikeAnimating(false), 600);
-      }
-    }
-    lastTapRef.current = now;
-  };
 
   return (
     <div className="space-y-4 mt-2">
@@ -163,22 +156,20 @@ const DreamDetailContent = ({
         </div>
       )}
 
-      {/* Dream Image */}
+      {/* Dream Image / Video */}
       {generatedImage && (
         <div className="mt-4">
           <h3 className="text-sm font-medium mb-2">Dream Visualization</h3>
-          <div
-            className="relative cursor-pointer select-none"
-            onMouseDown={handleImageDoubleTap}
-            onTouchStart={handleImageDoubleTap}
-          >
-            <img src={generatedImage} alt="Dream visualization" className="rounded-md w-full h-auto" />
-            {isLikeAnimating && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <Heart className="h-16 w-16 text-destructive fill-destructive" style={{ animation: 'heartPulse 0.6s ease-out' }} />
-              </div>
-            )}
-          </div>
+          <DreamImageWithVideo
+            generatedImage={generatedImage}
+            videoUrl={videoUrl}
+            dreamId={dreamId}
+            isOwner={isOwner}
+            isSubscribed={isSubscribed}
+            onLike={onLike}
+            currentUser={currentUser}
+            onVideoGenerated={onVideoGenerated}
+          />
         </div>
       )}
 
@@ -195,19 +186,10 @@ const DreamDetailContent = ({
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-sm font-semibold">Dream Analysis</h3>
-            <h3 className="text-sm font-semibold">Dream Analysis</h3>
           </div>
           <AnalysisSections text={analysis} />
         </div>
       )}
-
-      <style>{`
-        @keyframes heartPulse {
-          0% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.8); opacity: 0.8; }
-          100% { transform: scale(1.5); opacity: 0; }
-        }
-      `}</style>
     </div>
   );
 };

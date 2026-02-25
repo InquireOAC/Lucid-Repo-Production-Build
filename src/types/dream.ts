@@ -33,6 +33,7 @@ export interface DreamEntry {
   audioUrl?: string;
   audio_url?: string;
   image_dataurl?: string;
+  video_url?: string;
 }
 
 export interface DreamTag {
