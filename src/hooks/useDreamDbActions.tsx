@@ -48,7 +48,7 @@ export const useDreamDbActions = () => {
     const dbUpdates: Partial<any> = {}; // Prepare a clean object for DB
     const allowedFields: (keyof DreamEntry)[] = [
       "title", "content", "tags", "mood", "lucid", "analysis",
-      "generatedImage", "image_url", "imagePrompt", "is_public", "audio_url"
+      "generatedImage", "image_url", "imagePrompt", "is_public", "audio_url", "video_url"
     ];
 
     allowedFields.forEach(field => {

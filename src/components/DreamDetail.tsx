@@ -201,7 +201,10 @@ const DreamDetail = ({
               videoUrl={videoUrl || undefined}
               isOwner={!!isOwner}
               isSubscribed={isSubscribed}
-              onVideoGenerated={(url) => setVideoUrl(url)}
+              onVideoGenerated={(url) => {
+                setVideoUrl(url);
+                if (onUpdate) onUpdate(dream.id, { video_url: url });
+              }}
             />
             
             <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
