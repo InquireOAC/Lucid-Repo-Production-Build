@@ -5,11 +5,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
 import { Capacitor } from '@capacitor/core';
 import { revenueCatManager } from '@/utils/revenueCatManager';
+import { useUserRole } from '@/hooks/useUserRole';
 
 type FeatureType = 'analysis' | 'image';
 
 export const useFeatureUsage = () => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const [usageState, setUsageState] = useState<Record<FeatureType, boolean>>({
     analysis: false,
     image: false
@@ -120,8 +122,8 @@ export const useFeatureUsage = () => {
   const hasUsedFeature = (featureType: FeatureType): boolean => {
     if (!user) return false;
     
-    // Special case for app creator - always return false to indicate feature has not been used
-    if (user.email === "inquireoac@gmail.com") {
+    // Admins get unlimited access - always return false
+    if (isAdmin) {
       return false;
     }
     
@@ -131,8 +133,8 @@ export const useFeatureUsage = () => {
   const markFeatureAsUsed = (featureType: FeatureType): void => {
     if (!user) return;
     
-    // Special case for app creator - don't mark features as used
-    if (user.email === "inquireoac@gmail.com") {
+    // Admins get unlimited access - don't mark features as used
+    if (isAdmin) {
       return;
     }
     
@@ -151,9 +153,9 @@ export const useFeatureUsage = () => {
       if (!user) return false;
       setIsChecking(true);
       
-      // Special case for app creator - always return true
-      if (user.email === "inquireoac@gmail.com") {
-        console.log('App creator detected, allowing feature access');
+      // Admins get unlimited access
+      if (isAdmin) {
+        console.log('Admin detected, allowing feature access');
         return true;
       }
       
@@ -199,9 +201,9 @@ export const useFeatureUsage = () => {
     try {
       if (!user) return false;
       
-      // Special case for app creator - don't record usage
-      if (user.email === "inquireoac@gmail.com") {
-        console.log('App creator detected, not recording usage');
+      // Admins get unlimited access - don't record usage
+      if (isAdmin) {
+        console.log('Admin detected, not recording usage');
         return true;
       }
       

@@ -9,6 +9,7 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { AnalysisSections } from "@/components/dreams/AnalysisSections";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface DreamAnalysisProps {
   dreamContent: string;
@@ -24,16 +25,16 @@ const DreamAnalysis = ({
   disabled = false
 }: DreamAnalysisProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const { subscription, isLoading: subscriptionLoading } = useSubscriptionContext();
   const { hasUsedFeature, recordFeatureUsage } = useFeatureUsage();
   const [analysis, setAnalysis] = useState(existingAnalysis);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showInfo, setShowInfo] = useState(!existingAnalysis);
 
-  const isAppCreator = user?.email === "inquireoac@gmail.com";
   const hasUsedFreeTrial = hasUsedFeature('analysis');
   const hasActiveSubscription = subscription?.status === 'active';
-  const isFeatureEnabled = isAppCreator || !hasUsedFreeTrial || hasActiveSubscription;
+  const isFeatureEnabled = isAdmin || !hasUsedFreeTrial || hasActiveSubscription;
 
   const generateAnalysis = async () => {
     if (!user || disabled) return;
@@ -65,7 +66,7 @@ const DreamAnalysis = ({
         const usageRecorded = await recordFeatureUsage('analysis');
         console.log('Analysis usage recorded:', usageRecorded);
 
-        if (!isAppCreator && !hasUsedFreeTrial && !hasActiveSubscription) {
+        if (!isAdmin && !hasUsedFreeTrial && !hasActiveSubscription) {
           toast.success("Free trial used! Subscribe to continue analyzing dreams.", {
             duration: 5000,
             action: {
