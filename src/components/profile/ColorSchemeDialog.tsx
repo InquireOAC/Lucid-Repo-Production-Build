@@ -34,13 +34,13 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-md h-auto max-h-[80vh] flex flex-col p-0 pt-10">
-        <DialogHeader className="px-6 pb-2 shrink-0">
+        <DialogHeader className="px-5 pb-2 shrink-0">
           <DialogTitle className="text-lg">Choose Your Palette</DialogTitle>
           <p className="text-sm text-muted-foreground">Set the tone for your dream journal</p>
         </DialogHeader>
 
         <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 pb-6 flex flex-col gap-3">
+          <div className="px-5 pb-5 flex flex-col gap-2">
             {availableSchemes.map((scheme) => {
               const isActive = currentScheme.id === scheme.id;
               const isLocked = scheme.requiresSubscription && !isSubscribed;
@@ -51,7 +51,7 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
                   type="button"
                   onClick={() => handleSelect(scheme)}
                   className={cn(
-                    "relative w-full text-left p-4 rounded-xl border transition-all duration-200 vault-glass",
+                    "relative w-full text-left p-3 rounded-xl border transition-all duration-200 vault-glass",
                     isActive
                       ? "border-primary ring-2 ring-primary/20"
                       : "border-border hover:border-primary/30 hover:shadow-[0_0_15px_hsl(var(--primary)/0.08)]",
@@ -59,10 +59,9 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
                     isLocked && "opacity-75"
                   )}
                 >
-                  {/* Gradient bar */}
                   <div
                     className={cn(
-                      "h-3 w-full rounded-full mb-3 transition-opacity",
+                      "h-2 w-full rounded-full mb-2 transition-opacity",
                       isLocked && "opacity-50"
                     )}
                     style={{
@@ -70,23 +69,19 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
                     }}
                   />
 
-                  {/* Info row */}
                   <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm text-foreground">{scheme.name}</p>
-                      <p className="text-xs text-muted-foreground leading-tight">{scheme.description}</p>
-                    </div>
+                    <p className="font-medium text-xs text-foreground">{scheme.name}</p>
 
                     {isActive && (
-                      <div className="shrink-0 w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                      <div className="shrink-0 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <Check className="w-3 h-3 text-primary-foreground" />
                       </div>
                     )}
 
                     {isLocked && !isActive && (
-                      <div className="shrink-0 flex items-center gap-1 bg-background/60 backdrop-blur-sm rounded-full px-2.5 py-1">
-                        <Lock className="w-3 h-3 text-muted-foreground" />
-                        <span className="text-[10px] font-semibold text-muted-foreground tracking-wide">PRO</span>
+                      <div className="shrink-0 flex items-center gap-1 bg-background/60 backdrop-blur-sm rounded-full px-2 py-0.5">
+                        <Lock className="w-2.5 h-2.5 text-muted-foreground" />
+                        <span className="text-[9px] font-semibold text-muted-foreground tracking-wide">PRO</span>
                       </div>
                     )}
                   </div>
