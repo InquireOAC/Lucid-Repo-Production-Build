@@ -1,7 +1,7 @@
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Download, Share2, Loader2, BookOpen, RefreshCw } from "lucide-react";
+import { ArrowLeft, Download, Share2, Loader2, BookOpen, RefreshCw, Star, FileText } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,9 @@ import { saveAs } from "file-saver";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
+import { format } from "date-fns";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 
 interface ExportJournalDialogProps {
   open: boolean;
@@ -24,17 +27,17 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
 
-  const pdfUrl = useMemo(() => {
-    if (!pdfBlob) return null;
-    return URL.createObjectURL(pdfBlob);
-  }, [pdfBlob]);
+  const sorted = [...entries].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  const authorName = user?.user_metadata?.display_name || user?.user_metadata?.username || "Dreamer";
 
-  // Clean up object URL on unmount / new blob
-  React.useEffect(() => {
-    return () => {
-      if (pdfUrl) URL.revokeObjectURL(pdfUrl);
-    };
-  }, [pdfUrl]);
+  let dateRange = "";
+  if (sorted.length > 0) {
+    try {
+      const earliest = sorted[sorted.length - 1].date;
+      const latest = sorted[0].date;
+      dateRange = `${format(new Date(earliest), "MMM d, yyyy")} — ${format(new Date(latest), "MMM d, yyyy")}`;
+    } catch { /* skip */ }
+  }
 
   const handleGenerate = async () => {
     if (entries.length === 0) {
@@ -112,16 +115,72 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
             <div className="w-10" />
           </div>
 
-          {pdfUrl ? (
-            // Preview mode: show embedded PDF with action buttons
+          {pdfBlob ? (
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex-1 bg-muted/30">
-                <iframe
-                  src={pdfUrl}
-                  className="w-full h-full border-0"
-                  title="Dream Journal PDF Preview"
-                />
-              </div>
+              <ScrollArea className="flex-1">
+                <div className="px-4 py-6 space-y-4">
+                  {/* Cover card */}
+                  <div className="rounded-xl border border-primary/20 bg-card p-6 text-center space-y-3 shadow-lg">
+                    <div className="w-12 h-0.5 bg-primary/40 mx-auto" />
+                    <h2 className="text-2xl font-bold text-foreground">Dream Journal</h2>
+                    <div className="w-16 h-0.5 bg-primary/30 mx-auto" />
+                    <p className="text-base text-primary/80 italic">{authorName}</p>
+                    <p className="text-sm text-muted-foreground">{sorted.length} dream{sorted.length !== 1 ? "s" : ""}</p>
+                    {dateRange && <p className="text-xs text-muted-foreground">{dateRange}</p>}
+                  </div>
+
+                  {/* Dream entry cards */}
+                  {sorted.map((dream, i) => {
+                    const imageUrl = dream.generatedImage || dream.image_url;
+                    let dateStr = dream.date;
+                    try { dateStr = format(new Date(dream.date), "MMMM d, yyyy"); } catch { /* keep original */ }
+
+                    return (
+                      <div key={dream.id} className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+                        {imageUrl && (
+                          <img
+                            src={imageUrl}
+                            alt={dream.title}
+                            className="w-full h-40 object-cover"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="p-4 space-y-2">
+                          <h3 className="font-semibold text-foreground text-base leading-tight">{dream.title}</h3>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
+                            <span>{dateStr}</span>
+                            {dream.mood && <><span>•</span><span>{dream.mood}</span></>}
+                            {dream.lucid && (
+                              <Badge variant="outline" className="text-xs py-0 px-1.5 gap-0.5">
+                                <Star className="h-3 w-3" /> Lucid
+                              </Badge>
+                            )}
+                          </div>
+                          {dream.tags && dream.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {dream.tags.slice(0, 5).map(t => (
+                                <span key={t} className="text-xs text-primary/70">#{t}</span>
+                              ))}
+                            </div>
+                          )}
+                          {dream.content && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">{dream.content}</p>
+                          )}
+                          {dream.analysis && (
+                            <div className="flex items-center gap-1.5 text-xs text-primary/60 pt-1">
+                              <FileText className="h-3.5 w-3.5" />
+                              <span>Analysis included</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="px-4 pb-2 text-right">
+                          <span className="text-[10px] text-muted-foreground/50">{i + 1} / {sorted.length}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
               <div className="flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-xl px-4 py-3 flex gap-2"
                 style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 12px)" }}
               >
@@ -139,10 +198,8 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
               </div>
             </div>
           ) : (
-            // Initial / generating state
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-6 py-10 space-y-6">
               <BookOpen className="h-16 w-16 text-primary/60" />
-
               <div className="text-center space-y-2">
                 <h2 className="text-xl font-semibold text-foreground">
                   {entries.length} dream{entries.length !== 1 ? "s" : ""} will be exported
@@ -151,7 +208,6 @@ const ExportJournalDialog = ({ open, onOpenChange }: ExportJournalDialogProps) =
                   Generate a beautifully formatted PDF book with your dream entries, images, and analyses.
                 </p>
               </div>
-
               {isGenerating ? (
                 <div className="flex flex-col items-center space-y-3">
                   <Loader2 className="h-8 w-8 animate-spin text-primary" />
