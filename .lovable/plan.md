@@ -1,132 +1,95 @@
 
-
-# Admin Dashboard & Platform Announcement System
+# Enhanced Moderation Queue + Subscription Stats
 
 ## Overview
-Build a full admin dashboard accessible from the admin's profile, along with an in-app banner notification system for pushing announcements, polls, reminders, and more to all users platform-wide. Banners appear at the top of the screen and dismiss on click or via an X button.
+Three improvements to the Admin Dashboard:
+1. **Moderation cards show dream content preview** (title + truncated text)
+2. **Tapping a flag card opens a full detail modal** with the flagged dream content, image, reporter info, and action buttons (Remove Content, Keep Content, Dismiss)
+3. **Active subscriptions stat card + subscriber list** in the dashboard
 
-## What You'll Get
+## Technical Changes
 
-### 1. Admin Dashboard (new page: `/admin`)
-A dedicated admin page with a slide-in or full-page layout, accessible via a new "Admin Dashboard" button on your profile (visible only to admin-role users). The dashboard includes:
+### 1. `src/components/admin/ModerationQueue.tsx` -- Major rewrite
+- **Fetch flagged content with dream data**: Change the query to also fetch the related dream entry using `flagged_content_id` to look up `dream_entries` (title, content, image_url, user_id) and the reporter's profile (username)
+- Since we can't do a foreign key join on `content_flags.flagged_content_id -> dream_entries.id` directly (no FK exists), we'll do a two-step fetch: get flags, then batch-fetch the related dream entries and reporter profiles
+- **Card preview**: Each flag card now shows:
+  - Flag reason badge + content type
+  - Dream title (bold)
+  - First 2 lines of dream content (truncated)
+  - Reporter username + date
+  - Tap anywhere on the card to open the detail modal
+- **Detail modal** (using `Dialog` component):
+  - Full dream content text
+  - Dream image (if exists)
+  - Dream author username
+  - Flag reason + reporter notes + reporter username
+  - Date flagged
+  - Action buttons at bottom:
+    - **Remove Content** -- Deletes or hides the dream (set `is_public = false` on the dream entry) and marks flag as "resolved"
+    - **Keep Content** -- Marks the flag as "dismissed" (content stays)
+    - **Delete Dream** -- Fully deletes the dream entry and marks flag as "resolved"
 
-- **Announcements** -- Compose and push text announcements with optional links, schedule them, set priority/type (info, warning, celebration)
-- **Polls** -- Create simple polls (question + options) that appear as banners or in-feed; view aggregated results
-- **Reminders** -- Push motivational reminders or practice nudges (e.g., "Have you logged your dream today?")
-- **Community Stats** -- Total users, active users (last 7 days), total dreams logged, public dreams, new signups
-- **Content Moderation Queue** -- View flagged content reports, take action (dismiss, warn, remove)
-- **Featured Content** -- Pin/feature specific public dreams to the Lucid Repo or Explore page
-- **User Management** -- Search users, view profiles, assign moderator roles
+### 2. `src/hooks/useAdminStats.tsx` -- Add subscription count
+- Add a new query: `supabase.from('stripe_subscriptions').select('*', { count: 'exact', head: true }).eq('status', 'active').is('deleted_at', null)`
+- Add `activeSubscriptions` to the stats interface and return value
 
-### 2. In-App Banner Notification System
-A persistent banner component rendered at the top of the app (inside MainLayout) that:
-- Fetches active announcements on app load and via real-time subscription
-- Displays them as a colored banner (info = blue/purple, warning = amber, celebration = gold with sparkle)
-- Dismisses when the user clicks anywhere on the banner or the X button
-- Tracks which users have dismissed which announcements (so they don't reappear)
-- Supports stacking (if multiple active, shows the highest priority one; next appears after dismissal)
+### 3. `src/components/admin/CommunityStats.tsx` -- Add subscription stat card
+- Add a new stat card with a `CreditCard` icon showing "Active Subs" count
 
-## Database Changes (3 new tables)
+### 4. `src/components/admin/UserManager.tsx` -- Show subscription status per user
+- When searching users, also check if each user has an active subscription by querying `stripe_subscriptions`
+- Show a small "Subscribed" badge next to users who have an active subscription, along with their plan name (derived from `price_id`)
 
-### `platform_announcements`
-Stores all announcements, polls, and reminders pushed by admins.
+### Database Changes
+- **None required**. The `content_flags` table already has `flagged_content_id` and `flagged_content_type`. We'll use those to look up dream content. The admin already has RLS access to view all content flags and dream entries (public dreams are visible, and admin policies exist on content_flags). For setting dreams to non-public, the admin will need an RLS policy update.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| created_by | uuid | Admin user ID |
-| type | text | 'announcement', 'poll', 'reminder', 'celebration' |
-| title | text | Short headline |
-| content | text | Body text |
-| link_url | text | Optional CTA link |
-| priority | text | 'low', 'normal', 'high' |
-| is_active | boolean | Default true |
-| starts_at | timestamptz | When to start showing |
-| expires_at | timestamptz | When to stop showing (nullable = no expiry) |
-| created_at | timestamptz | Default now() |
-| metadata | jsonb | Poll options, extra config |
+### RLS Policy Addition (migration)
+- Add admin UPDATE policy on `dream_entries` so the admin can set `is_public = false` on flagged dreams:
+  ```sql
+  CREATE POLICY "Admins can update any dream"
+    ON public.dream_entries FOR UPDATE TO authenticated
+    USING (has_role(auth.uid(), 'admin'::app_role));
+  ```
+- Add admin DELETE policy on `dream_entries` so the admin can delete flagged content:
+  ```sql
+  CREATE POLICY "Admins can delete any dream"
+    ON public.dream_entries FOR DELETE TO authenticated
+    USING (has_role(auth.uid(), 'admin'::app_role));
+  ```
+- Add admin SELECT policy on `stripe_subscriptions` so the admin can see all active subscriptions:
+  ```sql
+  CREATE POLICY "Admins can view all subscriptions"
+    ON public.stripe_subscriptions FOR SELECT TO authenticated
+    USING (has_role(auth.uid(), 'admin'::app_role));
+  ```
 
-RLS: Admins can INSERT/UPDATE/DELETE. All authenticated users can SELECT active announcements.
-
-### `announcement_dismissals`
-Tracks which users dismissed which announcements.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| user_id | uuid | Who dismissed |
-| announcement_id | uuid | FK to platform_announcements |
-| dismissed_at | timestamptz | Default now() |
-| unique(user_id, announcement_id) | | Prevent duplicates |
-
-RLS: Users can INSERT and SELECT their own dismissals only.
-
-### `poll_responses`
-Tracks user votes on polls.
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | uuid | PK |
-| user_id | uuid | Voter |
-| announcement_id | uuid | FK to platform_announcements (poll type) |
-| selected_option | text | The chosen option |
-| created_at | timestamptz | Default now() |
-| unique(user_id, announcement_id) | | One vote per poll |
-
-RLS: Users can INSERT their own vote (one per poll) and SELECT their own. Admins can SELECT all for aggregation.
-
-## Frontend Changes
-
-### New Files
-- **`src/pages/AdminDashboard.tsx`** -- Main admin page with tab sections for Announcements, Polls, Community Stats, Moderation, Featured Content, Users
-- **`src/components/admin/AnnouncementComposer.tsx`** -- Form to create/edit announcements with type selector, priority, scheduling, and content fields
-- **`src/components/admin/PollComposer.tsx`** -- Form to create polls with question + up to 6 options; shows live results
-- **`src/components/admin/CommunityStats.tsx`** -- Dashboard cards showing user count, dream count, active users, new signups chart
-- **`src/components/admin/ModerationQueue.tsx`** -- Lists flagged content from `content_flags` table with action buttons
-- **`src/components/admin/FeaturedContentManager.tsx`** -- Search and pin public dreams
-- **`src/components/admin/UserManager.tsx`** -- Search users, view stats, assign moderator role
-- **`src/components/admin/AnnouncementsList.tsx`** -- List of past/active announcements with toggle and delete
-- **`src/components/announcements/AnnouncementBanner.tsx`** -- The dismissable banner component shown at the top of the screen
-- **`src/hooks/useAnnouncements.tsx`** -- Hook to fetch active announcements, handle dismissals, and manage real-time updates
-- **`src/hooks/useAdminStats.tsx`** -- Hook to fetch community statistics for the dashboard
-
-### Modified Files
-- **`src/App.tsx`** -- Add `/admin` route (guarded by admin role check)
-- **`src/layouts/MainLayout.tsx`** -- Render `<AnnouncementBanner />` between the safe-area overlay and the main content area
-- **`src/components/profile/ProfileHeaderActions.tsx`** -- Add admin dashboard button (shield icon) visible only when `useUserRole().isAdmin` is true
-- **`src/components/profile/SettingsDialog.tsx`** -- Add "Admin Dashboard" button in settings (admin-only)
-
-### Banner UI Design
+### Modal UI Design
 ```text
-+----------------------------------------------------------+
-| [icon] Announcement title: Short message here...    [X]  |
-+----------------------------------------------------------+
++------------------------------------------+
+|  [X]  Flagged Content Review             |
++------------------------------------------+
+|  [Dream Image - full width]              |
+|                                          |
+|  Dream Title                             |
+|  by @username  -  Jan 15, 2026           |
+|                                          |
+|  Full dream text content displayed       |
+|  here without truncation...              |
+|                                          |
+|  ---                                     |
+|  Flag: Inappropriate Content             |
+|  Reporter: @reporter_username            |
+|  Notes: "This contains..."              |
+|  Flagged: Feb 25, 2026                   |
+|                                          |
++------------------------------------------+
+|  [Hide Content]  [Delete]  [Keep]        |
++------------------------------------------+
 ```
-- Slides down from top with framer-motion animation
-- Background color varies by type (gradient purple for announcements, amber for reminders, gold sparkle for celebrations)
-- Tapping the banner opens the link (if provided) or just dismisses it
-- X button in top-right corner for explicit dismissal
-- Positioned below the safe-area overlay, above page content
 
-### Admin Dashboard Layout
-Full-screen slide-in (matching Settings pattern) with tabs:
-- **Overview** -- Community stats cards + recent activity
-- **Announcements** -- Create new + list of all with status toggles
-- **Polls** -- Create polls + view results with bar charts
-- **Moderation** -- Flagged content queue
-- **Users** -- User search + role management
-
-## Technical Details
-
-### Real-time Updates
-Use Supabase real-time subscription on `platform_announcements` table so new announcements appear instantly for all connected users without requiring a page refresh.
-
-### Admin Role Check
-All admin-only UI uses the existing `useUserRole()` hook. The admin dashboard route will redirect non-admins to the home page. RLS policies on the database ensure server-side security using the existing `has_role()` function.
-
-### Poll Aggregation
-Poll results will be fetched via a Supabase query that counts responses grouped by `selected_option`, displayed as horizontal bar charts in the admin dashboard.
-
-### Announcement Priority & Stacking
-When multiple announcements are active, they are sorted by priority (high > normal > low) then by `created_at` (newest first). Only one banner shows at a time. After dismissal, the next highest-priority undismissed announcement appears.
-
+### Files Changed
+- `src/components/admin/ModerationQueue.tsx` -- Rewrite with dream preview + detail modal
+- `src/hooks/useAdminStats.tsx` -- Add `activeSubscriptions` stat
+- `src/components/admin/CommunityStats.tsx` -- Add subscription stat card
+- `src/components/admin/UserManager.tsx` -- Show subscription badge per user
+- New migration for admin RLS policies on `dream_entries` and `stripe_subscriptions`
