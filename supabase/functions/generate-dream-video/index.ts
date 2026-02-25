@@ -188,13 +188,13 @@ Deno.serve(async (req) => {
       throw new Error("No operation name returned from Veo API");
     }
 
-    // Poll for completion (max ~120 seconds)
+    // Poll for completion (max ~5 minutes)
     const pollUrl = `https://${location}-aiplatform.googleapis.com/v1/${operationName}`;
     let result = null;
-    const maxAttempts = 40; // 40 * 3s = 120s
+    const maxAttempts = 60; // 60 * 5s = 300s
 
     for (let i = 0; i < maxAttempts; i++) {
-      await new Promise((r) => setTimeout(r, 3000));
+      await new Promise((r) => setTimeout(r, 5000));
 
       const pollRes = await fetch(pollUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -218,7 +218,7 @@ Deno.serve(async (req) => {
     }
 
     if (!result) {
-      throw new Error("Video generation timed out after 120 seconds");
+      throw new Error("Video generation timed out after 5 minutes");
     }
 
     // Extract video data from response
