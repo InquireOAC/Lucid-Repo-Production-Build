@@ -1376,6 +1376,7 @@ export type Database = {
           avatar_url: string | null
           banner_image: string | null
           bio: string | null
+          color_scheme: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -1393,6 +1394,7 @@ export type Database = {
           avatar_url?: string | null
           banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string
           display_name?: string | null
           id: string
@@ -1410,6 +1412,7 @@ export type Database = {
           avatar_url?: string | null
           banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
