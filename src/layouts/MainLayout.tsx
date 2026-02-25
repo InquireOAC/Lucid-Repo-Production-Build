@@ -25,10 +25,12 @@ const MainLayout = () => {
       {/* Fixed opaque overlay for status bar safe area */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       
-      {/* Announcement banner */}
-      <div className="sticky top-0 z-30">
-        <AnnouncementBanner />
-      </div>
+      {/* Announcement banner - only on community pages, not journal */}
+      {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
+        <div className="sticky top-0 z-30">
+          <AnnouncementBanner />
+        </div>
+      )}
       
       {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
       <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
