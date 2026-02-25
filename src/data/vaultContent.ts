@@ -20,21 +20,21 @@ export interface ResearchStudy {
 }
 
 export const vaultVideos: VaultVideo[] = [
-  // Lucid Dreaming
+  // ─── Lucid Dreaming ───
   {
-    title: "Lucid Dreaming: How To & Scientific Benefits",
-    thumbnailUrl: "https://img.youtube.com/vi/nMBFetmqLJU/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=nMBFetmqLJU",
-    duration: "8:42",
-    author: "Andrew Huberman",
+    title: "Lucid Dreaming Explained in 37 Minutes",
+    thumbnailUrl: "https://img.youtube.com/vi/4NEWuE0quFU/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=4NEWuE0quFU",
+    duration: "37:02",
+    author: "Tipharot",
     category: "lucid-dreaming",
   },
   {
-    title: "How to Lucid Dream Tonight – 5 Proven Methods",
-    thumbnailUrl: "https://img.youtube.com/vi/6pKFiE4kfEI/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=6pKFiE4kfEI",
-    duration: "12:03",
-    author: "Explore Lucid Dreaming",
+    title: "How to Lucid Dream (Science-Backed Tips!)",
+    thumbnailUrl: "https://img.youtube.com/vi/sccjyNRg-YQ/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=sccjyNRg-YQ",
+    duration: "12:16",
+    author: "Thomas Frank",
     category: "lucid-dreaming",
   },
   {
@@ -46,19 +46,19 @@ export const vaultVideos: VaultVideo[] = [
     category: "lucid-dreaming",
   },
   {
-    title: "What Happens In Your Brain During Lucid Dreams",
-    thumbnailUrl: "https://img.youtube.com/vi/rnWMpFSBi0g/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=rnWMpFSBi0g",
-    duration: "10:29",
-    author: "SciShow Psych",
+    title: "The DEILD Technique for Lucid Dreaming",
+    thumbnailUrl: "https://img.youtube.com/vi/bnAQ5-ijDho/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=bnAQ5-ijDho",
+    duration: "5:43",
+    author: "Daniel Love",
     category: "lucid-dreaming",
   },
   {
-    title: "Lucid Dreaming Expert Answers Your Questions",
-    thumbnailUrl: "https://img.youtube.com/vi/SxFPsSF0klA/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=SxFPsSF0klA",
-    duration: "15:22",
-    author: "Tipharot",
+    title: "How to Lucid Dream Tonight – 5 Proven Methods",
+    thumbnailUrl: "https://img.youtube.com/vi/6pKFiE4kfEI/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=6pKFiE4kfEI",
+    duration: "12:03",
+    author: "Explore Lucid Dreaming",
     category: "lucid-dreaming",
   },
   {
@@ -69,8 +69,40 @@ export const vaultVideos: VaultVideo[] = [
     author: "Explore Lucid Dreaming",
     category: "lucid-dreaming",
   },
+  {
+    title: "What Happens In Your Brain During Lucid Dreams",
+    thumbnailUrl: "https://img.youtube.com/vi/rnWMpFSBi0g/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=rnWMpFSBi0g",
+    duration: "10:29",
+    author: "SciShow Psych",
+    category: "lucid-dreaming",
+  },
+  {
+    title: "11 Advanced Lucid Dreaming Secrets",
+    thumbnailUrl: "https://img.youtube.com/vi/eMODBwPxRjc/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=eMODBwPxRjc",
+    duration: "22:14",
+    author: "Tipharot",
+    category: "lucid-dreaming",
+  },
 
-  // Meditation
+  // ─── Meditation ───
+  {
+    title: "How Meditation Works & Science-Based Effective Meditations",
+    thumbnailUrl: "https://img.youtube.com/vi/wTBSGgbIvsY/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=wTBSGgbIvsY",
+    duration: "2:04:06",
+    author: "Andrew Huberman",
+    category: "meditation",
+  },
+  {
+    title: "The Best Science-Based Meditation for Focus & Productivity",
+    thumbnailUrl: "https://img.youtube.com/vi/7TAi-8GofBk/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=7TAi-8GofBk",
+    duration: "10:12",
+    author: "Better Than Yesterday",
+    category: "meditation",
+  },
   {
     title: "How Meditation Changes Your Brain",
     thumbnailUrl: "https://img.youtube.com/vi/m8rRzTtP7Tc/hqdefault.jpg",
@@ -80,27 +112,11 @@ export const vaultVideos: VaultVideo[] = [
     category: "meditation",
   },
   {
-    title: "The Neuroscience of Meditation",
-    thumbnailUrl: "https://img.youtube.com/vi/aAVPDYhW_nw/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=aAVPDYhW_nw",
-    duration: "13:46",
-    author: "Andrew Huberman",
-    category: "meditation",
-  },
-  {
     title: "Meditation for Beginners – 20 Practical Tips",
     thumbnailUrl: "https://img.youtube.com/vi/o-kMJBWk9E0/hqdefault.jpg",
     youtubeUrl: "https://www.youtube.com/watch?v=o-kMJBWk9E0",
     duration: "15:23",
     author: "Matt D'Avella",
-    category: "meditation",
-  },
-  {
-    title: "How Meditation Can Reshape Our Brains",
-    thumbnailUrl: "https://img.youtube.com/vi/m8rRzTtP7Tc/hqdefault.jpg",
-    youtubeUrl: "https://www.youtube.com/watch?v=m8rRzTtP7Tc",
-    duration: "8:33",
-    author: "TEDx Talks",
     category: "meditation",
   },
   {
@@ -117,6 +133,14 @@ export const vaultVideos: VaultVideo[] = [
     youtubeUrl: "https://www.youtube.com/watch?v=aEqlQvczMJQ",
     duration: "10:01",
     author: "Goodful",
+    category: "meditation",
+  },
+  {
+    title: "Jon Kabat-Zinn: Guided Mindfulness Meditation",
+    thumbnailUrl: "https://img.youtube.com/vi/_DTmGtznab4/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=_DTmGtznab4",
+    duration: "43:02",
+    author: "Jon Kabat-Zinn",
     category: "meditation",
   },
 ];
