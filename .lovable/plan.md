@@ -1,46 +1,70 @@
 
-## Fix Avatar Highlight and Improve Long-Press for Video Generation
+## Fix Video Aspect Ratio, Persist Video URL, and Add Video Management in Edit Dream
 
-### Issue 1: Avatar and Name Getting Highlighted on Tap
+### 1. Fix Video Aspect Ratio Mismatch
 
-The avatar/username button in the DreamDetail modal (lines 160-176 of `DreamDetail.tsx`) is a `<button>` element that naturally receives focus styling and tap highlight on iOS. When you tap to open a dream, the focus state transfers to this element.
+The Veo API request in `generate-dream-video/index.ts` does not specify an `aspectRatio` parameter. Veo defaults to 16:9 regardless of the input image's dimensions. The fix is to detect the source image's aspect ratio before calling the API and pass the matching `aspectRatio` parameter (e.g., `"9:16"`, `"16:9"`, `"1:1"`, or the closest supported ratio).
 
-**Fix:**
-- Add `-webkit-tap-highlight-color: transparent` and `outline: none` / `focus:outline-none` to the avatar button in `DreamDetail.tsx` (line 161)
-- Add `select-none` class to prevent text selection on the username span
+**File: `supabase/functions/generate-dream-video/index.ts`**
+- After fetching the image, determine its dimensions (decode image headers or use the known aspect from the request)
+- Accept an optional `aspectRatio` param from the client, or compute it server-side by probing the image
+- Pass `aspectRatio` in the Veo `parameters` block alongside `sampleCount`
 
-### Issue 2: Long-Press Glitchy on iPhone for Video Generation
+### 2. Persist Video URL and Play in Dream Detail
 
-The current implementation uses Radix `ContextMenu` (right-click menu) in `DreamImageWithVideo.tsx`. On iOS, this conflicts with the native long-press behavior (image preview, copy, share sheet), causing a glitchy experience. The browser's native context menu fights with Radix's custom one.
+The edge function already saves `video_url` to the DB (line 296-300). The issue is that after generation, the client updates local state but doesn't persist it back to the local dream store so it survives navigation.
 
-**Fix:**
-- Replace the Radix `ContextMenu` with a custom long-press handler using `onTouchStart`/`onTouchEnd` timers (e.g., 500ms threshold)
-- On long-press detection, show a custom bottom sheet/action menu (using the existing `Drawer` or a simple popover) instead of the native context menu
-- Add `touch-action: none` on the image container during the press to prevent iOS from intercepting
-- Add a subtle scale animation (e.g., scale down to 0.97) during the press to give haptic-like visual feedback, making it feel intentional and smooth
-- Cancel the long-press if the user moves their finger (touch move threshold)
+**File: `src/components/dreams/DreamImageWithVideo.tsx`**
+- After `onVideoGenerated` fires, also call `onUpdate` (new prop) to persist `video_url` in the local dream store
 
-### Files to Modify
+**File: `src/components/DreamDetail.tsx`**
+- Pass an `onUpdate` callback through to `DreamDetailContent` -> `DreamImageWithVideo` so the video URL gets saved to the dream store
+- The existing code already shows video when `videoUrl` is set (line 201) -- just need to ensure it's loaded from `dream.video_url` on open (already done at line 47)
 
-1. **`src/components/DreamDetail.tsx`** -- Add tap highlight suppression and focus outline removal to the avatar button
-2. **`src/components/dreams/DreamImageWithVideo.tsx`** -- Replace Radix ContextMenu with a custom touch-friendly long-press handler that shows a bottom drawer with the action options (Generate Video, Save Image)
+**File: `src/hooks/useDreamDbActions.tsx`**
+- Add `video_url` to the `allowedFields` array (line 42) so edits that include video_url are persisted
 
-### Technical Details
+### 3. Video Carousel in Edit Dream Form
 
-**DreamDetail.tsx (avatar button fix):**
-```tsx
-<button
-  onClick={...}
-  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity w-fit focus:outline-none select-none"
-  style={{ WebkitTapHighlightColor: 'transparent' }}
->
-```
+Add a horizontal carousel in the "Dream Visualization" section of `DreamEntryForm.tsx` / `DreamImageGenerator.tsx` that shows:
+- **Slide 1**: The dream image (existing behavior)
+- **Slide 2** (if video exists): The dream video with playback, plus buttons to edit the animation prompt and regenerate/delete the video
 
-**DreamImageWithVideo.tsx (long-press rewrite):**
-- Use `useRef` for a timer and touch start position
-- `onTouchStart`: record position, start 500ms timer that triggers menu open
-- `onTouchMove`: if moved > 10px, cancel timer
-- `onTouchEnd`: cancel timer
-- Show a `Drawer` (vaul) from the bottom with the menu items instead of ContextMenu
-- Add a press-and-hold visual: scale the image to 0.97 during the hold, reset on release
-- Keep the desktop right-click ContextMenu as a fallback for non-touch devices
+**File: `src/components/DreamImageGenerator.tsx`**
+- Accept new props: `existingVideoUrl`, `dreamId`, `onVideoDeleted`, `onVideoGenerated`, `dreamContent`
+- When a video exists, wrap the image display in a `Carousel` with two slides
+- Slide 1: Existing `ImageDisplay` component
+- Slide 2: Video player with:
+  - Inline `<video>` element playing the existing video
+  - "Delete Video" button (deletes from storage + clears `video_url` in DB)
+  - "Regenerate Video" button (opens `GenerateVideoDialog` to edit prompt and regenerate)
+- Add dot indicators to show which slide is active
+
+**File: `src/components/DreamEntryForm.tsx`**
+- Pass `existingDream?.video_url` and `existingDream?.id` as new props to `DreamImageGenerator`
+- Pass `dreamContent` (formData.content) for the animation prompt composer
+- Handle `onVideoDeleted` to clear video_url from the dream
+- Handle `onVideoGenerated` to update the video_url
+
+**File: `src/components/dreams/GenerateVideoDialog.tsx`**
+- No structural changes needed -- it already accepts `dreamId`, `imageUrl`, `onVideoGenerated`, and `dreamContent`
+
+### 4. Video Deletion Logic
+
+**File: `src/components/DreamImageGenerator.tsx`**
+- Add a `handleDeleteVideo` function that:
+  1. Deletes the video file from the `dream-videos` Supabase storage bucket
+  2. Updates the `dream_entries` row to set `video_url = null`
+  3. Calls `onVideoDeleted()` to update parent state
+
+### Technical Summary
+
+Files to modify:
+1. **`supabase/functions/generate-dream-video/index.ts`** -- Add `aspectRatio` parameter to Veo request based on input image dimensions
+2. **`src/hooks/useDreamDbActions.tsx`** -- Add `video_url` to allowed update fields
+3. **`src/components/DreamImageGenerator.tsx`** -- Add video carousel slide with delete/regenerate controls
+4. **`src/components/DreamEntryForm.tsx`** -- Pass video-related props to `DreamImageGenerator`
+5. **`src/components/DreamDetail.tsx`** -- Ensure video URL updates propagate to dream store
+6. **`src/components/dreams/DreamImageWithVideo.tsx`** -- Minor: propagate video URL update to parent store
+
+No database schema changes needed -- `video_url` column already exists on `dream_entries`.
