@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2, Sparkles, X } from "lucide-react";
+import { Upload, Loader2, Sparkles, X, ArrowLeft } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -364,16 +364,29 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md max-h-[90vh] overflow-hidden flex flex-col">
-        <DialogHeader>
-          <DialogTitle>Your Dream Avatar</DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            Upload reference photos so AI can generate dream images that look like you.
-          </p>
-        </DialogHeader>
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-xl">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-base font-semibold text-foreground">Dream Avatar</h1>
+            <div className="w-10" />
+          </div>
 
-        <div className="space-y-5 overflow-y-auto overflow-x-hidden flex-1 min-h-0 pr-1">
+          <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="px-6 py-6 space-y-5">
+              <p className="text-sm text-muted-foreground">
+                Upload reference photos so AI can generate dream images that look like you.
+              </p>
           {/* Avatar Preview */}
           <div className="flex justify-center">
             <div className="w-32 h-32 rounded-full overflow-hidden border-2 border-muted bg-muted flex items-center justify-center">
@@ -507,7 +520,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-2 pt-2">
+          <div className="flex justify-end space-x-2 pt-2 pb-24">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
               Cancel
             </Button>
@@ -522,9 +535,11 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
               )}
             </Button>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
