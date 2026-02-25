@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
@@ -12,6 +12,7 @@ import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
+import ExportJournalDialog from "./ExportJournalDialog";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -40,6 +41,7 @@ const SettingsDialog = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
+  const [showExportJournal, setShowExportJournal] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -111,6 +113,16 @@ const SettingsDialog = ({
               <Separator />
 
               <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Data</h4>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowExportJournal(true)}>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Export Dream Journal
+                </Button>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Community</h4>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowGuidelines(true)}>
                   <Shield className="h-4 w-4 mr-2" />
@@ -165,6 +177,7 @@ const SettingsDialog = ({
     <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
+    <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
   </>;
 };
