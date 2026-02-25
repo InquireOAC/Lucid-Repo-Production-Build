@@ -230,11 +230,16 @@ Deno.serve(async (req) => {
 
     // Extract video data - Veo returns various nested formats
     const generatedVideos =
+      result.videos ||
       result.generateVideoResponse?.generatedSamples ||
       result.predictions ||
       result.generatedSamples ||
       [];
+
     if (generatedVideos.length === 0) {
+      if (result.raiMediaFilteredCount && result.raiMediaFilteredCount > 0) {
+        throw new Error("Video was blocked by safety filters. Try a gentler prompt.");
+      }
       throw new Error("No video generated in the response. Keys: " + Object.keys(result).join(", "));
     }
 
@@ -249,19 +254,24 @@ Deno.serve(async (req) => {
       for (let i = 0; i < binaryString.length; i++) {
         videoBytes[i] = binaryString.charCodeAt(i);
       }
-    } else if (videoData.gcsUri || videoData.video?.uri || videoData.video?.gcsUri) {
-      // Video stored in GCS, need to download it
-      const gcsUri = videoData.gcsUri || videoData.video?.uri || videoData.video?.gcsUri;
-      const gcsPath = gcsUri.replace("gs://", "");
-      const bucket = gcsPath.split("/")[0];
-      const objectPath = gcsPath.split("/").slice(1).join("/");
+    } else if (videoData.gcsUri || videoData.uri || videoData.video?.uri || videoData.video?.gcsUri) {
+      // Video stored in GCS (or direct URI), need to download it
+      const sourceUri = videoData.gcsUri || videoData.uri || videoData.video?.uri || videoData.video?.gcsUri;
 
-      const gcsUrl = `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media`;
-      const gcsRes = await fetch(gcsUrl, {
+      const downloadUrl = sourceUri.startsWith("gs://")
+        ? (() => {
+            const gcsPath = sourceUri.replace("gs://", "");
+            const bucket = gcsPath.split("/")[0];
+            const objectPath = gcsPath.split("/").slice(1).join("/");
+            return `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media`;
+          })()
+        : sourceUri;
+
+      const gcsRes = await fetch(downloadUrl, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
 
-      if (!gcsRes.ok) throw new Error(`Failed to download video from GCS: ${gcsRes.status}`);
+      if (!gcsRes.ok) throw new Error(`Failed to download video from source URI: ${gcsRes.status}`);
       videoBytes = new Uint8Array(await gcsRes.arrayBuffer());
     } else {
       throw new Error("Unexpected video response format");
