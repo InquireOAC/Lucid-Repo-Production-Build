@@ -109,12 +109,6 @@ const DreamAnalysis = ({
   if (showInfo && !analysis && !isGenerating) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
-            Dream Analysis
-          </CardTitle>
-        </CardHeader>
         <CardContent>
           <div className="text-center space-y-4 py-2">
             <p className="text-sm text-muted-foreground">
