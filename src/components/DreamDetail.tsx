@@ -12,6 +12,7 @@ import ShareButton from "@/components/share/ShareButton";
 import DreamComments from "@/components/DreamComments";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 
@@ -37,8 +38,11 @@ const DreamDetail = ({
   onLike
 }: DreamDetailProps) => {
   const { user, profile: authProfile } = useAuth();
+  const { subscription } = useSubscriptionContext();
+  const isSubscribed = !!subscription?.subscribed;
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [videoUrl, setVideoUrl] = useState(dream.video_url || null);
   const [commentCount, setCommentCount] = useState(dream.comment_count || dream.commentCount || 0);
 
   // Like state for like button near comments
@@ -191,6 +195,10 @@ const DreamDetail = ({
               onLike={onLike}
               currentUser={user}
               audioUrl={audioUrl || dream.audioUrl}
+              videoUrl={videoUrl || undefined}
+              isOwner={!!isOwner}
+              isSubscribed={isSubscribed}
+              onVideoGenerated={(url) => setVideoUrl(url)}
             />
             
             <div className="flex justify-between items-center mt-4 gap-2 flex-wrap">
