@@ -114,9 +114,10 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Data</h4>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowExportJournal(true)}>
+                <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
                   <BookOpen className="h-4 w-4 mr-2" />
                   Export Dream Journal
+                  <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coming Soon</span>
                 </Button>
               </div>
 
