@@ -1,10 +1,9 @@
 
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
 import DeleteAccountDialog from "./DeleteAccountDialog";
@@ -47,14 +46,26 @@ const SettingsDialog = ({
   };
 
   return <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[95vw] max-w-md h-[80vh] flex flex-col p-0 pt-10">
-          <DialogHeader className="px-6 pb-4 shrink-0">
-            <DialogTitle>Settings</DialogTitle>
-          </DialogHeader>
-          
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="px-6 pb-6 space-y-4">
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-background flex flex-col"
+          initial={{ x: "100%" }}
+          animate={{ x: 0 }}
+          exit={{ x: "100%" }}
+          transition={{ type: "spring", damping: 28, stiffness: 300 }}
+          style={{ paddingTop: "env(safe-area-inset-top)" }}
+        >
+          <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-xl">
+            <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h1 className="text-base font-semibold text-foreground">Settings</h1>
+            <div className="w-10" />
+          </div>
+
+          <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="px-6 py-6 space-y-4">
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>
@@ -129,39 +140,33 @@ const SettingsDialog = ({
 
               <div className="space-y-2 pb-4">
                 <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
-                <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700" onClick={() => {
-                onSignOut();
-                onOpenChange(false);
-              }}>
+                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => {
+                  onSignOut();
+                  onOpenChange(false);
+                }}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
-                <Button variant="ghost" className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowDeleteAccount(true)}>
+                <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => setShowDeleteAccount(true)}>
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete Account
                 </Button>
               </div>
             </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
 
-      <CommunityGuidelinesDialog open={showGuidelines} onOpenChange={setShowGuidelines} />
-
-      <BlockedUsersDialog open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
-
-      <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
-
-      <AIContextDialog open={showAIContext} onOpenChange={setShowAIContext} />
-
-      <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
-
-      <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
-
-      <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
-
-      {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
-    </>;
+    <CommunityGuidelinesDialog open={showGuidelines} onOpenChange={setShowGuidelines} />
+    <BlockedUsersDialog open={showBlockedUsers} onOpenChange={setShowBlockedUsers} />
+    <DeleteAccountDialog open={showDeleteAccount} onOpenChange={setShowDeleteAccount} />
+    <AIContextDialog open={showAIContext} onOpenChange={setShowAIContext} />
+    <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
+    <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
+    <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
+    {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
+  </>;
 };
 
 export default SettingsDialog;
