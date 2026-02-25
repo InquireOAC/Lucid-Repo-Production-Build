@@ -169,6 +169,7 @@ const DreamDetailContent = ({
             onLike={onLike}
             currentUser={currentUser}
             onVideoGenerated={onVideoGenerated}
+            dreamContent={content}
           />
         </div>
       )}
