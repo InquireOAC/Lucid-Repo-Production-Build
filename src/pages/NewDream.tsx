@@ -324,28 +324,17 @@ const NewDream = () => {
 
         {/* Transform Section - Always visible */}
         <div className="space-y-4">
-          <div className="featured-card p-6 rounded-2xl space-y-4">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold white-text">Analyze Dream</h3>
-            </div>
-            
-            <div className="space-y-3">
-              <DreamAnalysis
-                dreamContent={formData.content}
-                existingAnalysis={formData.analysis}
-                onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))} />
-
-              
-              <DreamImageGenerator
-                dreamContent={formData.content}
-                existingImage={formData.generatedImage}
-                existingPrompt={formData.imagePrompt}
-                onImageGenerated={(image, prompt) =>
-                setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
-                } />
-
-            </div>
-          </div>
+          <DreamAnalysis
+            dreamContent={formData.content}
+            existingAnalysis={formData.analysis}
+            onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))} />
+          <DreamImageGenerator
+            dreamContent={formData.content}
+            existingImage={formData.generatedImage}
+            existingPrompt={formData.imagePrompt}
+            onImageGenerated={(image, prompt) =>
+              setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
+            } />
         </div>
 
         {/* Save Button (mobile bottom) */}
