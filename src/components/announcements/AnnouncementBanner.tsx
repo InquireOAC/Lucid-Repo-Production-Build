@@ -31,10 +31,8 @@ const AnnouncementBanner = () => {
   const config = typeConfig[currentAnnouncement.type] || typeConfig.announcement;
 
   const handleClick = () => {
-    if (currentAnnouncement.link_url) {
-      window.open(currentAnnouncement.link_url, '_blank', 'noopener,noreferrer');
-    }
-    dismissAnnouncement(currentAnnouncement.id);
+    if (!currentAnnouncement.link_url) return;
+    window.open(currentAnnouncement.link_url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -47,8 +45,12 @@ const AnnouncementBanner = () => {
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
       >
         <div
-          className={cn("relative flex items-center gap-2 px-4 py-2.5 cursor-pointer", config.className)}
-          onClick={handleClick}
+          className={cn(
+            "relative flex items-center gap-2 px-4 py-2.5",
+            currentAnnouncement.link_url ? "cursor-pointer" : "cursor-default",
+            config.className
+          )}
+          onClick={currentAnnouncement.link_url ? handleClick : undefined}
         >
           {config.icon}
           <div className="flex-1 min-w-0">
