@@ -79,7 +79,8 @@ export const useNativeSubscription = () => {
           productId = 'price_basic';
           features = [
             'Unlimited Dream Analysis',
-            '25 Dream Art Generations',
+            '10 Dream Art Generations',
+            'Voice-to-Text Journaling',
             'Priority Support'
           ];
         } else if (isPremium) {
@@ -88,6 +89,7 @@ export const useNativeSubscription = () => {
           features = [
             'Unlimited Dream Analysis',
             'Unlimited Dream Art Generation',
+            'Voice-to-Text Journaling',
             'Priority Support'
           ];
         } else {

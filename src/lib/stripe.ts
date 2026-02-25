@@ -94,8 +94,8 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
         console.log(`Premium RevenueCat: ${imageUsed}/1000 images used, access: ${hasCredits}`);
         return hasCredits;
       } else if (subscription.price_id === 'com.lucidrepo.limited.monthly') {
-        const hasCredits = imageUsed < 25; // Basic: 25 images
-        console.log(`Basic RevenueCat: ${imageUsed}/25 images used, access: ${hasCredits}`);
+        const hasCredits = imageUsed < 10; // Basic: 10 images
+        console.log(`Basic RevenueCat: ${imageUsed}/10 images used, access: ${hasCredits}`);
         return hasCredits;
       } else {
         // Default for iOS subscriptions without clear price_id
@@ -122,7 +122,7 @@ const checkCreditsForSubscription = (subscription: any, featureType: 'analysis' 
     return true;
   } else if (featureType === 'image') {
     const imageUsed = subscription.image_generations_used || 0;
-    const imageLimit = isPremium ? 1000 : (isBasic ? 25 : 0);
+    const imageLimit = isPremium ? 1000 : (isBasic ? 10 : 0);
     const hasCredits = imageUsed < imageLimit;
     console.log(`Stripe ${isPremium ? 'Premium' : 'Basic'}: ${imageUsed}/${imageLimit} images used, access: ${hasCredits}`);
     return hasCredits;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,8 @@ const DreamEntryForm = ({
   isSubmitting: externalIsSubmitting 
 }: DreamEntryFormProps) => {
   const { user } = useAuth();
+  const { subscription } = useSubscriptionContext();
+  const isSubscribed = !!subscription && subscription.status === 'active';
   const navigate = useNavigate();
   const { uploadAudio, deleteAudio, isUploading } = useAudioUpload();
   
@@ -379,6 +382,7 @@ const DreamEntryForm = ({
                     }
                   }}
                   disabled={isUploading || externalIsSubmitting || isSubmitting}
+                  isSubscribed={isSubscribed}
                 />
               </div>
               
