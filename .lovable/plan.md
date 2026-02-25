@@ -1,79 +1,34 @@
 
 
-# Export Dream Journal as PDF Book
+# Fix PDF Preview - Render Pages as Images
 
-## Overview
-Add an "Export Dream Journal" button to the Settings screen that generates a beautifully formatted PDF book from the user's dream entries. The PDF includes a cover page with the user's profile info, and each dream entry gets its own page(s) with the dream image, title, date, tags, mood, description, and analysis. The user can then download or share the PDF.
+## Problem
+The `iframe`-based PDF preview doesn't work in sandboxed environments (Lovable preview, many mobile browsers). The iframe just shows a broken file icon instead of rendering the PDF content.
 
-## New Dependency
-- **jspdf** -- lightweight client-side PDF generation library (no server needed)
+## Solution
+Instead of embedding the PDF in an iframe, convert each page of the generated PDF to a JPEG image using jsPDF's internal rendering and an HTML canvas, then display the images in a scrollable container. This works universally across all browsers and environments.
 
-## New Files
+## Technical Changes
 
 ### 1. `src/utils/exportDreamJournalPdf.ts`
-Core PDF generation logic using jsPDF:
+- Change the export function to return **both** the PDF blob and an array of page image data URLs (base64 JPEG strings).
+- After building the PDF, loop through each page using `doc.setPage(p)` and `doc.output("datauristring")` -- but since jsPDF doesn't have a per-page-to-image API, we'll use `doc.output("arraybuffer")` for the blob and separately generate page preview images using an offscreen canvas approach with jsPDF's internal canvas mode.
+- Alternatively (simpler): use `doc.output("datauristring")` and let the dialog render page images. However, the most reliable approach is to generate page snapshots during PDF creation.
+- **Chosen approach**: Modify the function signature to return `{ blob: Blob, pageImages: string[] }`. For each page, after rendering its content, capture a snapshot using jsPDF's `internal.getCanvas()` or by converting each page to a data URL. Since jsPDF doesn't natively support per-page canvas export, we'll instead render a simplified preview using the dream entry data directly in the dialog component (showing dream title, image, description as styled cards).
 
-- **Cover page**: 
-  - Title: "Dream Journal" in large decorative text
-  - Subtitle: user's display name or username
-  - Date range (earliest to latest dream date)
-  - Total dream count
-  - A soft gradient or border decoration
-
-- **Dream entry pages** (one per dream, sorted by date descending):
-  - Dream title (large, bold)
-  - Date and mood
-  - Tags as inline labels
-  - Dream image (if available) -- fetched and embedded as base64
-  - Dream description (content) with text wrapping
-  - Dream analysis section (if available), separated by a divider
-  - Page number in footer
-
-- **Image handling**: 
-  - Fetch each dream image URL, draw it to a canvas to get base64
-  - Skip images that fail to load (show placeholder text instead)
-  - Images sized to fit within page width while maintaining aspect ratio
-
-- **Export function signature**:
-  ```
-  exportDreamJournalPdf(dreams: DreamEntry[], profile: { display_name, username }): Promise<Blob>
-  ```
+**Revised simpler approach**: Keep the PDF generation as-is (returns a Blob). In the dialog, instead of an iframe, render a card-based preview of the dream entries directly in React, showing what will be in the PDF. This is more reliable and provides a better mobile UX than trying to render actual PDF pages.
 
 ### 2. `src/components/profile/ExportJournalDialog.tsx`
-A full-screen slide-in dialog (matching the existing settings sub-dialog pattern) that:
+- Remove the `iframe` approach entirely.
+- Remove `pdfUrl` / `useMemo` / `useEffect` for object URL cleanup.
+- After PDF generation succeeds, show a scrollable preview of dream entry cards (styled to look like book pages) instead of the iframe:
+  - Cover card: "Dream Journal" title, author name, dream count, date range
+  - Dream entry cards: title, date, mood, image thumbnail, truncated content, analysis indicator
+- Keep the Download, Share, and Regenerate buttons pinned at the bottom.
+- The preview acts as a visual confirmation of what's in the PDF before downloading.
 
-- Shows a preview summary: "X dreams will be exported"
-- Has a "Generate PDF" button that triggers the export
-- Shows a progress indicator while generating (loading spinner + "Generating your dream journal...")
-- Once complete, offers two buttons:
-  - "Download" -- saves the PDF file
-  - "Share" -- uses Capacitor Share on native, or triggers download on web
-- Error handling with toast messages
-
-## Modified Files
-
-### 3. `src/components/profile/SettingsDialog.tsx`
-- Add a new section "Data" between "Dream Avatar" and "Community" with:
-  - Button: "Export Dream Journal" with a `BookOpen` icon from lucide-react
-- Add state `showExportJournal` and render `ExportJournalDialog`
-
-## Technical Details
-
-**jsPDF usage:**
-- Create A4-sized pages (210 x 297 mm)
-- Use built-in fonts (Helvetica for body, Helvetica-Bold for titles)
-- `addImage()` for dream images with JPEG compression to keep file size reasonable
-- `splitTextToSize()` for word-wrapping long dream descriptions
-- `addPage()` for each new dream entry
-- Footer with page numbers on every page
-
-**Image loading strategy:**
-- For each dream with an image URL, create an `<img>` element, load the URL with crossOrigin, draw to an offscreen canvas, and extract as JPEG base64
-- Use a timeout (5s per image) to avoid blocking on broken URLs
-- Process images sequentially to avoid memory spikes
-
-**Sharing on native:**
-- Write the PDF blob to Capacitor Filesystem as a temp file
-- Use `Share.share({ url: fileUri })` to open the native share sheet
-- On web, use `saveAs()` from file-saver (already installed)
+This approach is:
+- Universally compatible (no iframe/PDF viewer dependency)
+- Better UX on mobile (native scrolling, not a PDF viewer in an iframe)
+- Lightweight (no additional dependencies needed)
 
