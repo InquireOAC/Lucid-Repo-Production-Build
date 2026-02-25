@@ -31,15 +31,17 @@ const AddDreamDialog = ({
 }: AddDreamDialogProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-2xl glass-card border-white/10">
+      <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-hidden flex flex-col glass-card border-white/10">
         <DialogHeader>
           <DialogTitle className="gradient-text">Record New Dream</DialogTitle>
         </DialogHeader>
-        <DreamEntryForm
-          tags={tags}
-          onSubmit={onSubmit}
-          isSubmitting={isSubmitting}
-        />
+        <div className="overflow-y-auto overflow-x-hidden flex-1 min-h-0 pr-1">
+          <DreamEntryForm
+            tags={tags}
+            onSubmit={onSubmit}
+            isSubmitting={isSubmitting}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

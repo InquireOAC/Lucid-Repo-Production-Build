@@ -1,8 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Brain, Lock, RefreshCw } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -90,87 +89,82 @@ const DreamAnalysis = ({
 
   if (subscriptionLoading && !subscription) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center text-lg">
-            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
-            Dream Analysis
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-2">
-            Checking subscription status...
-          </p>
-        </CardContent>
-      </Card>
+      <div className="glass-card rounded-2xl p-6 border border-primary/10">
+        <p className="text-sm text-muted-foreground text-center py-2">
+          Checking subscription status...
+        </p>
+      </div>
     );
   }
 
   if (showInfo && !analysis && !isGenerating) {
     return (
-      <Card>
-        <CardContent>
-          <div className="text-center space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              {disabled
-                ? "Only the dream owner can analyze this dream."
-                : !isFeatureEnabled
-                ? "You've used your free analysis. Subscribe to analyze more dreams."
-                : "Get a professional multi-layered interpretation of your dream — symbols, emotions, subconscious messages, and a personal reflection invitation."}
-            </p>
-            {!disabled && isFeatureEnabled && (
-              <Button
-                onClick={generateAnalysis}
-                className="bg-gradient-to-r from-dream-purple to-dream-lavender hover:opacity-90 text-white"
-              >
-                
-                Analyze Dream
-              </Button>
-            )}
-            {!disabled && !isFeatureEnabled && (
-              <Button
-                onClick={() => showSubscriptionPrompt('analysis')}
-                variant="outline"
-                className="border-dream-purple text-dream-purple hover:bg-dream-purple hover:text-white"
-              >
-                <Lock className="h-4 w-4 mr-2" />
-                Subscribe to Analyze
-              </Button>
-            )}
+      <div className="glass-card rounded-2xl p-6 border border-primary/10 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="relative text-center space-y-4 py-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
+            <Sparkles className="h-6 w-6 text-primary" />
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            {disabled
+              ? "Only the dream owner can analyze this dream."
+              : !isFeatureEnabled
+              ? "You've used your free analysis. Subscribe to analyze more dreams."
+              : "Unlock deeper meaning — symbols, emotions, and subconscious messages interpreted by AI."}
+          </p>
+          {!disabled && isFeatureEnabled && (
+            <Button
+              onClick={generateAnalysis}
+              variant="aurora"
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Analyze Dream
+            </Button>
+          )}
+          {!disabled && !isFeatureEnabled && (
+            <Button
+              onClick={() => showSubscriptionPrompt('analysis')}
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <Lock className="h-4 w-4 mr-2" />
+              Subscribe to Analyze
+            </Button>
+          )}
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center text-lg">
-            <Brain className="h-5 w-5 mr-2 text-dream-purple" />
-            Dream Analysis
-          </CardTitle>
-          {!disabled && isFeatureEnabled && !isGenerating && analysis && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={generateAnalysis}
-              disabled={isGenerating}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-              Regenerate
-            </Button>
-          )}
+    <div className="glass-card rounded-2xl border border-primary/10 overflow-hidden">
+      {/* Header with regenerate */}
+      <div className="flex items-center justify-between px-6 pt-5 pb-2">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">Dream Analysis</span>
         </div>
-      </CardHeader>
-      <CardContent>
+        {!disabled && isFeatureEnabled && !isGenerating && analysis && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={generateAnalysis}
+            disabled={isGenerating}
+            className="text-muted-foreground hover:text-foreground h-8 text-xs"
+          >
+            <RefreshCw className="h-3 w-3 mr-1.5" />
+            Regenerate
+          </Button>
+        )}
+      </div>
+
+      <div className="px-6 pb-6">
         {isGenerating ? (
           <div className="flex flex-col items-center justify-center py-10 space-y-3">
             <div className="relative">
-              <Brain className="h-10 w-10 text-dream-purple opacity-20" />
-              <Loader2 className="h-10 w-10 animate-spin text-dream-purple absolute inset-0" />
+              <Sparkles className="h-10 w-10 text-primary opacity-20" />
+              <Loader2 className="h-10 w-10 animate-spin text-primary absolute inset-0" />
             </div>
             <p className="text-sm text-muted-foreground">
               Exploring the depths of your dream…
@@ -179,8 +173,8 @@ const DreamAnalysis = ({
         ) : analysis ? (
           <AnalysisSections text={analysis} />
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
