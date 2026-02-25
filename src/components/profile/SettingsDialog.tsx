@@ -1,8 +1,10 @@
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
@@ -33,6 +35,8 @@ const SettingsDialog = ({
   setSocialLinks,
   handleUpdateSocialLinks
 }: SettingsDialogProps) => {
+  const navigate = useNavigate();
+  const { isAdmin } = useUserRole();
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
@@ -68,6 +72,16 @@ const SettingsDialog = ({
 
           <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-6 py-6 space-y-4">
+              {isAdmin && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">Admin</h4>
+                  <Button variant="ghost" className="w-full justify-start" onClick={() => { onOpenChange(false); navigate("/admin"); }}>
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Admin Dashboard
+                  </Button>
+                  <Separator />
+                </div>
+              )}
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>

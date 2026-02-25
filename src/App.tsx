@@ -18,6 +18,7 @@ import Insights from './pages/Insights';
 import Explore from './pages/Explore';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import NotFound from './pages/NotFound';
+import AdminDashboard from './pages/AdminDashboard';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
@@ -51,6 +52,7 @@ function App() {
                   <Route path="insights" element={<Insights />} />
                   <Route path="insights/technique/:id" element={<TechniqueDetailPage />} />
                   <Route path="learn" element={<Learn />} />
+                  <Route path="admin" element={<AdminDashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Route>
               </Routes>
