@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { dreamId, imageUrl, animationPrompt } = await req.json();
+    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio } = await req.json();
     if (!dreamId || !imageUrl) throw new Error("dreamId and imageUrl are required");
 
     // Check if user is admin (bypass subscription check)
@@ -144,6 +144,46 @@ Deno.serve(async (req) => {
     // Determine mime type
     const contentType = imageRes.headers.get("content-type") || "image/png";
 
+    // Detect aspect ratio from image dimensions
+    // Parse PNG/JPEG headers to get width/height
+    let detectedAspectRatio = "1:1"; // default
+    if (clientAspectRatio) {
+      detectedAspectRatio = clientAspectRatio;
+    } else {
+      try {
+        // PNG: width at bytes 16-19, height at bytes 20-23 (big-endian)
+        if (bytes[0] === 0x89 && bytes[1] === 0x50) {
+          const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
+          const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
+          const ratio = width / height;
+          if (ratio > 1.4) detectedAspectRatio = "16:9";
+          else if (ratio < 0.7) detectedAspectRatio = "9:16";
+          else detectedAspectRatio = "1:1";
+          console.log(`Detected PNG dimensions: ${width}x${height}, ratio: ${ratio}, aspect: ${detectedAspectRatio}`);
+        }
+        // JPEG: scan for SOF0 marker (0xFF 0xC0)
+        else if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
+          let offset = 2;
+          while (offset < bytes.length - 8) {
+            if (bytes[offset] === 0xFF && (bytes[offset + 1] === 0xC0 || bytes[offset + 1] === 0xC2)) {
+              const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
+              const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
+              const ratio = width / height;
+              if (ratio > 1.4) detectedAspectRatio = "16:9";
+              else if (ratio < 0.7) detectedAspectRatio = "9:16";
+              else detectedAspectRatio = "1:1";
+              console.log(`Detected JPEG dimensions: ${width}x${height}, ratio: ${ratio}, aspect: ${detectedAspectRatio}`);
+              break;
+            }
+            const segLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
+            offset += 2 + segLen;
+          }
+        }
+      } catch (dimErr) {
+        console.warn("Failed to detect image dimensions, using 1:1:", dimErr);
+      }
+    }
+
     // Get Google access token
     const accessToken = await getGoogleAccessToken(saKey);
 
@@ -153,6 +193,8 @@ Deno.serve(async (req) => {
 
     // Start video generation
     const veoUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelId}:predictLongRunning`;
+
+    console.log("Using aspect ratio:", detectedAspectRatio);
 
     const veoRes = await fetch(veoUrl, {
       method: "POST",
@@ -172,6 +214,7 @@ Deno.serve(async (req) => {
         ],
         parameters: {
           sampleCount: 1,
+          aspectRatio: detectedAspectRatio,
         },
       }),
     });

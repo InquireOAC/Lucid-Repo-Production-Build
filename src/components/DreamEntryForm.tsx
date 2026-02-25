@@ -585,6 +585,15 @@ const DreamEntryForm = ({
                 imagePrompt: prompt,
               }));
             }}
+            dreamId={existingDream?.id}
+            existingVideoUrl={existingDream?.video_url}
+            onVideoGenerated={(videoUrl) => {
+              // Video URL is already persisted to DB by edge function
+              if (existingDream) existingDream.video_url = videoUrl;
+            }}
+            onVideoDeleted={() => {
+              if (existingDream) existingDream.video_url = null;
+            }}
           />
 
           {/* Save */}
