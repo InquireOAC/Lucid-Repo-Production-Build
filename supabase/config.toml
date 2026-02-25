@@ -45,3 +45,6 @@ verify_jwt = true
 
 [functions.analyze-character-image]
 verify_jwt = true
+
+[functions.compose-cinematic-prompt]
+verify_jwt = false

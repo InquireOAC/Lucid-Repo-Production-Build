@@ -101,19 +101,21 @@ TONE RULES:
 - Express genuine curiosity and respect for the dreamer's inner world
 - Each section should be 2-4 sentences — substantive but not exhausting`
     
-    console.log(`Generating ${task} for dream content. System prompt: ${systemPrompt.substring(0, 50)}...`)
+    console.log(`Generating ${task} for dream content using Gemini 3 Flash Preview`)
+
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
+    if (!LOVABLE_API_KEY) {
+      throw new Error('LOVABLE_API_KEY is not configured')
+    }
     
-    // Use gpt-4o for analysis (deeper reasoning), mini for image prompt generation
-    const model = (task === 'analyze_dream') ? 'gpt-4o' : 'gpt-4o-mini'
-    
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model,
+        model: 'google/gemini-3-flash-preview',
         messages: [
           {
             role: 'system',
@@ -127,14 +129,26 @@ TONE RULES:
       }),
     })
 
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('AI Gateway error:', response.status, errorText)
+      if (response.status === 429) {
+        throw new Error('Rate limit exceeded. Please try again in a moment.')
+      }
+      if (response.status === 402) {
+        throw new Error('AI credits exhausted. Please add credits to continue.')
+      }
+      throw new Error(`AI Gateway error: ${response.status}`)
+    }
+
     const result = await response.json()
     
-    if (result.error) {
-      console.error('OpenAI API error:', result.error)
-      throw new Error(result.error.message || 'OpenAI API error')
+    const analysis = result.choices?.[0]?.message?.content
+    if (!analysis) {
+      console.error('No content in AI response:', JSON.stringify(result))
+      throw new Error('No analysis generated')
     }
     
-    const analysis = result.choices[0].message.content
     console.log(`Successfully generated ${task} result`)
 
     return new Response(
