@@ -153,7 +153,7 @@ export function useSubscription(user: any) {
       imageTotal = 1000;
     } else if (entitlement.productIdentifier === 'com.lucidrepo.limited.monthly') {
       planName = 'Basic';
-      imageTotal = 25;
+      imageTotal = 10;
     } else {
       // Default to Premium for unrecognized products
       planName = 'Premium';
@@ -199,7 +199,7 @@ export function useSubscription(user: any) {
         imageTotal = 1000;
       } else if (subscriptionData.price_id === 'com.lucidrepo.limited.monthly') {
         planName = 'Basic';
-        imageTotal = 25;
+        imageTotal = 10;
       } else {
         // Fallback for RevenueCat subscriptions without clear price_id
         planName = 'Premium'; // Default to premium for RevenueCat
@@ -210,7 +210,7 @@ export function useSubscription(user: any) {
       imageTotal = 1000;
     } else if (subscriptionData.price_id === 'price_basic') {
       planName = 'Basic';
-      imageTotal = 25;
+      imageTotal = 10;
     } else {
       planName = 'Unknown';
       imageTotal = 0;

@@ -23,6 +23,7 @@ export function normalizeProduct(product: any): Product {
     features = [
       "Unlimited Dream Analysis",
       "Unlimited Dream Art Generations",
+      "Voice-to-Text Journaling",
       "Priority Support"
     ];
   } else if (
@@ -32,6 +33,7 @@ export function normalizeProduct(product: any): Product {
     features = [
       "Unlimited Dream Analysis",
       "10 Dream Art Generations",
+      "Voice-to-Text Journaling",
       "Priority Support"
     ];
   } else {

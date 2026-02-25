@@ -11,6 +11,7 @@ interface VoiceRecorderProps {
   onClear?: () => void;
   disabled?: boolean;
   className?: string;
+  isSubscribed?: boolean;
 }
 
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
@@ -19,6 +20,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onClear,
   disabled = false,
   className,
+  isSubscribed = false,
 }) => {
   const [recordingState, setRecordingState] = useState<'idle' | 'recording' | 'paused' | 'stopped'>('idle');
   const [isPlaying, setIsPlaying] = useState(false);
@@ -89,9 +91,20 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
         // Send the audio blob to parent for processing
         onRecordingComplete(blob);
 
-        // Auto-transcribe the recording
+        // Auto-transcribe the recording (subscription required)
         if (onTranscriptionComplete) {
-          transcribeAudio(blob);
+          if (isSubscribed) {
+            transcribeAudio(blob);
+          } else {
+            toast.error('Subscribe to unlock AI voice transcription', {
+              description: 'Your audio recording has been saved, but transcription requires a subscription.',
+              action: {
+                label: 'Upgrade',
+                onClick: () => window.location.href = '/profile?tab=subscription'
+              },
+              duration: 5000
+            });
+          }
         }
       };
 
@@ -354,7 +367,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       {!hasRecording && recordingState === 'idle' && !isTranscribing && (
         <div className="text-center text-sm text-muted-foreground">
           <p>Tap the red circle to start recording your dream</p>
-          <p>Your voice will be automatically transcribed</p>
+          <p>{isSubscribed ? 'Your voice will be automatically transcribed' : 'Subscribe to unlock automatic transcription'}</p>
         </div>
       )}
     </div>

@@ -92,6 +92,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         features: [
         "Unlimited Dream Analysis",
         "10 Dream Art Generations",
+        "Voice-to-Text Journaling",
         "Priority Support"]
 
       },
@@ -102,6 +103,7 @@ const StripeSubscriptionManager = ({ currentPlan }: StripeSubscriptionManagerPro
         features: [
         "Unlimited Dream Analysis",
         "Unlimited Dream Art Generation",
+        "Voice-to-Text Journaling",
         "Priority Support"]
 
       }]
