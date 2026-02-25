@@ -102,17 +102,29 @@ Deno.serve(async (req) => {
     const { dreamId, imageUrl, animationPrompt } = await req.json();
     if (!dreamId || !imageUrl) throw new Error("dreamId and imageUrl are required");
 
-    // Check subscription
-    const { data: subData } = await supabase
-      .from("stripe_subscriptions")
-      .select("status, price_id")
+    // Check if user is admin (bypass subscription check)
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
       .eq("user_id", user.id)
-      .is("deleted_at", null)
-      .eq("status", "active")
+      .eq("role", "admin")
       .maybeSingle();
 
-    if (!subData) {
-      throw new Error("Active subscription required for video generation");
+    const isAdmin = !!roleData;
+
+    if (!isAdmin) {
+      // Check subscription
+      const { data: subData } = await supabase
+        .from("stripe_subscriptions")
+        .select("status, price_id")
+        .eq("user_id", user.id)
+        .is("deleted_at", null)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (!subData) {
+        throw new Error("Active subscription required for video generation");
+      }
     }
 
     // Fetch the image and convert to base64
