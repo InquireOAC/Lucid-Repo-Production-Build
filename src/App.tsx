@@ -21,6 +21,7 @@ import NotFound from './pages/NotFound';
 import MainLayout from './layouts/MainLayout';
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
+import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ function App() {
       <AuthProvider>
         <SubscriptionProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+            <ColorSchemeProvider>
             <Toaster />
             <BrowserRouter>
               <Routes>
@@ -53,6 +55,7 @@ function App() {
                 </Route>
               </Routes>
             </BrowserRouter>
+            </ColorSchemeProvider>
           </ThemeProvider>
         </SubscriptionProvider>
       </AuthProvider>
