@@ -3,7 +3,7 @@ import { BookOpen, Sparkles, Heart, MessageCircle, Lightbulb } from "lucide-reac
 
 const SECTION_CONFIG: Record<string, { icon: React.ElementType; color: string }> = {
   "Core Narrative": { icon: BookOpen, color: "text-blue-400" },
-  "Symbols & Archetypes": { icon: Sparkles, color: "text-purple-400" },
+  "Symbols & Archetypes": { icon: Sparkles, color: "text-blue-400" },
   "Emotional Undercurrents": { icon: Heart, color: "text-rose-400" },
   "Message": { icon: MessageCircle, color: "text-amber-400" },
   "Invitation": { icon: Lightbulb, color: "text-emerald-400" },

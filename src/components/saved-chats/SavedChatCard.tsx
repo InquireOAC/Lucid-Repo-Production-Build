@@ -45,7 +45,7 @@ const SavedChatCard = ({
   const getExpertColor = (type: string) => {
     switch (type) {
       case 'jungian':
-        return 'bg-purple-500/20 text-purple-300 border-purple-400/30';
+        return 'bg-blue-500/20 text-blue-300 border-blue-400/30';
       case 'shamanic':
         return 'bg-green-500/20 text-green-300 border-green-400/30';
       case 'cbt':
@@ -54,7 +54,7 @@ const SavedChatCard = ({
         return 'bg-white/10 text-white/80 border-white/20';
     }
   };
-  return <Card className="cursor-pointer glass-card border border-white/10 hover:border-white/20 transition-all duration-300 group hover:scale-[1.02] hover:shadow-xl hover:shadow-purple-500/10" onClick={() => onOpenSession(session)}>
+  return <Card className="cursor-pointer glass-card border border-white/10 hover:border-white/20 transition-all duration-300 group hover:scale-[1.02] hover:shadow-xl hover:shadow-blue-500/10" onClick={() => onOpenSession(session)}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
@@ -90,7 +90,7 @@ const SavedChatCard = ({
                 <MessageCircle className="h-3 w-3 mr-1" />
                 {session.messages.length} {session.messages.length === 1 ? 'message' : 'messages'}
               </div>
-              <span className="text-xs text-purple-300 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-xs text-blue-300 opacity-0 group-hover:opacity-100 transition-opacity">
                 Click to continue →
               </span>
             </div>

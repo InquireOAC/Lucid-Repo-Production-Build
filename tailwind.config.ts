@@ -64,40 +64,40 @@ export default {
     			ring: 'hsl(var(--ring))',
     			background: 'hsl(var(--background))',
     			foreground: 'hsl(var(--foreground))',
-    			cosmic: {
-    				black: 'hsl(250, 25%, 5%)',
-    				purple: 'hsl(280, 70%, 55%)',
-    				violet: 'hsl(270, 100%, 65%)',
+    		cosmic: {
+    				black: 'hsl(220, 15%, 6%)',
+    				purple: 'hsl(217, 91%, 60%)',
+    				violet: 'hsl(220, 80%, 65%)',
     				blue: 'hsl(220, 80%, 60%)',
     				gold: 'hsl(45, 90%, 60%)',
-    				deep: 'hsl(255, 22%, 7%)'
+    				deep: 'hsl(220, 13%, 8%)'
     			},
     			aurora: {
-    				purple: 'hsl(280, 70%, 55%)',
+    				purple: 'hsl(217, 91%, 60%)',
     				blue: 'hsl(220, 80%, 60%)',
     				teal: 'hsl(175, 70%, 50%)',
-    				violet: 'hsl(270, 100%, 65%)',
+    				violet: 'hsl(220, 80%, 65%)',
     				gold: 'hsl(45, 90%, 60%)'
     			},
     			dream: {
-    				purple: 'hsl(280, 70%, 55%)',
-    				violet: 'hsl(270, 100%, 65%)',
+    				purple: 'hsl(217, 91%, 60%)',
+    				violet: 'hsl(220, 80%, 65%)',
     				blue: 'hsl(220, 80%, 60%)',
     				gold: 'hsl(45, 90%, 60%)',
-    				dark: 'hsl(250, 25%, 5%)',
-    				light: 'hsl(280, 60%, 75%)',
-    				midnight: 'hsl(255, 22%, 7%)',
+    				dark: 'hsl(220, 15%, 6%)',
+    				light: 'hsl(217, 60%, 75%)',
+    				midnight: 'hsl(220, 13%, 8%)',
     				teal: 'hsl(175, 70%, 50%)',
     				cyan: 'hsl(180, 70%, 55%)',
     				seafoam: 'hsl(165, 70%, 65%)'
     			},
     			oniri: {
-    				cosmic: 'hsl(255, 22%, 7%)',
-    				purple: 'hsl(280, 70%, 55%)',
-    				violet: 'hsl(270, 100%, 65%)',
-    				dark: 'hsl(250, 25%, 5%)',
-    				card: 'hsl(250, 20%, 8%)',
-    				glass: 'rgba(147, 51, 234, 0.02)'
+    				cosmic: 'hsl(220, 13%, 8%)',
+    				purple: 'hsl(217, 91%, 60%)',
+    				violet: 'hsl(220, 80%, 65%)',
+    				dark: 'hsl(220, 15%, 6%)',
+    				card: 'hsl(220, 13%, 8%)',
+    				glass: 'rgba(59, 130, 246, 0.02)'
     			},
     			primary: {
     				DEFAULT: 'hsl(var(--primary))',

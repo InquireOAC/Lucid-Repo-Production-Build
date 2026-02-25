@@ -16,10 +16,10 @@ export function getDifficultyStyles(difficulty: "Beginner" | "Intermediate" | "A
       };
     case "Advanced":
       return {
-        gradient: "from-purple-500/20 to-rose-700/10",
-        border: "border-purple-500/25",
-        badgeBg: "bg-purple-500/20 text-purple-300",
-        iconBg: "bg-purple-500/10",
+        gradient: "from-blue-500/20 to-blue-700/10",
+        border: "border-blue-500/25",
+        badgeBg: "bg-blue-500/20 text-blue-300",
+        iconBg: "bg-blue-500/10",
       };
   }
 }

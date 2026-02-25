@@ -110,7 +110,7 @@ const DreamShareSelector = ({ isOpen, onClose, onSelectDream }: DreamShareSelect
                   <div
                     key={dream.id}
                     onClick={() => handleSelectDream(dream.id)}
-                    className="glass-card rounded-xl p-4 cursor-pointer border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-purple-500/10"
+                    className="glass-card rounded-xl p-4 cursor-pointer border-white/10 hover:border-white/20 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg hover:shadow-blue-500/10"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ const DreamShareSelector = ({ isOpen, onClose, onSelectDream }: DreamShareSelect
                             {dream.tags.slice(0, 3).map((tag, index) => (
                               <span
                                 key={index}
-                                className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded-full"
+                                className="text-xs bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full"
                               >
                                 {tag}
                               </span>
