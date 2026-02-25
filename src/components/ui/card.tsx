@@ -8,10 +8,11 @@ const cardVariants = cva(
     variants: {
       variant: {
         default: "bg-card border-primary/10 shadow-lg backdrop-blur-sm",
-        glass: "glass-card",
+        glass: "vault-glass",
         luminous: "luminous-card",
         featured: "featured-card",
         compact: "bg-card/80 border-border/30 backdrop-blur-sm",
+        tech: "vault-glass vault-card-lift vault-light-sweep",
       },
     },
     defaultVariants: {

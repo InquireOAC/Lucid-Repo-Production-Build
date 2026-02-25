@@ -19,9 +19,10 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-primary/10 hover:text-primary",
         link: "text-primary underline-offset-4 hover:underline",
-        luminous: "bg-gradient-to-r from-primary via-accent to-primary text-primary-foreground shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] animate-aurora bg-[length:200%_100%]",
-        aurora: "bg-[hsl(270,70%,50%)] text-white shadow-lg shadow-purple-500/30 hover:bg-[hsl(270,70%,58%)] hover:scale-[1.02] hover:shadow-purple-500/50",
-        magic: "bg-gradient-to-r from-aurora-purple to-aurora-gold text-white shadow-lg shadow-aurora-purple/30 hover:shadow-aurora-gold/40 hover:scale-[1.02]",
+        luminous: "bg-gradient-primary text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02] animate-gradient-shift bg-[length:200%_100%]",
+        aurora: "bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02]",
+        magic: "bg-gradient-to-r from-primary to-secondary text-white shadow-lg shadow-primary/30 hover:shadow-secondary/40 hover:scale-[1.02]",
+        tech: "vault-glass border-primary/20 text-foreground hover:border-primary/40 hover:shadow-glow-primary",
       },
       size: {
         default: "h-10 px-4 py-2",

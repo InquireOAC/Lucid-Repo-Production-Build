@@ -29,7 +29,7 @@ const FeaturedDream = ({
 
   return (
     <div 
-      className="featured-card rounded-2xl overflow-hidden cursor-pointer group mb-6"
+      className="vault-glass corner-brackets rounded-2xl overflow-hidden cursor-pointer group mb-6 border border-primary/15"
       onClick={() => onOpenDream(dream)}
     >
       {/* Hero Image */}
