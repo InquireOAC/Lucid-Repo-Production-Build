@@ -16,7 +16,7 @@ const ImagePromptInput = ({ imagePrompt, onChange, disabled = false, onRegenerat
   return (
     <div className="space-y-2">
       <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        Image Prompt
+        Custom Prompt
       </label>
       <Textarea
         placeholder="Describe the image you want to generate..."
