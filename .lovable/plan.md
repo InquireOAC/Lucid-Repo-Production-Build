@@ -1,34 +1,66 @@
 
 
-# Fix PDF Preview - Render Pages as Images
+# Double-Page Spread Book Preview
 
-## Problem
-The `iframe`-based PDF preview doesn't work in sandboxed environments (Lovable preview, many mobile browsers). The iframe just shows a broken file icon instead of rendering the PDF content.
+## Overview
+Redesign the export preview to look like an open novel with double-page spreads. Each dream entry will be displayed as two facing pages side by side -- the dream image on the left page, and the story text (title, date, content, analysis) on the right page. The user scrolls vertically through these spreads like flipping through a book.
 
-## Solution
-Instead of embedding the PDF in an iframe, convert each page of the generated PDF to a JPEG image using jsPDF's internal rendering and an HTML canvas, then display the images in a scrollable container. This works universally across all browsers and environments.
+## Preview Design
+
+### Cover Spread
+- Full-width single "cover" styled like a book front cover with a subtle paper/parchment background, centered title, author name, and stats.
+
+### Dream Entry Spreads
+Each dream is rendered as a horizontal two-page spread:
+
+```text
++-------------------------+-------------------------+
+|                         |  Dream Title             |
+|                         |  January 15, 2026 - Calm |
+|     [Dream Image]       |  #lucid #flying          |
+|     (full bleed,        |                          |
+|      covers entire      |  The dream began in a    |
+|      left page)         |  vast forest where the   |
+|                         |  trees were made of...   |
+|                         |                          |
+|                         |  --- Analysis ---        |
+|                         |  This dream represents...|
+|                         |                          |
+|         pg 1            |         pg 2             |
++-------------------------+-------------------------+
+```
+
+- **Left page**: Dream image filling the page (or a decorative placeholder gradient if no image)
+- **Right page**: Title, date/mood/lucid badge, tags, dream description text, and analysis section
+- Subtle book spine shadow/divider down the center
+- Page numbers at bottom corners
+- Paper-like background color with slight shadow to look like a physical book
+
+### Dreams Without Images
+- Left page shows a decorative gradient or pattern with the dream title overlaid in large text, creating an artistic chapter-opener feel
 
 ## Technical Changes
 
-### 1. `src/utils/exportDreamJournalPdf.ts`
-- Change the export function to return **both** the PDF blob and an array of page image data URLs (base64 JPEG strings).
-- After building the PDF, loop through each page using `doc.setPage(p)` and `doc.output("datauristring")` -- but since jsPDF doesn't have a per-page-to-image API, we'll use `doc.output("arraybuffer")` for the blob and separately generate page preview images using an offscreen canvas approach with jsPDF's internal canvas mode.
-- Alternatively (simpler): use `doc.output("datauristring")` and let the dialog render page images. However, the most reliable approach is to generate page snapshots during PDF creation.
-- **Chosen approach**: Modify the function signature to return `{ blob: Blob, pageImages: string[] }`. For each page, after rendering its content, capture a snapshot using jsPDF's `internal.getCanvas()` or by converting each page to a data URL. Since jsPDF doesn't natively support per-page canvas export, we'll instead render a simplified preview using the dream entry data directly in the dialog component (showing dream title, image, description as styled cards).
+### `src/components/profile/ExportJournalDialog.tsx`
+- Replace the current vertical card list with horizontal double-page spread components
+- Each spread is a flex row with two equal-width "pages" side by side
+- Left page: `aspect-[3/4]` image container with `object-cover`
+- Right page: Scrollable text content with title, metadata, body, and analysis
+- Add book-like styling: paper background (`bg-amber-50/5` or similar warm tone), subtle drop shadow around each spread, a thin vertical divider (spine shadow) between pages
+- On mobile (narrow screens), stack pages vertically (image on top, text below) since side-by-side won't fit -- but still maintain the "page" aesthetic with borders and paper styling
+- Cover page remains full-width as a single centered spread
 
-**Revised simpler approach**: Keep the PDF generation as-is (returns a Blob). In the dialog, instead of an iframe, render a card-based preview of the dream entries directly in React, showing what will be in the PDF. This is more reliable and provides a better mobile UX than trying to render actual PDF pages.
+### `src/utils/exportDreamJournalPdf.ts`
+- Update the PDF generation to use landscape A4 format with a two-column layout per page (left = image, right = text) to match the preview's double-page spread concept
+- Each dream entry becomes a landscape spread: image on the left half, text content on the right half
+- Cover page remains a single portrait page (or landscape centered)
+- Adjust margins and content widths for the landscape two-column layout
 
-### 2. `src/components/profile/ExportJournalDialog.tsx`
-- Remove the `iframe` approach entirely.
-- Remove `pdfUrl` / `useMemo` / `useEffect` for object URL cleanup.
-- After PDF generation succeeds, show a scrollable preview of dream entry cards (styled to look like book pages) instead of the iframe:
-  - Cover card: "Dream Journal" title, author name, dream count, date range
-  - Dream entry cards: title, date, mood, image thumbnail, truncated content, analysis indicator
-- Keep the Download, Share, and Regenerate buttons pinned at the bottom.
-- The preview acts as a visual confirmation of what's in the PDF before downloading.
-
-This approach is:
-- Universally compatible (no iframe/PDF viewer dependency)
-- Better UX on mobile (native scrolling, not a PDF viewer in an iframe)
-- Lightweight (no additional dependencies needed)
+## Styling Details
+- Each spread container: `rounded-lg shadow-xl overflow-hidden border border-border/30`
+- Left page: image with slight sepia/warm overlay for a vintage book feel
+- Right page: warm off-white background, serif-like styling for text (using `font-serif` class)
+- Center spine: `border-r border-border/20` with a subtle gradient shadow
+- Page numbers: bottom-left on left page, bottom-right on right page
+- Vertical spacing between spreads to simulate page gaps
 
