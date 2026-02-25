@@ -1,6 +1,5 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Lock, Check } from "lucide-react";
 import { useColorScheme } from "@/contexts/ColorSchemeContext";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
@@ -39,7 +38,7 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
           <p className="text-sm text-muted-foreground">Set the tone for your dream journal</p>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
           <div className="px-5 pb-5 grid grid-cols-2 gap-2">
             {availableSchemes.map((scheme) => {
               const isActive = currentScheme.id === scheme.id;
@@ -89,7 +88,7 @@ const ColorSchemeDialog = ({ open, onOpenChange }: ColorSchemeDialogProps) => {
               );
             })}
           </div>
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
