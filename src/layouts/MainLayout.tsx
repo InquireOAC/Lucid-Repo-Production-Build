@@ -25,9 +25,9 @@ const MainLayout = () => {
       {/* Fixed opaque overlay for status bar safe area */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       
-      {/* Announcement banner - only on community pages, not journal */}
+      {/* Announcement banner - fixed overlay on community pages */}
       {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
-        <div className="relative z-50">
+        <div className="fixed top-0 left-0 right-0 z-50 pt-safe-top">
           <AnnouncementBanner />
         </div>
       )}
