@@ -1,58 +1,49 @@
 
 
-# Expand Color Palettes & Make Cards Compact
+# Convert Settings Modal to Full-Screen Slide-In
 
 ## Overview
-Expand from 6 schemes to 15 (5 free + 10 premium), make the cards more compact so more fit on screen, and ensure the modal scrolls properly.
+Replace the current `Dialog`-based Settings modal with a full-screen slide-in overlay, matching the Messages screen pattern exactly (using `framer-motion` `AnimatePresence` + `motion.div` sliding in from the right).
 
 ## Changes
 
-### `src/data/colorSchemes.ts`
-- Change 3 of the existing premium schemes to free (so we have 5 free total): Aurora Blue, Cosmic Violet, Emerald Dream, Rose Quartz, Solar Gold all become `requiresSubscription: false`
-- Keep Midnight Teal as premium
-- Add 9 new premium schemes:
-  1. **Crimson Flame** -- deep red/orange (hue 0-15)
-  2. **Lavender Haze** -- soft lilac (hue 270-280)
-  3. **Ocean Depths** -- deep navy blue (hue 210-220)
-  4. **Neon Mint** -- bright mint green (hue 150-160)
-  5. **Sunset Coral** -- warm coral/peach (hue 15-25)
-  6. **Arctic Frost** -- icy light blue (hue 200-210)
-  7. **Mystic Indigo** -- rich indigo (hue 235-245)
-  8. **Cherry Blossom** -- soft sakura pink (hue 330-340)
-  9. **Forest Moss** -- earthy dark green (hue 120-140)
+### `src/components/profile/SettingsDialog.tsx` -- Full rewrite
 
-Each new scheme follows the exact same structure as existing ones (darkVars + lightVars with all 10 CSS variable overrides, plus preview colors).
+**Remove:**
+- `Dialog`, `DialogContent`, `DialogHeader`, `DialogTitle` imports
+- `ScrollArea` import
+- All Dialog wrapper components
 
-### `src/components/profile/ColorSchemeDialog.tsx`
-- Make cards more compact: reduce padding from `p-4` to `p-3`, gradient bar height from `h-3` to `h-2`, gap from `gap-3` to `gap-2`
-- Remove the description text to save vertical space (keep just the gradient bar + name row)
-- Ensure the ScrollArea properly scrolls all 15 items by keeping the existing flex-col layout with `max-h-[80vh]`
+**Add:**
+- `AnimatePresence` and `motion` from `framer-motion`
+- `ArrowLeft` icon from lucide for the back button
 
-## Technical Details
-
-### Compact Card Layout
+**New layout** (matching MessagesDialog pattern):
 ```text
-+--------------------------------------+
-|  [gradient bar ~~~~~~~~~~~~~~~~]     |
-|  Aurora Blue            [checkmark]  |
-+--------------------------------------+
-```
-Each card becomes ~50px tall instead of ~80px, letting users see 8-10 schemes at once without scrolling.
-
-### New Scheme Example Structure
-```typescript
-{
-  id: "crimson-flame",
-  name: "Crimson Flame",
-  description: "Fiery red intensity",
-  requiresSubscription: true,
-  previewColor: "#EF4444",
-  secondaryPreviewColor: "#F97316",
-  darkVars: { /* 10 CSS vars */ },
-  lightVars: { /* 10 CSS vars */ },
-}
++------------------------------------------+
+| [<- Back]        Settings                |
+|------------------------------------------|
+|                                          |
+|  Profile                                 |
+|    Social Links                          |
+|                                          |
+|  Appearance                              |
+|    Color Scheme                          |
+|                                          |
+|  Notifications                           |
+|    Push Notifications                    |
+|    Wake Timer                            |
+|  ...                                     |
+|  (scrollable content)                    |
++------------------------------------------+
 ```
 
-### Files Modified
-1. `src/data/colorSchemes.ts` -- add 9 new premium schemes, make 3 existing ones free
-2. `src/components/profile/ColorSchemeDialog.tsx` -- compact card styling
+Key structural changes:
+- Outer wrapper: `AnimatePresence` with `motion.div` that slides in from `x: "100%"` to `x: 0` (spring damping 28, stiffness 300)
+- Fixed header bar with back arrow, centered "Settings" title, and `safe-area-inset-top` padding
+- Body: native `overflow-y-auto` div containing all the existing setting buttons/sections
+- All existing sub-dialogs (CommunityGuidelines, BlockedUsers, DeleteAccount, AIContext, etc.) remain unchanged -- they still open as regular dialogs on top
+
+### No other files need changes
+The `SettingsDialog` already receives `open`/`onOpenChange` props which work identically with this pattern. `ProfileDialogs.tsx` continues to render it the same way.
+
