@@ -37,12 +37,8 @@ export default function ProfileAvatar({
         <Button
           size="icon"
           variant="outline"
-          className="absolute bottom-0 right-0 rounded-full bg-dream-purple/90 shadow-md p-1 h-8 w-8 border-none flex items-center justify-center"
+          className="absolute bottom-0 right-0 rounded-full bg-primary/90 hover:bg-primary shadow-md p-1 h-8 w-8 border-none flex items-center justify-center"
           onClick={onEdit}
-          style={{
-            background: "#9b87f5",
-            border: "none",
-          }}
         >
           <Edit size={15} color="#fff" />
         </Button>
