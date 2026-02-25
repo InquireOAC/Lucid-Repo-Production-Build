@@ -138,7 +138,7 @@ const SettingsDialog = ({
 
               <Separator />
 
-              <div className="space-y-2 pb-4">
+              <div className="space-y-2 pb-24">
                 <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
                 <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => {
                   onSignOut();
