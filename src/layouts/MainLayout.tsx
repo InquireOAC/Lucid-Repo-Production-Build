@@ -27,7 +27,7 @@ const MainLayout = () => {
       
       {/* Announcement banner - only on community pages, not journal */}
       {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
-        <div className="sticky top-0 z-30">
+        <div className="relative z-50">
           <AnnouncementBanner />
         </div>
       )}
