@@ -163,7 +163,8 @@ const DreamDetail = ({
                     onClose();
                     if (username) navigate(`/profile/${username}`);
                   }}
-                  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity w-fit"
+                  className="flex items-center gap-2.5 hover:opacity-80 transition-opacity w-fit focus:outline-none select-none"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <SymbolAvatar
                     symbol={avatarSymbol}
