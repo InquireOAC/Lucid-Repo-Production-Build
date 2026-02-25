@@ -131,7 +131,15 @@ Deno.serve(async (req) => {
     const imageRes = await fetch(imageUrl);
     if (!imageRes.ok) throw new Error("Failed to fetch dream image");
     const imageBuffer = await imageRes.arrayBuffer();
-    const imageBase64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
+    // Chunk the conversion to avoid stack overflow on large images
+    const bytes = new Uint8Array(imageBuffer);
+    let imageBase64 = '';
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      imageBase64 += String.fromCharCode(...chunk);
+    }
+    imageBase64 = btoa(imageBase64);
 
     // Determine mime type
     const contentType = imageRes.headers.get("content-type") || "image/png";
