@@ -68,7 +68,7 @@ const MasonryDreamCard = ({
 
   return (
     <div 
-      className="masonry-item luminous-card rounded-xl overflow-hidden cursor-pointer group bg-card"
+      className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group"
       onClick={() => onOpenDream(dream)}
     >
       {/* Image */}

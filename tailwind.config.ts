@@ -170,10 +170,10 @@ export default {
     			},
     			'magic-glow': {
     				'0%, 100%': {
-    					boxShadow: '0 0 15px hsla(280, 70%, 55%, 0.2), 0 0 30px hsla(280, 70%, 55%, 0.1)'
+    					boxShadow: '0 0 15px hsla(217, 91%, 60%, 0.2), 0 0 30px hsla(217, 91%, 60%, 0.1)'
     				},
     				'50%': {
-    					boxShadow: '0 0 30px hsla(280, 70%, 55%, 0.4), 0 0 60px hsla(280, 70%, 55%, 0.2)'
+    					boxShadow: '0 0 30px hsla(217, 91%, 60%, 0.4), 0 0 60px hsla(217, 91%, 60%, 0.2)'
     				}
     			},
     			shimmer: {
@@ -209,6 +209,32 @@ export default {
     					opacity: '1',
     					transform: 'translateY(0) scale(1)'
     				}
+    			},
+    			'glow-pulse': {
+    				'0%, 100%': {
+    					boxShadow: '0 0 20px hsla(217, 91%, 60%, 0.15)'
+    				},
+    				'50%': {
+    					boxShadow: '0 0 40px hsla(217, 91%, 60%, 0.3), 0 0 60px hsla(263, 60%, 55%, 0.15)'
+    				}
+    			},
+    			'fade-in-up': {
+    				'0%': {
+    					opacity: '0',
+    					transform: 'translateY(16px)'
+    				},
+    				'100%': {
+    					opacity: '1',
+    					transform: 'translateY(0)'
+    				}
+    			},
+    			'gradient-shift': {
+    				'0%, 100%': {
+    					backgroundPosition: '0% 50%'
+    				},
+    				'50%': {
+    					backgroundPosition: '100% 50%'
+    				}
     			}
     		},
     		animation: {
@@ -219,16 +245,21 @@ export default {
     			shimmer: 'shimmer 3s ease-in-out infinite',
     			glow: 'glow 2s ease-in-out infinite',
     			'aurora-shift': 'aurora-shift 8s ease-in-out infinite',
-    			'page-reveal': 'page-reveal 0.5s ease-out forwards'
+    			'page-reveal': 'page-reveal 0.5s ease-out forwards',
+    			'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
+    			'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
+    			'gradient-shift': 'gradient-shift 6s ease-in-out infinite'
     		},
     		backgroundImage: {
-    			'cosmic-gradient': 'linear-gradient(135deg, hsl(250, 25%, 5%) 0%, hsl(255, 22%, 7%) 50%, hsl(250, 25%, 5%) 100%)',
-    			'aurora-gradient': 'linear-gradient(135deg, hsl(280, 70%, 55%) 0%, hsl(270, 100%, 65%) 50%, hsl(220, 80%, 60%) 100%)',
-    			'magic-gradient': 'linear-gradient(135deg, hsl(280, 70%, 55%) 0%, hsl(45, 90%, 60%) 100%)',
-    			'dream-gradient': 'linear-gradient(to bottom, hsl(250, 25%, 5%), hsl(280, 40%, 25%))',
-    			'oniri-gradient': 'linear-gradient(135deg, hsl(250, 25%, 5%) 0%, hsl(255, 22%, 7%) 50%, hsl(250, 25%, 5%) 100%)',
-    			'oniri-card': 'linear-gradient(135deg, rgba(147, 51, 234, 0.02) 0%, rgba(124, 58, 237, 0.01) 100%)',
-    			'luminous-gradient': 'linear-gradient(135deg, hsl(280, 70%, 55%) 0%, hsl(270, 100%, 65%) 50%, hsl(220, 80%, 60%) 100%)'
+    			'cosmic-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
+    			'aurora-gradient': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 50%, hsl(217, 91%, 60%) 100%)',
+    			'magic-gradient': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 100%)',
+    			'dream-gradient': 'linear-gradient(to bottom, hsl(220, 15%, 6%), hsl(263, 30%, 18%))',
+    			'oniri-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
+    			'oniri-card': 'linear-gradient(135deg, hsl(217, 91%, 60% / 0.02) 0%, hsl(263, 60%, 55% / 0.01) 100%)',
+    			'luminous-gradient': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 50%, hsl(217, 91%, 60%) 100%)',
+    			'gradient-primary': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 100%)',
+    			'gradient-radial': 'radial-gradient(circle at 50% 0%, hsl(217, 91%, 60% / 0.15) 0%, transparent 70%)'
     		},
     		boxShadow: {
     			'2xs': 'var(--shadow-2xs)',
@@ -237,7 +268,9 @@ export default {
     			md: 'var(--shadow-md)',
     			lg: 'var(--shadow-lg)',
     			xl: 'var(--shadow-xl)',
-    			'2xl': 'var(--shadow-2xl)'
+    			'2xl': 'var(--shadow-2xl)',
+    			'glow-primary': '0 0 40px hsl(217, 91%, 60% / 0.4)',
+    			'glow-secondary': '0 0 30px hsl(263, 60%, 55% / 0.3)'
     		}
     	}
     },
