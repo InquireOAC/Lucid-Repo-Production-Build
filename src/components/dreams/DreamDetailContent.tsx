@@ -194,7 +194,7 @@ const DreamDetailContent = ({
       {analysis && (
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-2 mb-3">
-            <Brain className="h-4 w-4 text-dream-purple" />
+            <h3 className="text-sm font-semibold">Dream Analysis</h3>
             <h3 className="text-sm font-semibold">Dream Analysis</h3>
           </div>
           <AnalysisSections text={analysis} />
