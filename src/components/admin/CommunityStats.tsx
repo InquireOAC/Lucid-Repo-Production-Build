@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAdminStats } from "@/hooks/useAdminStats";
-import { Users, Moon, Globe, AlertTriangle, Megaphone } from "lucide-react";
+import { Users, Moon, Globe, AlertTriangle, Megaphone, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const statCards = [
@@ -10,6 +10,7 @@ const statCards = [
   { key: "publicDreams" as const, label: "Public Dreams", icon: Globe },
   { key: "flaggedContent" as const, label: "Pending Flags", icon: AlertTriangle },
   { key: "activeAnnouncements" as const, label: "Active Announcements", icon: Megaphone },
+  { key: "activeSubscriptions" as const, label: "Active Subs", icon: CreditCard },
 ];
 
 const CommunityStats = () => {
