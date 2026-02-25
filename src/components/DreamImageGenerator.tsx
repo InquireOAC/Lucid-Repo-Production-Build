@@ -153,7 +153,7 @@ const DreamImageGenerator = ({
             variant="aurora">
 
                 
-                Generate Image
+                Auto-Generate Image
               </Button> :
           !disabled ?
           <Button
