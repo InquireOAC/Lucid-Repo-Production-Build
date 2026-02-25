@@ -49,5 +49,8 @@ verify_jwt = true
 [functions.compose-cinematic-prompt]
 verify_jwt = false
 
+[functions.compose-animation-prompt]
+verify_jwt = true
+
 [functions.generate-dream-video]
 verify_jwt = true

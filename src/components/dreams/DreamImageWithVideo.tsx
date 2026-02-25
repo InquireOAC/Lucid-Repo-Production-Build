@@ -19,6 +19,7 @@ interface DreamImageWithVideoProps {
   onLike?: () => void;
   currentUser?: any;
   onVideoGenerated?: (videoUrl: string) => void;
+  dreamContent?: string;
 }
 
 const DreamImageWithVideo = ({
@@ -30,6 +31,7 @@ const DreamImageWithVideo = ({
   onLike,
   currentUser,
   onVideoGenerated,
+  dreamContent,
 }: DreamImageWithVideoProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
@@ -136,6 +138,7 @@ const DreamImageWithVideo = ({
           dreamId={dreamId}
           imageUrl={generatedImage}
           onVideoGenerated={onVideoGenerated}
+          dreamContent={dreamContent}
         />
       )}
 

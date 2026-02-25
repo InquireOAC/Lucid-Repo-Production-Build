@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     const accessToken = await getGoogleAccessToken(saKey);
 
     const prompt = animationPrompt || "Gently animate this dream scene with subtle, dreamlike motion and atmospheric effects";
-    const modelId = "veo-2.0-generate-001";
+    const modelId = "veo-3.0-generate-preview";
     const location = "us-central1";
 
     // Start video generation
@@ -151,7 +151,6 @@ Deno.serve(async (req) => {
           },
         ],
         parameters: {
-          aspectRatio: "16:9",
           sampleCount: 1,
         },
       }),
