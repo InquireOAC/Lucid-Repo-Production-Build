@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useDreamImageAI } from "./useDreamImageAI";
+import { useUserRole } from "@/hooks/useUserRole";
 
 interface UseImageGenerationProps {
   dreamContent: string;
@@ -22,11 +23,11 @@ export const useImageGeneration = ({
   onSubscriptionRefresh,
 }: UseImageGenerationProps) => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const { hasUsedFeature, markFeatureAsUsed, canUseFeature, recordFeatureUsage } = useFeatureUsage();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [isGenerating, setIsGenerating] = useState(false);
-  const isAppCreator = user?.email === "inquireoac@gmail.com";
 
   const generateImage = useCallback(async (
     setImagePrompt: (prompt: string) => void,
@@ -46,7 +47,7 @@ export const useImageGeneration = ({
     setIsGenerating(true);
 
     try {
-      const canUse = isAppCreator || (await canUseFeature("image"));
+      const canUse = isAdmin || (await canUseFeature("image"));
       if (!canUse) {
         showSubscriptionPrompt("image");
         setIsGenerating(false);
@@ -87,7 +88,7 @@ export const useImageGeneration = ({
       toast.success("Dream image generated!");
 
       // 4. Record feature usage and refresh subscription data
-      if (!isAppCreator) {
+      if (!isAdmin) {
         if (!hasUsedFeature("image")) {
           markFeatureAsUsed("image");
         } else {
@@ -116,7 +117,7 @@ export const useImageGeneration = ({
     disabled,
     dreamContent,
     dreamId,
-    isAppCreator,
+    isAdmin,
     canUseFeature,
     markFeatureAsUsed,
     hasUsedFeature,
@@ -130,7 +131,7 @@ export const useImageGeneration = ({
   return {
     isGenerating,
     generateImage,
-    isAppCreator,
+    isAppCreator: isAdmin,
     hasUsedFeature: (feature: "image" | "analysis") => hasUsedFeature(feature),
   };
 };

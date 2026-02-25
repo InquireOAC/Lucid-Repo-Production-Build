@@ -13,6 +13,7 @@ import DreamComments from "@/components/DreamComments";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 
@@ -39,7 +40,8 @@ const DreamDetail = ({
 }: DreamDetailProps) => {
   const { user, profile: authProfile } = useAuth();
   const { subscription } = useSubscriptionContext();
-  const isSubscribed = !!subscription?.subscribed;
+  const { isAdmin } = useUserRole();
+  const isSubscribed = isAdmin || !!subscription?.subscribed;
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState(dream.video_url || null);

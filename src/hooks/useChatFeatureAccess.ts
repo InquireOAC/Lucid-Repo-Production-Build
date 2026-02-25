@@ -3,22 +3,22 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFeatureUsage } from './useFeatureUsage';
 import { showSubscriptionPrompt } from '@/lib/stripe';
+import { useUserRole } from '@/hooks/useUserRole';
 
 export const useChatFeatureAccess = () => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const { hasUsedFeature, canUseFeature, recordFeatureUsage, hasActiveSubscription } = useFeatureUsage();
   const [isChecking, setIsChecking] = useState(false);
-
-  const isAppCreator = user?.email === "inquireoac@gmail.com";
 
   const canUseChat = async (): Promise<boolean> => {
     try {
       if (!user) return false;
       setIsChecking(true);
       
-      // Special case for app creator - always return true
-      if (isAppCreator) {
-        console.log('App creator detected, allowing chat access');
+      // Admins get unlimited access
+      if (isAdmin) {
+        console.log('Admin detected, allowing chat access');
         return true;
       }
       
@@ -51,7 +51,7 @@ export const useChatFeatureAccess = () => {
 
   const recordChatUsage = async (): Promise<boolean> => {
     try {
-      if (!user || isAppCreator) return true;
+      if (!user || isAdmin) return true;
       
       // If user has active subscription, don't record usage (unlimited)
       if (hasActiveSubscription) {
@@ -79,7 +79,7 @@ export const useChatFeatureAccess = () => {
     canUseChat,
     recordChatUsage,
     isChecking,
-    isAppCreator,
+    isAppCreator: isAdmin,
     hasActiveSubscription,
     hasUsedFeature: (feature: 'analysis' | 'image') => hasUsedFeature(feature),
   };
