@@ -106,7 +106,7 @@ export const GenerateVideoDialog = ({
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
         <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-[hsl(220,20%,12%)] to-[hsl(220,25%,8%)] shadow-2xl shadow-primary/10">
           {/* Hero image with gradient overlay */}
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-72 overflow-hidden">
             <img
               src={imageUrl}
               alt="Dream to animate"
