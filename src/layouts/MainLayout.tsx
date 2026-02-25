@@ -25,13 +25,13 @@ const MainLayout = () => {
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       
       {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
-      <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+      <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </div>
       
       {/* Fixed tab bar positioned at the bottom with safe area padding */}
       <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right">
-        <div className="flex justify-around items-center h-16">
+        <div className="flex justify-around items-center h-14">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/explore" icon={<Compass />} label="Explore" />
@@ -68,9 +68,9 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       )}
     >
       <div className={cn(
-        "p-2 rounded-full transition-all duration-300 relative",
+        "p-1.5 rounded-full transition-all duration-300 relative",
         isActive 
-          ? "bg-[hsl(270,70%,50%)] text-white shadow-lg shadow-purple-500/40" 
+          ? "bg-primary/15 text-primary" 
           : "text-white/50"
       )}>
         {icon}
@@ -82,10 +82,6 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
           </div>
         )}
       </div>
-      <span className={cn(
-        "text-xs mt-1 font-medium",
-        isActive ? "text-white" : "text-white/50"
-      )}>{label}</span>
     </NavLink>
   );
 };
