@@ -95,6 +95,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
               // Ensure audio URL is available
               audio_url: dream.audio_url || null,
               audioUrl: dream.audio_url || null,
+              video_url: dream.video_url || null,
             };
           })
         );
