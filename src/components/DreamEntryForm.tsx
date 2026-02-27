@@ -466,25 +466,6 @@ const DreamEntryForm = ({
                 required
               />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-sm">Mood</Label>
-              <Select
-                name="mood"
-                value={formData.mood}
-                onValueChange={(v) =>
-                  setFormData((p) => ({ ...p, mood: v }))
-                }
-              >
-                <SelectTrigger className="dream-input h-9 text-sm">
-                  <SelectValue placeholder="Select Mood" />
-                </SelectTrigger>
-                <SelectContent>
-                  {["Happy", "Sad", "Neutral", "Anxious", "Angry", "Excited", "Relaxed", "Confused"].map((m) => (
-                    <SelectItem key={m} value={m}>{m}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
         </div>
 
