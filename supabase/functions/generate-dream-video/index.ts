@@ -144,40 +144,8 @@ Deno.serve(async (req) => {
     // Determine mime type
     const contentType = imageRes.headers.get("content-type") || "image/png";
 
-    // Detect aspect ratio from image dimensions
-    // Parse PNG/JPEG headers to get width/height
-    // Veo only supports "16:9" and "9:16" — no "1:1"
-    let detectedAspectRatio = "16:9"; // safe default
-    if (clientAspectRatio && clientAspectRatio !== "1:1") {
-      detectedAspectRatio = clientAspectRatio;
-    } else if (!clientAspectRatio) {
-      try {
-        let ratio = 1;
-        if (bytes[0] === 0x89 && bytes[1] === 0x50) {
-          const width = (bytes[16] << 24) | (bytes[17] << 16) | (bytes[18] << 8) | bytes[19];
-          const height = (bytes[20] << 24) | (bytes[21] << 16) | (bytes[22] << 8) | bytes[23];
-          ratio = width / height;
-          console.log(`Detected PNG dimensions: ${width}x${height}, ratio: ${ratio}`);
-        } else if (bytes[0] === 0xFF && bytes[1] === 0xD8) {
-          let offset = 2;
-          while (offset < bytes.length - 8) {
-            if (bytes[offset] === 0xFF && (bytes[offset + 1] === 0xC0 || bytes[offset + 1] === 0xC2)) {
-              const height = (bytes[offset + 5] << 8) | bytes[offset + 6];
-              const width = (bytes[offset + 7] << 8) | bytes[offset + 8];
-              ratio = width / height;
-              console.log(`Detected JPEG dimensions: ${width}x${height}, ratio: ${ratio}`);
-              break;
-            }
-            const segLen = (bytes[offset + 2] << 8) | bytes[offset + 3];
-            offset += 2 + segLen;
-          }
-        }
-        // Only use 9:16 for clearly portrait images; everything else gets 16:9
-        detectedAspectRatio = ratio < 0.7 ? "9:16" : "16:9";
-      } catch (dimErr) {
-        console.warn("Failed to detect image dimensions, using 16:9:", dimErr);
-      }
-    }
+    // Always use 9:16 vertical portrait for dream videos
+    const detectedAspectRatio = "9:16";
 
     // Get Google access token
     const accessToken = await getGoogleAccessToken(saKey);
