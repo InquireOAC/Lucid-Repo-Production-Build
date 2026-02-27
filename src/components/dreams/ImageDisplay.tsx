@@ -17,24 +17,24 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({
   const displayUrl = imageDataUrl || imageUrl;
 
   return (
-    <div className="space-y-4">
+    <>
       {displayUrl ? (
-        <div className="relative">
+        <div className="relative rounded-2xl overflow-hidden">
           <img
             src={displayUrl}
             alt="Dream visualization"
-            className="w-full h-64 object-cover rounded-lg border border-gray-200"
+            className="w-full aspect-[4/3] object-cover"
             onError={onError}
           />
         </div>
       ) : (
-        <div className="w-full h-64 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
-          <p className="text-gray-500 text-center">
+        <div className="w-full aspect-[4/3] border-2 border-dashed border-border rounded-2xl flex items-center justify-center bg-muted/30">
+          <p className="text-muted-foreground text-center text-sm">
             Generate an image for your dream
           </p>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
