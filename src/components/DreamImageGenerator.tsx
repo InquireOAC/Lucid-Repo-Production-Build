@@ -189,7 +189,7 @@ const DreamImageGenerator = ({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2">
         <ImagePlus className="h-5 w-5 text-primary" />
@@ -200,76 +200,90 @@ const DreamImageGenerator = ({
       {isGenerating ? (
         <GeneratingImage />
       ) : generatedImage ? (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {hasVideo ? (
             <>
-              <Carousel opts={{ watchDrag: true }} setApi={setCarouselApi}>
-                <CarouselContent>
-                  {/* Slide 1: Image */}
-                  <CarouselItem>
-                    <ImageDisplay
-                      imageUrl={generatedImage}
-                      imageDataUrl={generatedImage}
-                      onError={() => setImageError(true)}
-                      disabled={disabled || isGenerating}
-                    />
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
-                        <Download className="h-4 w-4 mr-1" /> Save
-                      </Button>
-                    </div>
-                  </CarouselItem>
-                  {/* Slide 2: Video */}
-                  <CarouselItem>
-                    <div className="rounded-2xl overflow-hidden bg-black">
-                      <video
-                        src={localVideoUrl}
-                        poster={generatedImage}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-auto"
-                      />
-                    </div>
-                    <div className="flex justify-end gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDeleteVideo}
-                        disabled={isDeletingVideo}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        {isDeletingVideo ? "Deleting..." : "Delete Video"}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowVideoDialog(true)}
-                      >
-                        <RefreshCw className="h-4 w-4 mr-1" /> Regenerate
-                      </Button>
-                    </div>
-                  </CarouselItem>
-                </CarouselContent>
-              </Carousel>
+              <div className="overflow-hidden">
+                <Carousel opts={{ watchDrag: true }} setApi={setCarouselApi}>
+                  <CarouselContent>
+                    {/* Slide 1: Image */}
+                    <CarouselItem>
+                      <div className="relative">
+                        <ImageDisplay
+                          imageUrl={generatedImage}
+                          imageDataUrl={generatedImage}
+                          onError={() => setImageError(true)}
+                          disabled={disabled || isGenerating}
+                        />
+                        <Button
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleSaveAsPng}
+                          className="absolute bottom-2 right-2 h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 backdrop-blur-sm"
+                        >
+                          <Download className="h-3.5 w-3.5 mr-1" /> Save
+                        </Button>
+                      </div>
+                    </CarouselItem>
+                    {/* Slide 2: Video */}
+                    <CarouselItem>
+                      <div className="rounded-2xl overflow-hidden bg-black aspect-[4/3]">
+                        <video
+                          src={localVideoUrl}
+                          poster={generatedImage}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </CarouselItem>
+                  </CarouselContent>
+                </Carousel>
+              </div>
               <DotIndicators />
+              {/* Video actions - only show when on video slide */}
+              {activeSlide === 1 && (
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDeleteVideo}
+                    disabled={isDeletingVideo}
+                    className="text-destructive hover:text-destructive h-8"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    {isDeletingVideo ? "Deleting..." : "Delete"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowVideoDialog(true)}
+                    className="h-8"
+                  >
+                    <RefreshCw className="h-3.5 w-3.5 mr-1" /> Regenerate
+                  </Button>
+                </div>
+              )}
             </>
           ) : (
-            <>
+            <div className="relative">
               <ImageDisplay
                 imageUrl={generatedImage}
                 imageDataUrl={generatedImage}
                 onError={() => setImageError(true)}
                 disabled={disabled || isGenerating}
               />
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onClick={handleSaveAsPng}>
-                  <Download className="h-4 w-4 mr-1" /> Save
-                </Button>
-              </div>
-            </>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleSaveAsPng}
+                className="absolute bottom-2 right-2 h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 backdrop-blur-sm"
+              >
+                <Download className="h-3.5 w-3.5 mr-1" /> Save
+              </Button>
+            </div>
           )}
           {imageError && (
             <p className="text-xs text-destructive text-center">
@@ -345,7 +359,7 @@ const DreamImageGenerator = ({
       {!disabled && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visual Style</p>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
             {styleOptions.map((style) => (
               <button
                 type="button"
