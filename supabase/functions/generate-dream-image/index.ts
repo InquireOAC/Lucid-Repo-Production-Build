@@ -83,6 +83,8 @@ serve(async (req) => {
       type: 'text',
       text: `[CINEMATIC RENDERING DIRECTIVE — READ THIS FIRST]
 
+MANDATORY OUTPUT FORMAT: Generate this image in PORTRAIT orientation with a 9:16 aspect ratio (e.g., 1024x1820 or similar vertical dimensions). The frame MUST be taller than it is wide. This is non-negotiable.
+
 You are a world-class cinematographer and visual effects supervisor generating a SINGLE UNIFIED MOVIE FRAME from a dream world. Every image you produce must read as a real frame from a film set in an alternate reality — not an AI-generated composite.
 
 PRIME DIRECTIVES:
