@@ -50,7 +50,8 @@ export const useJournalEntries = () => {
             commentCount: dream.comment_count || 0,
             user_id: dream.user_id,
             audio_url: dream.audio_url,
-            audioUrl: dream.audio_url
+            audioUrl: dream.audio_url,
+            video_url: dream.video_url
           };
         });
         
