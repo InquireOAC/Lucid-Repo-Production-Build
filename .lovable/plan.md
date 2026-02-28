@@ -1,36 +1,73 @@
 
 
-## Fix Edit Dream Modal: Side Scroll and Image/Video Carousel UX
+## Set Up Google and Apple OAuth for Native iOS (Capacitor)
 
-### Problems Identified
-1. **Horizontal side-scroll on the Edit Dream modal** -- The Embla carousel inside `DreamImageGenerator` causes overflow. The carousel's default CSS uses flex containers that can exceed the modal's width.
-2. **Extra empty space below the dream image** when there's no video -- The `ImageDisplay` component renders a fixed `h-64` container, and the carousel wrapper adds unnecessary padding/spacing.
-3. **Poor image/video carousel experience** -- Buttons (Save, Delete, Regenerate) are crammed under each slide, and the overall layout feels cluttered.
+### Problem
+Currently, when a user taps "Continue with Google" or "Continue with Apple" on the native iOS app, the OAuth flow opens in the browser but has no way to redirect back into the app. The code uses `window.location.origin` as the redirect URL, which doesn't work for native apps.
 
-### Plan
+### Solution Overview
+1. Register a custom URL scheme so the native app can receive OAuth callbacks
+2. Listen for deep links in the app and extract the OAuth session tokens
+3. Update the OAuth redirect URL to use the Supabase callback, which will redirect to the custom scheme
+4. Configure Info.plist with the URL scheme
+5. Update Supabase dashboard redirect URLs
 
-#### 1. Fix horizontal overflow in DreamImageGenerator (`src/components/DreamImageGenerator.tsx`)
-- Wrap the carousel section in `overflow-hidden` to prevent side-scroll leaking into the modal.
-- Add `overflow-hidden` to the main container div.
+---
 
-#### 2. Clean up ImageDisplay (`src/components/dreams/ImageDisplay.tsx`)
-- Remove the fixed `h-64` height constraint -- use `aspect-square` or natural image sizing with `object-cover` and a max-height instead, so there's no dead space below the image.
-- Make the image fill its container cleanly with rounded corners and no excess padding.
+### Step 1: Add Custom URL Scheme to Info.plist
 
-#### 3. Redesign the image/video carousel area in DreamImageGenerator
-- When there's **no video**: Show the image cleanly with no carousel wrapper at all (already the case, but tighten spacing).
-- When there **is a video**: Use the carousel but with proper `overflow-hidden` on each slide, consistent aspect ratios between image and video slides, and action buttons overlaid or in a compact row.
-- Move the Save/Download button to overlay the bottom-right of the image (like the screenshot shows it should be) rather than a separate row below.
-- For the video slide: Keep Delete and Regenerate buttons in a clean compact row.
-- Ensure both slides use the same aspect ratio container so swiping doesn't cause layout shifts.
+Add a `CFBundleURLTypes` entry so iOS knows to open the app when a URL like `app.dreamweaver.lucidrepo://` is triggered. The scheme will be `app.dreamweaver.lucidrepo`.
 
-#### 4. Fix the style thumbnails horizontal scroll
-- The style selector row at line 348 uses `-mx-1 px-1` which can contribute to horizontal overflow in the modal. Constrain this within the modal boundaries.
+**File: `ios/App/App/Info.plist`**
+
+### Step 2: Create a Deep Link Handler Utility
+
+Create `src/utils/oauthDeepLink.ts` that:
+- Imports `App` from `@capacitor/app` and `Capacitor` from `@capacitor/core`
+- On native platforms, listens for `appUrlOpen` events
+- When an OAuth callback URL arrives (containing `access_token` and `refresh_token` in the URL fragment), calls `supabase.auth.setSession()` to log the user in
+- On web, does nothing (standard browser redirect handles it)
+
+### Step 3: Initialize the Deep Link Listener on App Startup
+
+In `src/App.tsx`, import and call `setupOAuthDeepLinkListener()` inside a `useEffect` so it starts listening as soon as the app loads.
+
+### Step 4: Update OAuth Redirect URLs in Auth.tsx
+
+Change the `redirectTo` in `handleGoogleSignIn` and `handleAppleSignIn`:
+- On native: use `app.dreamweaver.lucidrepo://callback` (the custom URL scheme)
+- On web: keep `window.location.origin + '/'`
+
+This is done by checking `Capacitor.isNativePlatform()`.
+
+### Step 5: Configure Supabase Dashboard (Manual Step)
+
+You will need to:
+1. Go to **Supabase Dashboard > Authentication > URL Configuration**
+2. Add `app.dreamweaver.lucidrepo://callback` to the **Redirect URLs** list
+3. Under **Authentication > Providers**, enable **Google** and **Apple** with your credentials
+
+---
 
 ### Technical Details
 
+**Files to create:**
+- `src/utils/oauthDeepLink.ts` -- Deep link listener that parses OAuth tokens from the callback URL and sets the Supabase session
+
 **Files to modify:**
-- `src/components/DreamImageGenerator.tsx` -- Add `overflow-hidden` to root, redesign carousel slides with consistent aspect ratio containers, overlay Save button on image
-- `src/components/dreams/ImageDisplay.tsx` -- Replace fixed `h-64` with responsive aspect-ratio sizing, remove the empty-state dashed box height constraint
-- `src/components/journal/EditDreamDialog.tsx` -- Ensure `overflow-x-hidden` propagates correctly (already has it, but verify no inner elements break out)
+- `ios/App/App/Info.plist` -- Add `CFBundleURLTypes` with scheme `app.dreamweaver.lucidrepo`
+- `src/pages/Auth.tsx` -- Use native redirect URL when on Capacitor
+- `src/App.tsx` -- Initialize deep link listener on mount
+
+**Deep link flow:**
+```text
+User taps "Sign in with Google"
+  -> Opens browser with Supabase OAuth URL
+  -> User authenticates with Google
+  -> Supabase redirects to: app.dreamweaver.lucidrepo://callback#access_token=...&refresh_token=...
+  -> iOS opens the app via URL scheme
+  -> appUrlOpen listener fires
+  -> App extracts tokens, calls supabase.auth.setSession()
+  -> User is logged in, navigated to home
+```
 
