@@ -130,7 +130,7 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo },
+        options: { redirectTo: URL(string: "lucidrepo://login-callback") },
       });
       if (error) toast.error(error.message);
     } catch (error) {
