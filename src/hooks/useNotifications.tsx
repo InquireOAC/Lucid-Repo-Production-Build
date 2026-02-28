@@ -16,11 +16,13 @@ interface Notification {
     username?: string;
     avatar_symbol?: string;
     avatar_color?: string;
+    avatar_url?: string;
   };
   dream?: {
     title?: string;
     content?: string;
   };
+  comment_text?: string;
   message_content?: string;
 }
 
@@ -78,10 +80,10 @@ export const useNotifications = () => {
       }
 
       // Get user info for each notification
-      const userIds = [...new Set(activities.map(a => a.user_id))];
+      const userIds = [...new Set(activities.map(a => a.user_id).filter(Boolean))];
       const { data: users } = await supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_symbol, avatar_color')
+        .select('id, display_name, username, avatar_symbol, avatar_color, avatar_url')
         .in('id', userIds);
 
       // Get dream info for dream-related notifications
@@ -91,15 +93,37 @@ export const useNotifications = () => {
         .select('id, title, content')
         .in('id', dreamIds) : { data: [] };
 
+      // Get comment text for comment notifications
+      const commentActivities = activities.filter(a => a.type === 'comment' && a.dream_id);
+      let commentMap: Record<string, string> = {};
+      if (commentActivities.length > 0) {
+        // For each comment activity, fetch the most recent comment by that user on that dream
+        const { data: comments } = await supabase
+          .from('dream_comments')
+          .select('dream_id, user_id, content, created_at')
+          .in('dream_id', commentActivities.map(a => a.dream_id!))
+          .in('user_id', commentActivities.map(a => a.user_id!))
+          .order('created_at', { ascending: false });
+        
+        if (comments) {
+          for (const c of comments) {
+            const key = `${c.user_id}_${c.dream_id}`;
+            if (!commentMap[key]) commentMap[key] = c.content;
+          }
+        }
+      }
+
       // Combine the data
       const enrichedNotifications: Notification[] = activities.map(activity => {
         const activityUser = users?.find(u => u.id === activity.user_id);
         const dream = dreams?.find(d => d.id === activity.dream_id);
+        const commentKey = `${activity.user_id}_${activity.dream_id}`;
         
         return {
           ...activity,
           user: activityUser,
           dream: dream,
+          comment_text: commentMap[commentKey],
         };
       });
 

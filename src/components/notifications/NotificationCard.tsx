@@ -3,6 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 import { Heart, MessageCircle, Mail, UserPlus, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface NotificationCardProps {
   notification: {
@@ -18,11 +19,13 @@ interface NotificationCardProps {
       username?: string;
       avatar_symbol?: string;
       avatar_color?: string;
+      avatar_url?: string;
     };
     dream?: {
       title?: string;
       content?: string;
     };
+    comment_text?: string;
     message_content?: string;
   };
   onMarkAsRead: (id: string) => void;
@@ -55,11 +58,22 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
     }
   };
 
-  const snippet = notification.type === "message" && notification.message_content
-    ? notification.message_content.slice(0, 80) + (notification.message_content.length > 80 ? "…" : "")
-    : notification.dream?.title
-      ? `"${notification.dream.title}"`
-      : null;
+  const getSnippet = () => {
+    // Comment notifications: show comment text
+    if (notification.type === "comment" && notification.comment_text) {
+      const text = notification.comment_text.slice(0, 100);
+      return `"${text}${notification.comment_text.length > 100 ? "…" : ""}"`;
+    }
+    // Message notifications: show message content
+    if (notification.type === "message" && notification.message_content) {
+      return notification.message_content.slice(0, 80) + (notification.message_content.length > 80 ? "…" : "");
+    }
+    // Like/share: show dream title
+    if ((notification.type === "like" || notification.type === "share") && notification.dream?.title) {
+      return `"${notification.dream.title}"`;
+    }
+    return null;
+  };
 
   const handleClick = () => {
     if (!notification.read) onMarkAsRead(notification.id);
@@ -68,7 +82,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
     else if (notification.user?.username) navigate(`/profile/${notification.user.username}`);
   };
 
-  const initials = (notification.user?.display_name || notification.user?.username || "U").charAt(0).toUpperCase();
+  const snippet = getSnippet();
 
   return (
     <button
@@ -81,22 +95,15 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
           : "border border-transparent"
       )}
     >
-      {/* Avatar */}
+      {/* Avatar with type badge */}
       <div className="relative flex-shrink-0">
-        {notification.user?.avatar_symbol ? (
-          <div
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium",
-              notification.user.avatar_color || "bg-muted"
-            )}
-          >
-            {notification.user.avatar_symbol}
-          </div>
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground font-medium text-sm">{initials}</span>
-          </div>
-        )}
+        <SymbolAvatar
+          symbol={notification.user?.avatar_symbol}
+          color={notification.user?.avatar_color}
+          avatarUrl={notification.user?.avatar_url}
+          fallbackLetter={(notification.user?.display_name || notification.user?.username || "U").charAt(0).toUpperCase()}
+          size={40}
+        />
         {/* Type icon badge */}
         <div className={cn("absolute -bottom-0.5 -right-0.5 p-1 rounded-full border-2 border-background", config.bg)}>
           <Icon className={cn("h-2.5 w-2.5", config.color)} />
@@ -109,7 +116,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
           {getText()}
         </p>
         {snippet && (
-          <p className="text-xs text-muted-foreground mt-0.5 truncate">{snippet}</p>
+          <p className="text-xs text-muted-foreground mt-0.5 truncate italic">{snippet}</p>
         )}
         <p className="text-[11px] text-muted-foreground/60 mt-1">
           {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
