@@ -2,7 +2,6 @@ import React, { useRef, forwardRef, useImperativeHandle, useEffect } from "react
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
 import { shareDream } from "@/utils/shareUtils";
-import { QrCode } from "lucide-react";
 
 // Define a ref type that exposes the share function
 export interface DreamShareCardRef {
@@ -15,6 +14,18 @@ interface DreamShareCardProps {
   onShareComplete?: (success: boolean) => void;
 }
 
+/* ── colour tokens matching auth page cosmic blue palette ── */
+const C = {
+  bg: "#060B18",
+  primary: "#3B82F6",
+  primaryGlow: "rgba(56,130,246,0.25)",
+  accent: "#6366F1",
+  text: "#E2E8F0",
+  muted: "#64748B",
+  surfaceBorder: "rgba(56,130,246,0.12)",
+  surface: "rgba(56,130,246,0.06)",
+} as const;
+
 const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   dream,
   onShareStart,
@@ -23,51 +34,30 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
   const shareCardRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
   
-  // Log when the component renders with the current dream data
   useEffect(() => {
     console.log("DreamShareCard rendering with dream:", dream);
     console.log("DreamShareCard image URL:", dream.image_url || dream.generatedImage);
   }, [dream]);
   
-  // Expose the shareDream method via ref
   useImperativeHandle(ref, () => ({
     shareDream: async () => {
       if (!shareCardRef.current) return false;
       
       if (onShareStart) onShareStart();
       
-      // Ensure image has loaded before proceeding
       if (imgRef.current && dreamImageUrl && !imgRef.current.complete) {
         console.log("Image not loaded yet, waiting...");
         await new Promise<void>((resolve) => {
           const img = imgRef.current;
-          if (!img) {
-            resolve();
-            return;
-          }
-          
-          const onLoad = () => {
-            console.log("Image loaded successfully");
-            resolve();
-          };
-          
-          const onError = () => {
-            console.log("Image failed to load");
-            resolve();
-          };
-          
+          if (!img) { resolve(); return; }
+          const onLoad = () => { console.log("Image loaded successfully"); resolve(); };
+          const onError = () => { console.log("Image failed to load"); resolve(); };
           img.addEventListener('load', onLoad, { once: true });
           img.addEventListener('error', onError, { once: true });
-          
-          // If already complete, resolve immediately
-          if (img.complete) {
-            console.log("Image was already loaded");
-            resolve();
-          }
+          if (img.complete) { console.log("Image was already loaded"); resolve(); }
         });
       }
       
-      // Process share card using the shareDream utility
       const success = await shareDream(
         shareCardRef.current,
         dream.title || "My Dream",
@@ -83,22 +73,15 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
     ? format(new Date(dream.date), "MMMM d, yyyy")
     : "Unknown Date";
 
-  // Truncate dream content for display (limit to around 280 characters with ellipsis)
   const truncateText = (text: string, maxLength: number) => {
     if (!text || text.length <= maxLength) return text || "";
     return text.substring(0, maxLength) + "...";
   };
   
-  // Extract dream content for display - truncated
   const dreamContent = truncateText(dream.content || "No dream content recorded.", 280);
-  
-  // Prioritize image_url (Supabase bucket) over generatedImage (temporary URL)
   const dreamImageUrl = dream.image_url || dream.generatedImage || "";
-  
-  // Truncate analysis to shorter length
   const truncatedAnalysis = truncateText(dream.analysis || "", 140);
   
-  // Log the image URL for debugging
   console.log("Dream image in share card:", dreamImageUrl);
 
   return (
@@ -116,38 +99,116 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           display: 'flex',
           flexDirection: 'column',
           position: 'relative',
-          background: 'linear-gradient(to bottom, #6344A5, #8976BF)'
+          background: `linear-gradient(165deg, ${C.bg} 0%, #0C1629 40%, #111B33 100%)`,
         }}
       >
-        {/* App Name at the top */}
-        <div className="flex items-center justify-center mb-[60px]">
-          <h1 className="text-[48px] font-bold text-white tracking-tight">
+        {/* Tech grid background */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.04,
+            backgroundImage: `linear-gradient(rgba(56,130,246,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(56,130,246,0.5) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px',
+            pointerEvents: 'none',
+          }}
+        />
+        {/* Top radial glow */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '-100px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '900px',
+            height: '500px',
+            background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 70%)`,
+            filter: 'blur(80px)',
+            pointerEvents: 'none',
+          }}
+        />
+        {/* Bottom accent glow */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100px',
+            right: '-50px',
+            width: '400px',
+            height: '400px',
+            background: `radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, transparent 70%)`,
+            filter: 'blur(60px)',
+            pointerEvents: 'none',
+          }}
+        />
+
+        {/* App Name */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '60px' }}>
+          <h1 style={{
+            fontSize: '48px',
+            fontWeight: 700,
+            color: C.text,
+            letterSpacing: '-0.02em',
+          }}>
             Lucid Repo
           </h1>
         </div>
         
         {/* Title & Date */}
-        <div className="mb-[60px]">
-          <h2 className="text-[64px] font-bold leading-tight text-white text-left">
+        <div style={{ position: 'relative', zIndex: 1, marginBottom: '50px' }}>
+          <h2 style={{
+            fontSize: '60px',
+            fontWeight: 700,
+            lineHeight: 1.1,
+            color: '#fff',
+            textAlign: 'left',
+            letterSpacing: '-0.02em',
+          }}>
             {dream.title || "Untitled Dream"}
           </h2>
-          <p className="text-[24px] text-white/50 mt-2 text-left">
+          <p style={{
+            fontSize: '22px',
+            color: C.muted,
+            marginTop: '12px',
+            textAlign: 'left',
+          }}>
             {formattedDate}
           </p>
         </div>
         
-        {/* Dream Story */}
-        <div className="mb-[60px] bg-white/20 p-8 rounded-2xl">
-          <p className="text-[32px] leading-normal text-white text-left">
+        {/* Dream Story — glass surface */}
+        <div style={{
+          position: 'relative',
+          zIndex: 1,
+          marginBottom: '50px',
+          padding: '36px 32px',
+          borderRadius: '20px',
+          background: C.surface,
+          border: `1px solid ${C.surfaceBorder}`,
+        }}>
+          <p style={{
+            fontSize: '30px',
+            lineHeight: 1.5,
+            color: C.text,
+            textAlign: 'left',
+          }}>
             {dreamContent}
           </p>
         </div>
         
         {/* Dream Analysis */}
         {truncatedAnalysis && (
-          <div className="mb-[60px]">
-            <div className="border-l-[2px] border-purple-300 pl-[20px]">
-              <p className="text-[28px] italic text-white/90 text-left">
+          <div style={{ position: 'relative', zIndex: 1, marginBottom: '50px' }}>
+            <div style={{
+              borderLeft: `3px solid ${C.primary}`,
+              paddingLeft: '24px',
+            }}>
+              <p style={{
+                fontSize: '26px',
+                fontStyle: 'italic',
+                color: 'rgba(226,232,240,0.8)',
+                textAlign: 'left',
+                lineHeight: 1.5,
+              }}>
                 {truncatedAnalysis}
               </p>
             </div>
@@ -156,18 +217,22 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
         
         {/* Dream Visualization */}
         {dreamImageUrl && (
-          <div className="mb-[60px] flex items-center justify-center">
-            <div className="w-half overflow-hidden rounded-[24px] shadow-lg relative bg-[#8976BF]">
+          <div style={{ position: 'relative', zIndex: 1, marginBottom: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{
+              overflow: 'hidden',
+              borderRadius: '20px',
+              border: `1px solid ${C.surfaceBorder}`,
+              boxShadow: `0 8px 40px rgba(56,130,246,0.15)`,
+            }}>
               <img 
                 ref={imgRef}
                 src={dreamImageUrl}
                 alt="Dream Visualization"
-                className="w-half object-cover dream-image-container"
                 style={{ 
-                  borderRadius: '24px',
-                  boxShadow: 'inset 0 0 15px rgba(0, 0, 0, 0.3)',
-                  maxHeight: '800px',
-                  backgroundColor: '#8976BF'
+                  borderRadius: '20px',
+                  maxHeight: '700px',
+                  objectFit: 'cover',
+                  backgroundColor: C.bg,
                 }}
                 crossOrigin="anonymous"
                 onLoad={() => console.log("Image loaded in ShareCard")}
@@ -177,7 +242,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
           </div>
         )}
         
-        {/* --- Footer with uploaded logo image - increased by 25px --- */}
+        {/* Footer with logo */}
         <div
           style={{
             position: 'absolute',
@@ -191,22 +256,16 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             height: '150px',
             pointerEvents: 'none',
             background: 'none',
-            borderRadius: 0,
-            boxShadow: 'none',
           }}
         >
           <img
             src="/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png"
             alt="Lucid Repo Logo and App Store Badge"
             style={{
-              width: '825px', // Increased from 800px by 25px
+              width: '825px',
               maxWidth: '90%',
               height: 'auto',
               objectFit: 'contain',
-              margin: 0,
-              background: 'none',
-              borderRadius: 0,
-              boxShadow: 'none',
               display: 'block',
             }}
             draggable={false}
