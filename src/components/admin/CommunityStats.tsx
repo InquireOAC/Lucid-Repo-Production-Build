@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import { Users, Moon, Globe, AlertTriangle, Megaphone, CreditCard, Trophy, MessageSquare, UserCheck, Hash } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import AnalyticsCharts from "./AnalyticsCharts";
 
 const heroStats = [
   { key: "totalUsers" as const, label: "Total Users", icon: Users },
@@ -68,6 +69,9 @@ const CommunityStats = () => {
           </Card>
         ))}
       </div>
+
+      {/* Analytics Charts */}
+      <AnalyticsCharts />
     </div>
   );
 };
