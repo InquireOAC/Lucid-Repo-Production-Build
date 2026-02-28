@@ -1,6 +1,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Edit, MapPin, Link as LinkIcon, Calendar } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import ProfileAvatar from "./ProfileAvatar";
 import ProfileHeaderActions from "./ProfileHeaderActions";
 import ProfileSocialLinks from "./ProfileSocialLinks";
@@ -78,7 +79,7 @@ const ProfileHeader = ({
           </div>
           
           {/* Action buttons - below banner */}
-          <div className="flex gap-2 pt-3">
+          <div className="flex flex-col items-end gap-2 pt-3">
             <ProfileHeaderActions
               isOwnProfile={isOwnProfile}
               isFollowing={isFollowing}
@@ -91,6 +92,7 @@ const ProfileHeader = ({
               followersCount={followersCount}
               followingCount={followingCount}
             />
+            {isOwnProfile && <NotificationBell />}
           </div>
         </div>
 
