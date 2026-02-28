@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trophy, ChevronDown, ChevronUp, Users, Hash } from "lucide-react";
 import { useChallenges, type Challenge, type ChallengeEntry } from "@/hooks/useChallenges";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
@@ -17,9 +18,11 @@ const statusColors: Record<string, string> = {
 const ChallengeCard = ({
   challenge,
   onStatusChange,
+  maxEntries,
 }: {
   challenge: Challenge;
   onStatusChange: (id: string, status: string) => void;
+  maxEntries: number;
 }) => {
   const { fetchEntries } = useChallenges();
   const [expanded, setExpanded] = useState(false);
@@ -36,15 +39,20 @@ const ChallengeCard = ({
     setExpanded(!expanded);
   };
 
+  const entryCount = challenge.entry_count || 0;
+  const progressValue = maxEntries > 0 ? Math.min((entryCount / maxEntries) * 100, 100) : 0;
+
   return (
     <Card variant="compact">
-      <CardContent className="p-3 space-y-2">
+      <CardContent className="p-3.5 space-y-2.5">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <Trophy className="h-4 w-4 text-primary shrink-0" />
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+              <Trophy className="h-4 w-4 text-primary" />
+            </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{challenge.title}</p>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <p className="text-sm font-semibold truncate">{challenge.title}</p>
+              <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-0.5">
                   <Hash className="h-3 w-3" />
                   {challenge.required_tag}
@@ -58,11 +66,18 @@ const ChallengeCard = ({
             <Badge className={`text-[9px] ${statusColors[challenge.status] || ""}`}>
               {challenge.status}
             </Badge>
-            <Badge variant="outline" className="text-[9px] gap-0.5">
-              <Users className="h-2.5 w-2.5" />
-              {challenge.entry_count || 0}
-            </Badge>
           </div>
+        </div>
+
+        {/* Entry count progress bar */}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Users className="h-3 w-3" />
+              {entryCount} {entryCount === 1 ? "entry" : "entries"}
+            </span>
+          </div>
+          <Progress value={progressValue} className="h-1.5" />
         </div>
 
         {challenge.description && (
@@ -71,32 +86,32 @@ const ChallengeCard = ({
 
         <div className="flex items-center gap-1.5">
           {challenge.status === "draft" && (
-            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => onStatusChange(challenge.id, "active")}>
+            <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onStatusChange(challenge.id, "active")}>
               Activate
             </Button>
           )}
           {challenge.status === "active" && (
-            <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => onStatusChange(challenge.id, "ended")}>
+            <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => onStatusChange(challenge.id, "ended")}>
               End
             </Button>
           )}
-          <Button variant="ghost" size="sm" className="text-xs h-7 ml-auto" onClick={toggleExpand}>
+          <Button variant="ghost" size="sm" className="text-xs h-8 ml-auto" onClick={toggleExpand}>
             {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
             Entries
           </Button>
         </div>
 
         {expanded && (
-          <div className="border-t border-border pt-2 space-y-1.5">
+          <div className="border-t border-border/50 pt-2 space-y-1.5">
             {loadingEntries ? (
               <Skeleton className="h-8 w-full" />
             ) : entries.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-2">No entries yet</p>
             ) : (
               entries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-2 p-1.5 rounded bg-muted/30">
+                <div key={entry.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
                   {entry.profile?.avatar_url && (
-                    <img src={entry.profile.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+                    <img src={entry.profile.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-medium truncate">
@@ -128,11 +143,13 @@ const ChallengeManager = ({ refreshKey }: { refreshKey?: number }) => {
     else toast.success(`Challenge ${status}!`);
   };
 
+  const maxEntries = Math.max(...challenges.map((c) => c.entry_count || 0), 1);
+
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <Skeleton className="h-24 w-full" />
-        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-28 w-full" />
+        <Skeleton className="h-28 w-full" />
       </div>
     );
   }
@@ -142,9 +159,9 @@ const ChallengeManager = ({ refreshKey }: { refreshKey?: number }) => {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2.5">
       {challenges.map((c) => (
-        <ChallengeCard key={c.id} challenge={c} onStatusChange={handleStatusChange} />
+        <ChallengeCard key={c.id} challenge={c} onStatusChange={handleStatusChange} maxEntries={maxEntries} />
       ))}
     </div>
   );
