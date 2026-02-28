@@ -231,8 +231,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
                 style={{ 
                   borderRadius: '20px',
                   width: '100%',
-                  maxHeight: '700px',
-                  objectFit: 'contain',
+                  height: 'auto',
                   display: 'block',
                   backgroundColor: C.bg,
                 }}
