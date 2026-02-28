@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Crown, Settings, MessageCircle, UserPlus, UserMinus, Shield } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
-import NotificationBell from "@/components/notifications/NotificationBell";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
@@ -48,7 +47,6 @@ const ProfileHeaderActions = ({
           <Button variant="outline" onClick={onMessageClick} size="sm" className="rounded-full">
             <MessageCircle className="h-4 w-4" />
           </Button>
-          <NotificationBell />
         </>
       ) : (
         <>
