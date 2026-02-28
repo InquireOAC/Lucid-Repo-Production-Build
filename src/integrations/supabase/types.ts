@@ -850,6 +850,96 @@ export type Database = {
           },
         ]
       }
+      explore_articles: {
+        Row: {
+          authors: string
+          category: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          journal: string | null
+          key_finding: string
+          sort_order: number
+          title: string
+          url: string
+          year: number | null
+        }
+        Insert: {
+          authors?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          journal?: string | null
+          key_finding?: string
+          sort_order?: number
+          title: string
+          url: string
+          year?: number | null
+        }
+        Update: {
+          authors?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          journal?: string | null
+          key_finding?: string
+          sort_order?: number
+          title?: string
+          url?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      explore_videos: {
+        Row: {
+          author: string
+          category: string
+          created_at: string
+          created_by: string | null
+          duration: string
+          id: string
+          is_active: boolean
+          sort_order: number
+          thumbnail_url: string | null
+          title: string
+          youtube_id: string
+          youtube_url: string
+        }
+        Insert: {
+          author?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          duration?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          thumbnail_url?: string | null
+          title: string
+          youtube_id: string
+          youtube_url: string
+        }
+        Update: {
+          author?: string
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          duration?: string
+          id?: string
+          is_active?: boolean
+          sort_order?: number
+          thumbnail_url?: string | null
+          title?: string
+          youtube_id?: string
+          youtube_url?: string
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string | null

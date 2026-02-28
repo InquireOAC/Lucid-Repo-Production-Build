@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, Compass } from "lucide-react";
+import NotificationBell from "@/components/notifications/NotificationBell";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
@@ -24,8 +25,14 @@ const MainLayout = () => {
 
   return (
     <div className="flex flex-col min-h-screen cosmic-background">
-      {/* Fixed opaque overlay for status bar safe area */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
+      {/* Fixed opaque overlay for status bar safe area + notification bell */}
+      <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay">
+        {user && (
+          <div className="absolute right-3 bottom-1">
+            <NotificationBell />
+          </div>
+        )}
+      </div>
       
       {/* Announcement banner - fixed overlay on community pages */}
       {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
