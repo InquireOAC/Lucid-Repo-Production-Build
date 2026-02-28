@@ -96,7 +96,7 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
       )}
     >
       {/* Avatar with type badge */}
-      <div className="relative flex-shrink-0">
+      <div className="flex-shrink-0">
         <SymbolAvatar
           symbol={notification.user?.avatar_symbol}
           color={notification.user?.avatar_color}
@@ -104,10 +104,6 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
           fallbackLetter={(notification.user?.display_name || notification.user?.username || "U").charAt(0).toUpperCase()}
           size={40}
         />
-        {/* Type icon badge */}
-        <div className={cn("absolute -bottom-0.5 -right-0.5 p-1 rounded-full border-2 border-background", config.bg)}>
-          <Icon className={cn("h-2.5 w-2.5", config.color)} />
-        </div>
       </div>
 
       {/* Content */}
