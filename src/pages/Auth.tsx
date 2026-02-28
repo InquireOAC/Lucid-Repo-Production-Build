@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { containsInappropriateContent } from "@/utils/contentFilter";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
 import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
 
@@ -275,136 +275,159 @@ const Auth = () => {
             }}
           >
             {/* Tab switcher */}
-            <div className="flex rounded-xl mb-6 p-1" style={{ background: "rgba(56,130,246,0.06)", border: `1px solid ${C.surfaceBorder}` }}>
+            <div className="flex rounded-xl mb-6 p-1 relative" style={{ background: "rgba(56,130,246,0.06)", border: `1px solid ${C.surfaceBorder}` }}>
+              {/* Animated pill */}
+              <motion.div
+                className="absolute top-1 bottom-1 rounded-lg"
+                style={{
+                  background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
+                  boxShadow: `0 2px 10px ${C.primaryGlow}`,
+                  width: "calc(50% - 4px)",
+                }}
+                animate={{ x: mode === "signin" ? 0 : "calc(100% + 4px)" }}
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
               <button
                 type="button"
                 onClick={() => setMode("signin")}
-                className="flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200"
-                style={{
-                  background: mode === "signin" ? `linear-gradient(135deg, ${C.primary}, #6366F1)` : "transparent",
-                  color: mode === "signin" ? "#fff" : C.muted,
-                  boxShadow: mode === "signin" ? `0 2px 10px ${C.primaryGlow}` : "none",
-                }}
+                className="flex-1 py-2 text-sm font-medium rounded-lg relative z-10 transition-colors duration-200"
+                style={{ color: mode === "signin" ? "#fff" : C.muted }}
               >
                 Sign In
               </button>
               <button
                 type="button"
                 onClick={() => setMode("signup")}
-                className="flex-1 py-2 text-sm font-medium rounded-lg transition-all duration-200"
-                style={{
-                  background: mode === "signup" ? `linear-gradient(135deg, ${C.primary}, #6366F1)` : "transparent",
-                  color: mode === "signup" ? "#fff" : C.muted,
-                  boxShadow: mode === "signup" ? `0 2px 10px ${C.primaryGlow}` : "none",
-                }}
+                className="flex-1 py-2 text-sm font-medium rounded-lg relative z-10 transition-colors duration-200"
+                style={{ color: mode === "signup" ? "#fff" : C.muted }}
               >
                 Sign Up
               </button>
             </div>
 
-            {/* Email / Password form */}
-            <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
-              {mode === "signup" && (
+            {/* Form with animated transitions */}
+            <AnimatePresence mode="wait">
+              <motion.form
+                key={mode}
+                onSubmit={mode === "signin" ? handleSignIn : handleSignUp}
+                className="space-y-4"
+                initial={{ opacity: 0, x: mode === "signup" ? 20 : -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: mode === "signup" ? -20 : 20 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              >
+                {mode === "signup" && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <input
+                      type="text"
+                      placeholder="Username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      required
+                      className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                      style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
+                    />
+                  </motion.div>
+                )}
                 <div>
                   <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
                     style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
                   />
                 </div>
-              )}
-              <div>
-                <input
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
-                  style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
-                />
-              </div>
-              <div>
-                <input
-                  type="password"
-                  placeholder={mode === "signup" ? "Password (min 6 characters)" : "Password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={mode === "signup" ? 6 : undefined}
-                  className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
-                  style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
-                />
-              </div>
-
-              {/* Remember me (sign-in only) */}
-              {mode === "signin" && (
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="remember-me"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => {
-                      setRememberMe(checked);
-                      localStorage.setItem(REMEMBER_ME_KEY, String(checked));
-                    }}
+                <div>
+                  <input
+                    type="password"
+                    placeholder={mode === "signup" ? "Password (min 6 characters)" : "Password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={mode === "signup" ? 6 : undefined}
+                    className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                    style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
                   />
-                  <Label htmlFor="remember-me" className="text-xs cursor-pointer" style={{ color: C.muted }}>
-                    Remember me
-                  </Label>
                 </div>
-              )}
 
-              {/* Terms (sign-up only) */}
-              {mode === "signup" && (
-                <div className="space-y-3 pt-2" style={{ borderTop: `1px solid ${C.surfaceBorder}` }}>
-                  <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="terms-agree"
-                      checked={hasAcceptedTermsLocal}
-                      onCheckedChange={(checked) => setHasAcceptedTermsLocal(checked as boolean)}
+                {/* Remember me (sign-in only) */}
+                {mode === "signin" && (
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => {
+                        setRememberMe(checked);
+                        localStorage.setItem(REMEMBER_ME_KEY, String(checked));
+                      }}
                     />
-                    <div className="flex-1">
-                      <label htmlFor="terms-agree" className="text-sm font-medium leading-none cursor-pointer" style={{ color: C.text }}>
-                        I agree to the{" "}
-                        <button
-                          type="button"
-                          onClick={() => setShowTermsText(!showTermsText)}
-                          className="underline hover:no-underline"
-                          style={{ color: C.primary }}
-                        >
-                          Terms of Use
-                        </button>
-                      </label>
-                    </div>
+                    <Label htmlFor="remember-me" className="text-xs cursor-pointer" style={{ color: C.muted }}>
+                      Remember me
+                    </Label>
                   </div>
-                  {showTermsText && (
-                    <ScrollArea className="h-48 w-full rounded-xl p-3" style={{ border: `1px solid ${C.surfaceBorder}`, background: "rgba(56,130,246,0.03)" }}>
-                      <TermsText />
-                    </ScrollArea>
-                  )}
-                </div>
-              )}
+                )}
 
-              {/* Submit */}
-              <motion.button
-                type="submit"
-                className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-2"
-                style={{
-                  background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
-                  color: "#fff",
-                  border: "none",
-                  boxShadow: `0 4px 20px ${C.primaryGlow}`,
-                }}
-                whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
-              >
-                {isLoading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
-              </motion.button>
-            </form>
+                {/* Terms (sign-up only) */}
+                {mode === "signup" && (
+                  <motion.div
+                    className="space-y-3 pt-2"
+                    style={{ borderTop: `1px solid ${C.surfaceBorder}` }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.1 }}
+                  >
+                    <div className="flex items-start space-x-2">
+                      <Checkbox
+                        id="terms-agree"
+                        checked={hasAcceptedTermsLocal}
+                        onCheckedChange={(checked) => setHasAcceptedTermsLocal(checked as boolean)}
+                      />
+                      <div className="flex-1">
+                        <label htmlFor="terms-agree" className="text-sm font-medium leading-none cursor-pointer" style={{ color: C.text }}>
+                          I agree to the{" "}
+                          <button
+                            type="button"
+                            onClick={() => setShowTermsText(!showTermsText)}
+                            className="underline hover:no-underline"
+                            style={{ color: C.primary }}
+                          >
+                            Terms of Use
+                          </button>
+                        </label>
+                      </div>
+                    </div>
+                    {showTermsText && (
+                      <ScrollArea className="h-48 w-full rounded-xl p-3" style={{ border: `1px solid ${C.surfaceBorder}`, background: "rgba(56,130,246,0.03)" }}>
+                        <TermsText />
+                      </ScrollArea>
+                    )}
+                  </motion.div>
+                )}
+
+                {/* Submit */}
+                <motion.button
+                  type="submit"
+                  className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-2"
+                  style={{
+                    background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
+                    color: "#fff",
+                    border: "none",
+                    boxShadow: `0 4px 20px ${C.primaryGlow}`,
+                  }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+                </motion.button>
+              </motion.form>
+            </AnimatePresence>
           </div>
         </motion.div>
 
