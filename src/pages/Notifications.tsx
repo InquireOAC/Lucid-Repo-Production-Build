@@ -3,16 +3,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCard from "@/components/notifications/NotificationCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Bell } from "lucide-react";
+import { Bell, CheckCheck, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 
 const Notifications = () => {
   const { user } = useAuth();
-  const { notifications, loading, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
+  const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
 
   if (!user) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-safe-top pl-safe-left pr-safe-right">
-        <p className="text-white/60">Please sign in to view notifications</p>
+        <p className="text-muted-foreground">Please sign in to view notifications</p>
       </div>
     );
   }
@@ -21,33 +25,44 @@ const Notifications = () => {
     <div className="min-h-screen pt-safe-top pb-20 px-4 pl-safe-left pr-safe-right">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6 pt-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500">
-              <Bell className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-2xl font-bold gradient-text">Notifications</h1>
-          </div>
-          {notifications.length > 0 && (
             <button
-              onClick={markAllAsRead}
-              className="text-sm text-purple-300 hover:text-white transition-colors"
+              onClick={() => navigate(-1)}
+              className="p-2 rounded-full hover:bg-muted/50 transition-colors"
             >
-              Mark all read
+              <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
+            <h1 className="text-xl font-bold text-foreground">Activity</h1>
+            {unreadCount > 0 && (
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-primary/15 text-primary border border-primary/20">
+                {unreadCount}
+              </span>
+            )}
+          </div>
+          {notifications.length > 0 && unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={markAllAsRead}
+              className="text-xs text-muted-foreground hover:text-foreground gap-1.5"
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              Mark all read
+            </Button>
           )}
         </div>
 
         {/* Loading State */}
         {loading && (
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="glass-card p-4 rounded-xl border-white/10">
-                <div className="flex items-start gap-3">
-                  <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="space-y-2">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="p-4 rounded-xl bg-card border border-border/50">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
                   <div className="flex-1 space-y-2">
                     <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-1/3" />
                   </div>
                 </div>
               </div>
@@ -57,25 +72,39 @@ const Notifications = () => {
 
         {/* Empty State */}
         {!loading && notifications.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center mb-4">
-              <Bell className="h-8 w-8 text-white" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="text-center py-20"
+          >
+            <div className="mx-auto w-16 h-16 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center mb-4">
+              <Bell className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No notifications yet</h3>
-            <p className="text-white/60">When someone interacts with your dreams, you'll see notifications here</p>
-          </div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">No activity yet</h3>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+              When someone likes, comments, or follows you, it'll show up here.
+            </p>
+          </motion.div>
         )}
 
         {/* Notifications List */}
         {!loading && notifications.length > 0 && (
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <NotificationCard
-                key={notification.id}
-                notification={notification}
-                onMarkAsRead={markAsRead}
-              />
-            ))}
+          <div className="space-y-1">
+            <AnimatePresence>
+              {notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03, duration: 0.25 }}
+                >
+                  <NotificationCard
+                    notification={notification}
+                    onMarkAsRead={markAsRead}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         )}
       </div>
