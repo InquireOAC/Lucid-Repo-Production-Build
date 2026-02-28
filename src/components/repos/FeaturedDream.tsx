@@ -29,12 +29,12 @@ const FeaturedDream = ({
 
   return (
     <div 
-      className="vault-glass corner-brackets rounded-2xl overflow-hidden cursor-pointer group mb-6 border border-primary/15"
+      className="vault-glass corner-brackets rounded-xl overflow-hidden cursor-pointer group border border-primary/15"
       onClick={() => onOpenDream(dream)}
     >
       {/* Hero Image */}
       {imageUrl && (
-        <div className="relative aspect-[16/9] overflow-hidden">
+        <div className="relative aspect-[2/1] overflow-hidden">
           <img 
             src={imageUrl} 
             alt={dream.title}
@@ -43,8 +43,8 @@ const FeaturedDream = ({
           <div className="absolute inset-0 bg-gradient-to-t from-cosmic-black via-transparent to-transparent" />
           
           {/* Featured badge */}
-          <div className="absolute top-4 left-4">
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-aurora-gold/90 text-cosmic-black">
+          <div className="absolute top-3 left-3">
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-aurora-gold/90 text-cosmic-black">
               ✦ Featured
             </span>
           </div>
@@ -52,12 +52,12 @@ const FeaturedDream = ({
       )}
       
       {/* Content */}
-      <div className="p-6">
-        <h2 className="text-2xl font-bold mb-2 group-hover:text-primary transition-colors">
+      <div className="p-4">
+        <h2 className="text-lg font-bold mb-1 group-hover:text-primary transition-colors line-clamp-1">
           {dream.title}
         </h2>
         
-        <p className="text-muted-foreground line-clamp-2 mb-4">
+        <p className="text-muted-foreground text-sm line-clamp-1 mb-3">
           {dream.content}
         </p>
         

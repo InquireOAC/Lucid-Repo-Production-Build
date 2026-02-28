@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
-import FeaturedDream from "@/components/repos/FeaturedDream";
+import FeaturedDreamCarousel from "@/components/repos/FeaturedDreamCarousel";
 import MasonryDreamGrid from "@/components/repos/MasonryDreamGrid";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
@@ -90,15 +90,15 @@ const LucidRepoContainer = () => {
 
   const handleClearTags = () => setActiveTags([]);
 
-  // Get featured dream (most popular with image)
-  const featuredDream = filteredDreams.find(d => 
-    (d.generatedImage || d.image_url) && (d.like_count || 0) > 0
-  ) || filteredDreams.find(d => d.generatedImage || d.image_url);
+  // Get up to 3 featured dreams (with images, prioritizing likes)
+  const featuredDreams = filteredDreams
+    .filter(d => d.generatedImage || d.image_url)
+    .sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
+    .slice(0, 3);
   
   // Rest of dreams for masonry grid
-  const gridDreams = featuredDream 
-    ? filteredDreams.filter(d => d.id !== featuredDream.id)
-    : filteredDreams;
+  const featuredIds = new Set(featuredDreams.map(d => d.id));
+  const gridDreams = filteredDreams.filter(d => !featuredIds.has(d.id));
 
   return (
     <div className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right tech-grid-bg overflow-x-hidden">
@@ -131,9 +131,9 @@ const LucidRepoContainer = () => {
         </div>
       ) : (
         <>
-          {featuredDream && (
-            <FeaturedDream
-              dream={featuredDream}
+          {featuredDreams.length > 0 && (
+            <FeaturedDreamCarousel
+              dreams={featuredDreams}
               tags={filteredDreamTags}
               onLike={handleDreamLikeFromCard}
               onOpenDream={handleOpenDream}

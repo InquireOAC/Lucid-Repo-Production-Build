@@ -143,6 +143,46 @@ export const vaultVideos: VaultVideo[] = [
     author: "Jon Kabat-Zinn",
     category: "meditation",
   },
+  {
+    title: "Guided Body Scan Meditation for Deep Relaxation",
+    thumbnailUrl: "https://img.youtube.com/vi/15q-N-_kkrU/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=15q-N-_kkrU",
+    duration: "20:00",
+    author: "The Honest Guys",
+    category: "meditation",
+  },
+  {
+    title: "Breathwork for Energy & Focus – Wim Hof Method",
+    thumbnailUrl: "https://img.youtube.com/vi/tybOi4hjZFQ/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=tybOi4hjZFQ",
+    duration: "11:48",
+    author: "Wim Hof",
+    category: "meditation",
+  },
+  {
+    title: "Pranayama Breathing Techniques for Beginners",
+    thumbnailUrl: "https://img.youtube.com/vi/IElHgJG5Fe4/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=IElHgJG5Fe4",
+    duration: "15:37",
+    author: "Yoga With Adriene",
+    category: "meditation",
+  },
+  {
+    title: "Guided Chakra Meditation – Energy Healing",
+    thumbnailUrl: "https://img.youtube.com/vi/mEL8GJhMo-I/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=mEL8GJhMo-I",
+    duration: "30:12",
+    author: "Michael Sealey",
+    category: "meditation",
+  },
+  {
+    title: "Energy Control Breathing – Box Breathing Technique",
+    thumbnailUrl: "https://img.youtube.com/vi/n6RbW2LtdFs/hqdefault.jpg",
+    youtubeUrl: "https://www.youtube.com/watch?v=n6RbW2LtdFs",
+    duration: "5:30",
+    author: "Mark Divine",
+    category: "meditation",
+  },
 ];
 
 export const researchStudies: ResearchStudy[] = [
