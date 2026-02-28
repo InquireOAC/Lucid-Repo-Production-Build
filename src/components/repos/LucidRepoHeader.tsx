@@ -74,7 +74,7 @@ const LucidRepoHeader = ({
 
       {/* Dream Type Carousel */}
       {tags.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 pb-1">
+        <div className="flex flex-wrap justify-center items-center gap-2 pb-1">
           {tags.map((tag) => (
             <button
               key={tag.id}
