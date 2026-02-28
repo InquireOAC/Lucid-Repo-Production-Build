@@ -1,4 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
+import { motion } from "framer-motion";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import FeaturedDream from "./FeaturedDream";
 
@@ -39,7 +40,12 @@ const FeaturedDreamCarousel: React.FC<FeaturedDreamCarouselProps> = ({
   if (dreams.length === 0) return null;
 
   return (
-    <div className="mb-6">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="mb-6"
+    >
       <div
         ref={scrollRef}
         className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-4"
@@ -63,13 +69,16 @@ const FeaturedDreamCarousel: React.FC<FeaturedDreamCarouselProps> = ({
       {dreams.length > 1 && (
         <div className="flex justify-center gap-1.5 mt-3">
           {dreams.map((_, i) => (
-            <button
+            <motion.button
               key={i}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                i === activeIndex
-                  ? "w-5 bg-primary"
-                  : "w-1.5 bg-muted-foreground/30"
-              }`}
+              animate={{
+                width: i === activeIndex ? 20 : 6,
+                backgroundColor: i === activeIndex 
+                  ? "hsl(var(--primary))" 
+                  : "hsl(var(--muted-foreground) / 0.3)",
+              }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="h-1.5 rounded-full"
               onClick={() => {
                 scrollRef.current?.scrollTo({
                   left: i * (scrollRef.current?.clientWidth ?? 0),
@@ -81,7 +90,7 @@ const FeaturedDreamCarousel: React.FC<FeaturedDreamCarouselProps> = ({
           ))}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
 

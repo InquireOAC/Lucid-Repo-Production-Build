@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import UserSearchResults from "@/components/explore/UserSearchResults";
 import VaultTabContent from "@/components/explore/VaultTabContent";
 import type { VaultCategory } from "@/data/vaultContent";
+import PageTransition from "@/components/ui/PageTransition";
 
 const tabs: { label: string; value: VaultCategory }[] = [
   { label: "Lucid Dreaming", value: "lucid-dreaming" },
@@ -15,7 +17,7 @@ const Explore: React.FC = () => {
   const [activeTab, setActiveTab] = useState<VaultCategory>("lucid-dreaming");
 
   return (
-    <div className="min-h-screen pt-safe-top">
+    <PageTransition className="min-h-screen pt-safe-top">
       <div className="p-4 pb-2">
         <h1 className="text-xl font-bold text-foreground">Explore</h1>
         <p className="text-xs text-muted-foreground mt-1">Your knowledge vault</p>
@@ -41,21 +43,38 @@ const Explore: React.FC = () => {
             <button
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
+              className={`relative px-4 py-2 rounded-full text-xs font-semibold transition-all duration-200 ${
                 activeTab === tab.value
-                  ? "bg-primary/15 text-primary"
+                  ? "text-primary"
                   : "bg-card/60 text-muted-foreground hover:bg-card/80"
               }`}
             >
-              {tab.label}
+              {activeTab === tab.value && (
+                <motion.div
+                  layoutId="explore-tab-bg"
+                  className="absolute inset-0 bg-primary/15 rounded-full"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
+              <span className="relative z-10">{tab.label}</span>
             </button>
           ))}
         </div>
 
         {/* Tab Content */}
-        <VaultTabContent category={activeTab} />
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <VaultTabContent category={activeTab} />
+          </motion.div>
+        </AnimatePresence>
       </div>
-    </div>
+    </PageTransition>
   );
 };
 
