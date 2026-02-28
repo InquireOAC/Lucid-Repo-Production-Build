@@ -19,7 +19,7 @@ const C = {
   bg: "#060B18",
   primary: "#3B82F6",
   primaryGlow: "rgba(56,130,246,0.25)",
-  accent: "#6366F1",
+  accent: "#2563EB",
   text: "#E2E8F0",
   muted: "#64748B",
   surfaceBorder: "rgba(56,130,246,0.12)",
@@ -135,7 +135,7 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
             right: '-50px',
             width: '400px',
             height: '400px',
-            background: `radial-gradient(ellipse at center, rgba(99,102,241,0.15) 0%, transparent 70%)`,
+            background: `radial-gradient(ellipse at center, rgba(37,99,235,0.12) 0%, transparent 70%)`,
             filter: 'blur(60px)',
             pointerEvents: 'none',
           }}
