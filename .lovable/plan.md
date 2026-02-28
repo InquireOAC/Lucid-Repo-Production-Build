@@ -1,104 +1,68 @@
 
 
-# Admin Dashboard Sleek Redesign
+# Admin Dashboard Analytics Charts
 
 ## Overview
-A visual and UX overhaul of the admin dashboard focused on mobile-first sizing, cleaner information hierarchy, and alignment with the existing sci-fi/vault-glass design system. No new database tables or backend changes -- this is purely a frontend enhancement.
+Add a rich analytics section to the Stats tab with interactive time-series charts using the existing recharts library and chart UI components. The charts will query Supabase data grouped by day/month and display trends for key platform metrics.
 
----
+## Data Strategy
+All metrics will be derived from existing tables using client-side Supabase queries with date grouping. A new `useAdminAnalytics` hook will fetch 30-day time-series data in a single batch of parallel queries.
 
-## Current Issues
-- Tab labels are cramped at 5 across on mobile (especially small phones)
-- Stat cards are dense with small text and uniform styling -- no visual hierarchy for important metrics
-- Composer forms (Announcements, Polls, Challenges) are verbose and take too much vertical space
-- Header is plain and lacks the app's signature visual flair
-- No quick-glance summary when first landing on the dashboard
-- User Manager action buttons overflow on narrow screens
+### Metrics and Data Sources
+| Metric | Source Table | Query Logic |
+|--------|-------------|-------------|
+| New Users / Day | `profiles` | GROUP BY `created_at::date` |
+| New Subscriptions / Day | `stripe_subscriptions` | GROUP BY `created_at::date`, WHERE `deleted_at IS NULL` |
+| Current MRR | `stripe_subscriptions` | Count active subs x price ($4.99 for limited, $15.99 for unlimited) |
+| Monthly Active Users | `dream_entries` | Distinct `user_id` in last 30 days |
+| Image Generations | `dream_entries` | Count WHERE `image_url IS NOT NULL`, grouped by day |
+| Video Generations | `dream_entries` | Count WHERE `video_url IS NOT NULL`, grouped by day |
+| Public Dream Entries | `dream_entries` | Count WHERE `is_public = true`, grouped by day |
+| User Retention | Calculated | (Users active this week) / (Users active last week) as % |
 
----
+## New Files
 
-## Redesign Plan
+### `src/hooks/useAdminAnalytics.tsx`
+- Fetches 30-day time-series data from Supabase
+- Returns arrays of `{ date, value }` for each metric
+- Computes MRR from active subscription price_ids
+- Computes retention ratio
+- Single `useEffect` with `Promise.all` for performance
 
-### 1. Scrollable Tab Bar
-Replace the fixed-width `TabsList` with a horizontally scrollable strip. Each tab gets an icon + label instead of just text, improving tap targets and scannability on mobile.
+### `src/components/admin/AnalyticsCharts.tsx`
+- Renders a vertical stack of chart cards below the existing hero/secondary stat grids in `CommunityStats`
+- Each chart card uses `ChartContainer` from the existing chart UI
+- Uses `AreaChart` for trends (new users, dreams, generations) with gradient fills
+- Uses `BarChart` for subscriptions
+- Displays MRR and retention as large number KPI cards (not charts)
+- A date range selector (7d / 14d / 30d) at the top to filter the view
+- Mobile-optimized: charts are full-width, 180px tall, with proper touch scrolling
 
-```text
-[Stats] [Announce] [Events] [Moderate] [Users]
-  ^--- scrollable, each ~80px with icon above label
-```
+## Modified Files
 
-**File:** `src/pages/AdminDashboard.tsx`
-- Wrap TabsList in a horizontal scroll container with `overflow-x-auto` and `scrollbar-hide`
-- Add icons to each TabsTrigger (BarChart3, Megaphone, Trophy, Shield, Users)
-- Use a vertical icon+label layout inside each trigger for better mobile UX
+### `src/components/admin/CommunityStats.tsx`
+- Import and render `<AnalyticsCharts />` below the existing secondary stats grid
+- No other changes
 
-### 2. Enhanced Header with Gradient Accent
-Replace the plain header bar with a styled header that includes a subtle gradient line and the admin's greeting.
+## UI Layout (top to bottom in Stats tab)
+1. Hero Stats Row (existing - unchanged)
+2. Secondary Stats Grid (existing - unchanged)
+3. Date Range Selector: `[7d] [14d] [30d]` pill buttons
+4. MRR + Retention KPI row (two side-by-side glass cards)
+5. Chart Cards (scrollable vertical list):
+   - "New Users" - AreaChart with primary gradient
+   - "Subscriptions" - BarChart
+   - "Monthly Active Users" - AreaChart
+   - "Image Generations" - AreaChart
+   - "Video Generations" - AreaChart
+   - "Public Dreams" - AreaChart
 
-**File:** `src/pages/AdminDashboard.tsx`
-- Add a thin gradient accent bar (primary-to-secondary) below the header
-- Keep the back button and title, add a subtle "Command Center" subtitle
-
-### 3. Hero Stats Row (Top 4 Key Metrics)
-Pull 4 hero metrics (Total Users, Weekly Active, Public Dreams, Pending Flags) into a prominent horizontal scroll row at the top of the Stats tab with larger numbers and gradient icon backgrounds.
-
-**File:** `src/components/admin/CommunityStats.tsx`
-- Split stats into "hero" (top 4, larger cards) and "secondary" (remaining 6, compact grid)
-- Hero cards: taller, centered number with gradient icon circle, `vault-glass` style
-- Secondary cards: compact 2-column grid as before but with tighter padding
-
-### 4. Collapsible Composer Forms
-Wrap the AnnouncementComposer, PollComposer, and ChallengeComposer in collapsible sections so they don't dominate the screen by default.
-
-**File:** `src/pages/AdminDashboard.tsx`
-- Use Radix `Collapsible` component around each composer
-- Show a compact trigger button ("+ New Announcement", "+ New Poll", "+ New Challenge")
-- Composer expands when tapped, collapses after successful submission
-
-### 5. User Manager Mobile Layout Fix
-Stack the action buttons vertically on mobile and improve the card layout.
-
-**File:** `src/components/admin/UserManager.tsx`
-- Move action buttons (View, Mod, Admin) below the user info on mobile using `flex-wrap`
-- Add avatar display (use `SymbolAvatar` or initials fallback)
-- Make the search input full-width with the search button integrated inside
-
-### 6. Moderation Queue Badge Count in Tab
-Show the pending flag count as a notification badge on the "Moderate" tab trigger so admins see at a glance if action is needed.
-
-**File:** `src/pages/AdminDashboard.tsx`
-- Pass `flaggedContent` count from `useAdminStats` to the tab trigger
-- Render a small red dot/number badge on the Moderate tab when count > 0
-
-### 7. Challenge Manager Entry Count Visual
-Add a small progress-style indicator to challenge cards showing entry count vs. a visual bar.
-
-**File:** `src/components/admin/ChallengeManager.tsx`
-- Add a thin `Progress` bar under the challenge title showing relative engagement
-- Slightly increase padding and font sizes for mobile readability
-
----
+Each chart card: glass variant, title + current period total in header, 180px chart area.
 
 ## Technical Details
-
-### Files Modified
-| File | Changes |
-|------|---------|
-| `src/pages/AdminDashboard.tsx` | Scrollable tabs with icons, gradient header, collapsible composers, moderation badge |
-| `src/components/admin/CommunityStats.tsx` | Hero stats row + compact secondary grid |
-| `src/components/admin/UserManager.tsx` | Mobile-friendly stacked layout, avatar, integrated search |
-| `src/components/admin/ChallengeManager.tsx` | Better spacing, progress indicator |
-| `src/index.css` | Add `scrollbar-hide` utility if not present, admin-specific gradient classes |
-
-### No New Files
-All changes are modifications to existing components.
-
-### No Backend/DB Changes
-This is a purely visual/UX redesign.
-
-### Design Tokens Used
-- `vault-glass` for card backgrounds
-- `primary` gradient for accent elements
-- Existing `Badge`, `Progress`, `Collapsible` components from the UI library
-- Consistent `text-xs` / `text-sm` sizing with increased tap targets (min 44px)
+- Uses existing `recharts` dependency and `ChartContainer`/`ChartTooltip` from `src/components/ui/chart.tsx`
+- Uses existing `date-fns` for date formatting
+- All queries use admin RLS (admin role has access to all rows)
+- No database migrations needed -- all data already exists
+- No edge functions needed
 
