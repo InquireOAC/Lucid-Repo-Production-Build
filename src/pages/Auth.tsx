@@ -4,109 +4,56 @@ import { Capacitor } from "@capacitor/core";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { containsInappropriateContent } from "@/utils/contentFilter";
-import { ArrowLeft } from "lucide-react";
-import { Switch } from "@/components/ui/switch";
+import { motion, type Easing } from "framer-motion";
 import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
 
+/* ── colour tokens (self-contained palette) ── */
+const C = {
+  bg: "#0B0F19",
+  cream: "#F4F1EA",
+  muted: "#B8B3A8",
+  ink: "#1A1A1A",
+  divider: "rgba(244,241,234,0.1)",
+} as const;
+
+/* ── icons (monochrome black) ── */
 const GoogleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24">
-    <path
-      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
-      fill="#4285F4"
-    />
-    <path
-      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      fill="#34A853"
-    />
-    <path
-      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      fill="#FBBC05"
-    />
-    <path
-      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      fill="#EA4335"
-    />
+  <svg width="18" height="18" viewBox="0 0 24 24" fill={C.ink}>
+    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
+    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
   </svg>
 );
 
 const AppleIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill={C.ink}>
     <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
   </svg>
 );
 
-const OAuthButtons = ({
-  onGoogle,
-  onApple,
-  isLoading,
-}: {
-  onGoogle: () => void;
-  onApple: () => void;
-  isLoading: boolean;
-}) => (
-  <div className="space-y-3">
-    <Button
-      type="button"
-      variant="outline"
-      className="w-full glass-card border-white/10 hover:border-white/20 h-11 gap-3"
-      onClick={onGoogle}
-      disabled={isLoading}
-    >
-      <GoogleIcon />
-      Continue with Google
-    </Button>
-    <Button
-      type="button"
-      variant="outline"
-      className="w-full glass-card border-white/10 hover:border-white/20 h-11 gap-3"
-      onClick={onApple}
-      disabled={isLoading}
-    >
-      <AppleIcon />
-      Continue with Apple
-    </Button>
-    <div className="relative my-4">
-      <div className="absolute inset-0 flex items-center">
-        <span className="w-full border-t border-white/10" />
-      </div>
-      <div className="relative flex justify-center text-xs uppercase">
-        <span className="bg-background/50 px-2 text-muted-foreground">or</span>
-      </div>
-    </div>
-  </div>
-);
-
+/* ── terms text (unchanged) ── */
 const TermsText = () => (
-  <div className="space-y-3 text-xs">
-    <h4 className="font-semibold text-sm">Terms of Use Agreement</h4>
-    <p>
-      By creating an account, you agree to abide by our community standards and guidelines. We are committed to
-      maintaining a safe, respectful, and inclusive environment for all users.
-    </p>
-    <h5 className="font-semibold text-red-600">Zero Tolerance Policy</h5>
-    <p>
-      <strong>We have ZERO TOLERANCE for:</strong>
-    </p>
+  <div className="space-y-3 text-xs" style={{ color: C.muted }}>
+    <h4 className="font-semibold text-sm" style={{ color: C.cream }}>Terms of Use Agreement</h4>
+    <p>By creating an account, you agree to abide by our community standards and guidelines. We are committed to maintaining a safe, respectful, and inclusive environment for all users.</p>
+    <h5 className="font-semibold" style={{ color: "#c44" }}>Zero Tolerance Policy</h5>
+    <p><strong>We have ZERO TOLERANCE for:</strong></p>
     <ul className="list-disc pl-4 space-y-1">
-      <li>
-        Hate speech, discrimination, or content targeting individuals based on race, religion, gender, sexual
-        orientation, or other protected characteristics
-      </li>
+      <li>Hate speech, discrimination, or content targeting individuals based on race, religion, gender, sexual orientation, or other protected characteristics</li>
       <li>Harassment, bullying, or threatening behavior toward other users</li>
       <li>Abusive, violent, or harmful language or imagery</li>
       <li>Sexual content, explicit material, or inappropriate imagery</li>
       <li>Spam, promotional content, or attempts to deceive other users</li>
       <li>Sharing personal information of others without consent</li>
     </ul>
-    <h5 className="font-semibold">Community Expectations</h5>
+    <h5 className="font-semibold" style={{ color: C.cream }}>Community Expectations</h5>
     <p>We expect all users to:</p>
     <ul className="list-disc pl-4 space-y-1">
       <li>Treat others with respect and kindness</li>
@@ -115,14 +62,38 @@ const TermsText = () => (
       <li>Respect others' privacy and personal boundaries</li>
       <li>Use the platform for its intended purpose of sharing dreams and experiences</li>
     </ul>
-    <h5 className="font-semibold">Consequences</h5>
-    <p>
-      Violations of these terms may result in content removal, account suspension, or permanent ban from the platform.
-      We reserve the right to take action at our discretion to maintain community safety.
-    </p>
-    <p className="text-muted-foreground mt-4">Last updated: December 2024 | Version 1.0</p>
+    <h5 className="font-semibold" style={{ color: C.cream }}>Consequences</h5>
+    <p>Violations of these terms may result in content removal, account suspension, or permanent ban from the platform. We reserve the right to take action at our discretion to maintain community safety.</p>
+    <p className="mt-4" style={{ color: C.muted }}>Last updated: December 2024 | Version 1.0</p>
   </div>
 );
+
+/* ── shared button style ── */
+const creamBtnStyle: React.CSSProperties = {
+  background: C.cream,
+  color: C.ink,
+  borderRadius: 16,
+  boxShadow: "0 4px 20px rgba(0,0,0,0.25)",
+  border: "none",
+  fontWeight: 500,
+};
+
+/* ── dream archive previews ── */
+const archiveDreams = [
+  "A dream about flying over Paris",
+  "A nightmare of falling through mirrors",
+  "A lucid journey through a galaxy library",
+];
+
+/* ── animation variants ── */
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.15, duration: 0.5, ease: "easeOut" as const },
+  }),
+};
 
 const REMEMBER_ME_KEY = "lucid-repo-remember-me";
 
@@ -137,6 +108,7 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [hasAcceptedTermsLocal, setHasAcceptedTermsLocal] = useState(false);
   const [showTermsText, setShowTermsText] = useState(false);
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [rememberMe, setRememberMe] = useState(() => {
     const stored = localStorage.getItem(REMEMBER_ME_KEY);
     return stored !== null ? stored === "true" : true;
@@ -152,15 +124,17 @@ const Auth = () => {
     }
   }, [user, hasAcceptedTerms, termsLoading, navigate]);
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    const redirectTo = Capacitor.isNativePlatform()
+  const getRedirectTo = () =>
+    Capacitor.isNativePlatform()
       ? "app.dreamweaver.lucidrepo://callback"
       : `${window.location.origin}/`;
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo },
+        options: { redirectTo: getRedirectTo() },
       });
       if (error) toast.error(error.message);
     } catch (error) {
@@ -173,13 +147,10 @@ const Auth = () => {
 
   const handleAppleSignIn = async () => {
     setIsLoading(true);
-    const redirectTo = Capacitor.isNativePlatform()
-      ? "app.dreamweaver.lucidrepo://callback"
-      : `${window.location.origin}/`;
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "apple",
-        options: { redirectTo },
+        options: { redirectTo: getRedirectTo() },
       });
       if (error) toast.error(error.message);
     } catch (error) {
@@ -192,22 +163,14 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
-    }
+    if (!email || !password) { toast.error("Please fill in all fields"); return; }
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
+      const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
-        if (error.message.includes("Invalid login credentials")) {
-          toast.error("Invalid email or password. Please check your credentials and try again.");
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(error.message.includes("Invalid login credentials")
+          ? "Invalid email or password. Please check your credentials and try again."
+          : error.message);
         return;
       }
       toast.success("Signed in successfully!");
@@ -221,39 +184,21 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !username) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-    if (!hasAcceptedTermsLocal) {
-      toast.error("Please accept the Terms of Use to continue");
-      return;
-    }
-    if (containsInappropriateContent(username)) {
-      toast.error("Username contains inappropriate content. Please choose a different username.");
-      return;
-    }
-    if (password.length < 6) {
-      toast.error("Password must be at least 6 characters long");
-      return;
-    }
+    if (!email || !password || !username) { toast.error("Please fill in all fields"); return; }
+    if (!hasAcceptedTermsLocal) { toast.error("Please accept the Terms of Use to continue"); return; }
+    if (containsInappropriateContent(username)) { toast.error("Username contains inappropriate content. Please choose a different username."); return; }
+    if (password.length < 6) { toast.error("Password must be at least 6 characters long"); return; }
     setIsLoading(true);
     try {
-      const redirectUrl = `${window.location.origin}/`;
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: { username },
-        },
+        options: { emailRedirectTo: `${window.location.origin}/`, data: { username } },
       });
       if (error) {
-        if (error.message.includes("User already registered")) {
-          toast.error("An account with this email already exists");
-        } else {
-          toast.error(error.message);
-        }
+        toast.error(error.message.includes("User already registered")
+          ? "An account with this email already exists"
+          : error.message);
         return;
       }
       await markTermsAsAccepted();
@@ -278,141 +223,178 @@ const Auth = () => {
     }
   };
 
+  /* ── loading state ── */
   if (termsLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen cosmic-background pt-safe-top pl-safe-left pr-safe-right">
-        Loading...
+      <div className="flex items-center justify-center min-h-screen pt-safe-top" style={{ background: C.bg, color: C.cream }}>
+        Loading…
       </div>
     );
   }
 
-  // Terms acceptance screen for existing users
+  /* ── terms acceptance for existing users ── */
   if (user && hasAcceptedTerms === false) {
     return (
-      <div className="min-h-screen flex items-center justify-center cosmic-background pt-safe-top px-4 pl-safe-left pr-safe-right">
-        <div className="w-full max-w-md glass-card rounded-2xl border border-white/10 p-6">
+      <div className="min-h-screen flex items-center justify-center pt-safe-top px-4" style={{ background: C.bg }}>
+        <div className="w-full max-w-md rounded-2xl p-6" style={{ background: "rgba(244,241,234,0.04)", border: `1px solid ${C.divider}` }}>
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold gradient-text">Terms of Use</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Please accept our Terms of Use to continue using Lucid Repo
-            </p>
+            <h2 className="text-2xl font-bold" style={{ color: C.cream, fontFamily: "'Playfair Display', serif" }}>Terms of Use</h2>
+            <p className="text-sm mt-1" style={{ color: C.muted }}>Please accept our Terms of Use to continue using Lucid Repo</p>
           </div>
-          <ScrollArea className="h-48 w-full rounded-xl border border-white/10 p-3 glass-card mb-4">
+          <ScrollArea className="h-48 w-full rounded-xl p-3 mb-4" style={{ border: `1px solid ${C.divider}`, background: "rgba(244,241,234,0.03)" }}>
             <TermsText />
           </ScrollArea>
-          <Button onClick={handleAcceptTerms} className="w-full">
+          <button onClick={handleAcceptTerms} className="w-full h-11 text-sm font-medium" style={creamBtnStyle}>
             Accept Terms and Continue
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
+  /* ═══════════════════════════════════════════
+     MAIN AUTH — Literary Dream Archive
+     ═══════════════════════════════════════════ */
   return (
-    <div className="min-h-screen flex items-center justify-center cosmic-background tech-grid-bg pt-safe-top px-4 pl-safe-left pr-safe-right overflow-hidden">
-      {/* Animated aurora orbs */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/[0.08] blur-[120px] animate-pulse" />
-        <div className="absolute bottom-1/3 right-1/4 w-80 h-80 rounded-full bg-secondary/[0.06] blur-[100px] animate-pulse [animation-delay:2s]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/[0.05] blur-[150px] animate-pulse [animation-delay:4s]" />
-      </div>
-      <div className="relative z-10 w-full max-w-md vault-glass rounded-2xl border border-primary/15 p-6 backdrop-blur-xl">
-        <div className="text-center mb-6">
-          <img src={lucidRepoLogo} alt="Lucid Repo" className="h-10 mx-auto" />
-          <p className="text-sm text-muted-foreground mt-2">Your dream journal awaits</p>
-        </div>
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden"
+      style={{ background: C.bg }}
+    >
+      {/* Paper grain texture overlay */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "repeat",
+          backgroundSize: 256,
+        }}
+      />
 
-        <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 glass-card border border-white/10">
-            <TabsTrigger value="signin">Sign In</TabsTrigger>
-            <TabsTrigger value="signup">Sign Up</TabsTrigger>
-          </TabsList>
+      <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
+        {/* ── SECTION 1: Header ── */}
+        <motion.div
+          className="text-center mb-12"
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          variants={fadeUp}
+        >
+          <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 mx-auto mb-8 opacity-70" />
+          <h1
+            className="text-4xl font-semibold leading-tight tracking-tight"
+            style={{ color: C.cream, fontFamily: "'Playfair Display', serif" }}
+          >
+            Welcome back, Dreamer.
+          </h1>
+          <p className="mt-4 text-sm" style={{ color: C.muted }}>
+            Join thousands sharing their nightly adventures.
+          </p>
+        </motion.div>
 
-          <TabsContent value="signin">
-            <OAuthButtons onGoogle={handleGoogleSignIn} onApple={handleAppleSignIn} isLoading={isLoading} />
-            <form onSubmit={handleSignIn} className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="signin-email">Email</Label>
-                <Input
-                  id="signin-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="signin-password">Password</Label>
-                <Input
-                  id="signin-password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="remember-me"
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => {
-                      setRememberMe(checked);
-                      localStorage.setItem(REMEMBER_ME_KEY, String(checked));
-                    }}
-                  />
-                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
-                    Remember me
-                  </Label>
-                </div>
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
-              </Button>
-            </form>
-          </TabsContent>
+        {/* ── SECTION 2: Authentication ── */}
+        <motion.div
+          className="w-full space-y-4"
+          initial="hidden"
+          animate="visible"
+          custom={1}
+          variants={fadeUp}
+        >
+          {/* OAuth buttons */}
+          <motion.button
+            type="button"
+            className="w-full h-12 flex items-center justify-center gap-3 text-sm font-medium cursor-pointer"
+            style={creamBtnStyle}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
+          >
+            <GoogleIcon />
+            Continue with Google
+          </motion.button>
 
-          <TabsContent value="signup">
-            <OAuthButtons onGoogle={handleGoogleSignIn} onApple={handleAppleSignIn} isLoading={isLoading} />
-            <form onSubmit={handleSignUp} className="space-y-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-username">Username</Label>
-                <Input
-                  id="signup-username"
+          <motion.button
+            type="button"
+            className="w-full h-12 flex items-center justify-center gap-3 text-sm font-medium cursor-pointer"
+            style={creamBtnStyle}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleAppleSignIn}
+            disabled={isLoading}
+          >
+            <AppleIcon />
+            Continue with Apple
+          </motion.button>
+
+          <p className="text-center text-xs" style={{ color: C.muted }}>No spam. Just stories.</p>
+
+          {/* Divider */}
+          <div className="relative my-2">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full" style={{ borderTop: `1px solid ${C.divider}` }} />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase tracking-widest">
+              <span className="px-3" style={{ background: C.bg, color: C.muted }}>or</span>
+            </div>
+          </div>
+
+          {/* Email / Password form */}
+          <form onSubmit={mode === "signin" ? handleSignIn : handleSignUp} className="space-y-4">
+            {mode === "signup" && (
+              <div>
+                <input
                   type="text"
-                  placeholder="Choose a username"
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
+                  className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                  style={{ color: C.cream, borderBottom: `1px solid ${C.divider}` }}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-email">Email</Label>
-                <Input
-                  id="signup-email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="signup-password">Password</Label>
-                <Input
-                  id="signup-password"
-                  type="password"
-                  placeholder="Create a password (min 6 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                />
-              </div>
+            )}
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                style={{ color: C.cream, borderBottom: `1px solid ${C.divider}` }}
+              />
+            </div>
+            <div>
+              <input
+                type="password"
+                placeholder={mode === "signup" ? "Password (min 6 characters)" : "Password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={mode === "signup" ? 6 : undefined}
+                className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                style={{ color: C.cream, borderBottom: `1px solid ${C.divider}` }}
+              />
+            </div>
 
-              <div className="space-y-3 border-t border-white/10 pt-4">
+            {/* Remember me (sign-in only) */}
+            {mode === "signin" && (
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="remember-me"
+                  checked={rememberMe}
+                  onCheckedChange={(checked) => {
+                    setRememberMe(checked);
+                    localStorage.setItem(REMEMBER_ME_KEY, String(checked));
+                  }}
+                />
+                <Label htmlFor="remember-me" className="text-xs cursor-pointer" style={{ color: C.muted }}>
+                  Remember me
+                </Label>
+              </div>
+            )}
+
+            {/* Terms (sign-up only) */}
+            {mode === "signup" && (
+              <div className="space-y-3 pt-2" style={{ borderTop: `1px solid ${C.divider}` }}>
                 <div className="flex items-start space-x-2">
                   <Checkbox
                     id="terms-agree"
@@ -420,12 +402,13 @@ const Auth = () => {
                     onCheckedChange={(checked) => setHasAcceptedTermsLocal(checked as boolean)}
                   />
                   <div className="flex-1">
-                    <label htmlFor="terms-agree" className="text-sm font-medium leading-none cursor-pointer">
+                    <label htmlFor="terms-agree" className="text-sm font-medium leading-none cursor-pointer" style={{ color: C.cream }}>
                       I agree to the{" "}
                       <button
                         type="button"
                         onClick={() => setShowTermsText(!showTermsText)}
-                        className="text-primary underline hover:no-underline"
+                        className="underline hover:no-underline"
+                        style={{ color: C.muted }}
                       >
                         Terms of Use
                       </button>
@@ -433,29 +416,71 @@ const Auth = () => {
                   </div>
                 </div>
                 {showTermsText && (
-                  <ScrollArea className="h-48 w-full rounded-xl border border-white/10 p-3 glass-card">
+                  <ScrollArea className="h-48 w-full rounded-xl p-3" style={{ border: `1px solid ${C.divider}`, background: "rgba(244,241,234,0.03)" }}>
                     <TermsText />
                   </ScrollArea>
                 )}
               </div>
+            )}
 
-              <Button type="submit" className="w-full" disabled={isLoading || !hasAcceptedTermsLocal}>
-                {isLoading ? "Creating account..." : "Create Account"}
-              </Button>
-            </form>
-          </TabsContent>
-        </Tabs>
+            <motion.button
+              type="submit"
+              className="w-full h-12 text-sm font-medium cursor-pointer"
+              style={{ ...creamBtnStyle, opacity: (mode === "signup" && !hasAcceptedTermsLocal) ? 0.5 : 1 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={isLoading || (mode === "signup" && !hasAcceptedTermsLocal)}
+            >
+              {isLoading
+                ? (mode === "signin" ? "Signing in…" : "Creating account…")
+                : (mode === "signin" ? "Enter the Archive" : "Begin Your Story")}
+            </motion.button>
+          </form>
 
-        <div className="mt-4 text-center">
-          <Button
-            variant="ghost"
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2 mx-auto text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft size={16} />
-            Back to Journal
-          </Button>
-        </div>
+          {/* Toggle mode */}
+          <p className="text-center text-xs" style={{ color: C.muted }}>
+            {mode === "signin" ? (
+              <>New here?{" "}
+                <button type="button" onClick={() => setMode("signup")} className="underline hover:no-underline" style={{ color: C.cream }}>
+                  Create an account
+                </button>
+              </>
+            ) : (
+              <>Already have an account?{" "}
+                <button type="button" onClick={() => setMode("signin")} className="underline hover:no-underline" style={{ color: C.cream }}>
+                  Sign in
+                </button>
+              </>
+            )}
+          </p>
+        </motion.div>
+
+        {/* ── SECTION 3: Community Preview ── */}
+        <motion.div
+          className="w-full mt-14 text-center"
+          initial="hidden"
+          animate="visible"
+          custom={2}
+          variants={fadeUp}
+        >
+          <div className="mb-5" style={{ borderTop: `1px solid ${C.divider}` }} />
+          <p className="text-[10px] uppercase tracking-[0.25em] font-medium mb-5" style={{ color: C.muted }}>
+            Tonight in the Archive
+          </p>
+          <div className="space-y-3">
+            {archiveDreams.map((dream, i) => (
+              <motion.p
+                key={dream}
+                className="text-sm italic"
+                style={{ color: C.cream, opacity: 0.6, fontFamily: "'Playfair Display', serif" }}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 0.6, y: 0 }}
+                transition={{ delay: 0.6 + i * 0.2, duration: 0.5 }}
+              >
+                {dream}
+              </motion.p>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </div>
   );
