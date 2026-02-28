@@ -230,8 +230,9 @@ const DreamShareCard = forwardRef<DreamShareCardRef, DreamShareCardProps>(({
                 alt="Dream Visualization"
                 style={{ 
                   borderRadius: '20px',
-                  maxHeight: '700px',
-                  objectFit: 'cover',
+                  width: '100%',
+                  height: 'auto',
+                  display: 'block',
                   backgroundColor: C.bg,
                 }}
                 crossOrigin="anonymous"
