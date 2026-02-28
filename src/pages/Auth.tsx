@@ -468,7 +468,7 @@ const Auth = () => {
         >
           <div className="mb-5" style={{ borderTop: `1px solid ${C.divider}` }} />
           <p className="text-[10px] uppercase tracking-[0.25em] font-medium mb-5" style={{ color: C.muted }}>
-            Tonight in the Archive
+            Tonight in the Repo
           </p>
           <div className="grid grid-cols-2 gap-3">
             {recentDreams.map((dream, i) => {
