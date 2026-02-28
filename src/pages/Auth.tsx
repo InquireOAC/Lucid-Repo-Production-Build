@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion } from "framer-motion";
-import { Moon, Sparkles } from "lucide-react";
+import { Moon } from "lucide-react";
+import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
@@ -251,33 +252,8 @@ const Auth = () => {
           custom={0}
           variants={fadeUp}
         >
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{
-                background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
-                boxShadow: `0 0 20px ${C.primaryGlow}`,
-              }}
-            >
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-          </div>
-          <h1
-            className="text-3xl font-bold leading-tight tracking-tight"
-            style={{ color: C.text }}
-          >
-            Welcome to{" "}
-            <span
-              style={{
-                background: `linear-gradient(135deg, ${C.primary}, #818CF8)`,
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >
-              Lucid Repo
-            </span>
-          </h1>
-          <p className="mt-3 text-sm" style={{ color: C.muted }}>
+          <img src={lucidRepoLogo} alt="Lucid Repo" className="w-32 h-auto mx-auto mb-4" />
+          <p className="text-sm" style={{ color: C.muted }}>
             Join thousands sharing their nightly adventures.
           </p>
         </motion.div>
