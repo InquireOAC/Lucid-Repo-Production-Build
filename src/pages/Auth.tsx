@@ -261,7 +261,7 @@ const Auth = () => {
      ═══════════════════════════════════════════ */
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden"
+      className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden pb-24"
       style={{ background: C.bg }}
     >
       {/* Paper grain texture overlay */}
