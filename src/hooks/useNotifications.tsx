@@ -24,6 +24,21 @@ interface Notification {
   message_content?: string;
 }
 
+const STORAGE_KEY = "lucid_repo_read_notifications";
+
+function getReadIds(): Set<string> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+}
+
+function saveReadIds(ids: Set<string>) {
+  // Keep max 200 to avoid bloat
+  const arr = [...ids].slice(-200);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
 export const useNotifications = () => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -90,11 +105,9 @@ export const useNotifications = () => {
 
       setNotifications(enrichedNotifications);
       
-      // Count unread notifications (for now, we'll consider all as read after 24 hours)
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const unread = enrichedNotifications.filter(n => 
-        new Date(n.created_at) > oneDayAgo
-      ).length;
+      // Count unread using localStorage
+      const readIds = getReadIds();
+      const unread = enrichedNotifications.filter(n => !readIds.has(n.id)).length;
       setUnreadCount(unread);
 
     } catch (error) {
@@ -106,13 +119,19 @@ export const useNotifications = () => {
   };
 
   const markAsRead = async (notificationId: string) => {
-    // For now, just update locally since we don't have a read status in activities table
+    const readIds = getReadIds();
+    readIds.add(notificationId);
+    saveReadIds(readIds);
     setNotifications(prev => 
       prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
     );
+    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = async () => {
+    const readIds = getReadIds();
+    notifications.forEach(n => readIds.add(n.id));
+    saveReadIds(readIds);
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
     setUnreadCount(0);
   };

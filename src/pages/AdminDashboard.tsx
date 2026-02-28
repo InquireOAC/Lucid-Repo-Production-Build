@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown } from "lucide-react";
+import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen } from "lucide-react";
+import ExploreContentManager from "@/components/admin/ExploreContentManager";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminStats } from "@/hooks/useAdminStats";
 import CommunityStats from "@/components/admin/CommunityStats";
@@ -70,6 +71,7 @@ const AdminDashboard = () => {
     { value: "events", label: "Events", icon: Trophy },
     { value: "moderation", label: "Moderate", icon: Shield, badge: flagCount },
     { value: "users", label: "Users", icon: Users },
+    { value: "content", label: "Content", icon: BookOpen },
   ];
 
   return (
@@ -148,6 +150,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="users" className="mt-4">
             <UserManager />
+          </TabsContent>
+
+          <TabsContent value="content" className="mt-4">
+            <ExploreContentManager />
           </TabsContent>
         </Tabs>
       </div>
