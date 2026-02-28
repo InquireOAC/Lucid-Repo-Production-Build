@@ -79,7 +79,7 @@ const ProfileHeader = ({
           </div>
           
           {/* Action buttons - below banner */}
-          <div className="flex flex-col items-end gap-2 pt-3">
+          <div className="flex items-center gap-2 pt-3">
             <ProfileHeaderActions
               isOwnProfile={isOwnProfile}
               isFollowing={isFollowing}
