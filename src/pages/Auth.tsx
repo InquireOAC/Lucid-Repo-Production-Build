@@ -303,40 +303,10 @@ const Auth = () => {
           custom={1}
           variants={fadeUp}
         >
-          {/* OAuth buttons */}
-          <motion.button
-            type="button"
-            className="w-full h-12 flex items-center justify-center gap-3 text-sm font-medium cursor-pointer"
-            style={creamBtnStyle}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleGoogleSignIn}
-            disabled={isLoading}
-          >
-            <GoogleIcon />
-            Continue with Google
-          </motion.button>
-
-          <motion.button
-            type="button"
-            className="w-full h-12 flex items-center justify-center gap-3 text-sm font-medium cursor-pointer"
-            style={creamBtnStyle}
-            whileTap={{ scale: 0.98 }}
-            onClick={handleAppleSignIn}
-            disabled={isLoading}
-          >
-            <AppleIcon />
-            Continue with Apple
-          </motion.button>
-
-          
-
           {/* Divider */}
           <div className="relative my-2">
             <div className="absolute inset-0 flex items-center">
               <span className="w-full" style={{ borderTop: `1px solid ${C.divider}` }} />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase tracking-widest">
-              <span className="px-3" style={{ background: C.bg, color: C.muted }}>or</span>
             </div>
           </div>
 
