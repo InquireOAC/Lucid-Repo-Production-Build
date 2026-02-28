@@ -24,17 +24,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<any | null>(null);
   const profileFetchedRef = useRef<string | null>(null);
 
+  // Handle "Remember Me" - if disabled, clear session on fresh browser open
   useEffect(() => {
+    const rememberMe = localStorage.getItem("lucid-repo-remember-me");
+    if (rememberMe === "false") {
+      // Check if this is a fresh browser session using sessionStorage flag
+      const sessionActive = sessionStorage.getItem("lucid-repo-session-active");
+      if (!sessionActive) {
+        // Fresh session with remember me off - sign out
+        supabase.auth.signOut().then(() => {
+          setLoading(false);
+        });
+        return;
+      }
+    }
+    // Mark session as active
+    sessionStorage.setItem("lucid-repo-session-active", "true");
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Only fetch profile if user exists and we haven't fetched for this user yet
         if (session?.user && profileFetchedRef.current !== session.user.id) {
           profileFetchedRef.current = session.user.id;
-          // Use setTimeout to prevent blocking the auth state change
           setTimeout(() => {
             fetchProfile(session.user.id);
           }, 0);
