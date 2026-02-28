@@ -10,8 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { containsInappropriateContent } from "@/utils/contentFilter";
-import { motion, type Easing } from "framer-motion";
-import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
+import { motion } from "framer-motion";
+import { Moon } from "lucide-react";
 
 /* ── colour tokens (self-contained palette) ── */
 const C = {
@@ -78,13 +78,6 @@ const creamBtnStyle: React.CSSProperties = {
   fontWeight: 500,
 };
 
-/* ── dream archive previews ── */
-const archiveDreams = [
-  "A dream about flying over Paris",
-  "A nightmare of falling through mirrors",
-  "A lucid journey through a galaxy library",
-];
-
 /* ── animation variants ── */
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -95,7 +88,19 @@ const fadeUp = {
   }),
 };
 
-const REMEMBER_ME_KEY = "lucid-repo-remember-me";
+  const [recentDreams, setRecentDreams] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("dream_entries")
+      .select("id, title, image_url, generatedImage, created_at, profiles(username, display_name, avatar_symbol, avatar_color)")
+      .eq("is_public", true)
+      .order("created_at", { ascending: false })
+      .limit(4)
+      .then(({ data }) => setRecentDreams(data || []));
+  }, []);
+
+  const REMEMBER_ME_KEY = "lucid-repo-remember-me";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -279,7 +284,7 @@ const Auth = () => {
           custom={0}
           variants={fadeUp}
         >
-          <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 mx-auto mb-8 opacity-70" />
+          
           <h1
             className="text-4xl font-semibold leading-tight tracking-tight"
             style={{ color: C.cream, fontFamily: "'Playfair Display', serif" }}
@@ -324,7 +329,7 @@ const Auth = () => {
             Continue with Apple
           </motion.button>
 
-          <p className="text-center text-xs" style={{ color: C.muted }}>No spam. Just stories.</p>
+          
 
           {/* Divider */}
           <div className="relative my-2">
@@ -466,19 +471,50 @@ const Auth = () => {
           <p className="text-[10px] uppercase tracking-[0.25em] font-medium mb-5" style={{ color: C.muted }}>
             Tonight in the Archive
           </p>
-          <div className="space-y-3">
-            {archiveDreams.map((dream, i) => (
-              <motion.p
-                key={dream}
-                className="text-sm italic"
-                style={{ color: C.cream, opacity: 0.6, fontFamily: "'Playfair Display', serif" }}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 0.6, y: 0 }}
-                transition={{ delay: 0.6 + i * 0.2, duration: 0.5 }}
-              >
-                {dream}
-              </motion.p>
-            ))}
+          <div className="grid grid-cols-2 gap-3">
+            {recentDreams.map((dream, i) => {
+              const imgSrc = dream.image_url || dream.generatedImage;
+              const username = dream.profiles?.display_name || dream.profiles?.username || "Dreamer";
+              return (
+                <motion.div
+                  key={dream.id}
+                  className="rounded-xl overflow-hidden"
+                  style={{
+                    background: "rgba(244,241,234,0.04)",
+                    border: `1px solid ${C.divider}`,
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 + i * 0.15, duration: 0.5 }}
+                >
+                  {imgSrc ? (
+                    <div className="w-full aspect-[4/3] overflow-hidden">
+                      <img src={imgSrc} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-[4/3] flex items-center justify-center" style={{ background: "rgba(244,241,234,0.06)" }}>
+                      <Moon size={24} style={{ color: C.muted, opacity: 0.5 }} />
+                    </div>
+                  )}
+                  <div className="p-2.5">
+                    <p
+                      className="text-xs font-medium leading-snug line-clamp-2"
+                      style={{ color: C.cream, fontFamily: "'Playfair Display', serif" }}
+                    >
+                      {dream.title}
+                    </p>
+                    <p className="text-[10px] mt-1 truncate" style={{ color: C.muted }}>
+                      {username}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+            {recentDreams.length === 0 && (
+              <p className="col-span-2 text-xs italic" style={{ color: C.muted, opacity: 0.6 }}>
+                The archive awaits its first dreams…
+              </p>
+            )}
           </div>
         </motion.div>
       </div>
