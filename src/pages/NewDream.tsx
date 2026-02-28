@@ -273,26 +273,6 @@ const NewDream = () => {
               onChange={handleChange}
               className="dream-input w-full h-10 text-sm" />
           </div>
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-muted-foreground text-xs">
-              Mood
-            </Label>
-            <Select
-              value={formData.mood}
-              onValueChange={(value) => setFormData((p) => ({ ...p, mood: value }))}>
-              <SelectTrigger className="dream-input w-full h-10 text-sm">
-                <SelectValue placeholder="How did it feel?" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Joyful">✨ Joyful</SelectItem>
-                <SelectItem value="Peaceful">🌙 Peaceful</SelectItem>
-                <SelectItem value="Neutral">😐 Neutral</SelectItem>
-                <SelectItem value="Anxious">😰 Anxious</SelectItem>
-                <SelectItem value="Scary">😱 Scary</SelectItem>
-                <SelectItem value="Confused">🤔 Confused</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         {/* Tags */}
