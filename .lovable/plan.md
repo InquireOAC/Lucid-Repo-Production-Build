@@ -1,73 +1,67 @@
 
+# Redesign Auth Page: Literary Dream Archive
 
-## Set Up Google and Apple OAuth for Native iOS (Capacitor)
+## Overview
+Replace the current sci-fi/tech auth page with an elegant, literary "Dream Archive" login experience. The page will feel like entering a quiet reading room at midnight -- warm, minimal, and premium.
 
-### Problem
-Currently, when a user taps "Continue with Google" or "Continue with Apple" on the native iOS app, the OAuth flow opens in the browser but has no way to redirect back into the app. The code uses `window.location.origin` as the redirect URL, which doesn't work for native apps.
+## What Changes
 
-### Solution Overview
-1. Register a custom URL scheme so the native app can receive OAuth callbacks
-2. Listen for deep links in the app and extract the OAuth session tokens
-3. Update the OAuth redirect URL to use the Supabase callback, which will redirect to the custom scheme
-4. Configure Info.plist with the URL scheme
-5. Update Supabase dashboard redirect URLs
+### 1. Rewrite `src/pages/Auth.tsx`
+Complete visual overhaul while preserving all existing auth logic (Google/Apple OAuth, email sign-in/sign-up, terms acceptance, remember me, Capacitor deep linking).
 
----
+**Layout:**
+- Remove the glass card container, aurora orbs, and tech-grid background
+- Full-screen vertically centered flex column, max-width 420px
+- Background: solid `#0B0F19` with a subtle CSS paper grain texture overlay at low opacity
+- No particles, no glow, no neon
 
-### Step 1: Add Custom URL Scheme to Info.plist
+**Section 1 -- Header (top area):**
+- Serif headline: "Welcome back, Dreamer." using a high-contrast serif font (already have `EB Garamond` and `Lora` imported)
+- Subtext: "Join thousands sharing their nightly adventures." in muted warm gray (`#B8B3A8`)
+- Generous vertical spacing
 
-Add a `CFBundleURLTypes` entry so iOS knows to open the app when a URL like `app.dreamweaver.lucidrepo://` is triggered. The scheme will be `app.dreamweaver.lucidrepo`.
+**Section 2 -- Authentication (middle area):**
+- Default view shows sign-in mode (no tabs)
+- Two large cream buttons (`#F4F1EA` bg, `#1A1A1A` text, rounded-2xl, soft shadow) for Google and Apple with monochrome black icons
+- Caption: "No spam. Just stories." in muted text
+- Thin warm divider with "OR" centered
+- Email and password inputs: transparent background, bottom-border only, warm text
+- Primary CTA button: "Enter the Archive" (cream button, full width)
+- Remember Me toggle retained
+- Small "New here? Create an account" link toggles to sign-up mode, which adds username field and terms checkbox
+- Sign-up CTA: "Begin Your Story"
 
-**File: `ios/App/App/Info.plist`**
+**Section 3 -- Community Preview (bottom area):**
+- Subtle divider
+- Small uppercase sans-serif label: "TONIGHT IN THE ARCHIVE"
+- Three italic serif dream preview lines with staggered fade-in animation and slight opacity
+- Editorial feel, not interactive
 
-### Step 2: Create a Deep Link Handler Utility
+**Animations:**
+- Framer Motion staggered fade-in: headline first, then buttons, then archive preview
+- Subtle press animation on buttons (scale 0.98 on active)
 
-Create `src/utils/oauthDeepLink.ts` that:
-- Imports `App` from `@capacitor/app` and `Capacitor` from `@capacitor/core`
-- On native platforms, listens for `appUrlOpen` events
-- When an OAuth callback URL arrives (containing `access_token` and `refresh_token` in the URL fragment), calls `supabase.auth.setSession()` to log the user in
-- On web, does nothing (standard browser redirect handles it)
+### 2. Add Google Fonts Import
+Add `Playfair Display` for the serif headline (more literary than EB Garamond at display sizes). Will add via the existing font import pattern in `src/index.css`.
 
-### Step 3: Initialize the Deep Link Listener on App Startup
+### 3. Color/Style Approach
+All styling done inline via Tailwind arbitrary values and inline styles using the specified hex colors (`#0B0F19`, `#F4F1EA`, `#B8B3A8`, `#1A1A1A`). No changes to the global theme variables -- this page has its own self-contained palette.
 
-In `src/App.tsx`, import and call `setupOAuthDeepLinkListener()` inside a `useEffect` so it starts listening as soon as the app loads.
+## What Stays the Same
+- All Supabase OAuth logic (Google, Apple, email/password sign-in and sign-up)
+- Capacitor native redirect handling
+- Terms acceptance flow for existing users
+- Remember Me localStorage logic
+- Content filter for usernames
+- Route remains `/auth`, component still exported as default
 
-### Step 4: Update OAuth Redirect URLs in Auth.tsx
+## Technical Details
 
-Change the `redirectTo` in `handleGoogleSignIn` and `handleAppleSignIn`:
-- On native: use `app.dreamweaver.lucidrepo://callback` (the custom URL scheme)
-- On web: keep `window.location.origin + '/'`
+**File changes:**
+- `src/index.css` -- Add one `@import` line for Playfair Display font
+- `src/pages/Auth.tsx` -- Full rewrite of the render/UI while keeping all handler functions and state logic identical
 
-This is done by checking `Capacitor.isNativePlatform()`.
-
-### Step 5: Configure Supabase Dashboard (Manual Step)
-
-You will need to:
-1. Go to **Supabase Dashboard > Authentication > URL Configuration**
-2. Add `app.dreamweaver.lucidrepo://callback` to the **Redirect URLs** list
-3. Under **Authentication > Providers**, enable **Google** and **Apple** with your credentials
-
----
-
-### Technical Details
-
-**Files to create:**
-- `src/utils/oauthDeepLink.ts` -- Deep link listener that parses OAuth tokens from the callback URL and sets the Supabase session
-
-**Files to modify:**
-- `ios/App/App/Info.plist` -- Add `CFBundleURLTypes` with scheme `app.dreamweaver.lucidrepo`
-- `src/pages/Auth.tsx` -- Use native redirect URL when on Capacitor
-- `src/App.tsx` -- Initialize deep link listener on mount
-
-**Deep link flow:**
-```text
-User taps "Sign in with Google"
-  -> Opens browser with Supabase OAuth URL
-  -> User authenticates with Google
-  -> Supabase redirects to: app.dreamweaver.lucidrepo://callback#access_token=...&refresh_token=...
-  -> iOS opens the app via URL scheme
-  -> appUrlOpen listener fires
-  -> App extracts tokens, calls supabase.auth.setSession()
-  -> User is logged in, navigated to home
-```
-
+**Dependencies used:**
+- `framer-motion` (already installed) for staggered fade-in animations
+- Existing Radix UI components (Checkbox, ScrollArea) for terms flow
+- No new dependencies needed
