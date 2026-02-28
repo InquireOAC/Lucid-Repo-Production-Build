@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -28,8 +28,6 @@ const LucidRepoHeader = ({
   onTagClick,
   onClearTags,
 }: LucidRepoHeaderProps) => {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   return (
     <div className="mb-3 pt-3 space-y-2.5">
       {/* Tabs Row */}
@@ -76,17 +74,13 @@ const LucidRepoHeader = ({
 
       {/* Dream Type Carousel */}
       {tags.length > 0 && (
-        <div
-          ref={scrollRef}
-          className="flex items-center gap-2 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1"
-          style={{ WebkitOverflowScrolling: "touch" }}
-        >
+        <div className="flex flex-wrap items-center gap-2 pb-1">
           {tags.map((tag) => (
             <button
               key={tag.id}
               type="button"
               onClick={() => onTagClick(tag.id)}
-              className={`flex-shrink-0 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+              className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 activeTags.includes(tag.id)
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted/25 text-muted-foreground hover:bg-muted/40"
@@ -99,7 +93,7 @@ const LucidRepoHeader = ({
             <button
               type="button"
               onClick={onClearTags}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all whitespace-nowrap"
+              className="px-3 py-1.5 rounded-full text-xs font-medium text-destructive bg-destructive/10 hover:bg-destructive/20 transition-all whitespace-nowrap"
             >
               Clear
             </button>
