@@ -151,7 +151,7 @@ const Auth = () => {
       : `${window.location.origin}/`;
     try {
       const { error } = await supabase.auth.signInWithOAuth({
-        provider: .google,
+        provider: "google",
         options: { redirectTo },
       });
       if (error) toast.error(error.message);
