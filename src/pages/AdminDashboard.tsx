@@ -10,6 +10,8 @@ import AnnouncementsList from "@/components/admin/AnnouncementsList";
 import PollComposer from "@/components/admin/PollComposer";
 import ModerationQueue from "@/components/admin/ModerationQueue";
 import UserManager from "@/components/admin/UserManager";
+import ChallengeComposer from "@/components/admin/ChallengeComposer";
+import ChallengeManager from "@/components/admin/ChallengeManager";
 import { motion } from "framer-motion";
 
 const AdminDashboard = () => {
@@ -36,26 +38,30 @@ const AdminDashboard = () => {
       </div>
 
       <div className="px-4 py-4 space-y-6 pb-24">
-        <CommunityStats />
-
-        <Tabs defaultValue="announcements" className="w-full">
+        <Tabs defaultValue="stats" className="w-full">
           <TabsList className="w-full">
+            <TabsTrigger value="stats" className="flex-1 text-xs">Stats</TabsTrigger>
             <TabsTrigger value="announcements" className="flex-1 text-xs">Announce</TabsTrigger>
-            <TabsTrigger value="polls" className="flex-1 text-xs">Polls</TabsTrigger>
+            <TabsTrigger value="events" className="flex-1 text-xs">Events</TabsTrigger>
             <TabsTrigger value="moderation" className="flex-1 text-xs">Moderate</TabsTrigger>
             <TabsTrigger value="users" className="flex-1 text-xs">Users</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="stats" className="mt-4">
+            <CommunityStats />
+          </TabsContent>
+
           <TabsContent value="announcements" className="space-y-4 mt-4">
             <AnnouncementComposer onCreated={() => setRefreshKey(k => k + 1)} />
+            <PollComposer onCreated={() => setRefreshKey(k => k + 1)} />
             <h3 className="text-sm font-semibold text-muted-foreground">All Announcements</h3>
             <AnnouncementsList refreshKey={refreshKey} />
           </TabsContent>
 
-          <TabsContent value="polls" className="space-y-4 mt-4">
-            <PollComposer onCreated={() => setRefreshKey(k => k + 1)} />
-            <h3 className="text-sm font-semibold text-muted-foreground">Active Polls</h3>
-            <AnnouncementsList refreshKey={refreshKey} />
+          <TabsContent value="events" className="space-y-4 mt-4">
+            <ChallengeComposer onCreated={() => setRefreshKey(k => k + 1)} />
+            <h3 className="text-sm font-semibold text-muted-foreground">All Challenges</h3>
+            <ChallengeManager refreshKey={refreshKey} />
           </TabsContent>
 
           <TabsContent value="moderation" className="mt-4">

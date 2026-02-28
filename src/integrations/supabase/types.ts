@@ -196,6 +196,45 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_entries: {
+        Row: {
+          challenge_id: string
+          dream_id: string
+          entered_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          dream_id: string
+          entered_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          dream_id?: string
+          entered_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_entries_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "community_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_entries_dream_id_fkey"
+            columns: ["dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           comment_text: string
@@ -241,6 +280,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      community_challenges: {
+        Row: {
+          banner_image_url: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          end_date: string
+          id: string
+          prize_description: string | null
+          required_tag: string
+          start_date: string
+          status: string
+          title: string
+        }
+        Insert: {
+          banner_image_url?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          end_date: string
+          id?: string
+          prize_description?: string | null
+          required_tag: string
+          start_date: string
+          status?: string
+          title: string
+        }
+        Update: {
+          banner_image_url?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          prize_description?: string | null
+          required_tag?: string
+          start_date?: string
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       content_flags: {
         Row: {
