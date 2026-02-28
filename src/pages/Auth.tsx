@@ -152,7 +152,7 @@ const Auth = () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: .google,
-        redirectTo: URL(string: "lucidrepo://login-callback")
+        redirectTo: URL(string: "app.dreamweaver.lucidrepo://callback")
       });
       if (error) toast.error(error.message);
     } catch (error) {
