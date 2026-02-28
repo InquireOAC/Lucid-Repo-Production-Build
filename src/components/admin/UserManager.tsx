@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search, Shield, ShieldCheck, X, ExternalLink, Moon } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface UserResult {
   id: string;
@@ -20,6 +21,108 @@ interface UserResult {
   dreamCount?: number;
   planName?: string;
 }
+
+const UserCard = ({
+  user,
+  onAssignRole,
+  onRemoveRole,
+  onViewProfile,
+}: {
+  user: UserResult;
+  onAssignRole: (userId: string, role: "moderator" | "admin") => void;
+  onRemoveRole: (userId: string, role: string) => void;
+  onViewProfile: (user: UserResult) => void;
+}) => {
+  const displayName = user.display_name || user.username || "Anonymous";
+  const initials = displayName.charAt(0).toUpperCase();
+
+  return (
+    <Card variant="compact">
+      <CardContent className="p-3 space-y-2.5">
+        {/* User info row */}
+        <div className="flex items-center gap-2.5">
+          <Avatar className="h-9 w-9 shrink-0">
+            <AvatarImage src={user.avatar_url || undefined} alt={displayName} />
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-sm font-medium truncate">{displayName}</p>
+              {user.isSubscribed && (
+                <Badge variant="gold" className="text-[9px] shrink-0">
+                  {user.planName || "Subscribed"}
+                </Badge>
+              )}
+              {user.roles?.includes("admin") && (
+                <Badge variant="destructive" className="text-[9px] shrink-0 gap-0.5">
+                  Admin
+                  <button onClick={() => onRemoveRole(user.id, "admin")} className="ml-0.5 hover:opacity-70">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </Badge>
+              )}
+              {user.roles?.includes("moderator") && (
+                <Badge variant="secondary" className="text-[9px] shrink-0 gap-0.5">
+                  Mod
+                  <button onClick={() => onRemoveRole(user.id, "moderator")} className="ml-0.5 hover:opacity-70">
+                    <X className="h-2.5 w-2.5" />
+                  </button>
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+              <span>@{user.username || "no-username"}</span>
+              <span>·</span>
+              <span className="flex items-center gap-0.5">
+                <Moon className="h-3 w-3" />
+                {user.dreamCount}
+              </span>
+              <span>·</span>
+              <span>{format(new Date(user.created_at), "MMM d, yyyy")}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action buttons - stacked on mobile */}
+        <div className="flex flex-wrap gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onViewProfile(user)}
+            className="text-xs h-8 flex-1 min-w-[70px]"
+          >
+            <ExternalLink className="h-3.5 w-3.5 mr-1" />
+            View
+          </Button>
+          {!user.roles?.includes("moderator") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAssignRole(user.id, "moderator")}
+              className="text-xs h-8 flex-1 min-w-[70px]"
+            >
+              <Shield className="h-3.5 w-3.5 mr-1" />
+              Mod
+            </Button>
+          )}
+          {!user.roles?.includes("admin") && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onAssignRole(user.id, "admin")}
+              className="text-xs h-8 flex-1 min-w-[70px] border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+            >
+              <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+              Admin
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const UserManager = () => {
   const navigate = useNavigate();
@@ -117,16 +220,24 @@ const UserManager = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex gap-2">
+    <div className="space-y-3">
+      {/* Integrated search input */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search by username or display name..."
+          placeholder="Search username or display name..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && searchUsers()}
+          className="pl-9 pr-20 h-11"
         />
-        <Button onClick={searchUsers} disabled={searching} size="icon">
-          <Search className="h-4 w-4" />
+        <Button
+          onClick={searchUsers}
+          disabled={searching}
+          size="sm"
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8"
+        >
+          {searching ? "..." : "Search"}
         </Button>
       </div>
 
@@ -136,79 +247,13 @@ const UserManager = () => {
 
       <div className="space-y-2">
         {results.map((user) => (
-          <Card key={user.id} variant="compact">
-            <CardContent className="p-3 space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <p className="text-sm font-medium truncate">
-                        {user.display_name || user.username || "Anonymous"}
-                      </p>
-                      {user.isSubscribed && (
-                        <Badge variant="gold" className="text-[9px] shrink-0">
-                          {user.planName || "Subscribed"}
-                        </Badge>
-                      )}
-                      {user.roles?.includes("admin") && (
-                        <Badge variant="destructive" className="text-[9px] shrink-0 gap-0.5">
-                          Admin
-                          <button onClick={() => removeRole(user.id, "admin")} className="ml-0.5 hover:opacity-70">
-                            <X className="h-2.5 w-2.5" />
-                          </button>
-                        </Badge>
-                      )}
-                      {user.roles?.includes("moderator") && (
-                        <Badge variant="secondary" className="text-[9px] shrink-0 gap-0.5">
-                          Mod
-                          <button onClick={() => removeRole(user.id, "moderator")} className="ml-0.5 hover:opacity-70">
-                            <X className="h-2.5 w-2.5" />
-                          </button>
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>@{user.username || "no-username"}</span>
-                      <span>·</span>
-                      <span className="flex items-center gap-0.5">
-                        <Moon className="h-3 w-3" />
-                        {user.dreamCount}
-                      </span>
-                      <span>·</span>
-                      <span>Joined {format(new Date(user.created_at), "MMM d, yyyy")}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-1.5 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate(`/profile/${user.username || user.id}`)}
-                    className="text-xs"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </Button>
-                  {!user.roles?.includes("moderator") && (
-                    <Button variant="outline" size="sm" onClick={() => assignRole(user.id, "moderator")}>
-                      <Shield className="h-3.5 w-3.5 mr-1" />
-                      Mod
-                    </Button>
-                  )}
-                  {!user.roles?.includes("admin") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => assignRole(user.id, "admin")}
-                      className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                    >
-                      <ShieldCheck className="h-3.5 w-3.5 mr-1" />
-                      Admin
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <UserCard
+            key={user.id}
+            user={user}
+            onAssignRole={assignRole}
+            onRemoveRole={removeRole}
+            onViewProfile={(u) => navigate(`/profile/${u.username || u.id}`)}
+          />
         ))}
       </div>
     </div>
