@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
@@ -10,6 +11,7 @@ import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
 import { Moon } from "lucide-react";
+import PageTransition from "@/components/ui/PageTransition";
 
 const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
 
@@ -101,7 +103,7 @@ const LucidRepoContainer = () => {
   const gridDreams = filteredDreams.filter(d => !featuredIds.has(d.id));
 
   return (
-    <div className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right tech-grid-bg overflow-x-hidden">
+    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right tech-grid-bg overflow-x-hidden">
       <LucidRepoHeader 
         searchQuery={searchQuery} 
         setSearchQuery={setSearchQuery} 
@@ -122,13 +124,18 @@ const LucidRepoContainer = () => {
           <p className="mt-4 text-muted-foreground">Loading dreams...</p>
         </div>
       ) : filteredDreams.length === 0 ? (
-        <div className="text-center py-20">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+          className="text-center py-20"
+        >
           <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
           <h3 className="text-lg font-medium mb-2">No dreams found</h3>
           <p className="text-muted-foreground">
             {searchQuery ? "Try a different search term" : "Be the first to share a dream!"}
           </p>
-        </div>
+        </motion.div>
       ) : (
         <>
           {featuredDreams.length > 0 && (
@@ -166,7 +173,7 @@ const LucidRepoContainer = () => {
       )}
 
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
-    </div>
+    </PageTransition>
   );
 };
 

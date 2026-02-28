@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { Heart, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -62,12 +63,18 @@ const MasonryDreamCard = ({
   const imageUrl = dream.generatedImage || dream.image_url;
   const isLiked = (dream as any).isLiked || (dream as any).liked;
   
-  // Vary card heights for masonry effect
   const hasLongContent = dream.content?.length > 150;
   const showFullContent = index % 3 === 0 && hasLongContent;
 
   return (
-    <div 
+    <motion.div
+      initial={{ opacity: 0, y: 20, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{
+        duration: 0.4,
+        delay: Math.min(index * 0.06, 0.4),
+        ease: [0.22, 1, 0.36, 1],
+      }}
       className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group"
       onClick={() => onOpenDream(dream)}
     >
@@ -81,7 +88,6 @@ const MasonryDreamCard = ({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-cosmic-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
           
-          {/* Lucid badge */}
           {dream.lucid && (
             <div className="absolute top-2 left-2">
               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-aurora-violet/90 text-white">
@@ -105,7 +111,6 @@ const MasonryDreamCard = ({
           {dream.content}
         </p>
         
-        {/* Tags */}
         {dream.tags && dream.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-3">
             {dream.tags.slice(0, 2).map((tagId, i) => {
@@ -170,7 +175,7 @@ const MasonryDreamCard = ({
           </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

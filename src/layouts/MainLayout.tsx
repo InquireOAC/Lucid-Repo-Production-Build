@@ -1,9 +1,11 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, Compass } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
+import { AnimatePresence } from "framer-motion";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
@@ -38,14 +40,19 @@ const MainLayout = () => {
       </div>
       
       {/* Fixed tab bar positioned at the bottom with safe area padding */}
-      <div className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right">
+      <motion.div
+        initial={{ y: 60 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right"
+      >
         <div className="flex justify-around items-center h-14">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
           <NavTab to="/explore" icon={<Compass />} label="Explore" />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };
@@ -60,7 +67,6 @@ interface NavTabProps {
 const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
   const location = useLocation();
   
-  // Special handling for journal route - both "/" and "/journal" should be active
   const isActive = to === "/" 
     ? (location.pathname === "/" || location.pathname === "/journal" || location.pathname === "/journal/new")
     : location.pathname === to || location.pathname.startsWith(to + "/");
@@ -78,10 +84,17 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       <div className={cn(
         "p-1.5 rounded-full transition-all duration-300 relative",
         isActive 
-          ? "bg-primary/15 text-primary" 
+          ? "text-primary" 
           : "text-white/50"
       )}>
-        {icon}
+        {isActive && (
+          <motion.div
+            layoutId="nav-tab-glow"
+            className="absolute inset-0 bg-primary/15 rounded-full"
+            transition={{ type: "spring", stiffness: 350, damping: 30 }}
+          />
+        )}
+        <span className="relative z-10">{icon}</span>
         {badge && badge > 0 && (
           <div className="absolute -top-1 -right-1 w-5 h-5 bg-aurora-gold rounded-full flex items-center justify-center">
             <span className="text-cosmic-black text-xs font-bold">

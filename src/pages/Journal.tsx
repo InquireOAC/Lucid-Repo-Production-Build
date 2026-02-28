@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import DreamDetail from "@/components/DreamDetail";
@@ -10,6 +9,7 @@ import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfi
 import DreamsList from "@/components/journal/DreamsList";
 import EmptyJournal from "@/components/journal/EmptyJournal";
 import { DreamEntry } from "@/types/dream";
+import PageTransition from "@/components/ui/PageTransition";
 
 const Journal = () => {
   const {
@@ -131,7 +131,7 @@ const Journal = () => {
   };
 
   return (
-    <div className="min-h-screen starry-background pt-safe-top px-4 pb-4 md:px-6">
+    <PageTransition className="min-h-screen starry-background pt-safe-top px-4 pb-4 md:px-6">
       <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
       <TagFilter
@@ -216,7 +216,7 @@ const Journal = () => {
         }}
         onConfirmDelete={confirmDeleteDream}
       />
-    </div>
+    </PageTransition>
   );
 };
 
