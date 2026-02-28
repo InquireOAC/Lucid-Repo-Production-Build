@@ -13,6 +13,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { ArrowLeft } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
 
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
@@ -122,6 +124,8 @@ const TermsText = () => (
   </div>
 );
 
+const REMEMBER_ME_KEY = "lucid-repo-remember-me";
+
 const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -133,6 +137,10 @@ const Auth = () => {
   const [username, setUsername] = useState("");
   const [hasAcceptedTermsLocal, setHasAcceptedTermsLocal] = useState(false);
   const [showTermsText, setShowTermsText] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    const stored = localStorage.getItem(REMEMBER_ME_KEY);
+    return stored !== null ? stored === "true" : true;
+  });
 
   useEffect(() => {
     if (user && !termsLoading) {
@@ -310,8 +318,8 @@ const Auth = () => {
       </div>
       <div className="relative z-10 w-full max-w-md vault-glass rounded-2xl border border-primary/15 p-6 backdrop-blur-xl">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-white">Lucid Repo</h1>
-          <p className="text-sm text-muted-foreground mt-1">Your dream journal awaits</p>
+          <img src={lucidRepoLogo} alt="Lucid Repo" className="h-10 mx-auto" />
+          <p className="text-sm text-muted-foreground mt-2">Your dream journal awaits</p>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
@@ -344,6 +352,21 @@ const Auth = () => {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="remember-me"
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => {
+                      setRememberMe(checked);
+                      localStorage.setItem(REMEMBER_ME_KEY, String(checked));
+                    }}
+                  />
+                  <Label htmlFor="remember-me" className="text-sm text-muted-foreground cursor-pointer">
+                    Remember me
+                  </Label>
+                </div>
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
