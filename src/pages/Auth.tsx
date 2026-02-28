@@ -285,7 +285,7 @@ const Auth = () => {
         >
           
           <h1
-            className="text-4xl font-semibold leading-tight tracking-tight"
+            className="text-4xl font-semibold leading-tight tracking-tight mt-8"
             style={{ color: C.cream, fontFamily: "'Playfair Display', serif" }}
           >
             Welcome back, Dreamer.
