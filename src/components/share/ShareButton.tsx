@@ -314,7 +314,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                           alt="Dream Visualization"
                           style={{
                             width: '100%',
-                            height: 'auto',
+                            maxHeight: '280px',
+                            objectFit: 'contain',
                             display: 'block',
                             borderRadius: '12px',
                           }}
