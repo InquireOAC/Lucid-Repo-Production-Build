@@ -300,22 +300,24 @@ const ShareButton: React.FC<ShareButtonProps> = ({
 
                   {/* Dream image — uses preloaded base64 */}
                   {normalizedDream.generatedImage && dreamImageBase64 && (
-                    <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1 1 auto', minHeight: 0 }}>
                       <div style={{
                         width: '100%',
+                        height: '100%',
+                        maxHeight: '280px',
                         overflow: 'hidden',
                         borderRadius: '12px',
                         position: 'relative',
-                        border: '1px solid rgba(56,130,246,0.25)',
-                        boxShadow: '0 0 30px rgba(56,130,246,0.15), 0 0 60px rgba(59,130,246,0.05)',
+                        border: '1px solid rgba(139,92,246,0.25)',
+                        boxShadow: '0 0 30px rgba(139,92,246,0.15), 0 0 60px rgba(59,130,246,0.05)',
                       }}>
                         <img
                           src={dreamImageBase64}
                           alt="Dream Visualization"
                           style={{
                             width: '100%',
-                            height: 'auto',
-                            display: 'block',
+                            height: '100%',
+                            objectFit: 'cover',
                             borderRadius: '12px',
                           }}
                         />
