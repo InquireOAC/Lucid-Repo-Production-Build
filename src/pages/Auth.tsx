@@ -246,7 +246,7 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
         {/* ── SECTION 1: Header ── */}
         <motion.div
-          className="text-center mb-10"
+          className="text-center mb-10 mt-12"
           initial="hidden"
           animate="visible"
           custom={0}
