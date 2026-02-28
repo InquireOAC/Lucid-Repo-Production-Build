@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from '@capacitor/core';
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -123,10 +124,13 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
+    const redirectTo = Capacitor.isNativePlatform()
+      ? 'app.dreamweaver.lucidrepo://callback'
+      : `${window.location.origin}/`;
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/` },
+        options: { redirectTo },
       });
       if (error) toast.error(error.message);
     } catch (error) {
@@ -139,10 +143,13 @@ const Auth = () => {
 
   const handleAppleSignIn = async () => {
     setIsLoading(true);
+    const redirectTo = Capacitor.isNativePlatform()
+      ? 'app.dreamweaver.lucidrepo://callback'
+      : `${window.location.origin}/`;
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
-        options: { redirectTo: `${window.location.origin}/` },
+        options: { redirectTo },
       });
       if (error) toast.error(error.message);
     } catch (error) {
