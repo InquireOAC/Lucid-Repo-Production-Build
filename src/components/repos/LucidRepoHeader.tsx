@@ -29,49 +29,48 @@ const LucidRepoHeader = ({
   onClearTags,
 }: LucidRepoHeaderProps) => {
   return (
-    <div className="mb-4 pt-4 space-y-3">
-      {/* Search + Tabs Row */}
-      <div className="flex items-center gap-2 px-1">
-        <form onSubmit={handleSearch} className="flex-shrink-0" autoComplete="off">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              aria-label="Search dreams"
-              type="text"
-              className="pl-8 pr-3 py-1.5 h-8 w-[10rem] rounded-full text-xs bg-muted/40 border-border/40 focus:border-primary/50 focus:bg-muted/60 transition-colors"
-              placeholder="Search dreams..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </form>
+    <div className="mb-3 pt-3 space-y-2.5">
+      {/* Tabs Row */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="w-full bg-muted/20 backdrop-blur-sm rounded-xl p-0.5 h-9">
+          <TabsTrigger
+            value="following"
+            className="flex-1 rounded-lg text-[13px] font-medium h-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+          >
+            Following
+          </TabsTrigger>
+          <TabsTrigger
+            value="recent"
+            className="flex-1 rounded-lg text-[13px] font-medium h-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+          >
+            Recent
+          </TabsTrigger>
+          <TabsTrigger
+            value="popular"
+            className="flex-1 rounded-lg text-[13px] font-medium h-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
+          >
+            Popular
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="following"></TabsContent>
+        <TabsContent value="recent"></TabsContent>
+        <TabsContent value="popular"></TabsContent>
+      </Tabs>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 min-w-0">
-          <TabsList className="w-full bg-muted/30 backdrop-blur-sm rounded-full p-0.5 h-8">
-            <TabsTrigger
-              value="following"
-              className="flex-1 rounded-full text-xs h-7 px-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
-            >
-              Following
-            </TabsTrigger>
-            <TabsTrigger
-              value="recent"
-              className="flex-1 rounded-full text-xs h-7 px-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
-            >
-              Recent
-            </TabsTrigger>
-            <TabsTrigger
-              value="popular"
-              className="flex-1 rounded-full text-xs h-7 px-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
-            >
-              Popular
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="following"></TabsContent>
-          <TabsContent value="recent"></TabsContent>
-          <TabsContent value="popular"></TabsContent>
-        </Tabs>
-      </div>
+      {/* Search */}
+      <form onSubmit={handleSearch} autoComplete="off">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+          <Input
+            aria-label="Search dreams"
+            type="text"
+            className="pl-9 pr-4 h-9 w-full rounded-xl text-sm bg-muted/20 border-border/30 placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-muted/30 transition-colors"
+            placeholder="Search dreams..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </form>
 
       {/* Category pills */}
       {tags.length > 0 &&
