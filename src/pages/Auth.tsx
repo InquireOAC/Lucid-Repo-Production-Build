@@ -252,7 +252,7 @@ const Auth = () => {
           custom={0}
           variants={fadeUp}
         >
-          <img src={lucidRepoLogo} alt="Lucid Repo" className="w-32 h-auto mx-auto mb-4" />
+          <img src={lucidRepoLogo} alt="Lucid Repo" className="w-64 h-auto mx-auto mb-4" />
           <p className="text-sm" style={{ color: C.muted }}>
             Join thousands sharing their nightly adventures.
           </p>
