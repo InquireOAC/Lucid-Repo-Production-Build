@@ -1,7 +1,14 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
+import { Search, ChevronDown, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 interface LucidRepoHeaderProps {
   searchQuery: string;
@@ -72,30 +79,41 @@ const LucidRepoHeader = ({
         </div>
       </form>
 
-      {/* Category pills */}
-      {tags.length > 0 &&
-        <div className="flex flex-wrap justify-center gap-2">
-          {tags.map((tag) =>
-            <button
-              key={tag.id}
-              onClick={() => onTagClick(tag.id)}
-            className={`px-2.5 py-0.5 rounded-full text-xs transition-all ${
-              activeTags.includes(tag.id) ?
-              'bg-gradient-to-r from-aurora-purple to-aurora-violet text-white' :
-              'bg-secondary/30 text-muted-foreground hover:bg-secondary/50'}`
-            }>
-              {tag.name}
-            </button>
-          )}
-          {activeTags.length > 0 &&
-            <button
-              onClick={onClearTags}
-            className="px-2.5 py-0.5 rounded-full text-xs bg-destructive/20 text-destructive hover:bg-destructive/30 transition-all">
+      {/* Dream Type Dropdown */}
+      {tags.length > 0 && (
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 rounded-xl border-border/30 bg-muted/20 text-sm gap-1.5">
+                Dream Type
+                {activeTags.length > 0 && (
+                  <span className="ml-1 bg-primary text-primary-foreground rounded-full px-1.5 py-0.5 text-[10px] leading-none font-semibold">
+                    {activeTags.length}
+                  </span>
+                )}
+                <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-44">
+              {tags.map((tag) => (
+                <DropdownMenuCheckboxItem
+                  key={tag.id}
+                  checked={activeTags.includes(tag.id)}
+                  onCheckedChange={() => onTagClick(tag.id)}
+                >
+                  {tag.name}
+                </DropdownMenuCheckboxItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {activeTags.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={onClearTags} className="h-7 px-2 text-xs text-muted-foreground hover:text-destructive">
+              <X className="h-3 w-3 mr-1" />
               Clear
-            </button>
-          }
+            </Button>
+          )}
         </div>
-      }
+      )}
     </div>
   );
 };
