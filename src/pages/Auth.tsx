@@ -88,6 +88,9 @@ const fadeUp = {
   }),
 };
 
+const REMEMBER_ME_KEY = "lucid-repo-remember-me";
+
+const Auth = () => {
   const [recentDreams, setRecentDreams] = useState<any[]>([]);
 
   useEffect(() => {
@@ -99,10 +102,6 @@ const fadeUp = {
       .limit(4)
       .then(({ data }) => setRecentDreams(data || []));
   }, []);
-
-  const REMEMBER_ME_KEY = "lucid-repo-remember-me";
-
-const Auth = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { hasAcceptedTerms, isLoading: termsLoading, markTermsAsAccepted } = useTermsAcceptance();
