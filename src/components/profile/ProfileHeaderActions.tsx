@@ -1,8 +1,6 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Crown, Settings, MessageCircle, UserPlus, UserMinus, Shield } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
+import { Settings, MessageCircle, UserPlus, UserMinus } from "lucide-react";
 
 interface ProfileHeaderActionsProps {
   isOwnProfile: boolean;
@@ -23,24 +21,12 @@ const ProfileHeaderActions = ({
   onFollowClick,
   onMessageClick,
   onSettingsClick,
-  onSubscriptionClick,
 }: ProfileHeaderActionsProps) => {
-  const navigate = useNavigate();
-  const { isAdmin } = useUserRole();
 
   return (
     <div className="flex items-center gap-2">
       {isOwnProfile ? (
         <>
-          {isAdmin && (
-            <Button variant="outline" onClick={() => navigate("/admin")} size="sm" className="rounded-full">
-              <Shield className="h-4 w-4" />
-            </Button>
-          )}
-          <Button variant="outline" onClick={onSubscriptionClick} size="sm" className="rounded-full">
-            <Crown className="h-4 w-4 mr-1" />
-            Pro
-          </Button>
           <Button variant="outline" onClick={onSettingsClick} size="sm" className="rounded-full">
             <Settings className="h-4 w-4" />
           </Button>
