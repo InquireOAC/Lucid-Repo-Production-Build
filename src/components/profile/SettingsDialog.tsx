@@ -76,8 +76,7 @@ const SettingsDialog = ({
           <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-6 py-6 space-y-4">
               <Button
-                variant="luminous"
-                className="w-full justify-center gap-2 h-12 text-base font-semibold"
+                className="w-full justify-center gap-2 h-12 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40"
                 onClick={() => setShowSubscription(true)}
               >
                 <Crown className="h-5 w-5" />
