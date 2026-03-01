@@ -38,7 +38,7 @@ const DreamGrid = ({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1.5">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 px-1.5">
       {dreams.map((dream) => {
         // Extract avatar_symbol and avatar_color directly and safely
         const userProfile = dream.profiles || {};
