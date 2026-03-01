@@ -3,6 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, RotateCcw, AlertCircle, Sparkles, Check, Crown } from "lucide-react";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
+import { Capacitor } from "@capacitor/core";
 
 interface NativeSubscriptionManagerProps {
   currentPlan?: string;
@@ -10,6 +11,8 @@ interface NativeSubscriptionManagerProps {
 
 const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerProps) => {
   const { products, isLoading, purchaseSubscription, restorePurchases } = useNativeSubscription();
+  const isIOS = Capacitor.getPlatform() === 'ios';
+  const storeName = isIOS ? 'App Store' : 'Play Store';
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -32,7 +35,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
         <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
           <p className="text-sm font-medium">Current Plan: {currentPlan}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage via App Store Settings
+            Manage via {storeName} Settings
           </p>
         </div>
       )}
@@ -134,7 +137,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
 
       {/* Legal */}
       <p className="text-[11px] text-muted-foreground/70 text-center leading-relaxed">
-        Auto-renews unless canceled 24hrs before period end. Manage in App Store settings.{" "}
+        Auto-renews unless canceled 24hrs before period end. Manage in {storeName} settings.{" "}
         <button
           onClick={() => handleExternalLink('https://www.lucidrepo.com/terms-of-service')}
           className="text-primary/70 underline hover:text-primary"
