@@ -152,7 +152,7 @@ const NewDream = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6 pb-24 space-y-8 max-w-2xl mx-auto">
+      <div className="px-4 py-6 pb-24 space-y-8 max-w-2xl lg:max-w-3xl mx-auto">
 
         {/* Title Input */}
         <div className="space-y-2">
