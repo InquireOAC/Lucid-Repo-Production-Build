@@ -281,8 +281,9 @@ export const useNativeSubscription = () => {
         
         console.log('Purchases restored successfully - subscription context should be updated');
       } else {
+        const accountType = Capacitor.getPlatform() === 'ios' ? 'Apple ID' : 'Google account';
         toast.info('No active purchases found to restore', {
-          description: 'Make sure you\'re signed in with the same Apple ID used for the original purchase.'
+          description: `Make sure you're signed in with the same ${accountType} used for the original purchase.`
         });
       }
       

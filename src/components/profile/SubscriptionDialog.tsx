@@ -169,7 +169,7 @@ export const SubscriptionDialog: React.FC<SubscriptionDialogProps> = ({
 
           {isNativePlatform && (
             <p className="text-xs text-muted-foreground text-center pt-2">
-              Manage your subscription through App Store settings
+              Manage your subscription through {Capacitor.getPlatform() === 'ios' ? 'App Store' : 'Play Store'} settings
             </p>
           )}
         </div>
