@@ -15,6 +15,8 @@ import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
 import ExportJournalDialog from "./ExportJournalDialog";
+import { SubscriptionDialog } from "./SubscriptionDialog";
+import { Crown } from "lucide-react";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -46,6 +48,7 @@ const SettingsDialog = ({
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
   const [showExportJournal, setShowExportJournal] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -72,6 +75,17 @@ const SettingsDialog = ({
 
           <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-6 py-6 space-y-4">
+              <Button
+                variant="luminous"
+                className="w-full justify-center gap-2 h-12 text-base font-semibold"
+                onClick={() => setShowSubscription(true)}
+              >
+                <Crown className="h-5 w-5" />
+                Upgrade to Pro
+              </Button>
+
+              <Separator />
+
               {isAdmin && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-sm text-muted-foreground">Admin</h4>
@@ -193,6 +207,7 @@ const SettingsDialog = ({
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
     <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
+    <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
   </>;
 };
