@@ -56,15 +56,15 @@ const SettingsDialog = ({
 
   return <>
     <AnimatePresence>
-      {open && (
-        <motion.div
-          className="fixed inset-0 z-50 bg-background flex flex-col"
-          initial={{ x: "100%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "100%" }}
-          transition={{ type: "spring", damping: 28, stiffness: 300 }}
-          style={{ paddingTop: "env(safe-area-inset-top)" }}
-        >
+      {open &&
+      <motion.div
+        className="fixed inset-0 z-50 bg-background flex flex-col"
+        initial={{ x: "100%" }}
+        animate={{ x: 0 }}
+        exit={{ x: "100%" }}
+        transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        style={{ paddingTop: "env(safe-area-inset-top)" }}>
+
           <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-xl">
             <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
               <ArrowLeft className="h-5 w-5" />
@@ -76,25 +76,25 @@ const SettingsDialog = ({
           <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
             <div className="px-6 py-6 space-y-4">
               <Button
-                className="w-full justify-center gap-2 h-12 text-base font-semibold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40"
-                onClick={() => setShowSubscription(true)}
-              >
+              className="w-full justify-center gap-2 h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40 text-secondary-foreground"
+              onClick={() => setShowSubscription(true)}>
+
                 <Crown className="h-5 w-5" />
                 Upgrade to Pro
               </Button>
 
               <Separator />
 
-              {isAdmin && (
-                <div className="space-y-2">
+              {isAdmin &&
+            <div className="space-y-2">
                   <h4 className="font-medium text-sm text-muted-foreground">Admin</h4>
-                  <Button variant="ghost" className="w-full justify-start" onClick={() => { onOpenChange(false); navigate("/admin"); }}>
+                  <Button variant="ghost" className="w-full justify-start" onClick={() => {onOpenChange(false);navigate("/admin");}}>
                     <LayoutDashboard className="h-4 w-4 mr-2" />
                     Admin Dashboard
                   </Button>
                   <Separator />
                 </div>
-              )}
+            }
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Profile</h4>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => setShowSocialLinks(true)}>
@@ -181,9 +181,9 @@ const SettingsDialog = ({
               <div className="space-y-2 pb-24">
                 <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
                 <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => {
-                  onSignOut();
-                  onOpenChange(false);
-                }}>
+                onSignOut();
+                onOpenChange(false);
+              }}>
                   <LogOut className="h-4 w-4 mr-2" />
                   Sign Out
                 </Button>
@@ -195,7 +195,7 @@ const SettingsDialog = ({
             </div>
           </div>
         </motion.div>
-      )}
+      }
     </AnimatePresence>
 
     <CommunityGuidelinesDialog open={showGuidelines} onOpenChange={setShowGuidelines} />
