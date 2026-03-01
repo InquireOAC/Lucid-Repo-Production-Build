@@ -1,82 +1,40 @@
 
 
-# iPad Responsiveness + Android / Google Play Setup
+# Android Subscription Support
 
-## 1. iPad Responsive Layout Improvements
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-The app currently uses `max-w-3xl` (profile), `max-w-2xl` (journal, notifications), `max-w-md` (auth), and `max-w-6xl` (lucid repo). On iPad screens (834px-1024px+ wide), most pages will look narrow with excessive side margins. We need to make layouts adapt to wider screens.
+## Changes Needed
 
-### Changes:
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-**MainLayout (`src/layouts/MainLayout.tsx`)**
-- Increase the tab bar icon/label spacing for wider screens using responsive classes
-- Content area already fills width, so no changes needed there
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-**ProfilePageLayout (`src/components/profile/ProfilePageLayout.tsx`)**
-- Change `max-w-3xl` to a responsive value like `max-w-3xl lg:max-w-4xl xl:max-w-5xl` so the profile expands on iPad/desktop
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-**Journal page (`src/pages/Journal.tsx`)**
-- Add responsive max-width if it's currently constrained
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-**Notifications page (`src/pages/Notifications.tsx`)**
-- Bump `max-w-2xl` to `max-w-2xl lg:max-w-4xl`
-
-**NewDream page (`src/pages/NewDream.tsx`)**
-- Bump `max-w-2xl` to `max-w-2xl lg:max-w-3xl`
-
-**LucidRepo container (`src/pages/LucidRepoContainer.tsx`)**
-- Already `max-w-6xl`, good for iPad
-
-**Auth page (`src/pages/Auth.tsx`)**
-- Already `max-w-[420px]` which is fine for a centered login form
-
-**Dream grid components** (`src/components/repos/MasonryDreamGrid.tsx`, `src/components/repos/DreamGrid.tsx`)
-- Ensure grid columns scale: add `xl:grid-cols-4` breakpoints where appropriate
-
-**General CSS (`src/index.css`)**
-- Add iPad-specific safe area handling (iPad has different safe areas depending on orientation)
-
-## 2. Android / Google Play Store Setup
-
-The project already has Capacitor configured for iOS but not Android. We need to add Android support.
-
-### Changes:
-
-**`capacitor.config.ts`**
-- Already has `androidScheme: 'https'` which is correct. No changes needed.
-
-**`package.json`**
-- Add an `android:dev` script: `"android:dev": "npm run build && npx cap sync android && npx cap open android"`
-
-**Android safe areas (`src/index.css`)**
-- The existing `env(safe-area-inset-*)` CSS already works on Android with Capacitor's edge-to-edge mode, so no CSS changes needed for safe areas.
-
-**`index.html`**
-- Add Android-specific meta tags:
-  - `theme-color` meta tag for the Android status bar color
-  - Ensure viewport already has `viewport-fit=cover` (it does)
-
-### Post-code steps (user must do manually):
-After these code changes are made, you will need to:
-
-1. **Git pull** the project to your local machine
-2. Run `npm install`
-3. Run `npx cap add android` to create the `android/` folder
-4. Run `npm run build && npx cap sync android`
-5. Open in Android Studio: `npx cap open android`
-6. In Android Studio, configure your signing key and app icon before publishing to Google Play
-7. Set the `applicationId` in `android/app/build.gradle` -- it should already be `app.dreamweaver.LucidRepo` from capacitor.config.ts
-8. Generate a signed AAB (Android App Bundle) for Play Store submission
-
-## Summary of Files to Modify
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/profile/ProfilePageLayout.tsx` | Responsive max-width for iPad |
-| `src/pages/Notifications.tsx` | Responsive max-width |
-| `src/pages/NewDream.tsx` | Responsive max-width |
-| `src/components/repos/DreamGrid.tsx` | Add xl grid columns |
-| `src/components/repos/MasonryDreamGrid.tsx` | Add xl grid columns |
-| `package.json` | Add android:dev script |
-| `index.html` | Add theme-color meta tag |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
