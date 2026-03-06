@@ -1,40 +1,39 @@
 
 
-# Android Subscription Support
+# Platform-Specific RevenueCat API Keys
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Problem
+The edge function `get-revenuecat-key` returns a single `REVENUECAT_API_KEY` regardless of platform. Android needs a different key than iOS.
 
-## Changes Needed
+## Changes
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+### 1. Add Android RevenueCat secret
+A new Supabase secret `REVENUECAT_ANDROID_API_KEY` needs to be added for the Google Play RevenueCat key. The existing `REVENUECAT_API_KEY` will continue to serve as the iOS key.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### 2. Update edge function `get-revenuecat-key/index.ts`
+- Parse `platform` from request body
+- Return `REVENUECAT_API_KEY` for iOS, `REVENUECAT_ANDROID_API_KEY` for Android
+- Fall back to `REVENUECAT_API_KEY` if no platform specified
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### 3. Update `src/utils/revenueCatManager.ts` - `fetchApiKey()`
+- Pass `{ platform: Capacitor.getPlatform() }` as body to `supabase.functions.invoke('get-revenuecat-key')`
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+### 4. Update `capacitor.config.ts`
+- Remove the hardcoded `PurchasesCapacitor.apiKey` since we fetch it dynamically
+- Or keep it as iOS fallback — but cleaner to remove since `revenueCatManager` handles it
+
+### 5. Android SDK version
+Note: The Android `compileSdkVersion` / `targetSdkVersion` is set in `android/app/build.gradle` which is generated when you run `npx cap add android`. Lovable cannot edit that file directly since it's not in the project. After generating the Android project locally, you'll need to update `compileSdk` and `targetSdk` from 34 to 35 in `android/app/build.gradle`.
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+| `supabase/functions/get-revenuecat-key/index.ts` | Accept `platform` param, return correct key |
+| `src/utils/revenueCatManager.ts` | Send platform in fetchApiKey() |
+| `capacitor.config.ts` | Remove hardcoded PurchasesCapacitor apiKey |
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+## Manual Step
+- You will need to add the `REVENUECAT_ANDROID_API_KEY` secret to Supabase with your Android RevenueCat public API key
+- After running `npx cap add android`, update `android/app/build.gradle` to set `compileSdk = 35` and `targetSdk = 35`
 
