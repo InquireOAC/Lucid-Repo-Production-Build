@@ -143,6 +143,10 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Data</h4>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowDreamGallery(true)}>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Dream Gallery
+                </Button>
                 <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
                   <BookOpen className="h-4 w-4 mr-2" />
                   Export Dream Journal
