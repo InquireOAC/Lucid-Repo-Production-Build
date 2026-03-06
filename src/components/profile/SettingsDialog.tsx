@@ -16,6 +16,7 @@ import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
 import ExportJournalDialog from "./ExportJournalDialog";
 import { SubscriptionDialog } from "./SubscriptionDialog";
+import DreamGalleryDialog from "./DreamGalleryDialog";
 import { Crown } from "lucide-react";
 
 interface SettingsDialogProps {
