@@ -11,36 +11,40 @@ serve(async (req) => {
   }
 
   try {
-    // Get the RevenueCat API key from environment variables
-    const revenueCatApiKey = Deno.env.get('REVENUECAT_API_KEY')
-    
+    // Parse platform from request body
+    let platform = 'ios'; // default to iOS for backward compatibility
+    try {
+      const body = await req.json();
+      if (body?.platform) {
+        platform = body.platform;
+      }
+    } catch {
+      // No body or invalid JSON — default to iOS
+    }
+
+    // Return the correct API key based on platform
+    const secretName = platform === 'android' ? 'REVENUECAT_ANDROID_API_KEY' : 'REVENUECAT_API_KEY';
+    const revenueCatApiKey = Deno.env.get(secretName);
+
     if (!revenueCatApiKey) {
-      console.error('REVENUECAT_API_KEY not found in environment variables')
+      console.error(`${secretName} not found in environment variables`);
       return new Response(
-        JSON.stringify({ error: 'RevenueCat API key not configured' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
+        JSON.stringify({ error: `RevenueCat API key not configured for platform: ${platform}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
 
-    // Return the API key securely to authenticated requests
+    console.log(`Returning RevenueCat key for platform: ${platform}`);
+
     return new Response(
       JSON.stringify({ apiKey: revenueCatApiKey }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
     console.error('Error in get-revenuecat-key function:', error)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })

@@ -81,8 +81,11 @@ class RevenueCatManager {
 
   private async fetchApiKey() {
     try {
-      const { data, error } = await supabase.functions.invoke('get-revenuecat-key');
-      
+      const platform = Capacitor.getPlatform();
+      console.log('RevenueCat: Fetching API key for platform:', platform);
+      const { data, error } = await supabase.functions.invoke('get-revenuecat-key', {
+        body: { platform }
+      });
       if (error) {
         console.error('RevenueCat: Error fetching API key:', error);
         throw error;
