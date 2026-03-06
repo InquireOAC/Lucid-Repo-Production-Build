@@ -50,6 +50,7 @@ const SettingsDialog = ({
   const [showColorScheme, setShowColorScheme] = useState(false);
   const [showExportJournal, setShowExportJournal] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
+  const [showDreamGallery, setShowDreamGallery] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
