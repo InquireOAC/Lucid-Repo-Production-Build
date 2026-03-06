@@ -8,11 +8,7 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'https'
   },
-  plugins: {
-    PurchasesCapacitor: {
-      apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk'
-    }
-  },
+  plugins: {},
   ios: {
     allowsLinkPreview: false,
     scrollEnabled: true,
