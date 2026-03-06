@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard, Image as ImageIcon } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
@@ -16,6 +16,7 @@ import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
 import ExportJournalDialog from "./ExportJournalDialog";
 import { SubscriptionDialog } from "./SubscriptionDialog";
+import DreamGalleryDialog from "./DreamGalleryDialog";
 import { Crown } from "lucide-react";
 
 interface SettingsDialogProps {
@@ -49,6 +50,7 @@ const SettingsDialog = ({
   const [showColorScheme, setShowColorScheme] = useState(false);
   const [showExportJournal, setShowExportJournal] = useState(false);
   const [showSubscription, setShowSubscription] = useState(false);
+  const [showDreamGallery, setShowDreamGallery] = useState(false);
 
   const handleExternalLink = (url: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
@@ -141,6 +143,10 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Data</h4>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowDreamGallery(true)}>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  Dream Gallery
+                </Button>
                 <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
                   <BookOpen className="h-4 w-4 mr-2" />
                   Export Dream Journal
@@ -207,6 +213,7 @@ const SettingsDialog = ({
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
     <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
     <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
+    <DreamGalleryDialog open={showDreamGallery} onOpenChange={setShowDreamGallery} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
   </>;
 };
