@@ -50,10 +50,10 @@ export function useSectionImageGeneration(
           // Generate cinematic prompt
           const { data: promptData, error: promptError } = await supabase.functions.invoke(
             "compose-cinematic-prompt",
-            { body: { dreamContent: sec.text, dreamTitle: dream.title } }
+            { body: { sceneBrief: `Dream Title: ${dream.title}\n\nScene: ${sec.text}` } }
           );
 
-          if (promptError || !promptData?.prompt) {
+          if (promptError || !promptData?.cinematicPrompt) {
             console.error("Prompt generation failed for section", i + 1);
             sectionImages.push({ section: sec.section, text: sec.text });
             continue;
