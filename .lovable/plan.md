@@ -1,42 +1,40 @@
 
 
-## Plan: Starry Background for NewDream + Full-Page Edit Dream
+# Android Subscription Support
 
-### 1. Add muted animated starry background to NewDream page
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-**File: `src/pages/NewDream.tsx`**
-- Change the root `div` from `bg-background` to `starry-background` class (already exists in CSS with animated cosmic drift)
-- Update the sticky header from `bg-background/80` to `bg-background/60` so stars subtly show through
-- Update the bottom save bar similarly
+## Changes Needed
 
-The existing `starry-background` CSS class already has muted star dots with a slow `cosmic-drift` animation. The stars are already subtle (0.2-0.4 opacity). No CSS changes needed — it's already muted and animated.
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-### 2. Convert EditDreamDialog from modal to full-page route
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-**File: `src/pages/EditDream.tsx`** (new)
-- Create a new page component that mirrors NewDream but operates in edit mode
-- Accept a `dreamId` URL param, fetch the dream from the store, and pre-populate all fields
-- Use `handleEditDream` from `useDreamJournal` instead of `handleAddDream`
-- Header shows "Edit Dream" instead of "Record New Dream", Save button calls edit handler
-- Same `starry-background` class
-- On save, navigate back to journal
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-**File: `src/App.tsx`**
-- Add route: `<Route path="journal/edit/:dreamId" element={<EditDream />} />`
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-**File: `src/pages/Journal.tsx`**
-- Change `handleOpenEditDialog` to navigate to `/journal/edit/${dream.id}` instead of opening the modal
-- Remove `EditDreamDialog` import and usage
-- Remove `isEditingDream`, `setIsEditingDream` state usage
+## Files to Modify
 
-**File: `src/components/journal/EditDreamDialog.tsx`**
-- Can be left in place (unused) or removed
-
-### Summary of changes
-| File | Action |
+| File | Change |
 |------|--------|
-| `src/pages/NewDream.tsx` | Swap `bg-background` → `starry-background` on root + adjust header/footer opacity |
-| `src/pages/EditDream.tsx` | New file — clone of NewDream adapted for editing (pre-fills from existing dream, calls edit handler) |
-| `src/App.tsx` | Add `/journal/edit/:dreamId` route |
-| `src/pages/Journal.tsx` | Navigate to edit page instead of opening modal; remove modal code |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 

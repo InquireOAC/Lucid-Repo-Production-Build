@@ -4,7 +4,6 @@ import { useDreamJournal } from "@/hooks/useDreamJournal";
 import JournalHeader from "@/components/journal/JournalHeader";
 import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
-import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import DreamsList from "@/components/journal/DreamsList";
 import EmptyJournal from "@/components/journal/EmptyJournal";
@@ -88,8 +87,7 @@ const Journal = () => {
   };
 
   const handleOpenEditDialog = (dream: DreamEntry) => {
-    setSelectedDream(dream);
-    setIsEditingDream(true);
+    navigate(`/journal/edit/${dream.id}`);
   };
 
   return (
@@ -133,24 +131,8 @@ const Journal = () => {
         isSubmitting={isSubmitting}
       />
 
-      {selectedDream && (
-        <EditDreamDialog
-          isOpen={isEditingDream}
-          onOpenChange={(open) => {
-            setIsEditingDream(open);
-            if (!open) {
-              setSelectedDream(null);
-              if (user) {
-                setTimeout(memoizedSyncDreams, 300);
-              }
-            }
-          }}
-          onSubmit={handleEditDreamSubmit}
-          existingDream={selectedDream}
-          tags={tags}
-          isSubmitting={isSubmitting}
-        />
-      )}
+
+
 
 
       <DeleteDreamConfirmationDialog

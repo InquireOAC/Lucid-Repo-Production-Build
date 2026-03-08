@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Index from './pages/Index';
 import Journal from './pages/Journal';
 import NewDream from './pages/NewDream';
+import EditDream from './pages/EditDream';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import LucidRepoContainer from './pages/LucidRepo';
@@ -46,6 +47,7 @@ function App() {
                   <Route index element={<Index />} />
                   <Route path="journal" element={<Journal />} />
                   <Route path="journal/new" element={<NewDream />} />
+                  <Route path="journal/edit/:dreamId" element={<EditDream />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="profile/:userId" element={<Profile />} />
                   <Route path="profile/:username" element={<Profile />} />
