@@ -53,6 +53,7 @@ function App() {
                   <Route path="explore" element={<Explore />} />
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
+                  <Route path="dream/:dreamId" element={<DreamStoryPage />} />
                   <Route path="chat" element={<Chat />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="insights" element={<Insights />} />

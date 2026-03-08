@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
-import DreamDetail from "@/components/DreamDetail";
 import JournalHeader from "@/components/journal/JournalHeader";
 import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
