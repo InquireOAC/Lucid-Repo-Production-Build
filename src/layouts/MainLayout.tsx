@@ -12,6 +12,13 @@ const MainLayout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
   
   React.useEffect(() => {
     const publicRoutes = ["/", "/journal", "/journal/new", "/auth"];
@@ -36,7 +43,7 @@ const MainLayout = () => {
       )}
       
       {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
-      <div className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </div>
       
