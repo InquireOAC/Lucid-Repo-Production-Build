@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Heart, Eye } from "lucide-react";
+import { Heart, Eye, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
