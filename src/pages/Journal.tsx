@@ -149,7 +149,7 @@ const Journal = () => {
           <DreamsList
             dreams={filteredDreams}
             tags={tags}
-            onSelect={setSelectedDream}
+            onSelect={(dream) => navigate(`/dream/${dream.id}`)}
             onEdit={handleOpenEditDialog}
             onTogglePublic={handleTogglePublic}
             onDelete={(dreamId) => setDreamToDelete(dreamId)}
