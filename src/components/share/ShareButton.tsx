@@ -265,31 +265,31 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 minHeight: '45%',
               }}>
                 <div style={{
-                  fontSize: '7px',
-                  letterSpacing: '3px',
+                  fontSize: '9px',
+                  letterSpacing: '4px',
                   textTransform: 'uppercase' as const,
                   color: 'rgba(96,165,250,0.7)',
                   fontFamily: 'monospace',
-                  marginBottom: '8px',
+                  marginBottom: '10px',
                 }}>
                   ✦ DREAM JOURNAL ✦
                 </div>
 
                 <h2 style={{
-                  fontSize: '16px',
+                  fontSize: '20px',
                   fontWeight: 700,
                   lineHeight: 1.15,
                   color: '#ffffff',
                   letterSpacing: '-0.02em',
-                  marginBottom: '4px',
+                  marginBottom: '6px',
                 }}>
                   {normalizedDream.title}
                 </h2>
 
                 <p style={{
-                  fontSize: '8px',
+                  fontSize: '10px',
                   color: 'rgba(226,232,240,0.5)',
-                  marginBottom: '10px',
+                  marginBottom: '12px',
                   fontFamily: 'monospace',
                   letterSpacing: '0.5px',
                 }}>
@@ -299,14 +299,14 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 <div style={{
                   height: '1px',
                   background: 'linear-gradient(90deg, rgba(96,165,250,0.5), rgba(139,92,246,0.3), transparent)',
-                  marginBottom: '10px',
+                  marginBottom: '12px',
                 }} />
 
                 <p style={{
-                  fontSize: '10px',
-                  lineHeight: 1.5,
+                  fontSize: '12px',
+                  lineHeight: 1.55,
                   color: 'rgba(226,232,240,0.8)',
-                  marginBottom: '14px',
+                  marginBottom: '18px',
                 }}>
                   {excerpt}
                 </p>
@@ -316,7 +316,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     <img
                       src={logoBase64}
                       alt="Lucid Repo"
-                      style={{ width: '55%', height: 'auto', objectFit: 'contain', display: 'block' }}
+                      style={{ width: '65%', height: 'auto', objectFit: 'contain', display: 'block' }}
                     />
                   </div>
                 )}
