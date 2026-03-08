@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import PageTransition from "@/components/ui/PageTransition";
 import ConnectionsHeader from "@/components/connections/ConnectionsHeader";
 import ConnectionsFilterPills from "@/components/connections/ConnectionsFilterPills";
