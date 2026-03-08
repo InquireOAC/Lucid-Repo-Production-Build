@@ -31,9 +31,12 @@ const LucidRepoContainer = () => {
   return <LucidRepoDiscovery />;
 };
 
+const FILTER_CATEGORIES = ["All", "Lucid", "Nightmare", "Recurring", "Adventure", "Spiritual", "Flying", "Prophetic", "Sleep Paralysis"];
+
 const LucidRepoDiscovery = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const { series: publicSeries } = usePublicSeries();
 
@@ -90,16 +93,25 @@ const LucidRepoDiscovery = () => {
 
   const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
 
-  // Search filter
-  const filterBySearch = (dreams: DreamEntry[]) => {
-    if (!searchQuery.trim()) return dreams;
-    const q = searchQuery.toLowerCase();
-    return dreams.filter(d =>
-      d.title.toLowerCase().includes(q) ||
-      d.content?.toLowerCase().includes(q) ||
-      d.profiles?.username?.toLowerCase().includes(q) ||
-      d.profiles?.display_name?.toLowerCase().includes(q)
-    );
+  // Combined search + category filter
+  const filterDreams = (dreams: DreamEntry[]) => {
+    let result = dreams;
+    if (activeFilter !== "All") {
+      const filterLower = activeFilter.toLowerCase();
+      result = result.filter(d =>
+        d.tags?.some(t => t.toLowerCase() === filterLower)
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
+    }
+    return result;
   };
 
   const showLoading = isLoading || tagsLoading;
@@ -121,6 +133,24 @@ const LucidRepoDiscovery = () => {
             />
           </div>
         </form>
+      </div>
+
+      {/* Category Filter Bar */}
+      <div className="flex overflow-x-auto gap-5 mb-4 pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {FILTER_CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setActiveFilter(cat)}
+            className={`whitespace-nowrap pb-2 text-sm transition-all border-b-2 ${
+              activeFilter === cat
+                ? "font-bold text-primary border-primary"
+                : "font-medium text-muted-foreground border-transparent hover:text-foreground"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
       </div>
 
       {showLoading ? (
@@ -152,7 +182,7 @@ const LucidRepoDiscovery = () => {
       ) : (
         <>
           {/* Featured Hero */}
-          {featured && !searchQuery && (
+          {featured && !searchQuery && activeFilter === "All" && (
             <DiscoveryHero
               dream={featured}
               onOpenDream={handleOpenDream}
@@ -162,9 +192,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Trending Now */}
-          {filterBySearch(trending).length > 0 && (
+          {filterDreams(trending).length > 0 && (
             <DiscoveryRow title="🔥 Trending Now">
-              {filterBySearch(trending).map(dream => (
+              {filterDreams(trending).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
@@ -177,9 +207,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* From People You Follow */}
-          {user && filterBySearch(following).length > 0 && (
+          {user && filterDreams(following).length > 0 && (
             <DiscoveryRow title="📖 From People You Follow">
-              {filterBySearch(following).map(dream => (
+              {filterDreams(following).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
@@ -192,9 +222,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* New Releases */}
-          {filterBySearch(newReleases).length > 0 && (
+          {filterDreams(newReleases).length > 0 && (
             <DiscoveryRow title="✨ New Releases">
-              {filterBySearch(newReleases).map(dream => (
+              {filterDreams(newReleases).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
@@ -207,7 +237,7 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Dream Series */}
-          {!searchQuery && publicSeries.length > 0 && (
+          {!searchQuery && activeFilter === "All" && publicSeries.length > 0 && (
             <DiscoveryRow title="📚 Dream Series">
               {publicSeries.map(s => (
                 <DiscoverySeriesCard
@@ -220,7 +250,7 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Tag-based sections */}
-          {!searchQuery && tagSections.map(section => (
+          {!searchQuery && activeFilter === "All" && tagSections.map(section => (
             <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
               {section.dreams.map(dream => (
                 <DiscoveryDreamCard
