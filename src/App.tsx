@@ -52,7 +52,7 @@ function App() {
                   <Route path="profile/:userId" element={<Profile />} />
                   <Route path="profile/:username" element={<Profile />} />
                   <Route path="auth" element={<Auth />} />
-                  <Route path="explore" element={<Explore />} />
+                  <Route path="connections" element={<DreamConnections />} />
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
                   <Route path="dream/:dreamId" element={<DreamStoryPage />} />

@@ -50,7 +50,7 @@ const MainLayout = () => {
         <div className="flex justify-around items-center h-14">
           <NavTab to="/" icon={<Book />} label="Journal" />
           <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
-          <NavTab to="/explore" icon={<Compass />} label="Explore" />
+          <NavTab to="/connections" icon={<Link2 />} label="Connections" />
           <NavTab to="/profile" icon={<User />} label="Profile" />
         </div>
       </motion.div>
