@@ -107,7 +107,7 @@ const NewDream = () => {
   const dateDisplay = format(new Date(formData.date), "MMM d, yyyy");
 
   return (
-    <div className="min-h-screen bg-background animate-page-reveal">
+    <div className="min-h-screen starry-background animate-page-reveal">
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border/30 pt-safe-top">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
