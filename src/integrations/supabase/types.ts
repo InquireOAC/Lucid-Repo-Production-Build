@@ -235,6 +235,45 @@ export type Database = {
           },
         ]
       }
+      collective_waves: {
+        Row: {
+          created_at: string
+          description: string | null
+          dream_count: number
+          emoji: string | null
+          id: string
+          percent_change: number | null
+          theme: string
+          timeframe_end: string
+          timeframe_start: string
+          top_symbols: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          id?: string
+          percent_change?: number | null
+          theme: string
+          timeframe_end?: string
+          timeframe_start?: string
+          top_symbols?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          id?: string
+          percent_change?: number | null
+          theme?: string
+          timeframe_end?: string
+          timeframe_start?: string
+          top_symbols?: string[] | null
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           comment_text: string
@@ -635,6 +674,39 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_clusters: {
+        Row: {
+          created_at: string
+          description: string | null
+          dream_count: number
+          emoji: string | null
+          event_date: string
+          event_name: string
+          id: string
+          top_themes: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          event_date?: string
+          event_name: string
+          id?: string
+          top_themes?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          event_date?: string
+          event_name?: string
+          id?: string
+          top_themes?: string[] | null
+        }
+        Relationships: []
+      }
       dream_comments: {
         Row: {
           content: string
@@ -825,6 +897,54 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_matches: {
+        Row: {
+          created_at: string
+          dream1_id: string
+          dream2_id: string
+          id: string
+          match_percentage: number
+          shared_elements: string[]
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream1_id: string
+          dream2_id: string
+          id?: string
+          match_percentage?: number
+          shared_elements?: string[]
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          dream1_id?: string
+          dream2_id?: string
+          id?: string
+          match_percentage?: number
+          shared_elements?: string[]
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_matches_dream1_id_fkey"
+            columns: ["dream1_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dream_matches_dream2_id_fkey"
+            columns: ["dream2_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
             referencedColumns: ["id"]
           },
         ]
@@ -2068,6 +2188,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_alerts: {
+        Row: {
+          created_at: string
+          description: string | null
+          dreamer_count: number
+          dreamer_ids: string[] | null
+          emoji: string | null
+          id: string
+          is_trending: boolean | null
+          theme: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dreamer_count?: number
+          dreamer_ids?: string[] | null
+          emoji?: string | null
+          id?: string
+          is_trending?: boolean | null
+          theme: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dreamer_count?: number
+          dreamer_ids?: string[] | null
+          emoji?: string | null
+          id?: string
+          is_trending?: boolean | null
+          theme?: string
+        }
+        Relationships: []
       }
       terms_acceptance: {
         Row: {
