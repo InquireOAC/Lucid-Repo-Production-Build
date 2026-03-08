@@ -1,40 +1,53 @@
 
 
-# Android Subscription Support
+## Redesign: Magazine Editorial Dream Share Card (9:16)
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+Full-bleed dream image background with a frosted glass text overlay panel at the bottom. Clean, premium, social-media-ready.
 
-## Changes Needed
+### Design
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+```text
+┌──────────────────────┐
+│                      │
+│   FULL-BLEED IMAGE   │
+│   (dream visual)     │
+│                      │
+│                      │
+│                      │
+│                      │
+│                      │
+│┌────────────────────┐│
+││ ░░ FROSTED GLASS ░░││
+││                    ││
+││ ✦ DREAM JOURNAL ✦ ││
+││ Title              ││
+││ Date               ││
+││                    ││
+││ "Dream excerpt..." ││
+││                    ││
+││ ── logo/badge ──   ││
+│└────────────────────┘│
+└──────────────────────┘
+```
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+- **Full-bleed image**: Dream visualization fills the entire 9:16 card as background
+- **Bottom gradient**: Dark gradient fades from transparent at top to near-black at bottom
+- **Frosted glass panel**: Sits at the bottom ~45% with backdrop blur, containing title, date, short excerpt, and branding
+- **No image fallback**: If no dream image exists, use the cosmic gradient background with a subtle star pattern instead
+- **Branding**: "Lucid Repo" logo/app store badge at the very bottom of the glass panel
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
-
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
-
-## Files to Modify
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+| `src/components/share/DreamShareCard.tsx` | Complete rewrite — full-bleed image bg with frosted glass overlay panel at bottom |
+| `src/components/share/ShareButton.tsx` | Update preview card in the dialog to match the new design; simplify the inline preview to render the same layout |
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+### Key Details
+
+- **Off-screen render card** (`DreamShareCard`): 1080x1920 canvas with dream image as full background `object-fit: cover`, gradient overlay bottom 50%, frosted panel with title/date/excerpt/logo
+- **Preview in dialog** (`ShareButton`): Same layout scaled down to fit the dialog, using preloaded base64 images for reliable html2canvas capture
+- **Text truncation**: Dream content capped at ~150 chars for cleaner visuals on the share card
+- **Analysis removed**: Too cluttered for a share image; only title + date + short excerpt
+- **Color palette**: Keep existing cosmic blue tokens for the glass panel border glow and fallback background
 
