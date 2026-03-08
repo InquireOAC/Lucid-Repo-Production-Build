@@ -1,114 +1,40 @@
 
 
-## Plan: Dream Connections — No-AI Matching
+# Android Subscription Support
 
-### Matching Strategy (Zero AI Credits)
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-Instead of AI, use **tag-based and keyword matching** from data that already exists on every dream:
+## Changes Needed
 
-1. **Dream Matches**: Two dreams share 2+ tags → match. Match percentage = `(shared_tags / total_unique_tags) * 100`
-2. **Sync Alerts**: 5+ public dreams with the same tag within 48 hours
-3. **Collective Waves**: 15+ public dreams with the same tag within 72 hours
-4. **Dream Clusters**: Admin-created manually (link event name to a tag surge)
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-No edge function needed for matching. Instead, a **database function** runs the comparison when a dream is saved, using pure SQL against the `tags` array column.
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-### Database Schema (4 new tables + 1 function)
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-```sql
--- dream_matches: paired similar dreams
-CREATE TABLE public.dream_matches (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user1_id uuid NOT NULL,
-  dream1_id uuid NOT NULL,
-  user2_id uuid NOT NULL,
-  dream2_id uuid NOT NULL,  -- must be public
-  match_percentage integer NOT NULL DEFAULT 0,
-  shared_elements text[] NOT NULL DEFAULT '{}',
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
--- sync_alerts: 5+ dreamers same theme in 48h
-CREATE TABLE public.sync_alerts (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  theme text NOT NULL,
-  emoji text DEFAULT '🔗',
-  description text,
-  dreamer_count integer NOT NULL DEFAULT 0,
-  is_trending boolean DEFAULT false,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
+## Files to Modify
 
--- collective_waves: 15+ dreamers same theme in 72h
-CREATE TABLE public.collective_waves (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  theme text NOT NULL,
-  emoji text DEFAULT '🌊',
-  description text,
-  dream_count integer NOT NULL DEFAULT 0,
-  percent_change integer DEFAULT 0,
-  top_symbols text[] DEFAULT '{}',
-  timeframe_start timestamptz NOT NULL,
-  timeframe_end timestamptz NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
--- dream_clusters: admin-created event correlations
-CREATE TABLE public.dream_clusters (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_name text NOT NULL,
-  emoji text DEFAULT '🌕',
-  event_date date NOT NULL,
-  description text,
-  dream_count integer NOT NULL DEFAULT 0,
-  top_themes text[] DEFAULT '{}',
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-```
-
-RLS: `dream_matches` visible where user is `user1_id` or `user2_id`. Others readable by all authenticated users. Only service role can insert/update (via db function trigger).
-
-### Matching Logic — Pure SQL Database Function
-
-A trigger function on `dream_entries` INSERT that:
-
-1. Gets the new dream's tags
-2. Queries public dreams from the last 7 days by other users
-3. Computes tag overlap using `array_intersect` (PostgreSQL array operators: `&` operator or `array(select unnest(a) intersect select unnest(b))`)
-4. If 2+ shared tags → inserts a `dream_matches` row
-5. Counts public dreams per tag in last 48h → if 5+ → upserts `sync_alerts`
-6. Same for 72h / 15+ → upserts `collective_waves`
-
-This runs entirely in PostgreSQL with zero external API calls.
-
-### Files to Create/Modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| Migration SQL | 4 tables + trigger function + RLS |
-| `src/pages/DreamConnections.tsx` | Main page with header, stats, filter pills, card feed |
-| `src/components/connections/ConnectionsHeader.tsx` | Title + 3 stat cards |
-| `src/components/connections/ConnectionsFilterPills.tsx` | Filter row |
-| `src/components/connections/SyncAlertCard.tsx` | Indigo synchronicity card |
-| `src/components/connections/DreamMatchCard.tsx` | Side-by-side match card with % ring |
-| `src/components/connections/CollectiveWaveCard.tsx` | Green wave card |
-| `src/components/connections/DreamClusterCard.tsx` | Amber cluster card |
-| `src/components/connections/EmptyConnections.tsx` | Empty state |
-| `src/hooks/useDreamConnections.tsx` | Fetch matches/alerts/waves, compute sync score |
-| `src/layouts/MainLayout.tsx` | Replace Explore with Connections nav item |
-| `src/App.tsx` | Replace /explore route with /connections |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
 
-### Sync Score (Client-side, no AI)
-
-```
-score = min(100, matchCount * 5 + waveParticipation * 10 + journalStreak * 2)
-```
-
-Computed in the hook from query results.
-
-### Privacy (unchanged)
-
-- Other users' dreams only matched if `is_public = true`
-- User's own dreams (any visibility) compared against public pool
-- Match cards join on `dream_entries.is_public = true` for dream2 at query time
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
