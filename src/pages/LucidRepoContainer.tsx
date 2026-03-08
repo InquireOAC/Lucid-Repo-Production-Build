@@ -20,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 const LucidRepoContainer = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
+  const { series: publicSeries } = usePublicSeries();
 
   const {
     featured,
