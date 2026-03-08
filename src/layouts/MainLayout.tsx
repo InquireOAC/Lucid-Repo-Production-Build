@@ -12,6 +12,13 @@ const MainLayout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo(0, 0);
+    }
+  }, [location.pathname]);
   
   React.useEffect(() => {
     const publicRoutes = ["/", "/journal", "/journal/new", "/auth"];
