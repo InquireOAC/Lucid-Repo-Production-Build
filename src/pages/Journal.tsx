@@ -13,6 +13,7 @@ import PageTransition from "@/components/ui/PageTransition";
 
 const Journal = () => {
   const navigate = useNavigate();
+  const {
     entries,
     filteredDreams,
     tags,
