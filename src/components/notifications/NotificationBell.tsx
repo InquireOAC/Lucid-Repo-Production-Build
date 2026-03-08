@@ -1,12 +1,12 @@
 import React from "react";
 import { Bell } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useNotifications } from "@/hooks/useNotifications";
+import { useNotificationStore } from "@/store/notificationStore";
 import { cn } from "@/lib/utils";
 
 const NotificationBell: React.FC = () => {
   const navigate = useNavigate();
-  const { unreadCount } = useNotifications();
+  const unreadCount = useNotificationStore(state => state.unreadCount);
 
   return (
     <button
