@@ -784,6 +784,122 @@ export type Database = {
           },
         ]
       }
+      dream_series: {
+        Row: {
+          chapter_count: number | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          like_count: number | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          chapter_count?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          chapter_count?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      dream_series_chapters: {
+        Row: {
+          chapter_number: number
+          created_at: string | null
+          dream_id: string
+          id: string
+          series_id: string
+        }
+        Insert: {
+          chapter_number: number
+          created_at?: string | null
+          dream_id: string
+          id?: string
+          series_id: string
+        }
+        Update: {
+          chapter_number?: number
+          created_at?: string | null
+          dream_id?: string
+          id?: string
+          series_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_series_chapters_dream_id_fkey"
+            columns: ["dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dream_series_chapters_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "dream_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_series_follows: {
+        Row: {
+          created_at: string | null
+          id: string
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          series_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_series_follows_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "dream_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dream_symbol_analyses: {
         Row: {
           created_at: string
