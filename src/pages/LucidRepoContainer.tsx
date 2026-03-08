@@ -135,6 +135,24 @@ const LucidRepoDiscovery = () => {
         </form>
       </div>
 
+      {/* Category Filter Bar */}
+      <div className="flex overflow-x-auto gap-5 mb-4 pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        {FILTER_CATEGORIES.map(cat => (
+          <button
+            key={cat}
+            type="button"
+            onClick={() => setActiveFilter(cat)}
+            className={`whitespace-nowrap pb-2 text-sm transition-all border-b-2 ${
+              activeFilter === cat
+                ? "font-bold text-primary border-primary"
+                : "font-medium text-muted-foreground border-transparent hover:text-foreground"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
       {showLoading ? (
         <div className="space-y-6">
           <Skeleton className="w-full aspect-[16/9] rounded-2xl" />
@@ -164,7 +182,7 @@ const LucidRepoDiscovery = () => {
       ) : (
         <>
           {/* Featured Hero */}
-          {featured && !searchQuery && (
+          {featured && !searchQuery && activeFilter === "All" && (
             <DiscoveryHero
               dream={featured}
               onOpenDream={handleOpenDream}
@@ -174,9 +192,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Trending Now */}
-          {filterBySearch(trending).length > 0 && (
+          {filterDreams(trending).length > 0 && (
             <DiscoveryRow title="🔥 Trending Now">
-              {filterBySearch(trending).map(dream => (
+              {filterDreams(trending).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
