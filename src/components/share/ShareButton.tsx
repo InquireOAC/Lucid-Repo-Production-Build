@@ -263,8 +263,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
                 background: 'linear-gradient(to bottom, transparent 0%, rgba(6,11,24,0.5) 20%, rgba(6,11,24,0.8) 100%)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
+                backdropFilter: 'blur(2px)',
+                WebkitBackdropFilter: 'blur(2px)',
               }}>
                 <div style={{
                   fontSize: '9px',
