@@ -64,7 +64,7 @@ export function useSectionImageGeneration(
             "generate-dream-image",
             {
               body: {
-                prompt: promptData.prompt,
+                prompt: promptData.cinematicPrompt,
                 dreamContent: sec.text,
                 dreamId: dream.id,
               },
