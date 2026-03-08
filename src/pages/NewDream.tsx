@@ -135,7 +135,7 @@ const NewDream = () => {
             placeholder="Title your dream..."
             value={formData.title}
             onChange={handleChange}
-            className="text-2xl font-bold bg-transparent border-0 border-b border-border/20 rounded-none px-0 h-auto py-2 focus:border-primary/50 placeholder:text-muted-foreground/40"
+            className="text-2xl font-bold bg-transparent border-0 border-b-2 border-blue-500 rounded-none px-0 h-auto py-2 focus:border-blue-400 placeholder:text-muted-foreground/40"
           />
           <div className="flex items-center gap-2">
             <input
