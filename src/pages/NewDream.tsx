@@ -109,7 +109,7 @@ const NewDream = () => {
   return (
     <div className="min-h-screen starry-background animate-page-reveal">
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-lg border-b border-border/30 pt-safe-top">
+      <div className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b border-border/30 pt-safe-top">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
