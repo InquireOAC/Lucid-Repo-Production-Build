@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
@@ -7,6 +8,7 @@ import DiscoveryRow from "@/components/repos/DiscoveryRow";
 import DiscoveryDreamCard from "@/components/repos/DiscoveryDreamCard";
 import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
 import SeriesDetailPage from "@/components/series/SeriesDetailPage";
+import DreamStoryPage from "@/pages/DreamStoryPage";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
