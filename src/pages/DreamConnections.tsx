@@ -15,7 +15,25 @@ const DreamConnections: React.FC = () => {
   const { matches, waves, syncScore, filteredItems, isLoading, filter, setFilter } = useDreamConnections();
 
   return (
-    <PageTransition className="min-h-screen pt-safe-top">
+    <PageTransition className="relative min-h-screen pt-safe-top overflow-hidden">
+      {/* Starry background */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(var(--primary)/0.08)_0%,_transparent_60%)]" />
+        {Array.from({ length: 60 }).map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white"
+            style={{
+              width: `${Math.random() * 2 + 1}px`,
+              height: `${Math.random() * 2 + 1}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              opacity: Math.random() * 0.5 + 0.15,
+              animation: `pulse ${Math.random() * 4 + 3}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          />
+        ))}
       <div className="p-4 pb-2">
         <ConnectionsHeader matchCount={matches.length} activeWaves={waves.length} syncScore={syncScore} />
       </div>
