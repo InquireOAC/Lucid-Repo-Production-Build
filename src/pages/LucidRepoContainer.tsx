@@ -236,16 +236,6 @@ const LucidRepoDiscovery = () => {
         </>
       )}
 
-      {selectedDream && (
-        <DreamDetailWrapper
-          selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream}
-          tags={publicTags}
-          onClose={handleCloseDream}
-          onUpdate={handleDreamUpdate}
-          isAuthenticated={!!user}
-          onLike={() => handleDreamLike(selectedDream.id)}
-        />
-      )}
 
       {selectedSeries && (
         <SeriesDetailPage

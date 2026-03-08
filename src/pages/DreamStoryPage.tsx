@@ -24,7 +24,6 @@ const DreamStoryPage: React.FC = () => {
   const { user } = useAuth();
   const [dream, setDream] = useState<DreamEntry | null>(null);
   const [loading, setLoading] = useState(true);
-  const [analysisOpen, setAnalysisOpen] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
   useEffect(() => {
