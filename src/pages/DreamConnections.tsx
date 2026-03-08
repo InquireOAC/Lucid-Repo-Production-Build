@@ -34,7 +34,9 @@ const DreamConnections: React.FC = () => {
             }}
           />
         ))}
-      <div className="p-4 pb-2">
+      </div>
+
+      <div className="relative z-10 p-4 pb-2">
         <ConnectionsHeader matchCount={matches.length} activeWaves={waves.length} syncScore={syncScore} />
       </div>
 
