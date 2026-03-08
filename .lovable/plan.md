@@ -1,40 +1,30 @@
 
 
-# Android Subscription Support
+## Fix: Notifications not persisting read state across navigation
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+### Root Cause
 
-## Changes Needed
+`useNotifications()` is called independently in two places:
+1. `NotificationBell` (in ProfileHeader, stays mounted)
+2. `Notifications` page (mounts/unmounts on navigation)
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+Each hook instance has its **own independent state**. When you mark all as read on the Notifications page, it updates localStorage and *that instance's* `unreadCount` to 0. But the `NotificationBell` instance still holds its stale `unreadCount` from when it first fetched -- it never re-runs `fetchNotifications` because its `user` dependency hasn't changed.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### Fix
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
-
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
-
-## Files to Modify
+Replace the two independent hook instances with a **shared Zustand store** for notification state. This way both components read from and write to the same state.
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+| `src/store/notificationStore.ts` | New Zustand store holding `unreadCount`, `notifications`, `loading`, and actions (`fetchNotifications`, `markAsRead`, `markAllAsRead`). Keeps existing localStorage logic for read IDs. |
+| `src/hooks/useNotifications.tsx` | Rewrite to be a thin wrapper around the Zustand store. The `useEffect` for fetching + realtime subscription stays here but writes to the store. |
+| `src/components/notifications/NotificationBell.tsx` | Reads `unreadCount` from the store instead of calling `useNotifications()` independently. |
+| `src/pages/Notifications.tsx` | No changes needed -- it already uses `useNotifications()` which will now share state via the store. |
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+### How it works
+
+- Zustand store is a singleton -- both `NotificationBell` and `Notifications` page read the same `unreadCount`
+- When `markAllAsRead` is called on the Notifications page, the store's `unreadCount` updates to 0 immediately, and `NotificationBell` re-renders with 0
+- `fetchNotifications` in the store reads localStorage read IDs to correctly compute unread count on re-fetch
+- Realtime subscription stays in the hook (mounted once via ProfileHeader's NotificationBell)
 
