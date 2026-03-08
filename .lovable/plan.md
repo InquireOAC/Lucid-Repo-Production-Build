@@ -1,40 +1,19 @@
 
 
-# Android Subscription Support
+## Fix: Scroll-to-top not working on all pages
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+### Problem
+The scroll-to-top on navigation works for the Journal page but not consistently for Lucid Repo, Profile, and Dream Connections pages. The current fix only resets the scroll on the main container div, but the `window` scroll and the document element may also need resetting.
 
-## Changes Needed
+### Solution
+Update the existing `useEffect` in `MainLayout.tsx` to also call `window.scrollTo(0, 0)` as a fallback. This covers cases where the browser's native scroll position (on `window` or `document.documentElement`) persists across navigations, which can happen with `min-h-screen` content that extends the document.
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+### Changes
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+**`src/layouts/MainLayout.tsx`** - Enhance the scroll reset effect:
+- Keep the existing `scrollRef.current.scrollTo(0, 0)` 
+- Add `window.scrollTo(0, 0)` as an additional reset
+- Add `document.documentElement.scrollTop = 0` for full coverage
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
-
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+This ensures all scroll contexts are reset regardless of which element is actually scrolling.
 
