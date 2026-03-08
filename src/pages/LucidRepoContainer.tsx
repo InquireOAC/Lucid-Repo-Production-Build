@@ -136,7 +136,7 @@ const LucidRepoDiscovery = () => {
       </div>
 
       {/* Category Filter Bar */}
-      <div className="flex overflow-x-auto gap-5 mb-4 pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+      <div className="flex overflow-x-auto gap-5 mb-4 pb-1 pl-[3px] scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {FILTER_CATEGORIES.map(cat => (
           <button
             key={cat}
