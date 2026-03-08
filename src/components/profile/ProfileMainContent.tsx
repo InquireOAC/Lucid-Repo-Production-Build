@@ -156,6 +156,7 @@ const ProfileMainContent = ({
         publicDreams={publicDreams}
         likedDreams={likedDreams}
         refreshDreams={refreshDreams}
+        userId={profileToShow?.id}
       />
 
       <ProfileDialogs

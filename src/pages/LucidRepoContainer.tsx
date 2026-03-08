@@ -5,8 +5,11 @@ import AuthDialog from "@/components/repos/AuthDialog";
 import DiscoveryHero from "@/components/repos/DiscoveryHero";
 import DiscoveryRow from "@/components/repos/DiscoveryRow";
 import DiscoveryDreamCard from "@/components/repos/DiscoveryDreamCard";
+import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
+import SeriesDetailPage from "@/components/series/SeriesDetailPage";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
+import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { Moon, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,6 +20,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 const LucidRepoContainer = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
+  const { series: publicSeries } = usePublicSeries();
 
   const {
     featured,
@@ -187,6 +192,19 @@ const LucidRepoContainer = () => {
             </DiscoveryRow>
           )}
 
+          {/* Dream Series */}
+          {!searchQuery && publicSeries.length > 0 && (
+            <DiscoveryRow title="📚 Dream Series">
+              {publicSeries.map(s => (
+                <DiscoverySeriesCard
+                  key={s.id}
+                  series={s}
+                  onClick={setSelectedSeries}
+                />
+              ))}
+            </DiscoveryRow>
+          )}
+
           {/* Tag-based sections */}
           {!searchQuery && tagSections.map(section => (
             <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
@@ -212,6 +230,16 @@ const LucidRepoContainer = () => {
           onUpdate={handleDreamUpdate}
           isAuthenticated={!!user}
           onLike={() => handleDreamLike(selectedDream.id)}
+        />
+      )}
+
+      {selectedSeries && (
+        <SeriesDetailPage
+          series={selectedSeries}
+          open={!!selectedSeries}
+          onClose={() => setSelectedSeries(null)}
+          isOwner={user?.id === selectedSeries.user_id}
+          onOpenDream={handleOpenDream}
         />
       )}
 
