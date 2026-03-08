@@ -95,12 +95,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
       const promises: Promise<void>[] = [];
 
       promises.push(
-        preloadImageAsDataUrl(logoAbsoluteUrl).then((data) => setLogoBase64(data))
+        convertImageToDataUrl(logoAbsoluteUrl).then((data) => setLogoBase64(data))
       );
 
       if (dreamImageUrl) {
         promises.push(
-          preloadImageAsDataUrl(dreamImageUrl).then((data) => setDreamImageBase64(data))
+          convertImageToDataUrl(dreamImageUrl).then((data) => setDreamImageBase64(data))
         );
       }
 
