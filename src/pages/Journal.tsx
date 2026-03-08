@@ -131,24 +131,8 @@ const Journal = () => {
         isSubmitting={isSubmitting}
       />
 
-      {selectedDream && (
-        <EditDreamDialog
-          isOpen={isEditingDream}
-          onOpenChange={(open) => {
-            setIsEditingDream(open);
-            if (!open) {
-              setSelectedDream(null);
-              if (user) {
-                setTimeout(memoizedSyncDreams, 300);
-              }
-            }
-          }}
-          onSubmit={handleEditDreamSubmit}
-          existingDream={selectedDream}
-          tags={tags}
-          isSubmitting={isSubmitting}
-        />
-      )}
+
+
 
 
       <DeleteDreamConfirmationDialog
