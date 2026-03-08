@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, Compass } from "lucide-react";
+import { Book, Moon, User, Link2 } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
