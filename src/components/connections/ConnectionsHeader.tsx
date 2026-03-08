@@ -12,7 +12,7 @@ const ConnectionsHeader: React.FC<ConnectionsHeaderProps> = ({ matchCount, activ
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-bold text-foreground">Dream Connections</h1>
-        <p className="text-xs text-muted-foreground mt-1">When dreams align across the collective</p>
+        <p className="text-xs text-muted-foreground mt-1">When dreams align across the collective consciousness</p>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
