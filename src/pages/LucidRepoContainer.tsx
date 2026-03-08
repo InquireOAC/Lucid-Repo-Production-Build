@@ -31,9 +31,12 @@ const LucidRepoContainer = () => {
   return <LucidRepoDiscovery />;
 };
 
+const FILTER_CATEGORIES = ["All", "Lucid", "Nightmare", "Recurring", "Adventure", "Spiritual", "Flying", "Prophetic", "Sleep Paralysis"];
+
 const LucidRepoDiscovery = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const { series: publicSeries } = usePublicSeries();
 
@@ -90,16 +93,25 @@ const LucidRepoDiscovery = () => {
 
   const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
 
-  // Search filter
-  const filterBySearch = (dreams: DreamEntry[]) => {
-    if (!searchQuery.trim()) return dreams;
-    const q = searchQuery.toLowerCase();
-    return dreams.filter(d =>
-      d.title.toLowerCase().includes(q) ||
-      d.content?.toLowerCase().includes(q) ||
-      d.profiles?.username?.toLowerCase().includes(q) ||
-      d.profiles?.display_name?.toLowerCase().includes(q)
-    );
+  // Combined search + category filter
+  const filterDreams = (dreams: DreamEntry[]) => {
+    let result = dreams;
+    if (activeFilter !== "All") {
+      const filterLower = activeFilter.toLowerCase();
+      result = result.filter(d =>
+        d.tags?.some(t => t.toLowerCase() === filterLower)
+      );
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
+    }
+    return result;
   };
 
   const showLoading = isLoading || tagsLoading;
