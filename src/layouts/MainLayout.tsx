@@ -18,6 +18,8 @@ const MainLayout = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo(0, 0);
     }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
   }, [location.pathname]);
   
   React.useEffect(() => {
