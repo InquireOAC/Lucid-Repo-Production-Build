@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Share, Save } from "lucide-react";
 import { toast } from "sonner";
-import { elementToPngBase64, extractBase64FromDataUrl } from "@/utils/shareUtils";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share as CapacitorShare } from "@capacitor/share";
@@ -19,32 +18,189 @@ interface ShareButtonProps {
   className?: string;
 }
 
-const convertImageToDataUrl = (src: string): Promise<string> => {
+const loadImage = (src: string): Promise<HTMLImageElement | null> => {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.onload = () => {
-      try {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          const dataUrl = canvas.toDataURL("image/png");
-          if (dataUrl && dataUrl.length > 100) {
-            resolve(dataUrl);
-            return;
-          }
-        }
-      } catch {
-        // tainted canvas — fall back to original URL
-      }
-      resolve(src);
-    };
-    img.onerror = () => resolve(src); // fallback to original URL
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
     img.src = src;
   });
+};
+
+const wrapText = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  maxWidth: number,
+  maxLines: number
+): string[] => {
+  const words = text.split(" ");
+  const lines: string[] = [];
+  let currentLine = "";
+
+  for (const word of words) {
+    const testLine = currentLine ? `${currentLine} ${word}` : word;
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && currentLine) {
+      lines.push(currentLine);
+      currentLine = word;
+      if (lines.length >= maxLines) {
+        lines[lines.length - 1] += "...";
+        return lines;
+      }
+    } else {
+      currentLine = testLine;
+    }
+  }
+  if (currentLine) {
+    if (lines.length >= maxLines) {
+      lines[lines.length - 1] += "...";
+    } else {
+      lines.push(currentLine);
+    }
+  }
+  return lines;
+};
+
+const renderShareCardToCanvas = async (
+  dreamImageUrl: string,
+  title: string,
+  dateStr: string,
+  excerpt: string,
+  logoUrl: string
+): Promise<string> => {
+  const W = 1080;
+  const H = 1920;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext("2d")!;
+
+  // 1. Background
+  ctx.fillStyle = "#060B18";
+  ctx.fillRect(0, 0, W, H);
+
+  // 2. Dream image or cosmic fallback
+  const dreamImg = dreamImageUrl ? await loadImage(dreamImageUrl) : null;
+  if (dreamImg) {
+    // Cover-fit the image
+    const imgRatio = dreamImg.naturalWidth / dreamImg.naturalHeight;
+    const canvasRatio = W / H;
+    let drawW: number, drawH: number, drawX: number, drawY: number;
+    if (imgRatio > canvasRatio) {
+      drawH = H;
+      drawW = H * imgRatio;
+      drawX = (W - drawW) / 2;
+      drawY = 0;
+    } else {
+      drawW = W;
+      drawH = W / imgRatio;
+      drawX = 0;
+      drawY = (H - drawH) / 2;
+    }
+    ctx.drawImage(dreamImg, drawX, drawY, drawW, drawH);
+  } else {
+    // Cosmic gradient fallback
+    const bg = ctx.createLinearGradient(0, 0, W * 0.3, H);
+    bg.addColorStop(0, "#060B18");
+    bg.addColorStop(0.4, "#0C1629");
+    bg.addColorStop(1, "#111B33");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle glow
+    const glow = ctx.createRadialGradient(W / 2, H * 0.35, 0, W / 2, H * 0.35, 300);
+    glow.addColorStop(0, "rgba(56,130,246,0.15)");
+    glow.addColorStop(1, "transparent");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // 3. Bottom gradient overlay
+  const bottomGrad = ctx.createLinearGradient(0, H * 0.35, 0, H);
+  bottomGrad.addColorStop(0, "transparent");
+  bottomGrad.addColorStop(0.3, "rgba(0,0,0,0.3)");
+  bottomGrad.addColorStop(0.6, "rgba(0,0,0,0.7)");
+  bottomGrad.addColorStop(1, "rgba(0,0,0,0.92)");
+  ctx.fillStyle = bottomGrad;
+  ctx.fillRect(0, H * 0.35, W, H * 0.65);
+
+  // 4. Text panel background
+  const panelGrad = ctx.createLinearGradient(0, H * 0.55, 0, H);
+  panelGrad.addColorStop(0, "transparent");
+  panelGrad.addColorStop(0.2, "rgba(6,11,24,0.5)");
+  panelGrad.addColorStop(1, "rgba(6,11,24,0.8)");
+  ctx.fillStyle = panelGrad;
+  ctx.fillRect(0, H * 0.55, W, H * 0.45);
+
+  const padX = 72;
+  let y = H;
+
+  // Work bottom-up to position elements
+
+  // 5. Logo (at bottom)
+  const logoImg = await loadImage(`${window.location.origin}${logoUrl}`);
+  const logoHeight = 100;
+  const logoBottomPad = 80;
+  if (logoImg) {
+    const logoW = 700;
+    const logoH = (logoImg.naturalHeight / logoImg.naturalWidth) * logoW;
+    const logoX = (W - logoW) / 2;
+    const logoY = H - logoBottomPad - logoH;
+    ctx.drawImage(logoImg, logoX, logoY, logoW, logoH);
+    y = logoY - 48;
+  } else {
+    y = H - logoBottomPad - logoHeight;
+  }
+
+  // 6. Excerpt
+  ctx.font = "32px sans-serif";
+  ctx.fillStyle = "rgba(226,232,240,0.8)";
+  ctx.textBaseline = "bottom";
+  const excerptLines = wrapText(ctx, excerpt, W - padX * 2, 4);
+  const excerptLineHeight = 51; // 32px * 1.6
+  for (let i = excerptLines.length - 1; i >= 0; i--) {
+    ctx.fillText(excerptLines[i], padX, y);
+    y -= excerptLineHeight;
+  }
+  y -= 12; // margin above excerpt
+
+  // 7. Divider line
+  const divGrad = ctx.createLinearGradient(padX, 0, W - padX, 0);
+  divGrad.addColorStop(0, "rgba(96,165,250,0.5)");
+  divGrad.addColorStop(0.5, "rgba(139,92,246,0.3)");
+  divGrad.addColorStop(1, "transparent");
+  ctx.fillStyle = divGrad;
+  ctx.fillRect(padX, y - 1, W - padX * 2, 1);
+  y -= 33; // margin above divider
+
+  // 8. Date
+  ctx.font = "24px monospace";
+  ctx.fillStyle = "rgba(226,232,240,0.5)";
+  ctx.textBaseline = "bottom";
+  ctx.fillText(dateStr, padX, y);
+  y -= 52; // 24px + margin
+
+  // 9. Title
+  ctx.font = "bold 64px sans-serif";
+  ctx.fillStyle = "#ffffff";
+  ctx.textBaseline = "bottom";
+  const titleLines = wrapText(ctx, title, W - padX * 2, 3);
+  const titleLineHeight = 70; // 64px * 1.1
+  for (let i = titleLines.length - 1; i >= 0; i--) {
+    ctx.fillText(titleLines[i], padX, y);
+    y -= titleLineHeight;
+  }
+  y -= 10;
+
+  // 10. Label
+  ctx.font = "20px monospace";
+  ctx.fillStyle = "rgba(96,165,250,0.7)";
+  ctx.letterSpacing = "6px";
+  ctx.textBaseline = "bottom";
+  ctx.fillText("✦ DREAM JOURNAL ✦", padX, y);
+
+  return canvas.toDataURL("image/png");
 };
 
 const ShareButton: React.FC<ShareButtonProps> = ({
@@ -56,11 +212,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
   const [isSharing, setIsSharing] = useState(false);
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [dreamImageBase64, setDreamImageBase64] = useState<string | null>(null);
-  const [logoBase64, setLogoBase64] = useState<string | null>(null);
-  const [preloading, setPreloading] = useState(false);
   const shareCardRef = useRef<DreamShareCardRef>(null);
-  const previewCardRef = useRef<HTMLDivElement>(null);
 
   const normalizedDream = {
     ...dream,
@@ -81,79 +233,25 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     ? new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(normalizedDream.date))
     : "";
 
-  const handleShareClick = async () => {
+  const handleShareClick = () => {
     if (isSharing) return;
-    setIsSharing(true);
-    setPreloading(true);
-    setDreamImageBase64(null);
-    setLogoBase64(null);
-
-    try {
-      setShowShareDialog(true);
-
-      const logoAbsoluteUrl = `${window.location.origin}${LOGO_PATH}`;
-      const promises: Promise<void>[] = [];
-
-      promises.push(
-        convertImageToDataUrl(logoAbsoluteUrl).then((data) => setLogoBase64(data))
-      );
-
-      if (dreamImageUrl) {
-        promises.push(
-          convertImageToDataUrl(dreamImageUrl).then((data) => setDreamImageBase64(data))
-        );
-      }
-
-      await Promise.all(promises);
-      toast.success("Share card generated!");
-    } catch (error) {
-      console.error("Share error:", error);
-      toast.error("Failed to generate share card");
-    } finally {
-      setIsSharing(false);
-      setPreloading(false);
-    }
+    setShowShareDialog(true);
   };
 
-  const allImagesReady = !!logoBase64 && (!dreamImageUrl || !!dreamImageBase64);
-
   const handleSaveCard = async () => {
-    if (!previewCardRef.current || isSaving) return;
+    if (isSaving) return;
     setIsSaving(true);
 
     try {
-      // Wait longer on mobile for images to fully paint into the DOM
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      await new Promise((r) => setTimeout(r, isMobile ? 1500 : 500));
-      
-      // Double-check all images in the card are loaded
-      if (previewCardRef.current) {
-        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
-        await Promise.all(imgs.map(img => 
-          img.complete ? Promise.resolve() : new Promise<void>(resolve => {
-            img.onload = () => resolve();
-            img.onerror = () => resolve();
-            setTimeout(resolve, 3000);
-          })
-        ));
-      }
+      const dataUrl = await renderShareCardToCanvas(
+        dreamImageUrl,
+        normalizedDream.title,
+        formattedDate,
+        excerpt,
+        LOGO_PATH
+      );
 
-      const dialogContent = previewCardRef.current.closest('[class*="DialogContent"], [role="dialog"]') as HTMLElement | null;
-      const originalOverflow = dialogContent?.style.overflow;
-      if (dialogContent) dialogContent.style.overflow = 'visible';
-
-      let dataUrl: string | null = null;
-      try {
-        dataUrl = await elementToPngBase64(previewCardRef.current);
-      } finally {
-        if (dialogContent && originalOverflow !== undefined) {
-          dialogContent.style.overflow = originalOverflow;
-        }
-      }
-
-      if (!dataUrl) throw new Error("Image capture failed");
-
-      const base64Data = extractBase64FromDataUrl(dataUrl);
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
       const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.png`;
 
       if (Capacitor.isNativePlatform()) {
@@ -168,7 +266,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           url: savedFile.uri,
           dialogTitle: 'Share Your Dream Card'
         });
-        toast.success("Share card ready to share!");
+        toast.success("Share card ready!");
       } else {
         const binaryString = atob(base64Data);
         const bytes = new Uint8Array(binaryString.length);
@@ -208,7 +306,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
         className={`flex items-center justify-center gap-2 ${className}`}
       >
         <Share size={18} />
-        <span>{isSharing ? "Generating..." : "Share"}</span>
+        <span>Share</span>
       </Button>
 
       <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
@@ -218,9 +316,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Preview card — mirrors DreamShareCard layout scaled down */}
+            {/* DOM preview (visual only) */}
             <div
-              ref={previewCardRef}
               className="w-full mx-auto overflow-hidden relative"
               style={{
                 aspectRatio: '9/16',
@@ -228,10 +325,9 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 background: '#060B18',
               }}
             >
-              {/* Full-bleed image or fallback */}
-              {dreamImageBase64 ? (
+              {dreamImageUrl ? (
                 <img
-                  src={dreamImageBase64}
+                  src={dreamImageUrl}
                   alt=""
                   style={{
                     position: 'absolute',
@@ -242,18 +338,12 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     display: 'block',
                   }}
                 />
-              ) : !dreamImageUrl ? (
+              ) : (
                 <div style={{
                   position: 'absolute',
                   inset: 0,
                   background: 'linear-gradient(165deg, #060B18 0%, #0C1629 40%, #111B33 100%)',
                 }}>
-                  <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    opacity: 0.06,
-                    backgroundImage: 'radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.5) 0%, transparent 100%), radial-gradient(1px 1px at 75% 15%, rgba(255,255,255,0.4) 0%, transparent 100%), radial-gradient(2px 2px at 50% 55%, rgba(96,165,250,0.6) 0%, transparent 100%)',
-                  }} />
                   <div style={{
                     position: 'absolute',
                     top: '30%',
@@ -265,9 +355,8 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                     filter: 'blur(40px)',
                   }} />
                 </div>
-              ) : null}
+              )}
 
-              {/* Bottom gradient */}
               <div style={{
                 position: 'absolute',
                 bottom: 0,
@@ -278,7 +367,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 pointerEvents: 'none',
               }} />
 
-              {/* Text overlay with subtle frosted glass */}
               <div style={{
                 position: 'absolute',
                 bottom: 0,
@@ -288,9 +376,6 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(6,11,24,0.5) 20%, rgba(6,11,24,0.8) 100%)',
-                backdropFilter: 'blur(2px)',
-                WebkitBackdropFilter: 'blur(2px)',
               }}>
                 <div style={{
                   fontSize: '9px',
@@ -339,25 +424,23 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                   {excerpt}
                 </p>
 
-                {logoBase64 && (
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
-                    <img
-                      src={logoBase64}
-                      alt="Lucid Repo"
-                      style={{ width: '65%', height: 'auto', objectFit: 'contain', display: 'block' }}
-                    />
-                  </div>
-                )}
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <img
+                    src={LOGO_PATH}
+                    alt="Lucid Repo"
+                    style={{ width: '65%', height: 'auto', objectFit: 'contain', display: 'block' }}
+                  />
+                </div>
               </div>
             </div>
 
             <Button
               onClick={handleSaveCard}
-              disabled={isSaving || !allImagesReady || preloading}
+              disabled={isSaving}
               className="w-full flex items-center justify-center gap-2"
             >
               <Save size={18} />
-              <span>{isSaving ? "Saving..." : !allImagesReady ? "Loading image..." : "Save"}</span>
+              <span>{isSaving ? "Saving..." : "Save"}</span>
             </Button>
           </div>
         </DialogContent>
