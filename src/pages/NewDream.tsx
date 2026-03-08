@@ -218,7 +218,7 @@ const NewDream = () => {
               placeholder="Close your eyes and let the dream flow back to you..."
               value={formData.content}
               onChange={handleChange}
-              className="resize-none min-h-[300px] text-base leading-relaxed bg-transparent border-border/20 focus:border-primary/40 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-shadow"
+              className="resize-none min-h-[300px] text-base leading-relaxed bg-transparent border-blue-500 focus:border-blue-400 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-shadow"
               maxLength={CHARACTER_LIMIT}
             />
           </div>
