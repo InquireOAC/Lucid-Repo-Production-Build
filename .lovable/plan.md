@@ -1,40 +1,59 @@
 
 
-# Android Subscription Support
+## Fix: Replace DOM Screenshot with Direct Canvas Rendering
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+### Why It Keeps Failing
 
-## Changes Needed
+The current approach uses `html2canvas` / `html-to-image` to screenshot a DOM element. On iOS WebKit (especially in Capacitor), this is fundamentally broken for cross-origin images:
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+1. `html2canvas` clones the DOM and re-renders it — cross-origin images get blocked or produce blank canvases
+2. Even pre-converting to base64 via canvas fails because iOS taints the canvas for Supabase storage URLs
+3. `html-to-image` uses SVG `foreignObject` which has size limits on mobile Safari
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+No amount of retries, delays, or CORS headers fixes this reliably. It's a WebKit platform limitation.
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### The Fix: Draw Directly on Canvas
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+Instead of rendering HTML and screenshotting it, **compose the share card image entirely using the Canvas 2D API**:
 
-## Files to Modify
+1. Create a 1080x1920 canvas
+2. Load the dream image via `new Image()` and `drawImage()` it as the background
+3. Draw gradient overlays using `createLinearGradient()`
+4. Draw text (title, date, excerpt, label) using `fillText()` with proper fonts
+5. Load and draw the logo image
+6. Export via `canvas.toDataURL('image/png')`
+
+This completely bypasses `html2canvas`, `html-to-image`, and all DOM-to-image conversion. Canvas `drawImage()` with loaded `Image` objects works reliably on iOS even for cross-origin images loaded into memory.
+
+### Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+| `src/components/share/ShareButton.tsx` | Replace the preview-card DOM capture approach with a `renderShareCardToCanvas()` function that draws everything programmatically on a canvas. The preview dialog still shows the DOM-based preview (for visual feedback), but the Save button calls the canvas renderer directly. |
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+### How It Works
+
+```text
+User clicks Share
+  → Dialog opens with DOM-based preview (visual only)
+  → Images preloaded into Image objects
+
+User clicks Save
+  → Create offscreen 1080x1920 canvas
+  → drawImage(dreamImage, ...) as full-bleed background
+  → Draw gradient overlay with createLinearGradient
+  → fillText() for title, date, excerpt, label
+  → drawImage(logoImage, ...) for branding
+  → canvas.toDataURL('image/png')
+  → Save/share via Capacitor or download
+```
+
+### Key Details
+
+- The DOM preview card stays as-is for user feedback — it doesn't need to be pixel-perfect since it's just a preview
+- The actual saved image is rendered entirely via Canvas 2D, which is reliable across all platforms
+- Image loading uses `img.onload` promises with error fallbacks
+- If dream image fails to load (CORS), the canvas draws the cosmic gradient fallback instead
+- Text wrapping for the excerpt is handled manually with `measureText()` and line splitting
+- No dependency on `html2canvas` or `html-to-image` for this flow
 
