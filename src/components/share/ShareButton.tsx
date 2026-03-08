@@ -252,21 +252,19 @@ const ShareButton: React.FC<ShareButtonProps> = ({
                 pointerEvents: 'none',
               }} />
 
-              {/* Text overlay with frosted glass */}
+              {/* Text overlay with subtle frosted glass */}
               <div style={{
                 position: 'absolute',
                 bottom: 0,
                 left: 0,
                 right: 0,
-                padding: '24px 20px 24px 20px',
+                padding: '16px 20px 24px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
-                minHeight: '50%',
-                background: 'linear-gradient(to bottom, transparent 0%, rgba(6,11,24,0.4) 15%, rgba(6,11,24,0.7) 40%, rgba(6,11,24,0.88) 100%)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                borderTop: '1px solid rgba(96,165,250,0.12)',
+                background: 'linear-gradient(to bottom, transparent 0%, rgba(6,11,24,0.5) 20%, rgba(6,11,24,0.8) 100%)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
               }}>
                 <div style={{
                   fontSize: '9px',
