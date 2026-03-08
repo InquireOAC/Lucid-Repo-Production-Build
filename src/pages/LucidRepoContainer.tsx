@@ -192,6 +192,19 @@ const LucidRepoContainer = () => {
             </DiscoveryRow>
           )}
 
+          {/* Dream Series */}
+          {!searchQuery && publicSeries.length > 0 && (
+            <DiscoveryRow title="📚 Dream Series">
+              {publicSeries.map(s => (
+                <DiscoverySeriesCard
+                  key={s.id}
+                  series={s}
+                  onClick={setSelectedSeries}
+                />
+              ))}
+            </DiscoveryRow>
+          )}
+
           {/* Tag-based sections */}
           {!searchQuery && tagSections.map(section => (
             <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
