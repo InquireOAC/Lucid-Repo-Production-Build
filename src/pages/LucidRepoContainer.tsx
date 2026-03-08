@@ -220,6 +220,16 @@ const LucidRepoContainer = () => {
         />
       )}
 
+      {selectedSeries && (
+        <SeriesDetailPage
+          series={selectedSeries}
+          open={!!selectedSeries}
+          onClose={() => setSelectedSeries(null)}
+          isOwner={user?.id === selectedSeries.user_id}
+          onOpenDream={handleOpenDream}
+        />
+      )}
+
       <AuthDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen} />
     </PageTransition>
   );
