@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Heart, Eye } from "lucide-react";
+import { Heart, Eye, Headphones } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
@@ -68,6 +68,14 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
           <div className="absolute top-1.5 left-1.5">
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/90 text-primary-foreground">
               LUCID
+            </span>
+          </div>
+        )}
+
+        {dream.audio_url && (
+          <div className="absolute top-1.5 right-1.5">
+            <span className="flex items-center justify-center h-5 w-5 rounded-full bg-black/60 text-white">
+              <Headphones className="h-2.5 w-2.5" />
             </span>
           </div>
         )}

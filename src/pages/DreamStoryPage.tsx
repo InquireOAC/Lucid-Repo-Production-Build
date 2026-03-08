@@ -12,7 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2 } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones } from "lucide-react";
+import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
@@ -254,6 +255,17 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           </span>
         </div>
       </div>
+
+      {/* Audio Player */}
+      {dream.audio_url && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Headphones className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Listen to this dream</span>
+          </div>
+          <AudioPlayer audioUrl={dream.audio_url} title={dream.title} compact />
+        </div>
+      )}
 
       {/* Story Content */}
       <div className="px-4">
