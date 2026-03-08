@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +18,6 @@ import { toast } from "sonner";
 import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const CHARACTER_LIMIT = 3000;
 
@@ -252,50 +252,109 @@ const NewDream = () => {
         </div>
 
         {/* Dream Tools */}
-        <div className="space-y-3">
+        <motion.div
+          className="space-y-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
           <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dream Tools</Label>
 
-          <Collapsible open={analysisOpen} onOpenChange={setAnalysisOpen}>
-            <CollapsibleTrigger className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+          {/* AI Analysis */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => setAnalysisOpen(!analysisOpen)}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+            >
+              <motion.div
+                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                animate={{ rotate: analysisOpen ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <Sparkles className="h-4 w-4 text-primary" />
-              </div>
+              </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">AI Analysis</p>
                 <p className="text-xs text-muted-foreground">Get insights about your dream</p>
               </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3">
-              <DreamAnalysis
-                dreamContent={formData.content}
-                existingAnalysis={formData.analysis}
-                onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))}
-              />
-            </CollapsibleContent>
-          </Collapsible>
+              <motion.div
+                animate={{ rotate: analysisOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </button>
+          </motion.div>
+          <AnimatePresence>
+            {analysisOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2">
+                  <DreamAnalysis
+                    dreamContent={formData.content}
+                    existingAnalysis={formData.analysis}
+                    onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-          <Collapsible open={imageOpen} onOpenChange={setImageOpen}>
-            <CollapsibleTrigger className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+          {/* Dream Image */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => setImageOpen(!imageOpen)}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+            >
+              <motion.div
+                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                animate={{ rotate: imageOpen ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
                 <ImageIcon className="h-4 w-4 text-primary" />
-              </div>
+              </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">Dream Image</p>
                 <p className="text-xs text-muted-foreground">Generate art from your dream</p>
               </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-3">
-              <DreamImageGenerator
-                dreamContent={formData.content}
-                existingImage={formData.generatedImage}
-                existingPrompt={formData.imagePrompt}
-                onImageGenerated={(image, prompt) =>
-                  setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
-                }
-              />
-            </CollapsibleContent>
-          </Collapsible>
-        </div>
+              <motion.div
+                animate={{ rotate: imageOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </button>
+          </motion.div>
+          <AnimatePresence>
+            {imageOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2">
+                  <DreamImageGenerator
+                    dreamContent={formData.content}
+                    existingImage={formData.generatedImage}
+                    existingPrompt={formData.imagePrompt}
+                    onImageGenerated={(image, prompt) =>
+                      setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
+                    }
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* Fixed bottom save */}
