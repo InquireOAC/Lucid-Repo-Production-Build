@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamEntry } from "@/types/dream";
 import { useDreamLikes } from "@/hooks/useDreamLikes";
-import { useFollowing } from "@/hooks/useFollowing";
 import DreamComments from "@/components/DreamComments";
 import ShareButton from "@/components/share/ShareButton";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
@@ -12,12 +11,29 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock } from "lucide-react";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
+import { toast } from "sonner";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -46,8 +62,10 @@ const DreamStoryPage: React.FC = () => {
         return;
       }
 
-      // Increment view count
-      await supabase.from("dream_entries").update({ view_count: (data.view_count || 0) + 1 }).eq("id", dreamId);
+      // Only increment view count if not the owner
+      if (!user || user.id !== data.user_id) {
+        await supabase.from("dream_entries").update({ view_count: (data.view_count || 0) + 1 }).eq("id", dreamId);
+      }
 
       const { count: likeCount } = await supabase
         .from("dream_likes")
@@ -121,6 +139,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const { user } = useAuth();
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
   const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const profile = dream.profiles || {} as any;
   const username = profile.username;
   const displayName = profile.display_name || username || "Anonymous";
@@ -146,6 +165,33 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
     ? format(new Date(dream.date), "MMMM d, yyyy")
     : "";
 
+  const handleTogglePublic = async () => {
+    const newValue = !dream.is_public;
+    const { error } = await supabase
+      .from("dream_entries")
+      .update({ is_public: newValue })
+      .eq("id", dream.id);
+    if (error) {
+      toast.error("Failed to update visibility");
+      return;
+    }
+    setDream(prev => prev ? { ...prev, is_public: newValue, isPublic: newValue } : null);
+    toast.success(newValue ? "Dream is now public" : "Dream is now private");
+  };
+
+  const handleDelete = async () => {
+    const { error } = await supabase
+      .from("dream_entries")
+      .delete()
+      .eq("id", dream.id);
+    if (error) {
+      toast.error("Failed to delete dream");
+      return;
+    }
+    toast.success("Dream deleted");
+    navigate("/journal", { replace: true });
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -158,7 +204,41 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
-        <ShareButton dream={dream} variant="ghost" size="sm" />
+        <div className="flex items-center gap-1">
+          <ShareButton dream={dream} variant="ghost" size="sm" />
+          {isOwner && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => navigate(`/journal`, { state: { editDreamId: dream.id } })}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleTogglePublic}>
+                  {dream.is_public ? (
+                    <>
+                      <Lock className="h-4 w-4 mr-2" />
+                      Make Private
+                    </>
+                  ) : (
+                    <>
+                      <Globe className="h-4 w-4 mr-2" />
+                      Make Public
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setDeleteDialogOpen(true)} className="text-destructive focus:text-destructive">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       {/* Hero Image */}
@@ -271,7 +351,6 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       <div className="px-4">
         <div className="border-t border-border/30 pt-6">
           {sectionImages.length > 0 ? (
-            // Render interleaved sections
             <div className="space-y-8">
               {sectionImages.map((sec, i) => (
                 <div key={i}>
@@ -297,7 +376,6 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
               ))}
             </div>
           ) : (
-            // Plain text
             <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-serif">
               {dream.content}
             </p>
@@ -362,6 +440,24 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           <DreamComments dreamId={dream.id} onCommentCountChange={setCommentCount} />
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this dream from your journal. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 };

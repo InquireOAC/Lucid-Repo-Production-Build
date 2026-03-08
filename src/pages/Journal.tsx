@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
-import DreamDetail from "@/components/DreamDetail";
 import JournalHeader from "@/components/journal/JournalHeader";
 import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
@@ -12,6 +12,7 @@ import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
 
 const Journal = () => {
+  const navigate = useNavigate();
   const {
     entries,
     filteredDreams,
@@ -90,45 +91,6 @@ const Journal = () => {
     setSelectedDream(dream);
     setIsEditingDream(true);
   };
-  
-  const handleDreamDetailUpdate = (id: string, updates: Partial<DreamEntry>) => {
-    if (!selectedDream) return;
-    
-    // Skip DB call for comment-count-only updates (just update local state)
-    const isCommentCountOnly = Object.keys(updates).every(k => 
-      k === 'comment_count' || k === 'commentCount'
-    );
-    if (isCommentCountOnly) return;
-
-    // Only pass actually changed fields
-    const dreamPayload: Record<string, any> = {};
-    if (updates.title !== undefined) dreamPayload.title = updates.title;
-    if (updates.content !== undefined) dreamPayload.content = updates.content;
-    if (updates.tags !== undefined) dreamPayload.tags = updates.tags;
-    if (updates.lucid !== undefined) dreamPayload.lucid = updates.lucid;
-    if (updates.mood !== undefined) dreamPayload.mood = updates.mood;
-    if (updates.analysis !== undefined) dreamPayload.analysis = updates.analysis;
-    if (updates.generatedImage !== undefined) dreamPayload.generatedImage = updates.generatedImage;
-    if (updates.imagePrompt !== undefined) dreamPayload.imagePrompt = updates.imagePrompt;
-    if (updates.is_public !== undefined || updates.isPublic !== undefined) {
-      dreamPayload.is_public = updates.is_public ?? updates.isPublic;
-    }
-    if (updates.audio_url !== undefined || updates.audioUrl !== undefined) {
-      dreamPayload.audioUrl = updates.audio_url ?? updates.audioUrl;
-    }
-
-    if (Object.keys(dreamPayload).length === 0) return;
-
-    // Fill required fields for handleEditDream
-    handleEditDream({
-      title: dreamPayload.title ?? selectedDream.title,
-      content: dreamPayload.content ?? selectedDream.content,
-      tags: dreamPayload.tags ?? selectedDream.tags ?? [],
-      lucid: dreamPayload.lucid ?? selectedDream.lucid,
-      mood: dreamPayload.mood ?? selectedDream.mood ?? "Neutral",
-      ...dreamPayload,
-    }, id);
-  };
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top px-4 pb-4 md:px-6">
@@ -148,7 +110,7 @@ const Journal = () => {
           <DreamsList
             dreams={filteredDreams}
             tags={tags}
-            onSelect={setSelectedDream}
+            onSelect={(dream) => navigate(`/dream/${dream.id}`)}
             onEdit={handleOpenEditDialog}
             onTogglePublic={handleTogglePublic}
             onDelete={(dreamId) => setDreamToDelete(dreamId)}
@@ -190,24 +152,6 @@ const Journal = () => {
         />
       )}
 
-      {selectedDream && !isEditingDream && (
-        <DreamDetail
-          dream={selectedDream}
-          tags={tags}
-          onClose={() => {
-            setSelectedDream(null);
-            if (user) {
-              setTimeout(memoizedSyncDreams, 300);
-            }
-          }}
-          onUpdate={handleDreamDetailUpdate}
-          onDelete={(id) => {
-            setDreamToDelete(id);
-            setSelectedDream(null);
-          }}
-          isAuthenticated={!!user}
-        />
-      )}
 
       <DeleteDreamConfirmationDialog
         isOpen={!!dreamToDelete}

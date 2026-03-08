@@ -18,6 +18,7 @@ import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import Explore from './pages/Explore';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
+import DreamStoryPage from './pages/DreamStoryPage';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import MainLayout from './layouts/MainLayout';
@@ -52,6 +53,7 @@ function App() {
                   <Route path="explore" element={<Explore />} />
                   <Route path="lucid-repo" element={<LucidRepoContainer />} />
                   <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
+                  <Route path="dream/:dreamId" element={<DreamStoryPage />} />
                   <Route path="chat" element={<Chat />} />
                   <Route path="notifications" element={<Notifications />} />
                   <Route path="insights" element={<Insights />} />
