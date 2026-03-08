@@ -17,7 +17,7 @@ import Chat from './pages/Chat';
 import Learn from './pages/Learn';
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
-import Explore from './pages/Explore';
+import DreamConnections from './pages/DreamConnections';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import DreamStoryPage from './pages/DreamStoryPage';
 import NotFound from './pages/NotFound';
