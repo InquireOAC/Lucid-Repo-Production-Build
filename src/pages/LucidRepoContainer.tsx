@@ -20,6 +20,18 @@ import { DreamEntry } from "@/types/dream";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LucidRepoContainer = () => {
+  const { dreamId } = useParams<{ dreamId?: string }>();
+  const { user } = useAuth();
+
+  // If a dreamId is present, render the full-page story reader
+  if (dreamId) {
+    return <DreamStoryPage />;
+  }
+
+  return <LucidRepoDiscovery />;
+};
+
+const LucidRepoDiscovery = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
