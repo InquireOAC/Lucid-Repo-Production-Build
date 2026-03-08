@@ -275,7 +275,7 @@ const NewDream = () => {
           </Collapsible>
 
           <Collapsible open={imageOpen} onOpenChange={setImageOpen}>
-            <CollapsibleTrigger className="w-full flex items-center gap-3 p-4 rounded-xl border border-border/30 bg-muted/5 hover:bg-muted/10 transition-colors text-left">
+            <CollapsibleTrigger className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left">
               <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                 <ImageIcon className="h-4 w-4 text-primary" />
               </div>
