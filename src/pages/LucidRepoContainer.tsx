@@ -207,9 +207,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* From People You Follow */}
-          {user && filterBySearch(following).length > 0 && (
+          {user && filterDreams(following).length > 0 && (
             <DiscoveryRow title="📖 From People You Follow">
-              {filterBySearch(following).map(dream => (
+              {filterDreams(following).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
@@ -222,9 +222,9 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* New Releases */}
-          {filterBySearch(newReleases).length > 0 && (
+          {filterDreams(newReleases).length > 0 && (
             <DiscoveryRow title="✨ New Releases">
-              {filterBySearch(newReleases).map(dream => (
+              {filterDreams(newReleases).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
                   dream={dream}
