@@ -191,24 +191,6 @@ const Journal = () => {
         />
       )}
 
-      {selectedDream && !isEditingDream && (
-        <DreamDetail
-          dream={selectedDream}
-          tags={tags}
-          onClose={() => {
-            setSelectedDream(null);
-            if (user) {
-              setTimeout(memoizedSyncDreams, 300);
-            }
-          }}
-          onUpdate={handleDreamDetailUpdate}
-          onDelete={(id) => {
-            setDreamToDelete(id);
-            setSelectedDream(null);
-          }}
-          isAuthenticated={!!user}
-        />
-      )}
 
       <DeleteDreamConfirmationDialog
         isOpen={!!dreamToDelete}
