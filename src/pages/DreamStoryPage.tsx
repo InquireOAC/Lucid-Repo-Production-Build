@@ -120,6 +120,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const navigate = useNavigate();
   const { user } = useAuth();
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
+  const [analysisOpen, setAnalysisOpen] = useState(false);
   const profile = dream.profiles || {} as any;
   const username = profile.username;
   const displayName = profile.display_name || username || "Anonymous";
