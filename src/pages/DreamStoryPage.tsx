@@ -256,6 +256,17 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
       </div>
 
+      {/* Audio Player */}
+      {dream.audio_url && (
+        <div className="px-4 pb-2">
+          <div className="flex items-center gap-2 mb-2">
+            <Headphones className="h-4 w-4 text-primary" />
+            <span className="text-xs font-medium text-muted-foreground">Listen to this dream</span>
+          </div>
+          <AudioPlayer audioUrl={dream.audio_url} title={dream.title} compact />
+        </div>
+      )}
+
       {/* Story Content */}
       <div className="px-4">
         <div className="border-t border-border/30 pt-6">

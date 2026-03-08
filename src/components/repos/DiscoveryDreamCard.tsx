@@ -71,6 +71,14 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
             </span>
           </div>
         )}
+
+        {dream.audio_url && (
+          <div className="absolute top-1.5 right-1.5">
+            <span className="flex items-center justify-center h-5 w-5 rounded-full bg-black/60 text-white">
+              <Headphones className="h-2.5 w-2.5" />
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Author */}
