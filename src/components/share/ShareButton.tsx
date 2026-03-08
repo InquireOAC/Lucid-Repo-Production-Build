@@ -110,7 +110,21 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     setIsSaving(true);
 
     try {
-      await new Promise((r) => setTimeout(r, 500));
+      // Wait longer on mobile for images to fully paint into the DOM
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      await new Promise((r) => setTimeout(r, isMobile ? 1500 : 500));
+      
+      // Double-check all images in the card are loaded
+      if (previewCardRef.current) {
+        const imgs = Array.from(previewCardRef.current.querySelectorAll('img'));
+        await Promise.all(imgs.map(img => 
+          img.complete ? Promise.resolve() : new Promise<void>(resolve => {
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            setTimeout(resolve, 3000);
+          })
+        ));
+      }
 
       const dialogContent = previewCardRef.current.closest('[class*="DialogContent"], [role="dialog"]') as HTMLElement | null;
       const originalOverflow = dialogContent?.style.overflow;
