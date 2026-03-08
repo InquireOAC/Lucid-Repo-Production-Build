@@ -12,7 +12,7 @@ import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
 
 const Journal = () => {
-  const {
+  const navigate = useNavigate();
     entries,
     filteredDreams,
     tags,
