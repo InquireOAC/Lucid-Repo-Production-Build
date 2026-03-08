@@ -29,7 +29,7 @@ const LucidRepoHeader = ({
   onClearTags,
 }: LucidRepoHeaderProps) => {
   return (
-    <div className="mb-3 pt-3 space-y-2.5">
+    <div className="mb-3 pt-3 space-y-2.5 px-4">
       {/* Tabs Row */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full bg-muted/20 backdrop-blur-sm rounded-xl p-0.5 h-9">
