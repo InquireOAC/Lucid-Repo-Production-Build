@@ -1,98 +1,40 @@
 
 
-## Plan: Multi-Character Dream Avatar Builder
+# Android Subscription Support
 
-### Overview
-Transform the single-avatar Dream Avatar page into a multi-character builder with a scrollable carousel, per-character reference photos, and add/edit modes.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-### 1. New Database Table: `dream_characters`
+## Changes Needed
 
-Create a new table to store multiple characters per user. The existing `ai_context` table stays for backward compatibility (visual fingerprint usage in edge functions).
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-```sql
-CREATE TABLE public.dream_characters (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL,
-  name text,
-  photo_url text,          -- generated avatar
-  face_photo_url text,     -- reference face
-  outfit_photo_url text,   -- reference outfit
-  accessory_photo_url text,-- reference accessory
-  avatar_style text DEFAULT 'digital_art',
-  visual_fingerprint text,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now()
-);
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-ALTER TABLE public.dream_characters ENABLE ROW LEVEL SECURITY;
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
--- RLS policies (own data only)
-CREATE POLICY "Users can view own characters" ON public.dream_characters FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can insert own characters" ON public.dream_characters FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own characters" ON public.dream_characters FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own characters" ON public.dream_characters FOR DELETE USING (auth.uid() = user_id);
-```
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-### 2. Rewrite AIContextDialog (`src/components/profile/AIContextDialog.tsx`)
+## Files to Modify
 
-**New UI layout:**
-
-```text
-┌──────────────────────────────────────┐
-│  ← Dream Avatar                      │
-├──────────────────────────────────────┤
-│                                      │
-│   ○ ○ [●] ○  [+]    ← carousel      │
-│   (character circles, scrollable)    │
-│                                      │
-│   "Character Name"                   │
-│                                      │
-│   [Edit Avatar]  [Delete]            │
-│                                      │
-│  ─── When editing/adding: ───────── │
-│                                      │
-│   Reference Photos                   │
-│   [ Face ] [ Outfit ] [ Accessory ]  │
-│                                      │
-│   Avatar Style (horizontal scroll)   │
-│                                      │
-│   Name input                         │
-│                                      │
-│   [Generate Character]               │
-│   [Save]  [Cancel]                   │
-└──────────────────────────────────────┘
-```
-
-**Behavior:**
-- On open, fetch all `dream_characters` for the user
-- Display characters in a horizontal scrollable carousel (circles with generated avatar images)
-- Last item in carousel is a "+" button to add a new character
-- Tapping "+" enters **add mode**: blank form (face/outfit/accessory uploads, style picker, name input)
-- Tapping "Edit Avatar" on the selected character enters **edit mode**: pre-populates form with that character's data
-- Reference photos section only visible in add/edit mode
-- Save in add mode: INSERT into `dream_characters`
-- Save in edit mode: UPDATE existing character
-- Also sync the selected/primary character's `photo_url` to `ai_context` so existing features (profile avatar picker, image generation) continue working
-- Delete button removes a character
-
-### 3. Update EditProfileDialog (`src/components/profile/EditProfileDialog.tsx`)
-
-- Change the Dream Avatar option to query `dream_characters` instead of `ai_context` for the avatar URL
-- Show the first character's photo_url (or let user pick which character to use as profile pic)
-
-### 4. Update edge function reference (`analyze-character-image`)
-
-- No changes needed immediately; we'll sync the active character to `ai_context` on save so the fingerprint flow continues working
-
-### 5. Update aiContextUtils (`src/utils/aiContextUtils.ts`)
-
-- Keep as-is since `ai_context` will still be synced with the primary/active character
-
-### Summary of changes
-
-| File | Action |
+| File | Change |
 |------|--------|
-| Migration SQL | Create `dream_characters` table with RLS |
-| `src/components/profile/AIContextDialog.tsx` | Full rewrite: carousel, add/edit modes, multi-character CRUD |
-| `src/components/profile/EditProfileDialog.tsx` | Query `dream_characters` for avatar options instead of just `ai_context` |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 

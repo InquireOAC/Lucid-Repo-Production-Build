@@ -531,6 +531,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_characters: {
+        Row: {
+          accessory_photo_url: string | null
+          avatar_style: string | null
+          created_at: string
+          face_photo_url: string | null
+          id: string
+          name: string | null
+          outfit_photo_url: string | null
+          photo_url: string | null
+          updated_at: string
+          user_id: string
+          visual_fingerprint: string | null
+        }
+        Insert: {
+          accessory_photo_url?: string | null
+          avatar_style?: string | null
+          created_at?: string
+          face_photo_url?: string | null
+          id?: string
+          name?: string | null
+          outfit_photo_url?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id: string
+          visual_fingerprint?: string | null
+        }
+        Update: {
+          accessory_photo_url?: string | null
+          avatar_style?: string | null
+          created_at?: string
+          face_photo_url?: string | null
+          id?: string
+          name?: string | null
+          outfit_photo_url?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          visual_fingerprint?: string | null
+        }
+        Relationships: []
+      }
       dream_chat_messages: {
         Row: {
           content: string
