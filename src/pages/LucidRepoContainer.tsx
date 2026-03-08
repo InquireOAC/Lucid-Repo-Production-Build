@@ -237,7 +237,7 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Dream Series */}
-          {!searchQuery && publicSeries.length > 0 && (
+          {!searchQuery && activeFilter === "All" && publicSeries.length > 0 && (
             <DiscoveryRow title="📚 Dream Series">
               {publicSeries.map(s => (
                 <DiscoverySeriesCard
@@ -250,7 +250,7 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Tag-based sections */}
-          {!searchQuery && tagSections.map(section => (
+          {!searchQuery && activeFilter === "All" && tagSections.map(section => (
             <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
               {section.dreams.map(dream => (
                 <DiscoveryDreamCard
