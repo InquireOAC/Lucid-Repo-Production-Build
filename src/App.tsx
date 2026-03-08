@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Index from './pages/Index';
 import Journal from './pages/Journal';
 import NewDream from './pages/NewDream';
+import EditDream from './pages/EditDream';
 import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import LucidRepoContainer from './pages/LucidRepo';
