@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
 import { Heart, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -6,17 +7,17 @@ import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface DiscoveryDreamCardProps {
   dream: DreamEntry;
-  onOpenDream: (dream: DreamEntry) => void;
+  onOpenDream?: (dream: DreamEntry) => void;
   onLike: (dreamId: string) => void;
   onUserClick: (username: string | undefined) => void;
 }
 
 const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
   dream,
-  onOpenDream,
   onLike,
   onUserClick,
 }) => {
+  const navigate = useNavigate();
   const imageUrl = dream.generatedImage || dream.image_url;
   const profile = dream.profiles || {} as any;
   const username = profile.username;
@@ -26,7 +27,7 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
   return (
     <div
       className="flex-shrink-0 w-[140px] cursor-pointer group"
-      onClick={() => onOpenDream(dream)}
+      onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
       {/* Cover */}
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted/30 mb-2">

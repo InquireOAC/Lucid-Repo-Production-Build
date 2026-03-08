@@ -662,6 +662,7 @@ export type Database = {
           like_count: number | null
           lucid: boolean | null
           mood: string | null
+          section_images: Json | null
           shamanic_analysis: string | null
           tags: string[] | null
           title: string
@@ -689,6 +690,7 @@ export type Database = {
           like_count?: number | null
           lucid?: boolean | null
           mood?: string | null
+          section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
           title: string
@@ -716,6 +718,7 @@ export type Database = {
           like_count?: number | null
           lucid?: boolean | null
           mood?: string | null
+          section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
           title?: string

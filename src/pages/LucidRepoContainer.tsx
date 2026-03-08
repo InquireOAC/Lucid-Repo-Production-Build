@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
 import AuthDialog from "@/components/repos/AuthDialog";
@@ -7,6 +8,7 @@ import DiscoveryRow from "@/components/repos/DiscoveryRow";
 import DiscoveryDreamCard from "@/components/repos/DiscoveryDreamCard";
 import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
 import SeriesDetailPage from "@/components/series/SeriesDetailPage";
+import DreamStoryPage from "@/pages/DreamStoryPage";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
@@ -18,6 +20,18 @@ import { DreamEntry } from "@/types/dream";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const LucidRepoContainer = () => {
+  const { dreamId } = useParams<{ dreamId?: string }>();
+  const { user } = useAuth();
+
+  // If a dreamId is present, render the full-page story reader
+  if (dreamId) {
+    return <DreamStoryPage />;
+  }
+
+  return <LucidRepoDiscovery />;
+};
+
+const LucidRepoDiscovery = () => {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
@@ -222,16 +236,6 @@ const LucidRepoContainer = () => {
         </>
       )}
 
-      {selectedDream && (
-        <DreamDetailWrapper
-          selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream}
-          tags={publicTags}
-          onClose={handleCloseDream}
-          onUpdate={handleDreamUpdate}
-          isAuthenticated={!!user}
-          onLike={() => handleDreamLike(selectedDream.id)}
-        />
-      )}
 
       {selectedSeries && (
         <SeriesDetailPage
