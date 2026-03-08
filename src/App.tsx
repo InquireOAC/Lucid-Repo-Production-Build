@@ -47,6 +47,7 @@ function App() {
                   <Route index element={<Index />} />
                   <Route path="journal" element={<Journal />} />
                   <Route path="journal/new" element={<NewDream />} />
+                  <Route path="journal/edit/:dreamId" element={<EditDream />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="profile/:userId" element={<Profile />} />
                   <Route path="profile/:username" element={<Profile />} />

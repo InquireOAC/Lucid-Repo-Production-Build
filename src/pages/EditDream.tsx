@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +21,11 @@ import { format } from "date-fns";
 
 const CHARACTER_LIMIT = 3000;
 
-const NewDream = () => {
+const EditDream = () => {
   const navigate = useNavigate();
+  const { dreamId } = useParams<{ dreamId: string }>();
   const { user } = useAuth();
-  const { tags, handleAddDream, isSubmitting } = useDreamJournal();
+  const { tags, entries, handleEditDream, isSubmitting } = useDreamJournal();
   const { uploadAudio, isUploading } = useAudioUpload();
 
   const [formData, setFormData] = useState({
@@ -44,6 +45,29 @@ const NewDream = () => {
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  // Pre-populate from existing dream
+  useEffect(() => {
+    if (!dreamId || loaded) return;
+    const dream = entries.find((e) => e.id === dreamId);
+    if (!dream) return;
+    setFormData({
+      title: dream.title || "",
+      content: dream.content || "",
+      date: dream.date || new Date().toISOString().split("T")[0],
+      tags: dream.tags || [],
+      mood: dream.mood || "Neutral",
+      analysis: dream.analysis || "",
+      generatedImage: dream.generatedImage || dream.image_url || "",
+      imagePrompt: dream.imagePrompt || dream.image_prompt || "",
+      lucid: dream.lucid || false,
+    });
+    setAudioUrl(dream.audioUrl || dream.audio_url || "");
+    if (dream.analysis) setAnalysisOpen(true);
+    if (dream.generatedImage || dream.image_url) setImageOpen(true);
+    setLoaded(true);
+  }, [dreamId, entries, loaded]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -72,7 +96,7 @@ const NewDream = () => {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!user) { navigate("/auth"); return; }
+    if (!user || !dreamId) { navigate("/auth"); return; }
     if (!formData.title.trim()) { toast.error("Please add a title for your dream"); return; }
 
     const textToCheck = `${formData.title} ${formData.content}`;
@@ -80,40 +104,50 @@ const NewDream = () => {
 
     let uploadedAudioUrl = audioUrl;
     if (recordedAudio) {
-      const uploaded = await uploadAudio(recordedAudio, "new");
+      const uploaded = await uploadAudio(recordedAudio, dreamId);
       if (uploaded) { uploadedAudioUrl = uploaded; }
       else { toast.error("Failed to upload audio recording"); return; }
     }
 
     try {
-      await handleAddDream({
-        title: formData.title,
-        content: formData.content,
-        tags: formData.tags,
-        lucid: formData.lucid,
-        mood: formData.mood,
-        analysis: formData.analysis,
-        generatedImage: formData.generatedImage,
-        imagePrompt: formData.imagePrompt,
-        audioUrl: uploadedAudioUrl || undefined,
-      });
-      navigate("/");
+      await handleEditDream(
+        {
+          title: formData.title,
+          content: formData.content,
+          tags: formData.tags,
+          lucid: formData.lucid,
+          mood: formData.mood,
+          analysis: formData.analysis,
+          generatedImage: formData.generatedImage,
+          imagePrompt: formData.imagePrompt,
+          audioUrl: uploadedAudioUrl || undefined,
+        },
+        dreamId
+      );
+      navigate("/journal");
     } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("Failed to save dream");
+      console.error("Edit error:", error);
+      toast.error("Failed to save changes");
     }
   };
 
-  const dateDisplay = format(new Date(formData.date), "MMM d, yyyy");
+  if (!loaded && entries.length > 0 && dreamId && !entries.find((e) => e.id === dreamId)) {
+    return (
+      <div className="min-h-screen starry-background flex items-center justify-center">
+        <p className="text-muted-foreground">Dream not found</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen starry-background animate-page-reveal">
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b border-border/30 pt-safe-top">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-muted-foreground">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/journal")} className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
+          <span className="text-sm font-medium text-muted-foreground">Edit Dream</span>
           <Button
             variant="ghost"
             size="sm"
@@ -224,7 +258,7 @@ const NewDream = () => {
           </div>
         )}
 
-        {/* Tags - horizontal scroll */}
+        {/* Tags */}
         <div className="space-y-2">
           <Label className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
             <Tag className="h-3.5 w-3.5" />
@@ -365,7 +399,7 @@ const NewDream = () => {
             onClick={() => handleSubmit()}
             disabled={isSubmitting || isUploading || !formData.title.trim()}
           >
-            {isSubmitting ? "Saving..." : "Save Dream"}
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
         </div>
       </div>
@@ -373,4 +407,4 @@ const NewDream = () => {
   );
 };
 
-export default NewDream;
+export default EditDream;

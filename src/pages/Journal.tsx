@@ -4,7 +4,6 @@ import { useDreamJournal } from "@/hooks/useDreamJournal";
 import JournalHeader from "@/components/journal/JournalHeader";
 import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
-import EditDreamDialog from "@/components/journal/EditDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import DreamsList from "@/components/journal/DreamsList";
 import EmptyJournal from "@/components/journal/EmptyJournal";
