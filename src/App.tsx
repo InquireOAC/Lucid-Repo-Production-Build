@@ -18,6 +18,7 @@ import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import Explore from './pages/Explore';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
+import DreamStoryPage from './pages/DreamStoryPage';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import MainLayout from './layouts/MainLayout';
