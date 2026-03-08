@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { DreamEntry } from "@/types/dream";
 import { Heart, MessageCircle, Eye } from "lucide-react";
@@ -7,17 +8,17 @@ import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
 interface DiscoveryHeroProps {
   dream: DreamEntry;
-  onOpenDream: (dream: DreamEntry) => void;
+  onOpenDream?: (dream: DreamEntry) => void;
   onLike: (dreamId: string) => void;
   onUserClick: (username: string | undefined) => void;
 }
 
 const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
   dream,
-  onOpenDream,
   onLike,
   onUserClick,
 }) => {
+  const navigate = useNavigate();
   const imageUrl = dream.generatedImage || dream.image_url;
   const profile = dream.profiles || {} as any;
   const username = profile.username;
@@ -30,7 +31,7 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       className="relative rounded-2xl overflow-hidden mb-6 cursor-pointer group"
-      onClick={() => onOpenDream(dream)}
+      onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
       <div className="aspect-[16/9] relative">
         {imageUrl ? (
