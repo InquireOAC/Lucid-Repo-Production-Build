@@ -19,20 +19,32 @@ interface ShareButtonProps {
   className?: string;
 }
 
-const preloadImageAsDataUrl = async (src: string): Promise<string | null> => {
-  try {
-    const response = await fetch(src, { mode: 'cors', cache: 'force-cache' });
-    const blob = await response.blob();
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result as string);
-      reader.onerror = () => resolve(null);
-      reader.readAsDataURL(blob);
-    });
-  } catch {
-    console.warn("Failed to preload image as data URL:", src);
-    return null;
-  }
+const convertImageToDataUrl = (src: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/png");
+          if (dataUrl && dataUrl.length > 100) {
+            resolve(dataUrl);
+            return;
+          }
+        }
+      } catch {
+        // tainted canvas — fall back to original URL
+      }
+      resolve(src);
+    };
+    img.onerror = () => resolve(src); // fallback to original URL
+    img.src = src;
+  });
 };
 
 const ShareButton: React.FC<ShareButtonProps> = ({
