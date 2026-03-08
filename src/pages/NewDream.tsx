@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
 
 const CHARACTER_LIMIT = 3000;
 
