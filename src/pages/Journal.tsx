@@ -87,8 +87,7 @@ const Journal = () => {
   };
 
   const handleOpenEditDialog = (dream: DreamEntry) => {
-    setSelectedDream(dream);
-    setIsEditingDream(true);
+    navigate(`/journal/edit/${dream.id}`);
   };
 
   return (
