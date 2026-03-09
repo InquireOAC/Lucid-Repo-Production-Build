@@ -118,6 +118,35 @@ const LucidRepoDiscovery = () => {
     return result;
   };
 
+  // Reset sort when filter changes
+  React.useEffect(() => {
+    setSortMode("popular");
+  }, [activeFilter]);
+
+  // Filtered + sorted dreams for category grid view
+  const categoryDreams = useMemo(() => {
+    if (activeFilter === "All") return [];
+    const filterLower = activeFilter.toLowerCase();
+    let result = uniqueDreams.filter(d =>
+      d.tags?.some(t => t.toLowerCase() === filterLower)
+    );
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
+    }
+    if (sortMode === "popular") {
+      result.sort((a, b) => ((b.like_count || 0) + (b.comment_count || 0)) - ((a.like_count || 0) + (a.comment_count || 0)));
+    } else {
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    return result;
+  }, [activeFilter, uniqueDreams, searchQuery, sortMode]);
+
   const showLoading = isLoading || tagsLoading;
 
   // Expanded section view
