@@ -241,9 +241,9 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
                         )}
 
                         {item.videoUrl && (
-                          <div className="absolute top-3 right-3 rounded-full border border-border/50 bg-card/70 backdrop-blur-md px-2.5 py-1 flex items-center gap-1.5">
-                            <Play className="h-3 w-3 fill-foreground text-foreground" />
-                            <span className="text-[10px] font-medium text-foreground">Video</span>
+                          <div className="absolute top-3 right-3 rounded-full border border-white/20 bg-black/60 backdrop-blur-md px-2.5 py-1 flex items-center gap-1.5">
+                            <Play className="h-3 w-3 fill-white text-white" />
+                            <span className="text-[10px] font-medium text-white">Video</span>
                           </div>
                         )}
 
