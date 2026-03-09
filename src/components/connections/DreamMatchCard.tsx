@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { staggerItemVariants } from "@/components/ui/StaggerContainer";
 import type { DreamMatch } from "@/hooks/useDreamConnections";
 import { formatDistanceToNow } from "date-fns";
@@ -28,6 +29,7 @@ const MatchPercentRing: React.FC<{ pct: number }> = ({ pct }) => {
 };
 
 const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
+  const navigate = useNavigate();
   const img1 = match.dream1?.image_url || match.dream1?.generatedImage;
   const img2 = match.dream2?.image_url || match.dream2?.generatedImage;
   const otherName = match.dream2?.profiles?.display_name || match.dream2?.profiles?.username || "Dreamer";
@@ -45,9 +47,20 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-2 relative">
-        <DreamPreview image={img1} title={match.dream1?.title || "Your Dream"} label="You" labelColor="text-emerald-400" />
-        <DreamPreview image={img2} title={match.dream2?.title || "Their Dream"} label={otherName} labelColor="text-blue-400" />
-        
+        <DreamPreview
+          image={img1}
+          title={match.dream1?.title || "Your Dream"}
+          label="You"
+          labelColor="text-emerald-400"
+          onClick={() => navigate(`/dream/${match.dream1_id}`)}
+        />
+        <DreamPreview
+          image={img2}
+          title={match.dream2?.title || "Their Dream"}
+          label={otherName}
+          labelColor="text-primary"
+          onClick={() => navigate(`/dream/${match.dream2_id}`)}
+        />
       </div>
 
       {match.shared_elements.length > 0 && (
@@ -61,8 +74,20 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
   );
 };
 
-const DreamPreview = ({ image, title, label, labelColor }: { image?: string | null; title: string; label: string; labelColor: string }) => (
-  <div className="relative rounded-lg overflow-hidden aspect-[4/3]">
+interface DreamPreviewProps {
+  image?: string | null;
+  title: string;
+  label: string;
+  labelColor: string;
+  onClick: () => void;
+}
+
+const DreamPreview: React.FC<DreamPreviewProps> = ({ image, title, label, labelColor, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="relative rounded-lg overflow-hidden aspect-[4/3] w-full text-left transition-transform active:scale-[0.98]"
+  >
     {image ? (
       <img src={image} alt={title} className="w-full h-full object-cover" />
     ) : (
@@ -72,7 +97,7 @@ const DreamPreview = ({ image, title, label, labelColor }: { image?: string | nu
       <p className={`text-[10px] font-semibold ${labelColor}`}>{label}</p>
       <p className="text-[11px] text-white font-medium line-clamp-1">{title}</p>
     </div>
-  </div>
+  </button>
 );
 
 export default DreamMatchCard;
