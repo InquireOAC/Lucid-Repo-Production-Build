@@ -6,7 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, Play, Image as ImageIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
+import { Capacitor } from "@capacitor/core";
+import { Share } from "@capacitor/share";
+import { downloadImageAsPng } from "@/utils/downloadImageAsPng";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 
