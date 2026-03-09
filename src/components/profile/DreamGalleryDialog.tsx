@@ -228,7 +228,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
                         type="button"
                         variants={itemVariants}
                         whileTap={{ scale: 0.98 }}
-                        className={`relative ${featured ? "col-span-2 aspect-[16/9]" : "aspect-[3/4]"} rounded-2xl overflow-hidden border border-border/60 bg-muted text-left shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.06)]`}
+                        className={`relative ${featured ? "col-span-2 aspect-[16/9]" : "aspect-[3/4]"} rounded-2xl overflow-hidden border border-white/10 bg-muted text-left`}
                         onClick={() => setSelectedItem(item)}
                       >
                         {item.imageUrl && (
