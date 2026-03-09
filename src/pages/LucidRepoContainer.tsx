@@ -38,6 +38,7 @@ const LucidRepoDiscovery = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
+  const [expandedSection, setExpandedSection] = useState<{ title: string; dreams: DreamEntry[] } | null>(null);
   const { series: publicSeries } = usePublicSeries();
 
   const {
