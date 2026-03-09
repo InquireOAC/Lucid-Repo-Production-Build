@@ -264,7 +264,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
       <AnimatePresence>
         {selectedItem && (
           <motion.div
-            className="fixed inset-0 z-[70] bg-[hsl(var(--foreground))] flex flex-col"
+            className="fixed inset-0 z-[70] bg-background flex flex-col"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
