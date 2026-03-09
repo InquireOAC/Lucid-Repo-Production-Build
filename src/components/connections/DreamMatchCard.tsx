@@ -40,7 +40,7 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
       className="rounded-xl border border-primary/20 bg-card/80 p-4 space-y-3"
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-primary">
+        <p className="text-sm font-bold text-foreground">
           ✨ Dream Match — {formatDistanceToNow(new Date(match.created_at), { addSuffix: true })}
         </p>
         <MatchPercentRing pct={match.match_percentage} />
