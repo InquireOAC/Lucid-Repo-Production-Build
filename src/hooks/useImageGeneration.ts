@@ -34,7 +34,8 @@ export const useImageGeneration = ({
     setGeneratedImage: (url: string) => void,
     _uploadImage: (url: string, dreamId: string) => Promise<string | null>,
     useAIContext: boolean = true,
-    imageStyle: string = "surreal"
+    imageStyle: string = "surreal",
+    selectedCharacterId?: string
   ) => {
     if (!user || disabled) return;
     setGeneratedImage("");
