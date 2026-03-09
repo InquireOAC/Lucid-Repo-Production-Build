@@ -5,7 +5,7 @@ import { getUserAIContext } from "@/utils/aiContextUtils";
 import { buildPersonalizedPrompt } from "@/utils/promptBuildingUtils";
 
 export function useDreamImageAI() {
-  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true, imageStyle?: string) => {
+  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true, imageStyle?: string, characterData?: { photo_url?: string; visual_fingerprint?: string; name?: string }) => {
     // Step 1: Get raw scene brief from analyze-dream (now using Gemini 3 Flash)
     const result = await supabase.functions.invoke("analyze-dream", {
       body: { dreamContent, task: "create_image_prompt" },
@@ -22,7 +22,11 @@ export function useDreamImageAI() {
     let hasCharacterReference = false;
     let aiContext = null;
 
-    if (userId && useAIContext) {
+    if (characterData?.photo_url) {
+      // Use explicitly selected character data
+      hasCharacterReference = true;
+      aiContext = characterData;
+    } else if (userId && useAIContext) {
       aiContext = await getUserAIContext(userId);
       hasCharacterReference = !!(aiContext?.photo_url);
     }

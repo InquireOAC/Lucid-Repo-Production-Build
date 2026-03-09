@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, Download, Lock, Trash2, RefreshCw, Film } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -15,6 +15,7 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 import styleSurreal from "@/assets/styles/surreal.jpg";
 import styleRealistic from "@/assets/styles/realistic.jpg";
@@ -77,6 +78,7 @@ const DreamImageGenerator = ({
   onVideoDeleted,
 }: DreamImageGeneratorProps) => {
   const { hasActiveSubscription } = useFeatureUsage();
+  const { user } = useAuth();
   const {
     imagePrompt,
     setImagePrompt,
@@ -91,7 +93,9 @@ const DreamImageGenerator = ({
     useAIContext,
     setUseAIContext,
     imageStyle,
-    setImageStyle
+    setImageStyle,
+    selectedCharacterId,
+    setSelectedCharacterId,
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
@@ -106,6 +110,31 @@ const DreamImageGenerator = ({
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [isDeletingVideo, setIsDeletingVideo] = useState(false);
   const [localVideoUrl, setLocalVideoUrl] = useState(existingVideoUrl);
+  const [dreamCharacters, setDreamCharacters] = useState<any[]>([]);
+
+  // Fetch dream characters when useAIContext is toggled ON
+  useEffect(() => {
+    if (!useAIContext || !user?.id) {
+      setDreamCharacters([]);
+      return;
+    }
+    const fetchCharacters = async () => {
+      const { data } = await supabase
+        .from("dream_characters")
+        .select("id, name, photo_url")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (data && data.length > 0) {
+        setDreamCharacters(data);
+        if (!selectedCharacterId) {
+          setSelectedCharacterId(data[0].id);
+        }
+      } else {
+        setDreamCharacters([]);
+      }
+    };
+    fetchCharacters();
+  }, [useAIContext, user?.id]);
 
   React.useEffect(() => {
     setLocalVideoUrl(existingVideoUrl);
@@ -355,7 +384,48 @@ const DreamImageGenerator = ({
         </div>
       )}
 
-      {/* Visual Style - Horizontal Thumbnails */}
+      {/* Dream Character Carousel - visible when Use Avatar is ON and characters exist */}
+      {!disabled && useAIContext && dreamCharacters.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Select Character</p>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {dreamCharacters.map((char) => (
+              <button
+                type="button"
+                key={char.id}
+                onClick={() => setSelectedCharacterId(char.id)}
+                className="flex-shrink-0 flex flex-col items-center gap-1.5"
+              >
+                <div
+                  className={cn(
+                    "w-14 h-14 rounded-full border-2 transition-all overflow-hidden bg-muted",
+                    selectedCharacterId === char.id
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-border/50 hover:border-primary/30"
+                  )}
+                >
+                  {char.photo_url ? (
+                    <img
+                      src={char.photo_url}
+                      alt={char.name || "Character"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-lg">👤</div>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] leading-tight max-w-[56px] truncate",
+                  selectedCharacterId === char.id ? "text-primary font-semibold" : "text-muted-foreground"
+                )}>
+                  {char.name || "Unnamed"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!disabled && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visual Style</p>
