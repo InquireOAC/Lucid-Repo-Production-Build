@@ -275,7 +275,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-foreground hover:bg-foreground/10"
                 onClick={() => setSelectedItem(null)}
               >
                 <ArrowLeft className="h-5 w-5" />
