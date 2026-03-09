@@ -282,8 +282,8 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               </Button>
 
               <div className="flex-1 min-w-0 text-center pt-1">
-                <h1 className="text-sm font-medium text-primary-foreground line-clamp-1">{selectedItem.title}</h1>
-                <p className="text-xs text-primary-foreground/70 mt-1">{formatDisplayDate(selectedItem.date)}</p>
+                <h1 className="text-sm font-medium text-foreground line-clamp-1">{selectedItem.title}</h1>
+                <p className="text-xs text-muted-foreground mt-1">{formatDisplayDate(selectedItem.date)}</p>
               </div>
 
               <div className="w-10" />
