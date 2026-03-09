@@ -53,7 +53,7 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
       {match.shared_elements.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {match.shared_elements.map((el) => (
-            <Badge key={el} variant="default" className="text-[10px] bg-purple-500/20 text-purple-300 border-0">{el}</Badge>
+            <Badge key={el} variant="default" className="text-[10px] bg-primary/20 text-primary border-0">{el}</Badge>
           ))}
         </div>
       )}
