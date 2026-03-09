@@ -22,7 +22,11 @@ export function useDreamImageAI() {
     let hasCharacterReference = false;
     let aiContext = null;
 
-    if (userId && useAIContext) {
+    if (characterData?.photo_url) {
+      // Use explicitly selected character data
+      hasCharacterReference = true;
+      aiContext = characterData;
+    } else if (userId && useAIContext) {
       aiContext = await getUserAIContext(userId);
       hasCharacterReference = !!(aiContext?.photo_url);
     }
