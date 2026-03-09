@@ -472,7 +472,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                     <p className="text-sm text-muted-foreground">Your characters for dream image generation.</p>
                     <div
                       ref={carouselRef}
-                      className="flex gap-4 overflow-x-auto pb-3 scrollbar-hide"
+                      className="flex gap-4 overflow-x-auto py-2 px-1 scrollbar-hide"
                       style={{ WebkitOverflowScrolling: "touch" }}
                     >
                       {characters.map((char, idx) => (
