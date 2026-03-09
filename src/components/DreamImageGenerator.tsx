@@ -15,6 +15,7 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 import styleSurreal from "@/assets/styles/surreal.jpg";
 import styleRealistic from "@/assets/styles/realistic.jpg";
