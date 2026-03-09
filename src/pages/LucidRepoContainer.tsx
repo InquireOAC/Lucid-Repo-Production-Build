@@ -243,7 +243,7 @@ const LucidRepoDiscovery = () => {
 
           {/* From People You Follow */}
           {user && filterDreams(following).length > 0 && (
-            <DiscoveryRow title="📖 From People You Follow">
+            <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => setExpandedSection({ title: "📖 From People You Follow", dreams: filterDreams(following) })}>
               {filterDreams(following).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
