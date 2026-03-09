@@ -228,7 +228,7 @@ const LucidRepoDiscovery = () => {
 
           {/* Trending Now */}
           {filterDreams(trending).length > 0 && (
-            <DiscoveryRow title="🔥 Trending Now">
+            <DiscoveryRow title="🔥 Trending Now" onSeeAll={() => setExpandedSection({ title: "🔥 Trending Now", dreams: filterDreams(trending) })}>
               {filterDreams(trending).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
