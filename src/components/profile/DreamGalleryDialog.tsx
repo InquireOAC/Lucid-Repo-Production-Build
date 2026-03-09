@@ -333,7 +333,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               {selectedItem.videoUrl && (
                 <Button
                   variant="outline"
-                  className="flex-1 max-w-[180px] border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="flex-1 max-w-[180px] border-border text-foreground hover:bg-muted"
                   onClick={() => handleSave(selectedItem.videoUrl!, `${selectedItem.title}-video`, "video")}
                 >
                   <Download className="h-4 w-4 mr-2" />
