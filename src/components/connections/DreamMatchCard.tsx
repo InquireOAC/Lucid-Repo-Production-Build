@@ -47,7 +47,7 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
       <div className="grid grid-cols-2 gap-2 relative">
         <DreamPreview image={img1} title={match.dream1?.title || "Your Dream"} label="You" labelColor="text-emerald-400" />
         <DreamPreview image={img2} title={match.dream2?.title || "Their Dream"} label={otherName} labelColor="text-blue-400" />
-        <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-lg z-10">🔮</span>
+        
       </div>
 
       {match.shared_elements.length > 0 && (
