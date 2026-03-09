@@ -16,7 +16,7 @@ const ConnectionsHeader: React.FC<ConnectionsHeaderProps> = ({ matchCount, activ
       </div>
 
       <div className="grid grid-cols-3 gap-2">
-        <StatCard value={matchCount} label="Your Matches" color="text-primary" borderColor="border-primary/20" />
+        <StatCard value={matchCount} label="Matches" color="text-primary" borderColor="border-primary/20" />
         <StatCard value={activeWaves} label="Active Waves" color="text-emerald-400" borderColor="border-emerald-500/20" />
         <StatCard value={syncScore} label="Sync Score" color="text-amber-400" borderColor="border-amber-500/20" />
       </div>
