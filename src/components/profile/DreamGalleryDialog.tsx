@@ -312,7 +312,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
             <div className="flex-shrink-0 px-6 pb-8 pt-4 flex items-center justify-center gap-3">
               <Button
                 variant="outline"
-                className="flex-1 max-w-[180px] border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                className="flex-1 max-w-[180px] border-border text-foreground hover:bg-muted"
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4 mr-2" />
