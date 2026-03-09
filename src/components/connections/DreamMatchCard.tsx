@@ -9,7 +9,7 @@ const MatchPercentRing: React.FC<{ pct: number }> = ({ pct }) => {
   const r = 18;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
-  const color = pct >= 80 ? "stroke-amber-400" : pct >= 60 ? "stroke-purple-400" : "stroke-blue-400";
+  const color = pct >= 80 ? "stroke-amber-400" : pct >= 60 ? "stroke-primary" : "stroke-primary";
 
   return (
     <svg width="48" height="48" className="shrink-0">
@@ -35,10 +35,10 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
   return (
     <motion.div
       variants={staggerItemVariants}
-      className="rounded-xl border border-purple-500/20 bg-card/80 p-4 space-y-3"
+      className="rounded-xl border border-primary/20 bg-card/80 p-4 space-y-3"
     >
       <div className="flex items-center justify-between">
-        <p className="text-sm font-bold text-purple-300">
+        <p className="text-sm font-bold text-primary">
           ✨ Dream Match — {formatDistanceToNow(new Date(match.created_at), { addSuffix: true })}
         </p>
         <MatchPercentRing pct={match.match_percentage} />
@@ -53,7 +53,7 @@ const DreamMatchCard: React.FC<{ match: DreamMatch }> = ({ match }) => {
       {match.shared_elements.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {match.shared_elements.map((el) => (
-            <Badge key={el} variant="default" className="text-[10px] bg-purple-500/20 text-purple-300 border-0">{el}</Badge>
+            <Badge key={el} variant="default" className="text-[10px] bg-primary/20 text-primary border-0">{el}</Badge>
           ))}
         </div>
       )}
