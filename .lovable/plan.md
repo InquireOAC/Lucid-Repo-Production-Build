@@ -1,40 +1,49 @@
 
 
-# Android Subscription Support
+# Dream Gallery Redesign — "Dream Library"
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Overview
+Transform the basic 2-column grid gallery into a premium, immersive "Dream Library" experience that fits the app's Cosmic Tech aesthetic.
 
-## Changes Needed
+## Design Changes
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+### Header
+- Rename from "Dream Gallery" to "Dream Library"
+- Add a subtle stats row below the header showing total count of images and videos (e.g., "12 dreams visualized · 3 videos")
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### Gallery Grid
+- **Masonry-style mixed layout**: Alternate between large featured cards (full-width, aspect-[16/9]) and 2-column pairs (aspect-[3/4]) for visual rhythm
+- First item renders full-width as a "featured" card
+- Every 3rd item after that also renders full-width
+- Staggered fade-in animation using framer-motion (matching existing app patterns)
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### Card Design
+- Rounded-2xl with subtle border (border-white/10)
+- Gradient overlay from bottom: `from-black/80 via-black/40 to-transparent`
+- Title text at bottom-left, date in small muted text below title
+- Video badge: frosted glass pill with Play icon + "Video" text (top-right)
+- Hover/press: `scale(0.98)` with smooth transition
+- Subtle inner glow on the card border using `shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]`
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+### Empty State
+- Larger illustration area with a subtle radial glow behind the icon
+- More encouraging copy: "Your dream visualizations will appear here"
+- Subtle pulsing animation on the icon
 
-## Files to Modify
+### Detail View (Selected Item)
+- Keep the existing full-screen black overlay
+- Add the date below the title in the header
+- Add a share button alongside the save button
+- Slightly larger rounded corners on media (rounded-2xl)
 
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+### Loading Skeletons
+- Match the masonry layout pattern (1 large + 2 small pairs)
+- Add subtle shimmer/pulse animation
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+## Technical Approach
+- Single file edit: `src/components/profile/DreamGalleryDialog.tsx`
+- Use framer-motion `motion.div` with staggerChildren for card entrance animations
+- Add `format(date)` from `date-fns` for date display
+- Use `Share2` icon from lucide-react for share action
+- Query already fetches all needed data (title, imageUrl, videoUrl, date)
 
