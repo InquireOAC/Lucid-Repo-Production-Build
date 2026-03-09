@@ -1,23 +1,29 @@
 
 
-## Fix: Dream Avatar Page - Empty State and Missing Avatar
+## Switch to Grid View When Category Filter is Active
 
-### Problems
-1. **Empty page when no characters exist**: The dialog shows a bare "No characters yet" message with a button, instead of immediately entering the character creation form.
-2. **Existing avatar not displaying**: If the user has data in `ai_context` but no records in `dream_characters`, the page appears empty because it only queries `dream_characters`.
+### Current Behavior
+When a category filter (e.g. "Lucid", "Nightmare") is selected, the page still shows the discovery layout (horizontal rows), just with fewer dreams visible in each row. This is confusing and doesn't surface all matching dreams.
 
-### Solution
+### New Behavior
+When any filter other than "All" is selected:
+- Replace the discovery rows with a **2-column masonry grid** showing ALL dreams matching that tag
+- Default sort: **Popular** (by like_count + comment_count)
+- Show a small **sort dropdown** (Popular / New) aligned right, below the category filter bar
+- When "All" is selected, revert to the current discovery layout (hero + rows)
 
-**File: `src/components/profile/AIContextDialog.tsx`**
+### Changes
 
-Two changes:
+**`src/pages/LucidRepoContainer.tsx`**
 
-1. **Auto-enter "add" mode when no characters exist**: After `fetchCharacters` completes and returns 0 results, automatically set `mode` to `"add"` instead of staying in `"view"` mode showing the empty state. This gives users the creation form immediately.
+1. Add a `sortMode` state: `"popular" | "new"` (default `"popular"`)
+2. Reset `sortMode` to `"popular"` when `activeFilter` changes
+3. When `activeFilter !== "All"`:
+   - Filter `uniqueDreams` by the active tag
+   - Sort by engagement (popular) or `created_at` (new) based on `sortMode`
+   - Render a sort dropdown button (right-aligned, small) below the filter bar
+   - Render `MasonryDreamGrid` with the filtered+sorted dreams instead of the discovery rows
+4. When `activeFilter === "All"`: keep current discovery layout unchanged
 
-2. **Migrate existing `ai_context` data**: When `dream_characters` is empty, also check the `ai_context` table. If the user has an existing avatar there (photo_url), auto-create a `dream_characters` record from it so their existing avatar appears in the carousel. This handles the case where a user previously generated an avatar before the multi-character system was added.
-
-### Changes Detail
-
-- In `fetchCharacters()` (around line 89-109): After fetching dream_characters, if empty, query `ai_context` for the user. If ai_context has a `photo_url`, insert a new `dream_characters` row from that data and re-fetch. If still empty after migration attempt, set `mode = "add"`.
-- Remove the empty state block (lines 537-545) since users will never see "view" mode with 0 characters.
+The sort dropdown will be a simple `<select>` or pair of pill buttons styled consistently with the existing UI. No new components needed — just inline JSX in `LucidRepoContainer.tsx`.
 
