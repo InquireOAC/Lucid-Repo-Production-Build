@@ -51,8 +51,13 @@ export const useDreamImageGeneration = ({
     onSubscriptionRefresh: forceRefreshSubscription,
   });
 
+  const {
+    selectedCharacterId,
+    setSelectedCharacterId,
+  } = useImageState({ existingPrompt, existingImage });
+
   const generateImage = () => {
-    generateImageCore(setImagePrompt, setGeneratedImage, uploadImage, useAIContext, imageStyle);
+    generateImageCore(setImagePrompt, setGeneratedImage, uploadImage, useAIContext, imageStyle, selectedCharacterId ?? undefined);
   };
 
   return {
@@ -70,5 +75,7 @@ export const useDreamImageGeneration = ({
     setUseAIContext,
     imageStyle,
     setImageStyle,
+    selectedCharacterId,
+    setSelectedCharacterId,
   };
 };

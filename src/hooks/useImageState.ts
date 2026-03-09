@@ -42,5 +42,7 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
     setUseAIContext,
     imageStyle,
     setImageStyle,
+    selectedCharacterId,
+    setSelectedCharacterId,
   };
 };
