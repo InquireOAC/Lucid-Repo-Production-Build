@@ -264,7 +264,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
       <AnimatePresence>
         {selectedItem && (
           <motion.div
-            className="fixed inset-0 z-[70] bg-[hsl(var(--foreground))] flex flex-col"
+            className="fixed inset-0 z-[70] bg-background flex flex-col"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -275,15 +275,15 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-primary-foreground hover:bg-primary-foreground/10"
+                className="text-foreground hover:bg-foreground/10"
                 onClick={() => setSelectedItem(null)}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
 
               <div className="flex-1 min-w-0 text-center pt-1">
-                <h1 className="text-sm font-medium text-primary-foreground line-clamp-1">{selectedItem.title}</h1>
-                <p className="text-xs text-primary-foreground/70 mt-1">{formatDisplayDate(selectedItem.date)}</p>
+                <h1 className="text-sm font-medium text-foreground line-clamp-1">{selectedItem.title}</h1>
+                <p className="text-xs text-muted-foreground mt-1">{formatDisplayDate(selectedItem.date)}</p>
               </div>
 
               <div className="w-10" />
@@ -312,7 +312,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
             <div className="flex-shrink-0 px-6 pb-8 pt-4 flex items-center justify-center gap-3">
               <Button
                 variant="outline"
-                className="flex-1 max-w-[180px] border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                className="flex-1 max-w-[180px] border-border text-foreground hover:bg-muted"
                 onClick={handleShare}
               >
                 <Share2 className="h-4 w-4 mr-2" />
@@ -322,7 +322,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               {selectedItem.imageUrl && (
                 <Button
                   variant="outline"
-                  className="flex-1 max-w-[180px] border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="flex-1 max-w-[180px] border-border text-foreground hover:bg-muted"
                   onClick={() => handleSave(selectedItem.imageUrl!, selectedItem.title, "image")}
                 >
                   <Download className="h-4 w-4 mr-2" />
@@ -333,7 +333,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               {selectedItem.videoUrl && (
                 <Button
                   variant="outline"
-                  className="flex-1 max-w-[180px] border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10"
+                  className="flex-1 max-w-[180px] border-border text-foreground hover:bg-muted"
                   onClick={() => handleSave(selectedItem.videoUrl!, `${selectedItem.title}-video`, "video")}
                 >
                   <Download className="h-4 w-4 mr-2" />
