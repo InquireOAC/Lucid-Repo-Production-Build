@@ -286,7 +286,7 @@ const LucidRepoDiscovery = () => {
 
           {/* Tag-based sections */}
           {!searchQuery && activeFilter === "All" && tagSections.map(section => (
-            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
+            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`} onSeeAll={() => setExpandedSection({ title: `${section.tag} Dreams`, dreams: section.dreams })}>
               {section.dreams.map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
