@@ -530,7 +530,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
 
                       <div className="text-center">
                         <h2 className="text-lg font-semibold">{selectedCharacter.name || "Unnamed Character"}</h2>
-                        <p className="text-xs text-muted-foreground capitalize">{selectedCharacter.avatar_style?.replace('_', ' ') || "Digital Art"} style</p>
+                        <p className="text-xs text-muted-foreground">{avatarStyleOptions.find(s => s.value === selectedCharacter.avatar_style)?.label || "Digital Art"} style</p>
                       </div>
 
                       {/* Reference photos row */}
