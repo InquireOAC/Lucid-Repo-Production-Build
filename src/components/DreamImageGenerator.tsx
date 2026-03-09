@@ -78,6 +78,7 @@ const DreamImageGenerator = ({
   onVideoDeleted,
 }: DreamImageGeneratorProps) => {
   const { hasActiveSubscription } = useFeatureUsage();
+  const { user } = useAuth();
   const {
     imagePrompt,
     setImagePrompt,
@@ -92,7 +93,9 @@ const DreamImageGenerator = ({
     useAIContext,
     setUseAIContext,
     imageStyle,
-    setImageStyle
+    setImageStyle,
+    selectedCharacterId,
+    setSelectedCharacterId,
   } = useDreamImageGeneration({
     dreamContent,
     existingPrompt,
