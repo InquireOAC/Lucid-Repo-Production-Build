@@ -483,9 +483,9 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                         >
                           <div
                             className={cn(
-                              "w-20 h-20 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center bg-muted",
+                              "w-16 h-16 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center bg-muted",
                               selectedIndex === idx
-                                ? "border-primary ring-2 ring-primary/30 scale-110"
+                                ? "border-primary ring-2 ring-primary/30 scale-105"
                                 : "border-border/50 hover:border-primary/30"
                             )}
                           >
