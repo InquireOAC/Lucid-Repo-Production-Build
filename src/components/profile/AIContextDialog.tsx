@@ -569,15 +569,6 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                     </div>
                   )}
 
-                  {characters.length === 0 && !isFetching && (
-                    <div className="text-center py-10 space-y-3">
-                      <p className="text-muted-foreground">No characters yet.</p>
-                      <Button variant="luminous" onClick={handleAddMode}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Your First Character
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
 
