@@ -33,7 +33,7 @@ const MainLayout = () => {
   }, [user, loading, location.pathname, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen cosmic-background">
+    <div className="flex flex-col h-screen overflow-hidden cosmic-background">
       {/* Fixed opaque overlay for status bar safe area */}
       <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
       

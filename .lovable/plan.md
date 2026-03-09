@@ -1,34 +1,40 @@
 
 
-## Fix: Scroll-to-top not working on Lucid Repo and Profile pages
+# Android Subscription Support
 
-### Root Cause
-The outer container in `MainLayout.tsx` uses `min-h-screen` which allows it to grow beyond the viewport. When child pages also use `min-h-screen`, the document itself scrolls rather than the inner `scrollRef` div. This means `scrollRef.current.scrollTo(0, 0)` has no effect because that div isn't the one actually scrolling --- the browser window/body is.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-The `window.scrollTo(0, 0)` fallback likely fires before the content renders (due to React's async rendering), so it also fails.
+## Changes Needed
 
-### Solution
-Two changes to `MainLayout.tsx`:
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-1. **Lock the outer container** to exactly viewport height with `h-screen overflow-hidden` instead of `min-h-screen`. This forces all scrolling into the inner `scrollRef` div, making `scrollRef.current.scrollTo(0, 0)` the single source of truth for scroll position.
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-2. **Keep the window/document scroll resets** as additional safety nets.
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-```text
-┌─ outer div: h-screen + overflow-hidden ──────┐
-│  ┌─ scrollRef div: flex-1 overflow-y-auto ──┐ │
-│  │  <Outlet /> (all page content)            │ │
-│  │  (this is the ONLY thing that scrolls)    │ │
-│  └───────────────────────────────────────────┘ │
-│  ┌─ fixed tab bar ──────────────────────────┐ │
-│  └───────────────────────────────────────────┘ │
-└────────────────────────────────────────────────┘
-```
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-### File Changes
+## Files to Modify
 
-**`src/layouts/MainLayout.tsx`** (line 36):
-- Change `min-h-screen` to `h-screen overflow-hidden` on the root container div.
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
 
-This is a one-line class change that fixes the core issue for all pages at once.
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
