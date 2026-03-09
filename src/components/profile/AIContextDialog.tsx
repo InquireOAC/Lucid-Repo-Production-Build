@@ -506,8 +506,8 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
 
                       {/* Add button */}
                       <button onClick={handleAddMode} className="flex-shrink-0 flex flex-col items-center gap-1.5">
-                        <div className="w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors">
-                          <Plus className="h-6 w-6 text-muted-foreground/50" />
+                        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors">
+                          <Plus className="h-5 w-5 text-muted-foreground/50" />
                         </div>
                         <span className="text-[11px] text-muted-foreground">Add</span>
                       </button>
