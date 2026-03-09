@@ -9,7 +9,7 @@ const MatchPercentRing: React.FC<{ pct: number }> = ({ pct }) => {
   const r = 18;
   const circ = 2 * Math.PI * r;
   const offset = circ - (pct / 100) * circ;
-  const color = pct >= 80 ? "stroke-amber-400" : pct >= 60 ? "stroke-purple-400" : "stroke-blue-400";
+  const color = pct >= 80 ? "stroke-amber-400" : pct >= 60 ? "stroke-primary" : "stroke-primary";
 
   return (
     <svg width="48" height="48" className="shrink-0">
