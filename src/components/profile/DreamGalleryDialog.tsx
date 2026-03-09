@@ -247,9 +247,9 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
                           </div>
                         )}
 
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[hsl(var(--foreground)/0.8)] via-[hsl(var(--foreground)/0.4)] to-transparent p-3 pt-10">
-                          <p className="text-sm text-primary-foreground font-medium line-clamp-1">{item.title}</p>
-                          <p className="text-[11px] text-primary-foreground/75 mt-0.5">{formatDisplayDate(item.date)}</p>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-10">
+                          <p className="text-sm text-white font-medium line-clamp-1">{item.title}</p>
+                          <p className="text-[11px] text-white/75 mt-0.5">{formatDisplayDate(item.date)}</p>
                         </div>
                       </motion.button>
                     );

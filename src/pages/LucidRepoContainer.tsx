@@ -118,6 +118,39 @@ const LucidRepoDiscovery = () => {
 
   const showLoading = isLoading || tagsLoading;
 
+  // Expanded section view
+  if (expandedSection) {
+    return (
+      <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
+        <div className="flex items-center gap-3 pt-3 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => setExpandedSection(null)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold text-foreground">{expandedSection.title}</h1>
+        </div>
+        {expandedSection.dreams.length === 0 ? (
+          <div className="text-center py-20">
+            <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No dreams in this section</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {expandedSection.dreams.map(dream => (
+              <div key={dream.id} className="w-full">
+                <DiscoveryDreamCard
+                  dream={dream}
+                  onOpenDream={handleOpenDream}
+                  onLike={handleDreamLikeFromCard}
+                  onUserClick={handleNavigateToProfile}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
       {/* Search */}
