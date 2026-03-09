@@ -230,15 +230,46 @@ const LucidRepoDiscovery = () => {
               ))}
             </div>
           </div>
-          <div className="space-y-3">
-            <Skeleton className="h-5 w-40" />
-            <div className="flex gap-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="w-[140px] aspect-[2/3] rounded-xl flex-shrink-0" />
+        </div>
+      ) : activeFilter !== "All" ? (
+        <>
+          {/* Sort dropdown */}
+          <div className="flex justify-end mb-3">
+            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
+              {(["popular", "new"] as const).map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSortMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    sortMode === mode
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {mode === "popular" ? "Popular" : "New"}
+                </button>
               ))}
             </div>
           </div>
-        </div>
+          {categoryDreams.length === 0 ? (
+            <div className="text-center py-20">
+              <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-medium mb-2">No {activeFilter.toLowerCase()} dreams</h3>
+              <p className="text-muted-foreground">Try a different category</p>
+            </div>
+          ) : (
+            <MasonryDreamGrid
+              dreams={categoryDreams}
+              tags={publicTags}
+              onLike={handleDreamLikeFromCard}
+              onOpenDream={handleOpenDream}
+              onUserClick={handleNavigateToProfile}
+              onTagClick={() => {}}
+              currentUser={user}
+            />
+          )}
+        </>
       ) : uniqueDreams.length === 0 ? (
         <div className="text-center py-20">
           <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
