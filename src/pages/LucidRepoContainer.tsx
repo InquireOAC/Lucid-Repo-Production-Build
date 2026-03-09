@@ -13,7 +13,8 @@ import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
-import { Moon, Search } from "lucide-react";
+import { ArrowLeft, Moon, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
 import { DreamEntry } from "@/types/dream";
@@ -38,6 +39,7 @@ const LucidRepoDiscovery = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
+  const [expandedSection, setExpandedSection] = useState<{ title: string; dreams: DreamEntry[] } | null>(null);
   const { series: publicSeries } = usePublicSeries();
 
   const {
@@ -116,6 +118,39 @@ const LucidRepoDiscovery = () => {
 
   const showLoading = isLoading || tagsLoading;
 
+  // Expanded section view
+  if (expandedSection) {
+    return (
+      <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
+        <div className="flex items-center gap-3 pt-3 mb-4">
+          <Button variant="ghost" size="icon" onClick={() => setExpandedSection(null)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-bold text-foreground">{expandedSection.title}</h1>
+        </div>
+        {expandedSection.dreams.length === 0 ? (
+          <div className="text-center py-20">
+            <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No dreams in this section</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 [&>div>div]:w-full [&>div>div]:flex-shrink">
+            {expandedSection.dreams.map(dream => (
+              <div key={dream.id}>
+                <DiscoveryDreamCard
+                  dream={dream}
+                  onOpenDream={handleOpenDream}
+                  onLike={handleDreamLikeFromCard}
+                  onUserClick={handleNavigateToProfile}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </PageTransition>
+    );
+  }
+
   return (
     <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
       {/* Search */}
@@ -193,7 +228,7 @@ const LucidRepoDiscovery = () => {
 
           {/* Trending Now */}
           {filterDreams(trending).length > 0 && (
-            <DiscoveryRow title="🔥 Trending Now">
+            <DiscoveryRow title="🔥 Trending Now" onSeeAll={() => setExpandedSection({ title: "🔥 Trending Now", dreams: filterDreams(trending) })}>
               {filterDreams(trending).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
@@ -208,7 +243,7 @@ const LucidRepoDiscovery = () => {
 
           {/* From People You Follow */}
           {user && filterDreams(following).length > 0 && (
-            <DiscoveryRow title="📖 From People You Follow">
+            <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => setExpandedSection({ title: "📖 From People You Follow", dreams: filterDreams(following) })}>
               {filterDreams(following).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
@@ -223,7 +258,7 @@ const LucidRepoDiscovery = () => {
 
           {/* New Releases */}
           {filterDreams(newReleases).length > 0 && (
-            <DiscoveryRow title="✨ New Releases">
+            <DiscoveryRow title="✨ New Releases" onSeeAll={() => setExpandedSection({ title: "✨ New Releases", dreams: filterDreams(newReleases) })}>
               {filterDreams(newReleases).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
@@ -251,7 +286,7 @@ const LucidRepoDiscovery = () => {
 
           {/* Tag-based sections */}
           {!searchQuery && activeFilter === "All" && tagSections.map(section => (
-            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`}>
+            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`} onSeeAll={() => setExpandedSection({ title: `${section.tag} Dreams`, dreams: section.dreams })}>
               {section.dreams.map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}

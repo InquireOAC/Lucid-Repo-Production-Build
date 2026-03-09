@@ -228,7 +228,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
                         type="button"
                         variants={itemVariants}
                         whileTap={{ scale: 0.98 }}
-                        className={`relative ${featured ? "col-span-2 aspect-[16/9]" : "aspect-[3/4]"} rounded-2xl overflow-hidden border border-border/60 bg-muted text-left shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.06)]`}
+                        className={`relative ${featured ? "col-span-2 aspect-[16/9]" : "aspect-[3/4]"} rounded-2xl overflow-hidden border border-white/10 bg-muted text-left`}
                         onClick={() => setSelectedItem(item)}
                       >
                         {item.imageUrl && (
@@ -241,15 +241,15 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
                         )}
 
                         {item.videoUrl && (
-                          <div className="absolute top-3 right-3 rounded-full border border-border/50 bg-card/70 backdrop-blur-md px-2.5 py-1 flex items-center gap-1.5">
-                            <Play className="h-3 w-3 fill-foreground text-foreground" />
-                            <span className="text-[10px] font-medium text-foreground">Video</span>
+                          <div className="absolute top-3 right-3 rounded-full border border-white/20 bg-black/60 backdrop-blur-md px-2.5 py-1 flex items-center gap-1.5">
+                            <Play className="h-3 w-3 fill-white text-white" />
+                            <span className="text-[10px] font-medium text-white">Video</span>
                           </div>
                         )}
 
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[hsl(var(--foreground)/0.8)] via-[hsl(var(--foreground)/0.4)] to-transparent p-3 pt-10">
-                          <p className="text-sm text-primary-foreground font-medium line-clamp-1">{item.title}</p>
-                          <p className="text-[11px] text-primary-foreground/75 mt-0.5">{formatDisplayDate(item.date)}</p>
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-10">
+                          <p className="text-sm text-white font-medium line-clamp-1">{item.title}</p>
+                          <p className="text-[11px] text-white/75 mt-0.5">{formatDisplayDate(item.date)}</p>
                         </div>
                       </motion.button>
                     );

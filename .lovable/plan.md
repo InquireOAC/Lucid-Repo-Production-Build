@@ -1,29 +1,40 @@
 
 
-# Fix Dream Library Cards + Expandable Lucid Repo Sections
+# Android Subscription Support
 
-## 1. Dream Library Card Fix (`DreamGalleryDialog.tsx`)
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-**Problem**: Cards have a white/light inner glow and the gradient overlay uses `hsl(var(--foreground))` which resolves to a light color, making text unreadable.
+## Changes Needed
 
-**Fix**:
-- Remove `shadow-[inset_0_1px_0_0_hsl(var(--foreground)/0.06)]` from card class
-- Change gradient overlay from `from-[hsl(var(--foreground)/0.8)]` to `from-black/80 via-black/40 to-transparent`
-- Change border from `border-border/60` to `border-white/10`
-- Ensure text uses `text-white` and `text-white/75` instead of `text-primary-foreground`
-- Video badge: use `bg-black/60 text-white` instead of `bg-card/70 text-foreground`
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-## 2. Expandable Sections on Lucid Repo (`LucidRepoContainer.tsx`)
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-**Approach**: Add an `expandedSection` state. When a user taps "See all" on a section (Trending, Following, New Releases, tag sections), set the expanded section. Render a full-page view with a back button and the dreams in a 2-column grid using `DiscoveryDreamCard`.
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-**Changes**:
-- Add `expandedSection` state: `{ title: string, dreams: DreamEntry[] } | null`
-- Pass `onSeeAll` prop to each `DiscoveryRow` — this already supports it (line 23 in DiscoveryRow)
-- When expanded, render a simple view: back arrow + title header, then a 2-column grid of `DiscoveryDreamCard` components
-- Wrap the grid cards to fill width (remove `flex-shrink-0 w-[140px]`) — use a wrapper div with grid styling rather than modifying the shared card component
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-**Files to edit**:
-- `src/components/profile/DreamGalleryDialog.tsx` — card styling fixes
-- `src/pages/LucidRepoContainer.tsx` — expandable section state + grid view
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
