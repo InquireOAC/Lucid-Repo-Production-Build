@@ -90,16 +90,51 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
     if (!user) return;
     setIsFetching(true);
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('dream_characters')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+
+      // Migrate existing ai_context data if no dream_characters exist
+      if (!data || data.length === 0) {
+        const { data: aiCtx } = await supabase
+          .from('ai_context')
+          .select('*')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (aiCtx?.photo_url) {
+          await supabase.from('dream_characters').insert({
+            user_id: user.id,
+            name: aiCtx.name || null,
+            photo_url: aiCtx.photo_url,
+            face_photo_url: aiCtx.photo_url,
+            outfit_photo_url: aiCtx.outfit_photo_url || null,
+            accessory_photo_url: aiCtx.accessory_photo_url || null,
+            avatar_style: 'digital_art',
+            visual_fingerprint: aiCtx.visual_fingerprint || null,
+          });
+          // Re-fetch after migration
+          const { data: refreshed } = await supabase
+            .from('dream_characters')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: true });
+          data = refreshed;
+        }
+      }
+
       setCharacters(data || []);
       if ((data || []).length > 0 && selectedIndex >= (data || []).length) {
         setSelectedIndex(0);
+      }
+
+      // Auto-enter add mode when no characters exist
+      if (!data || data.length === 0) {
+        setMode("add");
       }
     } catch (error) {
       console.error('Error fetching characters:', error);
@@ -534,15 +569,6 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                     </div>
                   )}
 
-                  {characters.length === 0 && !isFetching && (
-                    <div className="text-center py-10 space-y-3">
-                      <p className="text-muted-foreground">No characters yet.</p>
-                      <Button variant="luminous" onClick={handleAddMode}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Your First Character
-                      </Button>
-                    </div>
-                  )}
                 </>
               )}
 

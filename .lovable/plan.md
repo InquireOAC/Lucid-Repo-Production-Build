@@ -1,29 +1,40 @@
 
 
-## Switch to Grid View When Category Filter is Active
+# Android Subscription Support
 
-### Current Behavior
-When a category filter (e.g. "Lucid", "Nightmare") is selected, the page still shows the discovery layout (horizontal rows), just with fewer dreams visible in each row. This is confusing and doesn't surface all matching dreams.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-### New Behavior
-When any filter other than "All" is selected:
-- Replace the discovery rows with a **2-column masonry grid** showing ALL dreams matching that tag
-- Default sort: **Popular** (by like_count + comment_count)
-- Show a small **sort dropdown** (Popular / New) aligned right, below the category filter bar
-- When "All" is selected, revert to the current discovery layout (hero + rows)
+## Changes Needed
 
-### Changes
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-**`src/pages/LucidRepoContainer.tsx`**
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-1. Add a `sortMode` state: `"popular" | "new"` (default `"popular"`)
-2. Reset `sortMode` to `"popular"` when `activeFilter` changes
-3. When `activeFilter !== "All"`:
-   - Filter `uniqueDreams` by the active tag
-   - Sort by engagement (popular) or `created_at` (new) based on `sortMode`
-   - Render a sort dropdown button (right-aligned, small) below the filter bar
-   - Render `MasonryDreamGrid` with the filtered+sorted dreams instead of the discovery rows
-4. When `activeFilter === "All"`: keep current discovery layout unchanged
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-The sort dropdown will be a simple `<select>` or pair of pill buttons styled consistently with the existing UI. No new components needed — just inline JSX in `LucidRepoContainer.tsx`.
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
