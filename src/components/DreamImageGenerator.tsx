@@ -384,7 +384,48 @@ const DreamImageGenerator = ({
         </div>
       )}
 
-      {/* Visual Style - Horizontal Thumbnails */}
+      {/* Dream Character Carousel - visible when Use Avatar is ON and characters exist */}
+      {!disabled && useAIContext && dreamCharacters.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Select Character</p>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {dreamCharacters.map((char) => (
+              <button
+                type="button"
+                key={char.id}
+                onClick={() => setSelectedCharacterId(char.id)}
+                className="flex-shrink-0 flex flex-col items-center gap-1.5"
+              >
+                <div
+                  className={cn(
+                    "w-14 h-14 rounded-full border-2 transition-all overflow-hidden bg-muted",
+                    selectedCharacterId === char.id
+                      ? "border-primary ring-2 ring-primary/20"
+                      : "border-border/50 hover:border-primary/30"
+                  )}
+                >
+                  {char.photo_url ? (
+                    <img
+                      src={char.photo_url}
+                      alt={char.name || "Character"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-lg">👤</div>
+                  )}
+                </div>
+                <span className={cn(
+                  "text-[10px] leading-tight max-w-[56px] truncate",
+                  selectedCharacterId === char.id ? "text-primary font-semibold" : "text-muted-foreground"
+                )}>
+                  {char.name || "Unnamed"}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!disabled && (
         <div className="space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Visual Style</p>
