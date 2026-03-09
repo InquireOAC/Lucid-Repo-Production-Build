@@ -56,8 +56,20 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
   });
 
   const handleSave = async (url: string, label: string) => {
+    const filename = `${label.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`;
     try {
-      await shareOrSaveImage(url, `${label.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
+      if (Capacitor.isNativePlatform()) {
+        await Share.share({
+          title: "Dream Image",
+          text: "Check out my dream image from Lucid Repo!",
+          url,
+          dialogTitle: "Save or Share Dream Image",
+        });
+        toast.success("Opened share sheet!");
+      } else {
+        await downloadImageAsPng(url, filename);
+        toast.success("Image downloaded!");
+      }
     } catch {
       toast.error("Failed to save");
     }
