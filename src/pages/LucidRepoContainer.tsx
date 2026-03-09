@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
@@ -8,6 +8,7 @@ import DiscoveryRow from "@/components/repos/DiscoveryRow";
 import DiscoveryDreamCard from "@/components/repos/DiscoveryDreamCard";
 import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
 import SeriesDetailPage from "@/components/series/SeriesDetailPage";
+import MasonryDreamGrid from "@/components/repos/MasonryDreamGrid";
 import DreamStoryPage from "@/pages/DreamStoryPage";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
@@ -40,6 +41,7 @@ const LucidRepoDiscovery = () => {
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const [expandedSection, setExpandedSection] = useState<{ title: string; dreams: DreamEntry[] } | null>(null);
+  const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
   const { series: publicSeries } = usePublicSeries();
 
   const {
@@ -115,6 +117,35 @@ const LucidRepoDiscovery = () => {
     }
     return result;
   };
+
+  // Reset sort when filter changes
+  React.useEffect(() => {
+    setSortMode("popular");
+  }, [activeFilter]);
+
+  // Filtered + sorted dreams for category grid view
+  const categoryDreams = useMemo(() => {
+    if (activeFilter === "All") return [];
+    const filterLower = activeFilter.toLowerCase();
+    let result = uniqueDreams.filter(d =>
+      d.tags?.some(t => t.toLowerCase() === filterLower)
+    );
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
+    }
+    if (sortMode === "popular") {
+      result.sort((a, b) => ((b.like_count || 0) + (b.comment_count || 0)) - ((a.like_count || 0) + (a.comment_count || 0)));
+    } else {
+      result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    }
+    return result;
+  }, [activeFilter, uniqueDreams, searchQuery, sortMode]);
 
   const showLoading = isLoading || tagsLoading;
 
@@ -199,15 +230,46 @@ const LucidRepoDiscovery = () => {
               ))}
             </div>
           </div>
-          <div className="space-y-3">
-            <Skeleton className="h-5 w-40" />
-            <div className="flex gap-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="w-[140px] aspect-[2/3] rounded-xl flex-shrink-0" />
+        </div>
+      ) : activeFilter !== "All" ? (
+        <>
+          {/* Sort dropdown */}
+          <div className="flex justify-end mb-3">
+            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
+              {(["popular", "new"] as const).map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSortMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    sortMode === mode
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {mode === "popular" ? "Popular" : "New"}
+                </button>
               ))}
             </div>
           </div>
-        </div>
+          {categoryDreams.length === 0 ? (
+            <div className="text-center py-20">
+              <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-medium mb-2">No {activeFilter.toLowerCase()} dreams</h3>
+              <p className="text-muted-foreground">Try a different category</p>
+            </div>
+          ) : (
+            <MasonryDreamGrid
+              dreams={categoryDreams}
+              tags={publicTags}
+              onLike={handleDreamLikeFromCard}
+              onOpenDream={handleOpenDream}
+              onUserClick={handleNavigateToProfile}
+              onTagClick={() => {}}
+              currentUser={user}
+            />
+          )}
+        </>
       ) : uniqueDreams.length === 0 ? (
         <div className="text-center py-20">
           <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
