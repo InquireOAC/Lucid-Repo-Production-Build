@@ -483,9 +483,9 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                         >
                           <div
                             className={cn(
-                              "w-20 h-20 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center bg-muted",
+                              "w-16 h-16 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center bg-muted",
                               selectedIndex === idx
-                                ? "border-primary ring-2 ring-primary/30 scale-110"
+                                ? "border-primary ring-2 ring-primary/30 scale-105"
                                 : "border-border/50 hover:border-primary/30"
                             )}
                           >
@@ -506,8 +506,8 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
 
                       {/* Add button */}
                       <button onClick={handleAddMode} className="flex-shrink-0 flex flex-col items-center gap-1.5">
-                        <div className="w-20 h-20 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors">
-                          <Plus className="h-6 w-6 text-muted-foreground/50" />
+                        <div className="w-16 h-16 rounded-full border-2 border-dashed border-muted-foreground/30 flex items-center justify-center hover:border-primary/50 transition-colors">
+                          <Plus className="h-5 w-5 text-muted-foreground/50" />
                         </div>
                         <span className="text-[11px] text-muted-foreground">Add</span>
                       </button>
@@ -530,7 +530,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
 
                       <div className="text-center">
                         <h2 className="text-lg font-semibold">{selectedCharacter.name || "Unnamed Character"}</h2>
-                        <p className="text-xs text-muted-foreground capitalize">{selectedCharacter.avatar_style?.replace('_', ' ') || "Digital Art"} style</p>
+                        <p className="text-xs text-muted-foreground">{avatarStyleOptions.find(s => s.value === selectedCharacter.avatar_style)?.label || "Digital Art"} style</p>
                       </div>
 
                       {/* Reference photos row */}
