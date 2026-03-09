@@ -134,9 +134,9 @@ const LucidRepoDiscovery = () => {
             <p className="text-muted-foreground">No dreams in this section</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 [&>div>div]:w-full [&>div>div]:flex-shrink">
             {expandedSection.dreams.map(dream => (
-              <div key={dream.id} className="w-full">
+              <div key={dream.id}>
                 <DiscoveryDreamCard
                   dream={dream}
                   onOpenDream={handleOpenDream}
