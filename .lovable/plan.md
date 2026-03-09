@@ -1,40 +1,52 @@
 
 
-# Android Subscription Support
+## Plan: Add Dream Avatar Character Carousel to Image Generator
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+### What
+When "Use Avatar" is toggled ON, show a horizontal carousel of the user's `dream_characters` between the toggle and the Visual Style selector. The selected character's `photo_url` will be used as the reference image during generation (instead of the current single `ai_context` lookup).
 
-## Changes Needed
+### Changes
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+**1. `src/components/DreamImageGenerator.tsx`**
+- Import `supabase` and `useAuth` (supabase already imported)
+- When `useAIContext` is toggled ON, fetch `dream_characters` for the current user
+- Store characters in local state + a `selectedCharacterId`
+- Render a horizontal scrollable carousel of character avatars (circular thumbnails with name labels, similar to the style selector pattern) between the "Use Avatar" toggle and the "Visual Style" section
+- Auto-select the first character by default
+- Pass the selected character ID down through the generation flow
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+**2. `src/hooks/useImageState.ts`**
+- Add `selectedCharacterId` / `setSelectedCharacterId` state (string | null)
+- Expose through the return object
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+**3. `src/hooks/useDreamImageGeneration.tsx`**
+- Pass `selectedCharacterId` through to `useImageGeneration`
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+**4. `src/hooks/useImageGeneration.ts`**
+- Accept optional `selectedCharacterId` parameter
+- In `generateImage`, instead of querying `ai_context` for the reference photo, query `dream_characters` by the selected ID to get `photo_url` and character metadata
+- Pass the character's `photo_url` as `referenceImageUrl` and character metadata into prompt building
 
-## Files to Modify
+**5. `src/hooks/useDreamImageAI.ts`**
+- Update `getImagePrompt` to accept an optional character object (with photo_url, visual_fingerprint, etc.) instead of always fetching from `ai_context`
+- When a character is provided, use its data directly; otherwise fall back to `ai_context` lookup (backward compat)
 
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+### UI Design
+- Small circular avatars (~56px) in a horizontal scroll row
+- Selected avatar gets a primary border + ring (matching existing patterns)
+- Character name below each avatar
+- Only visible when "Use Avatar" switch is ON
+- Smooth conditional render with no layout shift
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+### Data Flow
+```text
+Toggle ON → fetch dream_characters → show carousel → user selects one
+     ↓
+Generate clicked → selectedCharacterId used to get photo_url + metadata
+     ↓
+photo_url → referenceImageUrl in generate-dream-image edge function
+metadata → prompt personalization via buildPersonalizedPrompt
+```
+
+No database changes needed — `dream_characters` table already has all required fields.
 
