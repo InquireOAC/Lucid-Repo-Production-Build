@@ -110,6 +110,31 @@ const DreamImageGenerator = ({
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [isDeletingVideo, setIsDeletingVideo] = useState(false);
   const [localVideoUrl, setLocalVideoUrl] = useState(existingVideoUrl);
+  const [dreamCharacters, setDreamCharacters] = useState<any[]>([]);
+
+  // Fetch dream characters when useAIContext is toggled ON
+  useEffect(() => {
+    if (!useAIContext || !user?.id) {
+      setDreamCharacters([]);
+      return;
+    }
+    const fetchCharacters = async () => {
+      const { data } = await supabase
+        .from("dream_characters")
+        .select("id, name, photo_url")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      if (data && data.length > 0) {
+        setDreamCharacters(data);
+        if (!selectedCharacterId) {
+          setSelectedCharacterId(data[0].id);
+        }
+      } else {
+        setDreamCharacters([]);
+      }
+    };
+    fetchCharacters();
+  }, [useAIContext, user?.id]);
 
   React.useEffect(() => {
     setLocalVideoUrl(existingVideoUrl);
