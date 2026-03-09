@@ -28,7 +28,7 @@ const ConnectionsFilterPills: React.FC<Props> = ({ active, onChange }) => (
         {active === f.value && (
           <motion.div
             layoutId="connections-filter-bg"
-            className="absolute inset-0 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500"
+            className="absolute inset-0 rounded-full bg-primary"
             transition={{ type: "spring", stiffness: 400, damping: 30 }}
           />
         )}
