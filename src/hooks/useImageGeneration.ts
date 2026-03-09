@@ -61,19 +61,45 @@ export const useImageGeneration = ({
 
       // 1. Get image prompt from analyze-dream with optional user context and style
       console.log("Step 1: Getting image prompt...");
-      const generatedPromptText = await getImagePrompt(dreamContent, user.id, useAIContext, imageStyle);
+      
+      // If a specific character is selected, fetch their data
+      let characterData: any = undefined;
+      if (useAIContext && selectedCharacterId && user.id) {
+        const { data: charRow } = await supabase
+          .from("dream_characters")
+          .select("*")
+          .eq("id", selectedCharacterId)
+          .single();
+        if (charRow) {
+          characterData = {
+            photo_url: charRow.photo_url,
+            visual_fingerprint: charRow.visual_fingerprint,
+            name: charRow.name,
+            outfit_photo_url: charRow.outfit_photo_url,
+            accessory_photo_url: charRow.accessory_photo_url,
+          };
+          console.log("Using selected dream character:", charRow.name);
+        }
+      }
+
+      const generatedPromptText = await getImagePrompt(dreamContent, user.id, useAIContext, imageStyle, characterData);
       if (!generatedPromptText) throw new Error("No image prompt was generated");
       setImagePrompt(generatedPromptText);
       console.log("Image prompt generated:", generatedPromptText);
 
-      // 2. If using AI context, fetch reference photo URL
+      // 2. If using AI context, get reference photo URL (from selected character or ai_context)
       let referenceImageUrl: string | undefined;
       if (useAIContext && user.id) {
-        const { getUserAIContext } = await import("@/utils/aiContextUtils");
-        const aiContext = await getUserAIContext(user.id);
-        if (aiContext?.photo_url) {
-          referenceImageUrl = aiContext.photo_url;
-          console.log("Reference photo found, will include in generation");
+        if (characterData?.photo_url) {
+          referenceImageUrl = characterData.photo_url;
+          console.log("Using selected character photo as reference");
+        } else {
+          const { getUserAIContext } = await import("@/utils/aiContextUtils");
+          const aiContext = await getUserAIContext(user.id);
+          if (aiContext?.photo_url) {
+            referenceImageUrl = aiContext.photo_url;
+            console.log("Reference photo found from AI context");
+          }
         }
       }
 
