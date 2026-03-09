@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, Download, Lock, Trash2, RefreshCw, Film } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
