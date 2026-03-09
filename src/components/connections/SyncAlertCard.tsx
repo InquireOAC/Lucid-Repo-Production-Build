@@ -7,31 +7,46 @@ import { formatDistanceToNow } from "date-fns";
 const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => (
   <motion.div
     variants={staggerItemVariants}
-    className="relative overflow-hidden rounded-xl border border-indigo-500/25 bg-gradient-to-br from-indigo-950/40 to-card/80 p-4"
+    className="relative overflow-hidden rounded-2xl border border-primary/15 bg-card/90 backdrop-blur-sm p-5"
   >
-    {/* Pulse ring */}
-    <div className="absolute top-4 left-4 w-8 h-8">
-      <span className="absolute inset-0 rounded-full bg-indigo-500/20 animate-ping" />
-      <span className="absolute inset-1 rounded-full bg-indigo-500/30 animate-pulse" />
-      <span className="absolute inset-2 rounded-full bg-indigo-500/50" />
+    <div className="flex items-start gap-4">
+      {/* Pulse indicator */}
+      <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+        <span className="absolute inset-0 rounded-full bg-primary/10 animate-ping" style={{ animationDuration: "2s" }} />
+        <span className="absolute inset-1 rounded-full bg-primary/15 animate-pulse" />
+        <span className="absolute inset-3 rounded-full bg-primary/30" />
+        <span className="relative text-lg">{alert.emoji}</span>
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <p className="text-base font-bold text-foreground">Synchronicity Detected</p>
+          {alert.is_trending && (
+            <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold uppercase tracking-wider">
+              Live
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{alert.description}</p>
+      </div>
     </div>
 
-    {alert.is_trending && (
-      <span className="absolute top-3 right-3 px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider">
-        Live
-      </span>
-    )}
-
-    <div className="ml-12">
-      <p className="text-sm font-bold text-indigo-300">{alert.emoji} Synchronicity Detected</p>
-      <p className="text-xs text-muted-foreground mt-1">{alert.description}</p>
-
-      <div className="flex items-center justify-between mt-3">
-        <span className="text-xs text-indigo-400 font-medium">{alert.dreamer_count} dreamers</span>
-        <span className="text-[10px] text-muted-foreground">
-          {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
-        </span>
+    <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
+      <div className="flex items-center gap-1.5">
+        {/* Show emoji avatars */}
+        {["🌙", "😴", "💭", "🔮"].map((e, i) => (
+          <span
+            key={i}
+            className="w-7 h-7 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-sm"
+          >
+            {e}
+          </span>
+        ))}
+        <span className="text-xs font-medium text-primary ml-1.5">+{alert.dreamer_count} dreamers</span>
       </div>
+      <span className="text-xs text-muted-foreground">
+        {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+      </span>
     </div>
   </motion.div>
 );
