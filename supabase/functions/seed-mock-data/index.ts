@@ -259,7 +259,7 @@ serve(async (req) => {
 
     if (phase === 'images') {
       const imgLimit = limit as number
-      log.push(`Phase C: Generating AI images for ${imgLimit} dreams...`)
+      console.log(`Phase C: Generating AI images for ${imgLimit} dreams...`)
 
       const { data: dreamsToImage } = await supabase
         .from('dream_entries')
@@ -269,7 +269,7 @@ serve(async (req) => {
         .limit(100)
 
       const selected = (dreamsToImage || []).sort(() => Math.random() - 0.5).slice(0, imgLimit)
-      log.push(`Selected ${selected.length} dreams`)
+      console.log(`Selected ${selected.length} dreams`)
 
       const styles = ['surreal', 'fantasy', 'digital_art', 'cyberpunk', 'impressionist', 'oil_painting', 'watercolor', 'minimalist', 'hyper_realism', 'sketch']
       let successCount = 0
