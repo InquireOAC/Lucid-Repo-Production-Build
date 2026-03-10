@@ -258,8 +258,8 @@ serve(async (req) => {
     }
 
     if (phase === 'images') {
-      const limit = parseInt(new URL(req.url).searchParams.get('limit') || '5')
-      log.push(`Phase C: Generating AI images for ${limit} dreams...`)
+      const imgLimit = limit as number
+      log.push(`Phase C: Generating AI images for ${imgLimit} dreams...`)
 
       const { data: dreamsToImage } = await supabase
         .from('dream_entries')
