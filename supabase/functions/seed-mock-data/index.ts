@@ -100,42 +100,57 @@ serve(async (req) => {
     const log: string[] = []
 
     if (phase === 'all' || phase === 'profiles') {
-      log.push('Phase A: Creating 100 auth users + profiles...')
+      const batchStart = 0
+      const batchSize = 100
+      log.push(`Phase A: Creating ${batchSize} auth users + profiles...`)
       const userIds: string[] = []
       const usedUsernames = new Set<string>()
 
-      for (let i = 0; i < 100; i++) {
+      // Generate all usernames first
+      const userConfigs: { username: string; email: string; displayName: string; bio: string; symbol: string; color: string }[] = []
+      for (let i = 0; i < batchSize; i++) {
         let username: string
         do {
           username = `${pick(PREFIXES)}_${pick(SUFFIXES)}_${randInt(1, 99)}`
         } while (usedUsernames.has(username))
         usedUsernames.add(username)
-
-        const email = `mock_${username}@lucidrepo-seed.test`
-        const { data, error } = await supabase.auth.admin.createUser({
-          email,
-          password: crypto.randomUUID(),
-          email_confirm: true,
-          user_metadata: { username },
-        })
-
-        if (error) {
-          log.push(`User ${i} error: ${error.message}`)
-          continue
-        }
-
-        const userId = data.user.id
-        userIds.push(userId)
-
-        // Update profile with rich data (trigger already created the profile)
-        await supabase.from('profiles').update({
-          display_name: pick(NAMES),
+        userConfigs.push({
+          username,
+          email: `mock_${username}@lucidrepo-seed.test`,
+          displayName: pick(NAMES),
           bio: pick(BIOS),
-          avatar_symbol: pick(SYMBOLS),
-          avatar_color: pick(COLORS),
-        }).eq('id', userId)
+          symbol: pick(SYMBOLS),
+          color: pick(COLORS),
+        })
       }
 
+      // Create users in parallel batches of 10
+      for (let i = 0; i < userConfigs.length; i += 10) {
+        const batch = userConfigs.slice(i, i + 10)
+        const results = await Promise.allSettled(
+          batch.map(async (cfg) => {
+            const { data, error } = await supabase.auth.admin.createUser({
+              email: cfg.email,
+              password: crypto.randomUUID(),
+              email_confirm: true,
+              user_metadata: { username: cfg.username },
+            })
+            if (error) throw error
+            const userId = data.user.id
+            await supabase.from('profiles').update({
+              display_name: cfg.displayName,
+              bio: cfg.bio,
+              avatar_symbol: cfg.symbol,
+              avatar_color: cfg.color,
+            }).eq('id', userId)
+            return userId
+          })
+        )
+        for (const r of results) {
+          if (r.status === 'fulfilled') userIds.push(r.value)
+          else log.push(`User error: ${(r.reason as Error).message}`)
+        }
+      }
       log.push(`Created ${userIds.length} users`)
 
       // Phase B: Dreams
