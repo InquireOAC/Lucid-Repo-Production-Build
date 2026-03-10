@@ -285,11 +285,12 @@ serve(async (req) => {
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceRoleKey}` },
             body: JSON.stringify({ sceneBrief, imageStyle: style, hasCharacterReference: false }),
           })
-          if (!promptRes.ok) { log.push(`Prompt failed for "${dream.title}": ${promptRes.status}`); continue }
+          if (!promptRes.ok) { console.log(`Prompt failed for "${dream.title}": ${promptRes.status}`); continue }
           const { cinematicPrompt } = await promptRes.json()
-          if (!cinematicPrompt) { log.push(`No prompt for "${dream.title}"`); continue }
+          if (!cinematicPrompt) { console.log(`No prompt for "${dream.title}"`); continue }
 
           // Step 2: Generate image directly via AI gateway
+          console.log(`Generating image for "${dream.title}" (${style})...`)
           const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${lovableApiKey}` },
@@ -302,7 +303,7 @@ serve(async (req) => {
               modalities: ['image', 'text'],
             }),
           })
-          if (!aiRes.ok) { log.push(`AI failed for "${dream.title}": ${aiRes.status}`); continue }
+          if (!aiRes.ok) { console.log(`AI failed for "${dream.title}": ${aiRes.status}`); continue }
 
           const aiData = await aiRes.json()
           const msg = aiData.choices?.[0]?.message
@@ -311,29 +312,43 @@ serve(async (req) => {
           if (!dataUrl && Array.isArray(msg?.content)) {
             for (const p of msg.content) { if (p.type === 'image_url' && p.image_url?.url) { dataUrl = p.image_url.url; break } }
           }
-          if (!dataUrl) { log.push(`No image for "${dream.title}"`); continue }
+          if (!dataUrl) { console.log(`No image data for "${dream.title}"`); continue }
 
-          // Upload
+          // Upload using chunked approach to avoid stack overflow
           const m = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
-          if (!m) { log.push(`Bad data URL for "${dream.title}"`); continue }
-          const bin = atob(m[2])
-          const bytes = new Uint8Array(bin.length)
-          for (let k = 0; k < bin.length; k++) bytes[k] = bin.charCodeAt(k)
+          if (!m) { console.log(`Bad data URL for "${dream.title}"`); continue }
+          
+          // Chunked base64 decode
+          const b64 = m[2]
+          const chunkSize = 8192
+          const chunks: Uint8Array[] = []
+          let totalLen = 0
+          for (let offset = 0; offset < b64.length; offset += chunkSize) {
+            const chunk = atob(b64.slice(offset, offset + chunkSize))
+            const arr = new Uint8Array(chunk.length)
+            for (let k = 0; k < chunk.length; k++) arr[k] = chunk.charCodeAt(k)
+            chunks.push(arr)
+            totalLen += arr.length
+          }
+          const bytes = new Uint8Array(totalLen)
+          let pos = 0
+          for (const c of chunks) { bytes.set(c, pos); pos += c.length }
+          
           const ext = m[1].includes('png') ? 'png' : 'jpg'
           const fileName = `mock-seeds/${dream.id}.${ext}`
 
           const { error: upErr } = await supabase.storage.from('dream-images').upload(fileName, bytes, { contentType: m[1], upsert: true })
-          if (upErr) { log.push(`Upload failed: ${upErr.message}`); continue }
+          if (upErr) { console.log(`Upload failed: ${upErr.message}`); continue }
 
           const { data: urlData } = supabase.storage.from('dream-images').getPublicUrl(fileName)
           await supabase.from('dream_entries').update({ image_url: urlData.publicUrl }).eq('id', dream.id)
           successCount++
-          log.push(`✅ ${successCount}/20 "${dream.title}" (${style})`)
+          console.log(`✅ ${successCount}/${imgLimit} "${dream.title}" (${style})`)
         } catch (err) {
-          log.push(`Error: ${err.message}`)
+          console.log(`Error: ${(err as Error).message}`)
         }
       }
-      log.push(`Phase C done: ${successCount} images`)
+      console.log(`Phase C done: ${successCount} images generated`)
     }
 
     return new Response(JSON.stringify({ success: true, log }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
