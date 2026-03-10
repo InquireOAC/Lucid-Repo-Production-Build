@@ -1,40 +1,52 @@
+## Seed Mock Data for Marketing Screenshots
 
+### Situation
 
-# Android Subscription Support
+- Currently 15 real profiles in the database
+- No foreign key constraints on `profiles` or `dream_entries`, so mock data can be inserted directly via SQL
+- Dream images require calling the AI generation pipeline (Gemini), which takes ~30s per image
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+### Plan
 
-## Changes Needed
+#### 1. Create a `seed-mock-data` edge function
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+A one-time-use edge function that:
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+**Phase A — 100 Mock Profiles**
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+- Generates 100 UUIDs and inserts into `profiles` with:
+  - Realistic usernames (e.g., "lucid_explorer_42", "dreamcatcher_nova", "astral_wanderer")
+  - Display names, bios, avatar symbols + colors (using the app's existing symbol avatar system)
+  - Varied `created_at` dates over the past 3 months
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+**Phase B — Dream Entries (~3-5 per user, all public)**
 
-## Files to Modify
+- ~400 dream entries total with:
+  - Creative dream titles and content (vivid, varied themes: flying, underwater, space, forests, cities, etc.)
+  - Realistic tags from the default set (Nightmare, Lucid, Recurring, Adventure, Spiritual, Flying, Falling, Water)
+  - Varied moods, `lucid` flags, like/comment/view counts
+  - `is_public = true` on all entries
+  - Staggered `created_at` dates
 
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+**Phase C — AI Image Generation for 10 Users**
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+- Select 20 users, pick 1-2 dreams each
+- For each dream, call the existing `compose-cinematic-prompt` + `generate-dream-image` pipeline
+- Store the resulting `image_url` on the dream entry
+- This phase will take ~5-10 minutes due to AI generation time
 
+#### 2. Populate Connections Data
+
+- The `match_dream_on_insert` trigger won't fire for bulk SQL inserts, so after seeding dreams, run the matching logic manually to populate `dream_matches`, `sync_alerts`, and `collective_waves` with organic-looking data
+
+### Technical Notes
+
+- Uses `SUPABASE_SERVICE_ROLE_KEY` to bypass RLS for inserts
+- The function is idempotent — checks if mock data already exists before inserting
+- Mock user IDs won't have auth.users entries, so they can't log in (they're display-only for the Lucid Repo feed and marketing)
+- After screenshots are done, a cleanup function can remove all mock data
+
+### Estimated Generation Time
+
+- Profiles + dreams: ~5 seconds
+- 15-20 AI images: ~8-12 minutes (sequential generation)
