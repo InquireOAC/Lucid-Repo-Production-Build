@@ -257,7 +257,8 @@ serve(async (req) => {
     }
 
     if (phase === 'images') {
-      log.push('Phase C: Generating AI images for 20 dreams...')
+      const limit = parseInt(new URL(req.url).searchParams.get('limit') || '5')
+      log.push(`Phase C: Generating AI images for ${limit} dreams...`)
 
       const { data: dreamsToImage } = await supabase
         .from('dream_entries')
@@ -266,7 +267,8 @@ serve(async (req) => {
         .eq('is_public', true)
         .limit(100)
 
-      const selected = (dreamsToImage || []).sort(() => Math.random() - 0.5).slice(0, 20)
+      const selected = (dreamsToImage || []).sort(() => Math.random() - 0.5).slice(0, limit)
+      log.push(`Selected ${selected.length} dreams`)
       log.push(`Selected ${selected.length} dreams`)
 
       const styles = ['surreal', 'fantasy', 'digital_art', 'cyberpunk', 'impressionist', 'oil_painting', 'watercolor', 'minimalist', 'hyper_realism', 'sketch']
