@@ -268,8 +268,7 @@ serve(async (req) => {
         .eq('is_public', true)
         .limit(100)
 
-      const selected = (dreamsToImage || []).sort(() => Math.random() - 0.5).slice(0, limit)
-      log.push(`Selected ${selected.length} dreams`)
+      const selected = (dreamsToImage || []).sort(() => Math.random() - 0.5).slice(0, imgLimit)
       log.push(`Selected ${selected.length} dreams`)
 
       const styles = ['surreal', 'fantasy', 'digital_art', 'cyberpunk', 'impressionist', 'oil_painting', 'watercolor', 'minimalist', 'hyper_realism', 'sketch']
