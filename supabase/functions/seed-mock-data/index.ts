@@ -90,7 +90,8 @@ serve(async (req) => {
     const lovableApiKey = Deno.env.get('LOVABLE_API_KEY') ?? ''
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    const { phase } = await req.json().catch(() => ({ phase: 'all' }))
+    const body = await req.json().catch(() => ({}))
+    const { phase = 'all', limit = 5 } = body
     const log: string[] = []
 
     if (phase === 'all' || phase === 'profiles') {
