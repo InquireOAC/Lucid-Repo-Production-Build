@@ -168,7 +168,7 @@ serve(async (req) => {
           allDreams.push({
             user_id: userId,
             title,
-            content: pick(CONTENTS),
+            content: CONTENTS_FN(title),
             tags: dreamTags,
             mood: pick(MOODS),
             lucid: dreamTags.includes('Lucid') || Math.random() < 0.3,
