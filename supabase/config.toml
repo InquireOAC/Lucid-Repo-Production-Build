@@ -58,3 +58,6 @@ wall_clock_limit = 300
 
 [functions.split-dream-sections]
 verify_jwt = false
+
+[functions.seed-mock-data]
+verify_jwt = false
