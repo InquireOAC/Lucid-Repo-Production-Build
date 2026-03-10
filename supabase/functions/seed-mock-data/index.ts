@@ -403,41 +403,89 @@ serve(async (req) => {
             continue
           }
 
-          // Step 2: Generate image
-          const imageRes = await fetch(`${supabaseUrl}/functions/v1/generate-dream-image`, {
+          // Step 2: Generate image via AI gateway directly
+          const contentParts = [
+            {
+              type: 'text',
+              text: `[CINEMATIC RENDERING DIRECTIVE] Generate this image in PORTRAIT orientation with a 9:16 aspect ratio (e.g., 1024x1820). The frame MUST be taller than it is wide. Render as a single unified cinematic dream scene frame. No text, no words, no UI elements.`
+            },
+            { type: 'text', text: cinematicPrompt }
+          ]
+
+          const aiRes = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${serviceRoleKey}`,
+              'Authorization': `Bearer ${lovableApiKey}`,
             },
             body: JSON.stringify({
-              prompt: cinematicPrompt,
-              imageStyle: style,
+              model: 'google/gemini-3-pro-image-preview',
+              messages: [{ role: 'user', content: contentParts }],
+              modalities: ['image', 'text'],
             }),
           })
 
-          if (!imageRes.ok) {
-            const errText = await imageRes.text()
-            log.push(`Image gen failed for "${dream.title}": ${imageRes.status} - ${errText.substring(0, 200)}`)
+          if (!aiRes.ok) {
+            log.push(`AI gateway failed for "${dream.title}": ${aiRes.status}`)
             continue
           }
 
-          const { imageUrl, image_url } = await imageRes.json()
-          const finalUrl = imageUrl || image_url
+          const aiData = await aiRes.json()
+          const message = aiData.choices?.[0]?.message
+          let dataUrl: string | null = null
 
-          if (finalUrl) {
-            // Update the dream entry with the image
-            const { error: updateErr } = await supabase
-              .from('dream_entries')
-              .update({ image_url: finalUrl })
-              .eq('id', dream.id)
-
-            if (updateErr) {
-              log.push(`Failed to update dream ${dream.id}: ${updateErr.message}`)
-            } else {
-              successCount++
-              log.push(`✅ Generated image ${successCount}/20 for "${dream.title}" (${style})`)
+          if (message?.images?.length > 0) {
+            dataUrl = message.images[0]?.image_url?.url ?? null
+          }
+          if (!dataUrl && Array.isArray(message?.content)) {
+            for (const part of message.content) {
+              if (part.type === 'image_url' && part.image_url?.url) {
+                dataUrl = part.image_url.url
+                break
+              }
             }
+          }
+
+          if (!dataUrl) {
+            log.push(`No image in AI response for "${dream.title}"`)
+            continue
+          }
+
+          // Upload to storage
+          const matches = dataUrl.match(/^data:(image\/\w+);base64,(.+)$/)
+          if (!matches) { log.push(`Invalid data URL for "${dream.title}"`); continue }
+
+          const mimeType = matches[1]
+          const imageBase64 = matches[2]
+          const binaryString = atob(imageBase64)
+          const bytes = new Uint8Array(binaryString.length)
+          for (let k = 0; k < binaryString.length; k++) bytes[k] = binaryString.charCodeAt(k)
+
+          const ext = mimeType.includes('png') ? 'png' : 'jpg'
+          const fileName = `mock-seeds/${dream.id}.${ext}`
+
+          const { error: uploadErr } = await supabase.storage
+            .from('dream-images')
+            .upload(fileName, bytes, { contentType: mimeType, upsert: true })
+
+          if (uploadErr) {
+            log.push(`Upload failed for "${dream.title}": ${uploadErr.message}`)
+            continue
+          }
+
+          const { data: urlData } = supabase.storage.from('dream-images').getPublicUrl(fileName)
+          const finalUrl = urlData.publicUrl
+
+          const { error: updateErr } = await supabase
+            .from('dream_entries')
+            .update({ image_url: finalUrl })
+            .eq('id', dream.id)
+
+          if (updateErr) {
+            log.push(`Failed to update dream ${dream.id}: ${updateErr.message}`)
+          } else {
+            successCount++
+            log.push(`✅ Generated image ${successCount}/20 for "${dream.title}" (${style})`)
           }
         } catch (err) {
           log.push(`Error generating image for "${dream.title}": ${err.message}`)
