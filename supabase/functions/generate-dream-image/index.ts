@@ -164,6 +164,12 @@ Now render the following cinematic dream scene:`
     // Add the prompt text
     contentParts.push({ type: 'text', text: prompt })
 
+    // Final reinforcement of vertical orientation (recency bias)
+    contentParts.push({
+      type: 'text',
+      text: `[FINAL MANDATORY REMINDER] The output image MUST be in PORTRAIT / VERTICAL orientation (9:16 aspect ratio — taller than wide, e.g. 1024×1820). Do NOT produce a landscape or square image under any circumstances. Vertical frame is non-negotiable.`
+    })
+
     const response = await fetch(
       'https://ai.gateway.lovable.dev/v1/chat/completions',
       {
