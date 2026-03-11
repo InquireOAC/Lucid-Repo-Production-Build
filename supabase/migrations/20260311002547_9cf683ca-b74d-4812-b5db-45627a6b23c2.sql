@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.backfill_dream_images();
