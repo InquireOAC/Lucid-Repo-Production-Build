@@ -2,12 +2,19 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
+import { getUserAIContext } from "@/utils/aiContextUtils";
 
 interface SectionImage {
   section: number;
   text: string;
   image_url?: string;
   prompt?: string;
+}
+
+interface CharacterData {
+  referenceImageUrl?: string;
+  outfitImageUrl?: string;
+  accessoryImageUrl?: string;
 }
 
 export function useSectionImageGeneration(
@@ -24,6 +31,21 @@ export function useSectionImageGeneration(
     setProgress(0);
 
     try {
+      // Fetch character/avatar data for the dream owner
+      let characterData: CharacterData = {};
+      try {
+        const aiContext = await getUserAIContext(dream.user_id);
+        if (aiContext) {
+          characterData = {
+            referenceImageUrl: aiContext.photo_url || undefined,
+            outfitImageUrl: aiContext.outfit_photo_url || undefined,
+            accessoryImageUrl: aiContext.accessory_photo_url || undefined,
+          };
+        }
+      } catch (err) {
+        console.warn("Could not fetch AI context for section images:", err);
+      }
+
       // Step 1: Split dream into sections
       const { data: splitData, error: splitError } = await supabase.functions.invoke(
         "split-dream-sections",
@@ -59,7 +81,7 @@ export function useSectionImageGeneration(
             continue;
           }
 
-          // Generate image
+          // Generate image — pass character data if available
           const { data: imgData, error: imgError } = await supabase.functions.invoke(
             "generate-dream-image",
             {
@@ -67,6 +89,9 @@ export function useSectionImageGeneration(
                 prompt: promptData.cinematicPrompt,
                 dreamContent: sec.text,
                 dreamId: dream.id,
+                ...(characterData.referenceImageUrl && { referenceImageUrl: characterData.referenceImageUrl }),
+                ...(characterData.outfitImageUrl && { outfitImageUrl: characterData.outfitImageUrl }),
+                ...(characterData.accessoryImageUrl && { accessoryImageUrl: characterData.accessoryImageUrl }),
               },
             }
           );
@@ -76,7 +101,7 @@ export function useSectionImageGeneration(
             sectionImages.push({
               section: sec.section,
               text: sec.text,
-              prompt: promptData.prompt,
+              prompt: promptData.cinematicPrompt,
             });
             continue;
           }
@@ -85,7 +110,7 @@ export function useSectionImageGeneration(
             section: sec.section,
             text: sec.text,
             image_url: imgData.imageUrl,
-            prompt: promptData.prompt,
+            prompt: promptData.cinematicPrompt,
           });
         } catch (err) {
           console.error(`Error generating section ${i + 1}:`, err);
