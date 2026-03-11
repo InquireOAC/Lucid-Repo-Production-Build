@@ -16,9 +16,9 @@ serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-    const { limit = 200 } = await req.json().catch(() => ({}))
+    const { limit = 100 } = await req.json().catch(() => ({}))
 
-    // Step 1: Get all existing mock-seed image URLs
+    // Get pool of existing mock-seed images
     const { data: dreamsWithImages } = await supabase
       .from('dream_entries')
       .select('image_url')
@@ -27,20 +27,16 @@ serve(async (req) => {
       .limit(500)
 
     const imagePool = [...new Set(
-      (dreamsWithImages || [])
-        .map((d: any) => d.image_url)
-        .filter(Boolean)
+      (dreamsWithImages || []).map((d: any) => d.image_url).filter(Boolean)
     )]
 
     if (imagePool.length === 0) {
-      return new Response(JSON.stringify({ error: 'No mock-seed images found to distribute' }), {
+      return new Response(JSON.stringify({ error: 'No mock-seed images found' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400
       })
     }
 
-    console.log(`Image pool size: ${imagePool.length}`)
-
-    // Step 2: Get dreams without images
+    // Get imageless dreams
     const { data: imagelessDreams } = await supabase
       .from('dream_entries')
       .select('id')
@@ -50,29 +46,36 @@ serve(async (req) => {
       .limit(limit)
 
     if (!imagelessDreams || imagelessDreams.length === 0) {
-      return new Response(JSON.stringify({ success: true, message: 'All public dreams already have images', updated: 0 }), {
+      return new Response(JSON.stringify({ success: true, updated: 0, remaining: 0 }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
 
-    console.log(`Found ${imagelessDreams.length} dreams without images`)
-
-    // Step 3: Assign images round-robin from the pool
+    // Batch update using parallel promises (groups of 10)
     let updated = 0
-    for (let i = 0; i < imagelessDreams.length; i++) {
-      const imageUrl = imagePool[i % imagePool.length]
-      const { error } = await supabase
-        .from('dream_entries')
-        .update({ image_url: imageUrl })
-        .eq('id', imagelessDreams[i].id)
-
-      if (!error) updated++
-      else console.log(`Failed to update ${imagelessDreams[i].id}: ${error.message}`)
+    const batchSize = 10
+    for (let b = 0; b < imagelessDreams.length; b += batchSize) {
+      const batch = imagelessDreams.slice(b, b + batchSize)
+      const promises = batch.map((dream, idx) => {
+        const imageUrl = imagePool[(b + idx) % imagePool.length]
+        return supabase
+          .from('dream_entries')
+          .update({ image_url: imageUrl })
+          .eq('id', dream.id)
+      })
+      const results = await Promise.all(promises)
+      updated += results.filter(r => !r.error).length
     }
 
-    console.log(`Updated ${updated}/${imagelessDreams.length} dreams`)
+    // Check remaining
+    const { count } = await supabase
+      .from('dream_entries')
+      .select('id', { count: 'exact', head: true })
+      .is('image_url', null)
+      .is('generatedImage', null)
+      .eq('is_public', true)
 
-    return new Response(JSON.stringify({ success: true, updated, total: imagelessDreams.length, poolSize: imagePool.length }), {
+    return new Response(JSON.stringify({ success: true, updated, remaining: count || 0, poolSize: imagePool.length }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     })
   } catch (error) {
