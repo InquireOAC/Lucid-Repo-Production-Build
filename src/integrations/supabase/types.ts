@@ -2523,6 +2523,7 @@ export type Database = {
       }
     }
     Functions: {
+      backfill_dream_images: { Args: never; Returns: number }
       check_subscription_credits: {
         Args: { credit_type: string; customer_id: string }
         Returns: boolean
