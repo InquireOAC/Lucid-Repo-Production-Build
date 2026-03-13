@@ -114,11 +114,13 @@ export function useDreamConnections() {
   };
 
   const fetchWaves = async () => {
+    const last72h = new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString();
     const { data } = await supabase
       .from("collective_waves")
       .select("*")
+      .gte("created_at", last72h)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(10);
     if (data) setWaves(data as CollectiveWave[]);
   };
 
