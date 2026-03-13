@@ -290,25 +290,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               <div className="w-10" />
             </div>
 
-            <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-              {selectedItem.videoUrl ? (
-                <video
-                  src={selectedItem.videoUrl}
-                  poster={selectedItem.imageUrl || undefined}
-                  autoPlay
-                  loop
-                  playsInline
-                  controls
-                  className="max-w-full max-h-full rounded-2xl"
-                />
-              ) : selectedItem.imageUrl ? (
-                <img
-                  src={selectedItem.imageUrl}
-                  alt={selectedItem.title}
-                  className="max-w-full max-h-full object-contain rounded-2xl"
-                />
-              ) : null}
-            </div>
+            <GalleryFullView item={selectedItem} />
 
             <div className="flex-shrink-0 px-6 pb-8 pt-4 flex items-center justify-center gap-3">
               <Button
