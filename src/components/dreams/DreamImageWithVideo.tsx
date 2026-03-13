@@ -163,7 +163,7 @@ const DreamImageWithVideo = ({
 
       {/* Mobile / desktop action drawer */}
       <Drawer open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DrawerContent>
+        <DrawerContent className="z-[60]" overlayClassName="z-[60]">
           <DrawerHeader>
             <DrawerTitle>Image Actions</DrawerTitle>
           </DrawerHeader>

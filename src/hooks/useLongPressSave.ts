@@ -1,6 +1,12 @@
-import { useRef, useCallback } from "react";
+import React, { useRef, useCallback } from "react";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { toast } from "sonner";
+
+export const suppressNativeStyle: React.CSSProperties = {
+  WebkitTouchCallout: 'none',
+  WebkitUserSelect: 'none',
+  userSelect: 'none',
+};
 
 export function useLongPressSave(imageUrl: string | undefined | null, filename?: string) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

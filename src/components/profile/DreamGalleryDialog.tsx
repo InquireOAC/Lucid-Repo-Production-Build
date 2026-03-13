@@ -343,6 +343,7 @@ const GalleryFullView: React.FC<{ item: GalleryItem }> = ({ item }) => {
       onTouchMove={lp.onTouchMove}
       onTouchEnd={lp.onTouchEnd}
       onContextMenu={lp.onContextMenu}
+      style={suppressNativeStyle}
     >
       {item.videoUrl ? (
         <video
