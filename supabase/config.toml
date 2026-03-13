@@ -66,3 +66,6 @@ wall_clock_limit = 300
 [functions.reseed-dream-content]
 verify_jwt = false
 wall_clock_limit = 300
+
+[functions.generate-dream-insight]
+verify_jwt = true
