@@ -183,11 +183,19 @@ const LucidRepoDiscovery = () => {
   }
 
   return (
-    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
+    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 md:px-8 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
+      {/* Desktop page header */}
+      <div className="hidden md:flex items-center justify-between pt-6 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Lucid Repo</h1>
+          <p className="text-sm text-muted-foreground mt-1">Explore shared dreams from the community</p>
+        </div>
+      </div>
+
       {/* Search */}
-      <div className="pt-3 mb-4">
+      <div className="pt-3 md:pt-0 mb-4">
         <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
-          <div className="relative">
+          <div className="relative max-w-full md:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
             <Input
               aria-label="Search dreams"
@@ -221,12 +229,12 @@ const LucidRepoDiscovery = () => {
 
       {showLoading ? (
         <div className="space-y-6">
-          <Skeleton className="w-full aspect-[16/9] rounded-2xl" />
+          <Skeleton className="w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl" />
           <div className="space-y-3">
             <Skeleton className="h-5 w-32" />
-            <div className="flex gap-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="w-[140px] aspect-[2/3] rounded-xl flex-shrink-0" />
+            <div className="flex gap-3 md:grid md:grid-cols-4 lg:grid-cols-5">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Skeleton key={i} className="w-[140px] md:w-full aspect-[2/3] rounded-xl flex-shrink-0" />
               ))}
             </div>
           </div>

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Book, Moon, User, Sparkles } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -53,7 +55,7 @@ const MainLayout = () => {
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none"
-          style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}
+          style={isMobile ? { paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' } : undefined}
         >
           <div className="md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
             <Outlet />

@@ -26,7 +26,7 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
 
   return (
     <div
-      className="flex-shrink-0 w-[140px] cursor-pointer stable-card"
+      className="flex-shrink-0 w-[140px] md:w-full md:min-w-0 cursor-pointer stable-card"
       onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
       {/* Cover */}
