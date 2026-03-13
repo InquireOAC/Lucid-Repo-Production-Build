@@ -126,13 +126,17 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
   },
 
   markAsRead: (notificationId: string) => {
+    const state = get();
+    const notification = state.notifications.find(n => n.id === notificationId);
+    if (!notification || notification.read) return;
+    
     const readIds = getReadIds();
     readIds.add(notificationId);
     saveReadIds(readIds);
-    set(state => ({
+    set({
       notifications: state.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n),
       unreadCount: Math.max(0, state.unreadCount - 1),
-    }));
+    });
   },
 
   markAllAsRead: () => {

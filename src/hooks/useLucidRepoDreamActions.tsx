@@ -82,11 +82,8 @@ export function useLucidRepoDreamActions(
     handleUpdateDream(id, updates).then(success => {
       if (success) {
         fetchPublicDreams();
-        if (updates.is_public === false || updates.isPublic === false) {
-          toast.success("Dream is now private");
-        }
       } else {
-        toast.error("Failed to update dream");
+        console.error("Failed to update dream");
       }
     });
   };

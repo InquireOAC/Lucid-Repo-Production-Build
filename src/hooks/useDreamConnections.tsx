@@ -125,11 +125,13 @@ export function useDreamConnections() {
   };
 
   const fetchClusters = async () => {
+    const today = new Date().toISOString().split('T')[0];
     const { data } = await supabase
       .from("dream_clusters")
       .select("*")
+      .gte("event_date", today)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(10);
     if (data) setClusters(data as DreamCluster[]);
   };
 
