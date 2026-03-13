@@ -1,7 +1,5 @@
-
 // src/utils/imageUtils.ts
 import { supabase, SUPABASE_URL } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 /**
  * Uploads a dream image to Supabase storage and updates the dream entry
@@ -23,7 +21,6 @@ export const uploadDreamImage = async (
 
     if (!userId) {
       console.error("Missing userId for image upload. User might not be logged in.");
-      toast.error("User not identified. Cannot save image to your account.");
       return imageUrl; 
     }
 
@@ -159,7 +156,6 @@ export const uploadDreamImage = async (
     return publicUrl;
   } catch (error: any) {
     console.error("Error in uploadDreamImage:", error.message, error.stack);
-    toast.error(`Failed to save image: ${error.message}. Using temporary image for now.`);
     return imageUrl; 
   }
 };
