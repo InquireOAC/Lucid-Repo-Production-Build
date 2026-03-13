@@ -425,7 +425,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
 
 /* ---------- Long-press saveable image sub-components ---------- */
 
-const HeroImage: React.FC<{ imageUrl: string; title: string }> = ({ imageUrl, title }) => {
+const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lucid?: boolean }> = ({ imageUrl, title, tags, lucid }) => {
   const lp = useLongPressSave(imageUrl, `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
   return (
     <div
@@ -437,6 +437,25 @@ const HeroImage: React.FC<{ imageUrl: string; title: string }> = ({ imageUrl, ti
     >
       <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {lucid && (
+              <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
+                Lucid
+              </Badge>
+            )}
+            {tags.slice(0, 4).map(tag => (
+              <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+          {title}
+        </h1>
+      </div>
     </div>
   );
 };
