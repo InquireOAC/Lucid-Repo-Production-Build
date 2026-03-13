@@ -34,6 +34,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import { toast } from "sonner";
+import { useLongPressSave } from "@/hooks/useLongPressSave";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
