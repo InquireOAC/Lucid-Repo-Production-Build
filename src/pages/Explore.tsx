@@ -18,14 +18,14 @@ const Explore: React.FC = () => {
 
   return (
     <PageTransition className="min-h-screen pt-safe-top">
-      <div className="p-4 pb-2">
-        <h1 className="text-xl font-bold text-foreground">Explore</h1>
+      <div className="p-4 md:px-8 md:pt-6 pb-2 max-w-6xl mx-auto">
+        <h1 className="text-xl md:text-2xl font-bold text-foreground">Explore</h1>
         <p className="text-xs text-muted-foreground mt-1">Your knowledge vault</p>
       </div>
 
-      <div className="px-4 space-y-5">
+      <div className="px-4 md:px-8 space-y-5 max-w-6xl mx-auto pb-8">
         {/* User Search */}
-        <div className="relative">
+        <div className="relative max-w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search users..."

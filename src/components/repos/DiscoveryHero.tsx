@@ -29,7 +29,7 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
       className="relative rounded-2xl overflow-hidden mb-6 cursor-pointer stable-card"
       onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
-      <div className="aspect-[16/9] relative">
+      <div className="aspect-[16/9] md:aspect-[21/9] relative">
         {imageUrl ? (
           <img
             src={imageUrl}

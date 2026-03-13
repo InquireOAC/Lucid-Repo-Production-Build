@@ -126,7 +126,7 @@ const NewDream = () => {
         </div>
       </div>
 
-      <div className="px-4 py-6 pb-28 space-y-6 max-w-2xl mx-auto">
+      <div className="px-4 md:px-8 py-6 pb-28 md:pb-6 space-y-6 max-w-2xl mx-auto">
         {/* Title + date */}
         <div className="space-y-1">
           <Input

@@ -229,12 +229,12 @@ const LucidRepoDiscovery = () => {
 
       {showLoading ? (
         <div className="space-y-6">
-          <Skeleton className="w-full aspect-[16/9] rounded-2xl" />
+          <Skeleton className="w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl" />
           <div className="space-y-3">
             <Skeleton className="h-5 w-32" />
-            <div className="flex gap-3">
-              {[1, 2, 3].map(i => (
-                <Skeleton key={i} className="w-[140px] aspect-[2/3] rounded-xl flex-shrink-0" />
+            <div className="flex gap-3 md:grid md:grid-cols-4 lg:grid-cols-5">
+              {[1, 2, 3, 4, 5].map(i => (
+                <Skeleton key={i} className="w-[140px] md:w-full aspect-[2/3] rounded-xl flex-shrink-0" />
               ))}
             </div>
           </div>
