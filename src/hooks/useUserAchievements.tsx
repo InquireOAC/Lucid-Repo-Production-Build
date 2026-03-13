@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface Achievement {
   id: string;
@@ -56,7 +55,6 @@ export const useUserAchievements = (userId?: string) => {
       setAllAchievements(allAchievementsData || []);
     } catch (error) {
       console.error('Error fetching achievements:', error);
-      toast.error('Failed to load achievements');
     } finally {
       setLoading(false);
     }
@@ -88,14 +86,6 @@ export const useUserAchievements = (userId?: string) => {
 
       setAchievements(prev => [data, ...prev]);
       
-      // Show toast notification
-      const achievement = data.learning_achievements;
-      if (achievement) {
-        toast.success(`Achievement Unlocked! ${achievement.icon} ${achievement.name}`, {
-          duration: 5000,
-        });
-      }
-
       return true;
     } catch (error) {
       console.error('Error unlocking achievement:', error);

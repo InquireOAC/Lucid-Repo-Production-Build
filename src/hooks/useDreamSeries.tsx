@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export interface DreamSeries {
   id: string;
@@ -73,12 +72,10 @@ export function useDreamSeries(userId?: string) {
         .select()
         .single();
       if (error) throw error;
-      toast.success("Series created!");
       fetchUserSeries();
       return created;
     } catch (e: any) {
-      toast.error("Failed to create series");
-      console.error(e);
+      console.error("Failed to create series", e);
       return null;
     }
   };
@@ -90,11 +87,10 @@ export function useDreamSeries(userId?: string) {
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", seriesId);
       if (error) throw error;
-      toast.success("Series updated!");
       fetchUserSeries();
       return true;
     } catch (e) {
-      toast.error("Failed to update series");
+      console.error("Failed to update series");
       return false;
     }
   };
@@ -106,11 +102,10 @@ export function useDreamSeries(userId?: string) {
         .delete()
         .eq("id", seriesId);
       if (error) throw error;
-      toast.success("Series deleted");
       fetchUserSeries();
       return true;
     } catch (e) {
-      toast.error("Failed to delete series");
+      console.error("Failed to delete series");
       return false;
     }
   };
@@ -157,12 +152,11 @@ export function useSeriesChapters(seriesId?: string) {
         .from("dream_series")
         .update({ chapter_count: nextNum, updated_at: new Date().toISOString() })
         .eq("id", seriesId);
-      toast.success("Chapter added!");
       fetchChapters();
       return true;
     } catch (e: any) {
-      if (e.code === "23505") toast.error("This dream is already in the series");
-      else toast.error("Failed to add chapter");
+      if (e.code === "23505") console.error("This dream is already in the series");
+      else console.error("Failed to add chapter");
       return false;
     }
   };
@@ -175,16 +169,14 @@ export function useSeriesChapters(seriesId?: string) {
         .delete()
         .eq("id", chapterId);
       if (error) throw error;
-      // Update chapter count
       await supabase
         .from("dream_series")
         .update({ chapter_count: Math.max(0, chapters.length - 1), updated_at: new Date().toISOString() })
         .eq("id", seriesId);
-      toast.success("Chapter removed");
       fetchChapters();
       return true;
     } catch (e) {
-      toast.error("Failed to remove chapter");
+      console.error("Failed to remove chapter");
       return false;
     }
   };
@@ -217,16 +209,14 @@ export function useSeriesFollow(userId?: string) {
           .eq("user_id", userId)
           .eq("series_id", seriesId);
         setFollowedSeriesIds(prev => prev.filter(id => id !== seriesId));
-        toast.success("Unfollowed series");
       } else {
         await supabase
           .from("dream_series_follows")
           .insert({ user_id: userId, series_id: seriesId });
         setFollowedSeriesIds(prev => [...prev, seriesId]);
-        toast.success("Following series!");
       }
     } catch (e) {
-      toast.error("Failed to update follow");
+      console.error("Failed to update follow");
     }
   };
 

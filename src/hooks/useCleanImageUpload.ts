@@ -1,14 +1,13 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadImageToStorage, urlToBlob } from "@/utils/cleanImageUpload";
-import { toast } from "sonner";
 
 export const useCleanImageUpload = () => {
   const { user } = useAuth();
 
   const uploadImageData = async (imageData: Blob | File, dreamId: string = "preview"): Promise<string | null> => {
     if (!user) {
-      toast.error("User not authenticated");
+      console.error("User not authenticated");
       return null;
     }
 
@@ -24,14 +23,13 @@ export const useCleanImageUpload = () => {
       return uploadedUrl;
     } catch (error: any) {
       console.error("Upload failed:", error);
-      toast.error(`Upload failed: ${error.message}`);
       return null;
     }
   };
 
   const uploadImageFromUrl = async (imageUrl: string, dreamId: string = "preview"): Promise<string | null> => {
     if (!user) {
-      toast.error("User not authenticated");
+      console.error("User not authenticated");
       return null;
     }
 
@@ -41,7 +39,6 @@ export const useCleanImageUpload = () => {
       return await uploadImageData(imageBlob, dreamId);
     } catch (error: any) {
       console.error("URL upload failed:", error);
-      toast.error(`Upload failed: ${error.message}`);
       return null;
     }
   };

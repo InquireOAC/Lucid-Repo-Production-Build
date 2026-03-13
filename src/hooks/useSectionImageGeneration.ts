@@ -59,7 +59,7 @@ export function useSectionImageGeneration(
       const sections: Array<{ section: number; text: string }> = splitData.sections;
       setTotalSections(sections.length);
 
-      toast.info(`Splitting into ${sections.length} scenes. Generating images...`);
+      console.log(`Splitting into ${sections.length} scenes. Generating images...`);
 
       // Step 2: For each section, generate a cinematic prompt then an image
       const sectionImages: SectionImage[] = [];
@@ -132,10 +132,9 @@ export function useSectionImageGeneration(
       onUpdate({ ...dream, section_images: sectionImages } as any);
 
       const successCount = sectionImages.filter(s => s.image_url).length;
-      toast.success(`Generated ${successCount}/${sections.length} story images!`);
+      console.log(`Generated ${successCount}/${sections.length} story images!`);
     } catch (error) {
       console.error("Section image generation error:", error);
-      toast.error(error instanceof Error ? error.message : "Failed to generate story images");
     } finally {
       setIsGenerating(false);
     }
