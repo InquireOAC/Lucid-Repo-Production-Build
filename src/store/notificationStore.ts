@@ -119,7 +119,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       set({ notifications: enriched, unreadCount: unread });
     } catch (error) {
       console.error('Error fetching notifications:', error);
-      toast.error('Failed to load notifications');
+      console.error('Failed to load notifications');
     } finally {
       set({ loading: false });
     }
