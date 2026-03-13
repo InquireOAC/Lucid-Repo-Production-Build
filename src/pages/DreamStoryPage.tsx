@@ -353,19 +353,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
                     {sec.text}
                   </p>
                   {sec.image_url && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="mt-4 rounded-xl overflow-hidden"
-                    >
-                      <img
-                        src={sec.image_url}
-                        alt={`Section ${sec.section}`}
-                        className="w-full object-cover rounded-xl"
-                        loading="lazy"
-                      />
-                    </motion.div>
+                    <SectionImage imageUrl={sec.image_url} section={sec.section} index={i} />
                   )}
                 </div>
               ))}
