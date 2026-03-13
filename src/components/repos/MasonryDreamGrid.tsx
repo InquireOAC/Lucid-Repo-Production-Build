@@ -67,7 +67,7 @@ const MasonryDreamCard = ({
 
   return (
     <div
-      className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group animate-fade-in"
+      className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group animate-fade-in-up will-change-transform"
       style={{ animationDelay: `${Math.min(index * 60, 400)}ms`, animationFillMode: 'backwards' }}
       onClick={() => onOpenDream(dream)}
     >

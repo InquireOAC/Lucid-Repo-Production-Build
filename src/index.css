@@ -858,6 +858,9 @@
   border: 1px solid hsl(var(--primary) / 0.12);
   box-shadow: 0 8px 32px hsl(var(--background) / 0.5);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Vault card lift on hover */
