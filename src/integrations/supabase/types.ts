@@ -765,6 +765,8 @@ export type Database = {
           content: string
           created_at: string
           date: string
+          dream_date: string | null
+          dream_symbols: string[] | null
           favorite_therapy_mode: string | null
           generatedImage: string | null
           id: string
@@ -775,15 +777,18 @@ export type Database = {
           jungian_analysis: string | null
           like_count: number | null
           lucid: boolean | null
+          lucidity_level: number | null
           mood: string | null
           section_images: Json | null
           shamanic_analysis: string | null
           tags: string[] | null
+          technique_used: string | null
           title: string
           updated_at: string
           user_id: string
           video_url: string | null
           view_count: number | null
+          word_count: number | null
         }
         Insert: {
           analysis?: string | null
@@ -793,6 +798,8 @@ export type Database = {
           content: string
           created_at?: string
           date?: string
+          dream_date?: string | null
+          dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
@@ -803,15 +810,18 @@ export type Database = {
           jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
+          lucidity_level?: number | null
           mood?: string | null
           section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
+          technique_used?: string | null
           title: string
           updated_at?: string
           user_id: string
           video_url?: string | null
           view_count?: number | null
+          word_count?: number | null
         }
         Update: {
           analysis?: string | null
@@ -821,6 +831,8 @@ export type Database = {
           content?: string
           created_at?: string
           date?: string
+          dream_date?: string | null
+          dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
@@ -831,15 +843,18 @@ export type Database = {
           jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
+          lucidity_level?: number | null
           mood?: string | null
           section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
+          technique_used?: string | null
           title?: string
           updated_at?: string
           user_id?: string
           video_url?: string | null
           view_count?: number | null
+          word_count?: number | null
         }
         Relationships: [
           {
@@ -857,6 +872,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dream_insights: {
+        Row: {
+          based_on_date_range: string | null
+          based_on_entry_count: number | null
+          generated_at: string
+          id: string
+          motivation_message: string | null
+          recommendation_message: string | null
+          summary_message: string | null
+          user_id: string
+        }
+        Insert: {
+          based_on_date_range?: string | null
+          based_on_entry_count?: number | null
+          generated_at?: string
+          id?: string
+          motivation_message?: string | null
+          recommendation_message?: string | null
+          summary_message?: string | null
+          user_id: string
+        }
+        Update: {
+          based_on_date_range?: string | null
+          based_on_entry_count?: number | null
+          generated_at?: string
+          id?: string
+          motivation_message?: string | null
+          recommendation_message?: string | null
+          summary_message?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       dream_likes: {
         Row: {
@@ -1592,6 +1640,65 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lucid_achievement_definitions: {
+        Row: {
+          category: string | null
+          description: string
+          icon: string
+          id: string
+          key: string
+          title: string
+          unlock_rule: Json
+        }
+        Insert: {
+          category?: string | null
+          description: string
+          icon?: string
+          id?: string
+          key: string
+          title: string
+          unlock_rule?: Json
+        }
+        Update: {
+          category?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          key?: string
+          title?: string
+          unlock_rule?: Json
+        }
+        Relationships: []
+      }
+      lucid_user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucid_user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "lucid_achievement_definitions"
             referencedColumns: ["id"]
           },
         ]
@@ -2540,6 +2647,7 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: undefined
       }
+      get_lucid_stats: { Args: { p_user_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
