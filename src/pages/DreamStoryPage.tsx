@@ -243,13 +243,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       </div>
 
       {/* Hero Image */}
-      {imageUrl && (
-        <div className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={dream.title}
-            className="w-full h-full object-cover"
-          />
+      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} />}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-5">
             {dream.tags && dream.tags.length > 0 && (
