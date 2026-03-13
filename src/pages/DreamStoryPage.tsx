@@ -206,7 +206,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="container mx-auto max-w-2xl px-0 sm:px-4 pt-safe-top pb-24"
+      className="container mx-auto max-w-2xl lg:max-w-3xl px-0 sm:px-4 pt-safe-top pb-24"
     >
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-3 sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border/30">

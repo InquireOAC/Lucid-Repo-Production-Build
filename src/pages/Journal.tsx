@@ -91,57 +91,55 @@ const Journal = () => {
   };
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top px-4 pb-4 md:px-6">
-      <JournalHeader onAddDream={() => setIsAddingDream(true)} />
+    <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
+      <div className="max-w-6xl mx-auto">
+        <JournalHeader onAddDream={() => setIsAddingDream(true)} />
 
-      <TagFilter
-        tags={uniqueTagsInDreams}
-        activeTags={activeTagIds}
-        onTagClick={handleTagClick}
-        onClearTags={() => setActiveTagIds([])}
-      />
+        <TagFilter
+          tags={uniqueTagsInDreams}
+          activeTags={activeTagIds}
+          onTagClick={handleTagClick}
+          onClearTags={() => setActiveTagIds([])}
+        />
 
-      <div className="mb-6">
-        {entries.length === 0 ? (
-          <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
-        ) : (
-          <DreamsList
-            dreams={filteredDreams}
-            tags={tags}
-            onSelect={(dream) => navigate(`/dream/${dream.id}`)}
-            onEdit={handleOpenEditDialog}
-            onTogglePublic={handleTogglePublic}
-            onDelete={(dreamId) => setDreamToDelete(dreamId)}
-            onTagClick={handleTagClick}
-          />
-        )}
+        <div className="mb-6">
+          {entries.length === 0 ? (
+            <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
+          ) : (
+            <DreamsList
+              dreams={filteredDreams}
+              tags={tags}
+              onSelect={(dream) => navigate(`/dream/${dream.id}`)}
+              onEdit={handleOpenEditDialog}
+              onTogglePublic={handleTogglePublic}
+              onDelete={(dreamId) => setDreamToDelete(dreamId)}
+              onTagClick={handleTagClick}
+            />
+          )}
+        </div>
+
+        <AddDreamDialog
+          isOpen={isAddingDream}
+          onOpenChange={(open) => {
+            setIsAddingDream(open);
+            if (!open && user) {
+              // Small delay to avoid conflicts
+              setTimeout(memoizedSyncDreams, 300);
+            }
+          }}
+          onSubmit={handleAddDreamAndClose}
+          tags={tags}
+          isSubmitting={isSubmitting}
+        />
+
+        <DeleteDreamConfirmationDialog
+          isOpen={!!dreamToDelete}
+          onOpenChange={(open) => {
+            if (!open) setDreamToDelete(null);
+          }}
+          onConfirmDelete={confirmDeleteDream}
+        />
       </div>
-
-      <AddDreamDialog
-        isOpen={isAddingDream}
-        onOpenChange={(open) => {
-          setIsAddingDream(open);
-          if (!open && user) {
-            // Small delay to avoid conflicts
-            setTimeout(memoizedSyncDreams, 300);
-          }
-        }}
-        onSubmit={handleAddDreamAndClose}
-        tags={tags}
-        isSubmitting={isSubmitting}
-      />
-
-
-
-
-
-      <DeleteDreamConfirmationDialog
-        isOpen={!!dreamToDelete}
-        onOpenChange={(open) => {
-          if (!open) setDreamToDelete(null);
-        }}
-        onConfirmDelete={confirmDeleteDream}
-      />
     </PageTransition>
   );
 };

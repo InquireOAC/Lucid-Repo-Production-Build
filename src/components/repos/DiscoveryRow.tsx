@@ -24,9 +24,10 @@ const DiscoveryRow: React.FC<DiscoveryRowProps> = ({ title, children, onSeeAll }
           </button>
         )}
       </div>
+      {/* Mobile: horizontal scroll. Desktop: wrapping grid */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 stable-scroll"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 stable-scroll md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-x-visible md:mx-0 md:px-0"
         style={{ scrollbarWidth: "none" }}
       >
         {children}
