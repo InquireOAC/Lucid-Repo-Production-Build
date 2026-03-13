@@ -112,7 +112,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
       setDreams(dreamsWithCounts);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
-      toast.error("Failed to fetch dreams");
+      console.error("Failed to fetch dreams");
     } finally {
       setIsLoading(false);
     }

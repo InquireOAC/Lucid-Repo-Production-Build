@@ -40,7 +40,7 @@ function App() {
         <SubscriptionProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <ColorSchemeProvider>
-            <Toaster />
+            
             <BrowserRouter>
               <Routes>
                 <Route path="/" element={<MainLayout />}>
