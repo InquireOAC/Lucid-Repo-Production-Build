@@ -357,8 +357,8 @@ const NewDream = () => {
         </motion.div>
       </div>
 
-      {/* Fixed bottom save */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/60 backdrop-blur-lg border-t border-border/30 pb-safe-bottom z-20">
+      {/* Fixed bottom save — mobile only; inline on desktop */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/60 backdrop-blur-lg border-t border-border/30 pb-safe-bottom z-20 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:pb-0 md:max-w-2xl md:mx-auto md:mt-2 md:mb-8">
         <div className="max-w-2xl mx-auto">
           <Button
             className="w-full h-12 text-base font-semibold"
