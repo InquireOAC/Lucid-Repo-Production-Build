@@ -1,40 +1,74 @@
 
 
-# Android Subscription Support
+# Desktop Layout Restructuring
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+The app currently renders as a mobile-only layout at all screen sizes — bottom tab bar, single-column content, and narrow max-widths. On desktop/laptop screens (768px+), this wastes most of the viewport.
 
-## Changes Needed
+## Approach
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+Transform `MainLayout.tsx` into a responsive layout that shows a **left sidebar navigation** on desktop (md+) and keeps the **bottom tab bar** on mobile only. Each page will get responsive content width and grid improvements.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+## Changes
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### 1. `src/layouts/MainLayout.tsx` — Responsive shell
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+- On `md+`: render a **fixed left sidebar** (w-64) with vertical nav items (icon + label), app logo at top, user avatar at bottom
+- On mobile (`< md`): keep existing bottom tab bar (unchanged)
+- Hide bottom tab bar on desktop via `md:hidden`
+- Hide sidebar on mobile via `hidden md:flex`
+- Main content area: `md:ml-64` with no bottom padding on desktop
+- Sidebar style: `glass-card` background, `border-r border-primary/10`, cosmic aesthetic matching existing nav
 
-## Files to Modify
+### 2. `src/pages/Journal.tsx` — Two-column on desktop
 
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+- On `lg+`: use a two-column layout — dream list on left, selected dream preview panel on right
+- On mobile: keep current single-column behavior
+- Wider container: `max-w-6xl mx-auto`
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+### 3. `src/pages/LucidRepoContainer.tsx` — Wider grid
+
+- Expand `max-w-6xl` container already exists — good
+- On desktop, the masonry grid already scales to 4 columns — good
+- Add wider hero card on desktop (`md:aspect-[21/9]`)
+- DiscoveryRow: on desktop, allow wrapping grid instead of horizontal scroll
+
+### 4. `src/pages/LucidStats.tsx` — Dashboard grid
+
+- On `lg+`: render stat cards in a 2-column grid layout instead of single stack
+- Hero card spans full width
+- Smaller cards pair side-by-side
+
+### 5. `src/pages/Profile.tsx` / `ProfilePageLayout.tsx`
+
+- Already has `max-w-3xl lg:max-w-4xl xl:max-w-5xl` — widen to `max-w-6xl`
+- Profile header can be wider with more horizontal space
+
+### 6. `src/components/repos/DiscoveryRow.tsx` — Desktop grid mode
+
+- On `md+`: switch from horizontal scroll to a wrapping grid (`md:grid md:grid-cols-3 lg:grid-cols-4`)
+- Keep horizontal scroll on mobile
+
+### 7. `src/index.css` — Remove mobile-only scroll constraints
+
+- Add desktop-specific styles for sidebar layout
+- Ensure `scrollbar-none` only applies on mobile
+
+### 8. `src/pages/DreamStoryPage.tsx` — Centered reading width
+
+- On desktop, constrain story content to `max-w-3xl mx-auto` for comfortable reading
+- Images can go wider (`max-w-4xl`)
+
+## Technical details
+
+- Use `useIsMobile()` hook (already exists at 768px breakpoint) for JS-level branching where needed
+- Prefer Tailwind responsive classes (`md:`, `lg:`) over JS where possible
+- Sidebar nav items reuse the same routes as bottom tabs
+- No new dependencies needed
+- Bottom tab bar gets `md:hidden`, sidebar gets `hidden md:flex`
+
+## Not changing
+
+- Mobile experience stays identical
+- Routing structure unchanged
+- No new pages or components beyond the sidebar nav inside MainLayout
 
