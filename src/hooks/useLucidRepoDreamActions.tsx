@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useNavigate } from "react-router-dom";
 import { useLikes } from "@/hooks/useLikes";
-import { toast } from "sonner";
 
 export function useLucidRepoDreamActions(
   user: any,
