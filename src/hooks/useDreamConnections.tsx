@@ -88,6 +88,7 @@ export function useDreamConnections() {
   };
 
   const fetchMatches = async () => {
+    const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data } = await supabase
       .from("dream_matches")
       .select(`
@@ -95,8 +96,9 @@ export function useDreamConnections() {
         dream1:dream_entries!dream_matches_dream1_id_fkey(title, image_url, "generatedImage", tags),
         dream2:dream_entries!dream_matches_dream2_id_fkey(title, image_url, "generatedImage", tags, profiles:profiles!dream_entries_user_id_fkey(username, display_name, avatar_url))
       `)
+      .gte("created_at", last24h)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(20);
     if (data) setMatches(data as unknown as DreamMatch[]);
   };
 
