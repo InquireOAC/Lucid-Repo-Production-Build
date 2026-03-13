@@ -20,7 +20,7 @@ const LucidStats: React.FC = () => {
   if (isLoading) {
     return (
       <PageTransition className="min-h-screen pt-safe-top">
-        <div className="px-4 py-6 space-y-4">
+        <div className="px-4 md:px-8 py-6 space-y-4 max-w-6xl mx-auto">
           <LoadingSkeletonStats />
         </div>
       </PageTransition>
@@ -30,7 +30,7 @@ const LucidStats: React.FC = () => {
   if (error) {
     return (
       <PageTransition className="min-h-screen pt-safe-top">
-        <div className="px-4 py-6">
+        <div className="px-4 md:px-8 py-6 max-w-6xl mx-auto">
           <div className="glass-card rounded-2xl p-6 text-center space-y-3">
             <p className="text-lg font-semibold text-foreground">Something went wrong</p>
             <p className="text-sm text-muted-foreground">Unable to load your stats.</p>
@@ -44,15 +44,23 @@ const LucidStats: React.FC = () => {
   return (
     <PageTransition className="min-h-screen pt-safe-top">
       <PullToRefresh onRefresh={async () => { await refetch(); }}>
-        <div className="px-4 py-6 space-y-4 pb-8">
-          <StatsHeroCard stats={stats} />
-          <LucidFrequencyCard stats={stats} timeRange={timeRange} onTimeRangeChange={setTimeRange} />
-          <RecallStrengthCard stats={stats} />
-          <TechniqueEffectivenessCard stats={stats} />
-          <TriggerDetectionCard stats={stats} />
-          <LucidityTrendCard stats={stats} />
-          <AICoachCard stats={stats} />
-          <AchievementsCard stats={stats} />
+        <div className="px-4 md:px-8 py-6 pb-8 max-w-6xl mx-auto">
+          {/* Hero spans full width */}
+          <div className="mb-4">
+            <StatsHeroCard stats={stats} />
+          </div>
+          {/* Dashboard grid: 2-col on lg+ */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <LucidFrequencyCard stats={stats} timeRange={timeRange} onTimeRangeChange={setTimeRange} />
+            <RecallStrengthCard stats={stats} />
+            <TechniqueEffectivenessCard stats={stats} />
+            <TriggerDetectionCard stats={stats} />
+            <LucidityTrendCard stats={stats} />
+            <AICoachCard stats={stats} />
+            <div className="lg:col-span-2">
+              <AchievementsCard stats={stats} />
+            </div>
+          </div>
         </div>
       </PullToRefresh>
     </PageTransition>
