@@ -1,6 +1,5 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import { DreamEntry } from "@/types/dream";
 import { Heart, MessageCircle, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -26,11 +25,8 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
   const isLiked = (dream as any).liked;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative rounded-2xl overflow-hidden mb-6 cursor-pointer group"
+    <div
+      className="relative rounded-2xl overflow-hidden mb-6 cursor-pointer stable-card"
       onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
       <div className="aspect-[16/9] relative">
@@ -38,19 +34,19 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
           <img
             src={imageUrl}
             alt={dream.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+            className="w-full h-full object-cover relative z-0"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center relative z-0">
             <span className="text-6xl">🌙</span>
           </div>
         )}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5">
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
           <div className="flex items-center gap-1 mb-2">
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground uppercase tracking-wider">
               Featured
@@ -115,7 +111,7 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -14,7 +14,7 @@ const DiscoverySeriesCard: React.FC<DiscoverySeriesCardProps> = ({ series, onCli
 
   return (
     <div
-      className="flex-shrink-0 w-[140px] cursor-pointer group"
+      className="flex-shrink-0 w-[140px] cursor-pointer stable-card"
       onClick={() => onClick(series)}
     >
       <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted/30 mb-2">
@@ -22,19 +22,19 @@ const DiscoverySeriesCard: React.FC<DiscoverySeriesCardProps> = ({ series, onCli
           <img
             src={series.cover_image_url}
             alt={series.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover relative z-0"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20 p-3">
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20 p-3 relative z-0">
             <BookOpen className="h-8 w-8 text-primary/60 mb-2" />
             <span className="text-xs text-center text-foreground/70 font-medium line-clamp-3">{series.title}</span>
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent z-10" />
 
-        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+        <div className="absolute bottom-0 left-0 right-0 p-2.5 z-20">
           <h3 className="text-xs font-semibold text-white line-clamp-2 leading-tight mb-1">
             {series.title}
           </h3>
@@ -51,7 +51,7 @@ const DiscoverySeriesCard: React.FC<DiscoverySeriesCardProps> = ({ series, onCli
         </div>
 
         {series.status !== "ongoing" && (
-          <div className="absolute top-1.5 left-1.5">
+          <div className="absolute top-1.5 left-1.5 z-20">
             <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-primary/90 text-primary-foreground uppercase">
               {series.status}
             </span>
