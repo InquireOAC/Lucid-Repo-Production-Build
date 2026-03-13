@@ -243,29 +243,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       </div>
 
       {/* Hero Image */}
-      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} />}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5">
-            {dream.tags && dream.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {dream.lucid && (
-                  <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
-                    Lucid
-                  </Badge>
-                )}
-                {dream.tags.slice(0, 4).map(tag => (
-                  <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-              {dream.title}
-            </h1>
-          </div>
-        </div>
-      )}
+      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} tags={dream.tags} lucid={dream.lucid} />}
 
       {/* No image fallback */}
       {!imageUrl && (
