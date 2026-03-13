@@ -14,6 +14,7 @@ import ModerationQueue from "@/components/admin/ModerationQueue";
 import UserManager from "@/components/admin/UserManager";
 import ChallengeComposer from "@/components/admin/ChallengeComposer";
 import ChallengeManager from "@/components/admin/ChallengeManager";
+import SubscribersList from "@/components/admin/SubscribersList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { motion } from "framer-motion";
 
