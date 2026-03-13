@@ -241,7 +241,8 @@ const DreamEntryForm = ({
 
     setIsSubmitting(true);
     try {
-      const dreamData = {
+      const wordCount = formData.content.trim() ? formData.content.trim().split(/\s+/).length : 0;
+      const dreamData: Record<string, any> = {
         title: formData.title,
         content: formData.content,
         dream_date: formData.date,
@@ -253,7 +254,10 @@ const DreamEntryForm = ({
         image_url: formData.generatedImage,
         image_prompt: formData.imagePrompt,
         lucid: formData.lucid,
-        audio_url: uploadedAudioUrl || null
+        audio_url: uploadedAudioUrl || null,
+        technique_used: formData.technique_used || null,
+        lucidity_level: formData.lucid ? formData.lucidity_level : null,
+        word_count: wordCount,
       };
 
       console.log("Saving dream with image URL:", formData.generatedImage);
