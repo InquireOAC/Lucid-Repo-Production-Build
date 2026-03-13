@@ -144,7 +144,7 @@ const DreamImageWithVideo = ({
           <img
             src={generatedImage}
             alt="Dream visualization"
-            className="rounded-md w-full h-auto pointer-events-none"
+            className="rounded-md w-full h-auto"
             draggable={false}
           />
         )}

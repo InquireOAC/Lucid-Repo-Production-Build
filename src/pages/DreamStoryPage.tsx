@@ -445,4 +445,45 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   );
 };
 
+/* ---------- Long-press saveable image sub-components ---------- */
+
+const HeroImage: React.FC<{ imageUrl: string; title: string }> = ({ imageUrl, title }) => {
+  const lp = useLongPressSave(imageUrl, `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
+  return (
+    <div
+      className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+    </div>
+  );
+};
+
+const SectionImage: React.FC<{ imageUrl: string; section: number; index: number }> = ({ imageUrl, section, index }) => {
+  const lp = useLongPressSave(imageUrl, `dream-section-${section}.png`);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="mt-4 rounded-xl overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      <img
+        src={imageUrl}
+        alt={`Section ${section}`}
+        className="w-full object-cover rounded-xl"
+        loading="lazy"
+      />
+    </motion.div>
+  );
+};
+
 export default DreamStoryPage;

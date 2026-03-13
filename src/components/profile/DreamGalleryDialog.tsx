@@ -331,4 +331,38 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
   );
 };
 
+const GalleryFullView: React.FC<{ item: GalleryItem }> = ({ item }) => {
+  const lp = useLongPressSave(
+    item.videoUrl ? undefined : item.imageUrl,
+    `${item.title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`
+  );
+  return (
+    <div
+      className="flex-1 flex items-center justify-center p-4 overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      {item.videoUrl ? (
+        <video
+          src={item.videoUrl}
+          poster={item.imageUrl || undefined}
+          autoPlay
+          loop
+          playsInline
+          controls
+          className="max-w-full max-h-full rounded-2xl"
+        />
+      ) : item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="max-w-full max-h-full object-contain rounded-2xl"
+        />
+      ) : null}
+    </div>
+  );
+};
+
 export default DreamGalleryDialog;
