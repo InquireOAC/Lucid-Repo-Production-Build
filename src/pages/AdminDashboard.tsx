@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen } from "lucide-react";
+import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen, CreditCard } from "lucide-react";
 import ExploreContentManager from "@/components/admin/ExploreContentManager";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminStats } from "@/hooks/useAdminStats";
