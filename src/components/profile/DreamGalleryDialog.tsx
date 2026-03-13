@@ -10,7 +10,7 @@ import { Share } from "@capacitor/share";
 import { downloadImageAsPng } from "@/utils/downloadImageAsPng";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLongPressSave } from "@/hooks/useLongPressSave";
+import { useLongPressSave, suppressNativeStyle } from "@/hooks/useLongPressSave";
 import { format } from "date-fns";
 
 interface DreamGalleryDialogProps {
