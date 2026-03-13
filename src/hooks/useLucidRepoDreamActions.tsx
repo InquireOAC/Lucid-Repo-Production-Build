@@ -20,9 +20,7 @@ export function useLucidRepoDreamActions(
   const { handleLike } = useLikes(user, dreamsState, setDreamsState, refreshLikedDreams);
 
   const handleOpenDream = (dream: DreamEntry) => {
-    // Save current scroll position
-    setSavedScrollPosition(window.scrollY);
-    setSelectedDream({ ...dream });
+    navigate(`/dream/${dream.id}`);
   };
 
   const handleCloseDream = () => {
