@@ -71,6 +71,7 @@ const AdminDashboard = () => {
     { value: "announcements", label: "Announce", icon: Megaphone },
     { value: "events", label: "Events", icon: Trophy },
     { value: "moderation", label: "Moderate", icon: Shield, badge: flagCount },
+    { value: "subscribers", label: "Subs", icon: CreditCard, badge: stats.activeSubscriptions },
     { value: "users", label: "Users", icon: Users },
     { value: "content", label: "Content", icon: BookOpen },
   ];
