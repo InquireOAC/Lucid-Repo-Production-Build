@@ -73,7 +73,7 @@ export function useLucidRepoDreamActions(
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
     const dreamToUpdate = dreamsState.find(d => d.id === id);
     if (!dreamToUpdate) {
-      toast.error("Dream not found");
+      console.error("Dream not found");
       return;
     }
     if (user && dreamToUpdate.user_id !== user.id) {
