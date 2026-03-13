@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+
 import { useSortAndFilter } from "./useSortAndFilter";
 import { useLikes } from "./useLikes";
 
