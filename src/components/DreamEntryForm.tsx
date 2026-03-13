@@ -468,7 +468,60 @@ const DreamEntryForm = ({
                 required
               />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Technique Used</Label>
+              <Select
+                value={formData.technique_used}
+                onValueChange={(v) => setFormData((p) => ({ ...p, technique_used: v }))}
+              >
+                <SelectTrigger className="dream-input h-9 text-sm">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="MILD">MILD</SelectItem>
+                  <SelectItem value="WILD">WILD</SelectItem>
+                  <SelectItem value="WBTB">WBTB</SelectItem>
+                  <SelectItem value="Reality Checks">Reality Checks</SelectItem>
+                  <SelectItem value="Meditation">Meditation</SelectItem>
+                  <SelectItem value="Supplements">Supplements</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {/* Lucidity Level — only shown when lucid is checked */}
+          {formData.lucid && (
+            <div className="space-y-2">
+              <Label className="text-sm">Lucidity Level</Label>
+              <div className="flex gap-2">
+                {[
+                  { value: 1, label: "Slight", desc: "Awareness" },
+                  { value: 2, label: "Moderate", desc: "Control" },
+                  { value: 3, label: "Full", desc: "Control" },
+                ].map((level) => (
+                  <button
+                    key={level.value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((p) => ({
+                        ...p,
+                        lucidity_level: p.lucidity_level === level.value ? null : level.value,
+                      }))
+                    }
+                    className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+                      formData.lucidity_level === level.value
+                        ? "bg-primary/20 border-primary/40 text-foreground"
+                        : "bg-muted/10 border-border/30 text-muted-foreground"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{level.label}</p>
+                    <p className="text-[10px]">{level.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dream Tags */}
