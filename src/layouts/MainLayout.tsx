@@ -15,6 +15,7 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const scrollRef = React.useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   React.useEffect(() => {
     if (scrollRef.current) {
