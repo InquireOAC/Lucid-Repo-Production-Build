@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface NotificationUser {
   display_name?: string;
