@@ -34,7 +34,15 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import { toast } from "sonner";
-import { useLongPressSave } from "@/hooks/useLongPressSave";
+import { suppressNativeStyle } from "@/hooks/useLongPressSave";
+import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Download } from "lucide-react";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
