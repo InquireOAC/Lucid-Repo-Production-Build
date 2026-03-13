@@ -52,9 +52,8 @@ const MainLayout = () => {
         {/* Main content - scrollable area */}
         <div
           ref={scrollRef}
-          className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none"
+          className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none md:pb-0"
           style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}
-          className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none md:!pb-0"
         >
           <div className="md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
             <Outlet />
