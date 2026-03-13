@@ -34,7 +34,15 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import { toast } from "sonner";
-import { useLongPressSave } from "@/hooks/useLongPressSave";
+import { suppressNativeStyle } from "@/hooks/useLongPressSave";
+import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Download } from "lucide-react";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -426,60 +434,136 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
 /* ---------- Long-press saveable image sub-components ---------- */
 
 const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lucid?: boolean }> = ({ imageUrl, title, tags, lucid }) => {
-  const lp = useLongPressSave(imageUrl, `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
+  const [showMenu, setShowMenu] = useState(false);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
+
+  const clearTimer = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartPos.current = { x: t.clientX, y: t.clientY };
+    timerRef.current = setTimeout(() => setShowMenu(true), 500);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPos.current) return;
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - touchStartPos.current.x, t.clientY - touchStartPos.current.y) > 10) clearTimer();
+  };
+  const handleTouchEnd = () => clearTimer();
+  const handleContextMenu = (e: React.MouseEvent) => { e.preventDefault(); setShowMenu(true); };
+
+  const handleSave = () => {
+    setShowMenu(false);
+    shareOrSaveImage(imageUrl, `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`).catch(() => toast.error("Failed to save image"));
+  };
+
   return (
-    <div
-      className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden"
-      onTouchStart={lp.onTouchStart}
-      onTouchMove={lp.onTouchMove}
-      onTouchEnd={lp.onTouchEnd}
-      onContextMenu={lp.onContextMenu}
-    >
-      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-      <div className="absolute bottom-0 left-0 right-0 p-5">
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {lucid && (
-              <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
-                Lucid
-              </Badge>
-            )}
-            {tags.slice(0, 4).map(tag => (
-              <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
-        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-          {title}
-        </h1>
+    <>
+      <div
+        className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onContextMenu={handleContextMenu}
+        style={suppressNativeStyle}
+      >
+        <img src={imageUrl} alt={title} className="w-full h-full object-cover" draggable={false} style={suppressNativeStyle} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          {tags && tags.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {lucid && (
+                <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
+                  Lucid
+                </Badge>
+              )}
+              {tags.slice(0, 4).map(tag => (
+                <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+            {title}
+          </h1>
+        </div>
       </div>
-    </div>
+      <Drawer open={showMenu} onOpenChange={setShowMenu}>
+        <DrawerContent>
+          <DrawerHeader><DrawerTitle>Image Actions</DrawerTitle></DrawerHeader>
+          <div className="flex flex-col gap-1 px-4 pb-6">
+            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left" onClick={handleSave}>
+              <Download className="h-5 w-5 text-primary" />
+              <span className="font-medium">Save Image</span>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 
 const SectionImage: React.FC<{ imageUrl: string; section: number; index: number }> = ({ imageUrl, section, index }) => {
-  const lp = useLongPressSave(imageUrl, `dream-section-${section}.png`);
+  const [showMenu, setShowMenu] = useState(false);
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
+
+  const clearTimer = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartPos.current = { x: t.clientX, y: t.clientY };
+    timerRef.current = setTimeout(() => setShowMenu(true), 500);
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartPos.current) return;
+    const t = e.touches[0];
+    if (Math.hypot(t.clientX - touchStartPos.current.x, t.clientY - touchStartPos.current.y) > 10) clearTimer();
+  };
+  const handleTouchEnd = () => clearTimer();
+  const handleContextMenu = (e: React.MouseEvent) => { e.preventDefault(); setShowMenu(true); };
+
+  const handleSave = () => {
+    setShowMenu(false);
+    shareOrSaveImage(imageUrl, `dream-section-${section}.png`).catch(() => toast.error("Failed to save image"));
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="mt-4 rounded-xl overflow-hidden"
-      onTouchStart={lp.onTouchStart}
-      onTouchMove={lp.onTouchMove}
-      onTouchEnd={lp.onTouchEnd}
-      onContextMenu={lp.onContextMenu}
-    >
-      <img
-        src={imageUrl}
-        alt={`Section ${section}`}
-        className="w-full object-cover rounded-xl"
-        loading="lazy"
-      />
-    </motion.div>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 }}
+        className="mt-4 rounded-xl overflow-hidden"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onContextMenu={handleContextMenu}
+        style={suppressNativeStyle}
+      >
+        <img
+          src={imageUrl}
+          alt={`Section ${section}`}
+          className="w-full object-cover rounded-xl"
+          loading="lazy"
+          draggable={false}
+          style={suppressNativeStyle}
+        />
+      </motion.div>
+      <Drawer open={showMenu} onOpenChange={setShowMenu}>
+        <DrawerContent>
+          <DrawerHeader><DrawerTitle>Image Actions</DrawerTitle></DrawerHeader>
+          <div className="flex flex-col gap-1 px-4 pb-6">
+            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left" onClick={handleSave}>
+              <Download className="h-5 w-5 text-primary" />
+              <span className="font-medium">Save Image</span>
+            </button>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 

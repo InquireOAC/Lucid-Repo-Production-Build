@@ -1,35 +1,40 @@
 
 
-# Fix: Long-Press Image Save Not Triggering
+# Android Subscription Support
 
-## Root Causes
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-1. **iOS native context menu intercepts touch** — On iOS Safari, long-pressing an `<img>` triggers the native "Save Image / Copy" popup before the custom 500ms timer fires. Fix: add `-webkit-touch-callout: none` and `-webkit-user-select: none` to image containers.
+## Changes Needed
 
-2. **Drawer z-index buried under Dialog** — `DreamImageWithVideo` renders its action Drawer at `z-50`, same as the parent Dialog overlay. The Drawer gets trapped behind it. Fix: bump Drawer to `z-[60]`.
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-3. **Story page images have no action drawer** — `HeroImage` and `SectionImage` in `DreamStoryPage` call `shareOrSaveImage` directly (silent download), not the visible action sheet the user expects. Fix: add an action drawer matching `DreamImageWithVideo`'s pattern.
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-## Changes
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-### 1. `src/components/dreams/DreamImageWithVideo.tsx`
-- Add `WebkitTouchCallout: 'none'` and `WebkitUserSelect: 'none'` to the container's inline style object (suppresses iOS native menu)
-- Pass `className="z-[60]"` to `<DrawerContent>` so it renders above any parent Dialog
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-### 2. `src/components/ui/drawer.tsx`
-- Add optional `overlayClassName` prop to `DrawerContent` and pass it to `<DrawerOverlay>` so callers can bump overlay z-index when needed
+## Files to Modify
 
-### 3. `src/pages/DreamStoryPage.tsx`
-- Replace `useLongPressSave` on `HeroImage` and `SectionImage` with inline long-press state + a `<Drawer>` action sheet showing "Save Image"
-- Add `-webkit-touch-callout: none` style to both image containers
-- Import `Drawer`, `DrawerContent`, `DrawerHeader`, `DrawerTitle` and `Download` icon
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
 
-### 4. `src/components/profile/DreamGalleryDialog.tsx`
-- Add `WebkitTouchCallout: 'none'` and `WebkitUserSelect: 'none'` inline styles to the `GalleryFullView` container
-
-### 5. `src/hooks/useLongPressSave.ts`
-- Export a `suppressNativeStyle` constant from the hook for convenience:
-  ```ts
-  { WebkitTouchCallout: 'none', WebkitUserSelect: 'none' } as React.CSSProperties
-  ```
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
