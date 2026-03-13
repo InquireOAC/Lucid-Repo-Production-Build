@@ -124,10 +124,13 @@ const DreamImageWithVideo = ({
         onClick={videoUrl ? togglePlayPause : undefined}
         style={{
           WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
           touchAction: 'pan-y',
           transform: isPressing ? 'scale(0.97)' : 'scale(1)',
           transition: 'transform 0.2s ease-out',
-        }}
+        } as React.CSSProperties}
       >
         {videoUrl ? (
           <video
