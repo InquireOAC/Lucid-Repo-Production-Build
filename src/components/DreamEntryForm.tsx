@@ -66,6 +66,8 @@ const DreamEntryForm = ({
     generatedImage: existingDream?.generatedImage || existingDream?.image_url || "",
     imagePrompt: existingDream?.imagePrompt || existingDream?.image_prompt || "",
     lucid: existingDream?.lucid || false,
+    lucidity_level: existingDream?.lucidity_level ?? null as number | null,
+    technique_used: existingDream?.technique_used ?? "" as string,
   });
   
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
