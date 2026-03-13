@@ -30,7 +30,7 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
       onClick={() => navigate(`/lucid-repo/${dream.id}`)}
     >
       {/* Cover */}
-      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted/30 mb-2">
+      <div className="relative aspect-[2/3] rounded-xl overflow-hidden bg-muted/30 mb-2 will-change-transform">
         {imageUrl ? (
           <img
             src={imageUrl}
