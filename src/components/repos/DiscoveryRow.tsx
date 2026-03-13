@@ -1,6 +1,5 @@
 import React, { useRef } from "react";
 import { ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 
 interface DiscoveryRowProps {
   title: string;
@@ -12,12 +11,7 @@ const DiscoveryRow: React.FC<DiscoveryRowProps> = ({ title, children, onSeeAll }
   const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
-    <motion.section
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-      className="mb-6"
-    >
+    <section className="mb-6">
       <div className="flex items-center justify-between mb-3 px-1">
         <h2 className="text-base font-bold text-foreground">{title}</h2>
         {onSeeAll && (
@@ -32,12 +26,12 @@ const DiscoveryRow: React.FC<DiscoveryRowProps> = ({ title, children, onSeeAll }
       </div>
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4"
+        className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4 stable-scroll"
         style={{ scrollbarWidth: "none" }}
       >
         {children}
       </div>
-    </motion.section>
+    </section>
   );
 };
 
