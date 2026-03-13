@@ -1,40 +1,57 @@
 
+Goal: eliminate the remaining Lucid Repo text/title flicker while scrolling (based on your screenshot, this is still happening in the **All** feed cards, not just masonry cards).
 
-# Android Subscription Support
+What I found
+- The previous fix mostly targeted masonry/featured card surfaces.
+- Your screenshot shows the **All feed** (`DiscoveryHero` + horizontal `DiscoveryRow` cards), which still uses:
+  - `framer-motion` transform animations on container elements
+  - layered absolute overlays/text without explicit layer isolation
+  - hover-scale transforms on images that can trigger unstable compositing on iOS/touch browsers
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+Implementation plan
+1) Add a dedicated mobile compositing-stability utility in `src/index.css`
+- Introduce reusable classes for card scroll stability (translate3d, backface hidden, isolation, contain paint, font smoothing).
+- Add a horizontal-scroll stability utility for discovery rows (`-webkit-overflow-scrolling: touch`, contain/isolation safeguards).
 
-## Changes Needed
+2) Apply stability classes + explicit z-index layering to All-feed cards
+- `src/components/repos/DiscoveryHero.tsx`
+  - Apply stable-card class to root card.
+  - Ensure image is base layer, gradient overlay middle layer, text/stats top layer (`z-0 / z-10 / z-20`).
+- `src/components/repos/DiscoveryDreamCard.tsx`
+  - Same layering and stable-card class.
+- `src/components/series/DiscoverySeriesCard.tsx`
+  - Same layering and stable-card class.
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+3) Remove transform-heavy entry animation from scroll surfaces
+- `src/components/repos/DiscoveryHero.tsx`
+- `src/components/repos/DiscoveryRow.tsx`
+- Replace `motion.*` wrappers with static containers (or non-transform CSS-only fade if needed), so scrolling does not run through animated transform stacks.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+4) Disable hover transform effects on touch/coarse pointers
+- Update image scale classes in discovery cards to only apply on non-touch/desktop breakpoints (so mobile scrolling doesn’t trigger accidental hover-state compositing changes).
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+5) Keep existing masonry fix, but align stability pattern
+- Ensure `MasonryDreamGrid` remains on the same stable class pattern for consistency (no regression between All view and filtered view).
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+Technical details
+- Files to update:
+  - `src/index.css`
+  - `src/components/repos/DiscoveryHero.tsx`
+  - `src/components/repos/DiscoveryRow.tsx`
+  - `src/components/repos/DiscoveryDreamCard.tsx`
+  - `src/components/series/DiscoverySeriesCard.tsx`
+  - (light consistency check) `src/components/repos/MasonryDreamGrid.tsx`
+- Key CSS techniques:
+  - `transform: translate3d(0,0,0)`
+  - `-webkit-backface-visibility: hidden; backface-visibility: hidden`
+  - `isolation: isolate`
+  - `contain: paint`
+  - explicit stacking (`z-index`) for image/overlay/text layers
+  - touch-safe hover behavior (no scale transforms on mobile)
 
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
-
+Validation checklist after implementation
+- On mobile viewport (~440x782), in `/lucid-repo`:
+  - Scroll vertically through featured + multiple discovery rows: titles/descriptions never disappear.
+  - Horizontally swipe discovery rows quickly: no text flicker/blanking.
+  - Switch category filters and return to All: still stable.
+  - Confirm card taps/open behavior remains unchanged.
