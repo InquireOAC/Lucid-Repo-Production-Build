@@ -150,6 +150,10 @@ const AdminDashboard = () => {
             <ModerationQueue />
           </TabsContent>
 
+          <TabsContent value="subscribers" className="mt-4">
+            <SubscribersList />
+          </TabsContent>
+
           <TabsContent value="users" className="mt-4">
             <UserManager />
           </TabsContent>
