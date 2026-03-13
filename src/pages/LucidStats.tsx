@@ -43,7 +43,7 @@ const LucidStats: React.FC = () => {
 
   return (
     <PageTransition className="min-h-screen pt-safe-top">
-      <PullToRefresh onRefresh={() => refetch()}>
+      <PullToRefresh onRefresh={async () => { await refetch(); }}>
         <div className="px-4 py-6 space-y-4 pb-8">
           <StatsHeroCard stats={stats} />
           <LucidFrequencyCard stats={stats} timeRange={timeRange} onTimeRangeChange={setTimeRange} />
