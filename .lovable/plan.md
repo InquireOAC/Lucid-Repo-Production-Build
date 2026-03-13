@@ -1,26 +1,40 @@
 
 
-## Plan: Enable Long-Press to Save Images
+# Android Subscription Support
 
-The app currently blocks native long-press saving on images by using `pointer-events-none`, `draggable={false}`, and `e.preventDefault()` on context menus. The `DreamImageWithVideo` component has a custom long-press that opens a drawer with "Save Image" — this is good, but other image surfaces lack it entirely.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-### Changes
+## Changes Needed
 
-**1. `src/components/dreams/DreamImageWithVideo.tsx`**
-- Remove `pointer-events-none` from the `<img>` tag (it's redundant since the parent handles touch events)
-- Keep the existing custom long-press → drawer → Save Image flow (it already works and integrates with double-tap-to-like)
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-**2. `src/pages/DreamStoryPage.tsx`** — Section images
-- Add long-press-to-save on section images (the inline story images). Wrap each section image with a touch handler that calls `shareOrSaveImage` on long press, or show a simple action sheet.
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-**3. `src/components/profile/DreamGalleryDialog.tsx`** — Gallery full-view image
-- The selected/expanded image view already has a "Save Image" button, but add long-press support on the full-view image itself for consistency. Also remove the `toast` import (leftover from previous cleanup).
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-**4. `src/components/repos/DiscoveryDreamCard.tsx`** and `src/components/repos/DiscoveryHero.tsx`**
-- These are thumbnail/preview cards — long-press should navigate to dream detail, not save. No change needed here.
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-### Implementation approach
-- Create a small reusable hook `useLongPressSave(imageUrl)` that returns touch handlers (`onTouchStart`, `onTouchMove`, `onTouchEnd`, `onContextMenu`) and triggers `shareOrSaveImage` after 500ms hold.
-- Apply this hook to section images in DreamStoryPage and the gallery full-view image.
-- Keep DreamImageWithVideo's existing drawer-based approach (it has additional actions like Generate Video).
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 

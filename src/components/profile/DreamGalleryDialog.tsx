@@ -10,6 +10,7 @@ import { Share } from "@capacitor/share";
 import { downloadImageAsPng } from "@/utils/downloadImageAsPng";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLongPressSave } from "@/hooks/useLongPressSave";
 import { format } from "date-fns";
 
 interface DreamGalleryDialogProps {
@@ -289,25 +290,7 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
               <div className="w-10" />
             </div>
 
-            <div className="flex-1 flex items-center justify-center p-4 overflow-hidden">
-              {selectedItem.videoUrl ? (
-                <video
-                  src={selectedItem.videoUrl}
-                  poster={selectedItem.imageUrl || undefined}
-                  autoPlay
-                  loop
-                  playsInline
-                  controls
-                  className="max-w-full max-h-full rounded-2xl"
-                />
-              ) : selectedItem.imageUrl ? (
-                <img
-                  src={selectedItem.imageUrl}
-                  alt={selectedItem.title}
-                  className="max-w-full max-h-full object-contain rounded-2xl"
-                />
-              ) : null}
-            </div>
+            <GalleryFullView item={selectedItem} />
 
             <div className="flex-shrink-0 px-6 pb-8 pt-4 flex items-center justify-center gap-3">
               <Button
@@ -345,6 +328,40 @@ const DreamGalleryDialog = ({ open, onOpenChange }: DreamGalleryDialogProps) => 
         )}
       </AnimatePresence>
     </>
+  );
+};
+
+const GalleryFullView: React.FC<{ item: GalleryItem }> = ({ item }) => {
+  const lp = useLongPressSave(
+    item.videoUrl ? undefined : item.imageUrl,
+    `${item.title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`
+  );
+  return (
+    <div
+      className="flex-1 flex items-center justify-center p-4 overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      {item.videoUrl ? (
+        <video
+          src={item.videoUrl}
+          poster={item.imageUrl || undefined}
+          autoPlay
+          loop
+          playsInline
+          controls
+          className="max-w-full max-h-full rounded-2xl"
+        />
+      ) : item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.title}
+          className="max-w-full max-h-full object-contain rounded-2xl"
+        />
+      ) : null}
+    </div>
   );
 };
 

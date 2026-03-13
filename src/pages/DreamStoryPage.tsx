@@ -34,6 +34,7 @@ import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import { toast } from "sonner";
+import { useLongPressSave } from "@/hooks/useLongPressSave";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -242,35 +243,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       </div>
 
       {/* Hero Image */}
-      {imageUrl && (
-        <div className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden">
-          <img
-            src={imageUrl}
-            alt={dream.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5">
-            {dream.tags && dream.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {dream.lucid && (
-                  <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
-                    Lucid
-                  </Badge>
-                )}
-                {dream.tags.slice(0, 4).map(tag => (
-                  <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
-              {dream.title}
-            </h1>
-          </div>
-        </div>
-      )}
+      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} tags={dream.tags} lucid={dream.lucid} />}
 
       {/* No image fallback */}
       {!imageUrl && (
@@ -358,19 +331,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
                     {sec.text}
                   </p>
                   {sec.image_url && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.1 }}
-                      className="mt-4 rounded-xl overflow-hidden"
-                    >
-                      <img
-                        src={sec.image_url}
-                        alt={`Section ${sec.section}`}
-                        className="w-full object-cover rounded-xl"
-                        loading="lazy"
-                      />
-                    </motion.div>
+                    <SectionImage imageUrl={sec.image_url} section={sec.section} index={i} />
                   )}
                 </div>
               ))}
@@ -458,6 +419,66 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </motion.div>
+  );
+};
+
+/* ---------- Long-press saveable image sub-components ---------- */
+
+const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lucid?: boolean }> = ({ imageUrl, title, tags, lucid }) => {
+  const lp = useLongPressSave(imageUrl, `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}.png`);
+  return (
+    <div
+      className="relative aspect-[3/4] sm:rounded-2xl overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      <img src={imageUrl} alt={title} className="w-full h-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {lucid && (
+              <Badge className="bg-primary/90 text-primary-foreground text-[10px] font-bold uppercase tracking-wider">
+                Lucid
+              </Badge>
+            )}
+            {tags.slice(0, 4).map(tag => (
+              <Badge key={tag} variant="secondary" className="bg-white/15 text-white/90 border-0 text-[10px]">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+        <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+          {title}
+        </h1>
+      </div>
+    </div>
+  );
+};
+
+const SectionImage: React.FC<{ imageUrl: string; section: number; index: number }> = ({ imageUrl, section, index }) => {
+  const lp = useLongPressSave(imageUrl, `dream-section-${section}.png`);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.1 }}
+      className="mt-4 rounded-xl overflow-hidden"
+      onTouchStart={lp.onTouchStart}
+      onTouchMove={lp.onTouchMove}
+      onTouchEnd={lp.onTouchEnd}
+      onContextMenu={lp.onContextMenu}
+    >
+      <img
+        src={imageUrl}
+        alt={`Section ${section}`}
+        className="w-full object-cover rounded-xl"
+        loading="lazy"
+      />
     </motion.div>
   );
 };
