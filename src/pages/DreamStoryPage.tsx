@@ -376,7 +376,20 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
                     {sec.text}
                   </p>
                   {sec.image_url && (
-                    <SectionImage imageUrl={sec.image_url} section={sec.section} index={i} />
+                    <SectionImage
+                      imageUrl={sec.image_url}
+                      section={sec.section}
+                      index={i}
+                      prompt={sec.prompt}
+                      sectionText={sec.text}
+                      videoUrl={sec.video_url}
+                      dreamId={dream.id}
+                      canGenerateVideo={canGenerateVideo}
+                      showSubscribeLocked={showSubscribeLocked}
+                      isOwner={isOwner}
+                      onVideoGenerated={(videoUrl) => handleSectionVideoGenerated(i, videoUrl)}
+                      onImageRegenerated={(newUrl, newPrompt) => handleSectionImageRegenerated(i, newUrl, newPrompt)}
+                    />
                   )}
                 </div>
               ))}
