@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
+import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "@/components/dreams/VoiceRecorder";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { useAudioUpload } from "@/hooks/useAudioUpload";
@@ -46,6 +47,7 @@ const EditDream = () => {
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
 
   // Pre-populate from existing dream
   useEffect(() => {
@@ -64,6 +66,7 @@ const EditDream = () => {
       lucid: dream.lucid || false,
     });
     setAudioUrl(dream.audioUrl || dream.audio_url || "");
+    setVideoUrl(dream.video_url || undefined);
     if (dream.analysis) setAnalysisOpen(true);
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
     setLoaded(true);
@@ -383,6 +386,15 @@ const EditDream = () => {
                     onImageGenerated={(image, prompt) =>
                       setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
                     }
+                    dreamId={dreamId}
+                    existingVideoUrl={videoUrl}
+                    onVideoGenerated={(url) => {
+                      setVideoUrl(url);
+                      if (dreamId) {
+                        supabase.from('dream_entries').update({ video_url: url }).eq('id', dreamId);
+                      }
+                    }}
+                    onVideoDeleted={() => setVideoUrl(undefined)}
                   />
                 </div>
               </motion.div>

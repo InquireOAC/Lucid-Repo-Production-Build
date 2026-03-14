@@ -11,6 +11,8 @@ import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { cn } from "@/lib/utils";
@@ -78,6 +80,9 @@ const DreamImageGenerator = ({
   onVideoDeleted,
 }: DreamImageGeneratorProps) => {
   const { hasActiveSubscription } = useFeatureUsage();
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
   const { user } = useAuth();
   const {
     imagePrompt,
@@ -297,22 +302,36 @@ const DreamImageGenerator = ({
               )}
             </>
           ) : (
-            <div className="relative">
-              <ImageDisplay
-                imageUrl={generatedImage}
-                imageDataUrl={generatedImage}
-                onError={() => setImageError(true)}
-                disabled={disabled || isGenerating}
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleSaveAsPng}
-                className="absolute bottom-2 right-2 h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 backdrop-blur-sm"
-              >
-                <Download className="h-3.5 w-3.5 mr-1" /> Save
-              </Button>
-            </div>
+            <>
+              <div className="relative">
+                <ImageDisplay
+                  imageUrl={generatedImage}
+                  imageDataUrl={generatedImage}
+                  onError={() => setImageError(true)}
+                  disabled={disabled || isGenerating}
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleSaveAsPng}
+                  className="absolute bottom-2 right-2 h-8 rounded-lg bg-black/50 hover:bg-black/70 text-white border-0 backdrop-blur-sm"
+                >
+                  <Download className="h-3.5 w-3.5 mr-1" /> Save
+                </Button>
+              </div>
+              {/* Generate Video button - Mystic only */}
+              {dreamId && isMystic && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowVideoDialog(true)}
+                  className="w-full gap-2 mt-2"
+                >
+                  <Film className="h-4 w-4" />
+                  Generate Video
+                </Button>
+              )}
+            </>
           )}
           {imageError && (
             <p className="text-xs text-destructive text-center">
