@@ -17,6 +17,7 @@ interface GenerateVideoDialogProps {
   imageUrl: string;
   onVideoGenerated?: (videoUrl: string) => void;
   dreamContent?: string;
+  skipDreamUpdate?: boolean;
 }
 
 export const GenerateVideoDialog = ({
