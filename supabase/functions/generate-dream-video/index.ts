@@ -113,7 +113,7 @@ Deno.serve(async (req) => {
     const isAdmin = !!roleData;
 
     if (!isAdmin) {
-      // Check subscription
+      // Check subscription - only top-tier plans allowed
       const { data: subData } = await supabase
         .from("stripe_subscriptions")
         .select("status, price_id")
@@ -124,6 +124,11 @@ Deno.serve(async (req) => {
 
       if (!subData) {
         throw new Error("Active subscription required for video generation");
+      }
+
+      const allowedPriceIds = ["price_premium", "com.lucidrepo.unlimited.monthly"];
+      if (!allowedPriceIds.includes(subData.price_id)) {
+        throw new Error("Premium (Mystic) subscription required for video generation");
       }
     }
 

@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown } from "lucide-react";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -43,6 +43,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Download } from "lucide-react";
+import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -149,11 +152,19 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
   const profile = dream.profiles || {} as any;
   const username = profile.username;
   const displayName = profile.display_name || username || "Anonymous";
   const imageUrl = dream.generatedImage || dream.image_url;
   const isOwner = user?.id === dream.user_id;
+
+  // Video access gating
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === "active" && subscription?.plan === "Premium");
+  const canGenerateVideo = isOwner && isMystic;
+  const showSubscribeLocked = isOwner && !isMystic;
 
   // Parse section_images
   const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string }> =
@@ -251,7 +262,18 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       </div>
 
       {/* Hero Image */}
-      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} tags={dream.tags} lucid={dream.lucid} />}
+      {imageUrl && (
+        <HeroImage
+          imageUrl={imageUrl}
+          title={dream.title}
+          tags={dream.tags}
+          lucid={dream.lucid}
+          videoUrl={dream.video_url}
+          canGenerateVideo={canGenerateVideo}
+          showSubscribeLocked={showSubscribeLocked}
+          onGenerateVideo={() => setShowVideoDialog(true)}
+        />
+      )}
 
       {/* No image fallback */}
       {!imageUrl && (
@@ -410,6 +432,20 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
       </div>
 
+      {/* Video Generation Dialog */}
+      {imageUrl && (
+        <GenerateVideoDialog
+          open={showVideoDialog}
+          onOpenChange={setShowVideoDialog}
+          dreamId={dream.id}
+          imageUrl={imageUrl}
+          dreamContent={dream.content}
+          onVideoGenerated={(videoUrl) => {
+            setDream(prev => prev ? { ...prev, video_url: videoUrl } : null);
+          }}
+        />
+      )}
+
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -433,7 +469,18 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
 
 /* ---------- Long-press saveable image sub-components ---------- */
 
-const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lucid?: boolean }> = ({ imageUrl, title, tags, lucid }) => {
+interface HeroImageProps {
+  imageUrl: string;
+  title: string;
+  tags?: string[];
+  lucid?: boolean;
+  videoUrl?: string | null;
+  canGenerateVideo?: boolean;
+  showSubscribeLocked?: boolean;
+  onGenerateVideo?: () => void;
+}
+
+const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, videoUrl, canGenerateVideo, showSubscribeLocked, onGenerateVideo }) => {
   const [showMenu, setShowMenu] = useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
@@ -468,7 +515,21 @@ const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lu
         onContextMenu={handleContextMenu}
         style={suppressNativeStyle}
       >
-        <img src={imageUrl} alt={title} className="w-full h-full object-cover" draggable={false} style={suppressNativeStyle} />
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            poster={imageUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+            draggable={false}
+            style={suppressNativeStyle}
+          />
+        ) : (
+          <img src={imageUrl} alt={title} className="w-full h-full object-cover" draggable={false} style={suppressNativeStyle} />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-5">
           {tags && tags.length > 0 && (
@@ -498,6 +559,24 @@ const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lu
               <Download className="h-5 w-5 text-primary" />
               <span className="font-medium">Save Image</span>
             </button>
+            {canGenerateVideo && !videoUrl && (
+              <button
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
+                onClick={() => { setShowMenu(false); onGenerateVideo?.(); }}
+              >
+                <Video className="h-5 w-5 text-primary" />
+                <span className="font-medium">Generate Video</span>
+              </button>
+            )}
+            {showSubscribeLocked && !videoUrl && (
+              <button
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left opacity-60"
+                disabled
+              >
+                <Crown className="h-5 w-5" />
+                <span className="font-medium">Generate Video (Subscribe)</span>
+              </button>
+            )}
           </div>
         </DrawerContent>
       </Drawer>
