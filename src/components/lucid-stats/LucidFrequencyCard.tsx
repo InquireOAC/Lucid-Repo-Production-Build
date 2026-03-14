@@ -56,8 +56,8 @@ const LucidFrequencyCard: React.FC<Props> = ({ stats, timeRange, onTimeRangeChan
               <Tooltip
                 contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 12 }}
               />
-              <Bar dataKey="lucid" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Lucid" />
-              <Bar dataKey="total" fill="hsl(var(--muted))" radius={[4, 4, 0, 0]} opacity={0.3} name="Total" />
+              <Bar dataKey="total" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} opacity={0.25} name="Total" />
+              <Bar dataKey="lucid" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.9} name="Lucid" />
             </BarChart>
           </ResponsiveContainer>
         </div>
