@@ -802,6 +802,7 @@ const SectionImage: React.FC<SectionImageProps> = ({
           dreamId={dreamId}
           imageUrl={imageUrl}
           dreamContent={sectionText || ""}
+          skipDreamUpdate
           onVideoGenerated={(url) => {
             onVideoGenerated?.(url);
           }}

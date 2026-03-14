@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio } = await req.json();
+    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio, skipDreamUpdate } = await req.json();
     if (!dreamId || !imageUrl) throw new Error("dreamId and imageUrl are required");
 
     // Check if user is admin (bypass subscription check)
@@ -303,14 +303,16 @@ Deno.serve(async (req) => {
       .from("dream-videos")
       .getPublicUrl(fileName);
 
-    // Update dream entry
-    const { error: updateError } = await supabase
-      .from("dream_entries")
-      .update({ video_url: publicUrl.publicUrl })
-      .eq("id", dreamId)
-      .eq("user_id", user.id);
+    // Update dream entry only if not a section-specific video
+    if (!skipDreamUpdate) {
+      const { error: updateError } = await supabase
+        .from("dream_entries")
+        .update({ video_url: publicUrl.publicUrl })
+        .eq("id", dreamId)
+        .eq("user_id", user.id);
 
-    if (updateError) throw new Error(`Failed to update dream: ${updateError.message}`);
+      if (updateError) throw new Error(`Failed to update dream: ${updateError.message}`);
+    }
 
     return new Response(
       JSON.stringify({ videoUrl: publicUrl.publicUrl }),

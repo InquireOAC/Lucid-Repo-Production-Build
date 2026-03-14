@@ -17,6 +17,7 @@ interface GenerateVideoDialogProps {
   imageUrl: string;
   onVideoGenerated?: (videoUrl: string) => void;
   dreamContent?: string;
+  skipDreamUpdate?: boolean;
 }
 
 export const GenerateVideoDialog = ({
@@ -26,6 +27,7 @@ export const GenerateVideoDialog = ({
   imageUrl,
   onVideoGenerated,
   dreamContent,
+  skipDreamUpdate,
 }: GenerateVideoDialogProps) => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -72,6 +74,7 @@ export const GenerateVideoDialog = ({
           dreamId,
           imageUrl,
           animationPrompt: prompt || undefined,
+          skipDreamUpdate: skipDreamUpdate || undefined,
         },
       });
 
