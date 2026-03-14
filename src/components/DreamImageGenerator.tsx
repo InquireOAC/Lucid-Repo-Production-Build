@@ -261,7 +261,7 @@ const DreamImageGenerator = ({
                     </CarouselItem>
                     {/* Slide 2: Video */}
                     <CarouselItem>
-                      <div className="rounded-2xl overflow-hidden bg-black aspect-[4/3]">
+                      <div className="rounded-2xl overflow-hidden bg-black">
                         <video
                           src={localVideoUrl}
                           poster={generatedImage}
@@ -269,7 +269,7 @@ const DreamImageGenerator = ({
                           loop
                           muted
                           playsInline
-                          className="w-full h-full object-cover"
+                          className="w-full object-contain"
                         />
                       </div>
                     </CarouselItem>
