@@ -152,11 +152,19 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
   const profile = dream.profiles || {} as any;
   const username = profile.username;
   const displayName = profile.display_name || username || "Anonymous";
   const imageUrl = dream.generatedImage || dream.image_url;
   const isOwner = user?.id === dream.user_id;
+
+  // Video access gating
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === "active" && subscription?.plan === "Premium");
+  const canGenerateVideo = isOwner && isMystic;
+  const showSubscribeLocked = isOwner && !isMystic;
 
   // Parse section_images
   const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string }> =
