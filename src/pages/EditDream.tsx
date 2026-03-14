@@ -386,6 +386,15 @@ const EditDream = () => {
                     onImageGenerated={(image, prompt) =>
                       setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
                     }
+                    dreamId={dreamId}
+                    existingVideoUrl={videoUrl}
+                    onVideoGenerated={(url) => {
+                      setVideoUrl(url);
+                      if (dreamId) {
+                        supabase.from('dream_entries').update({ video_url: url }).eq('id', dreamId);
+                      }
+                    }}
+                    onVideoDeleted={() => setVideoUrl(undefined)}
                   />
                 </div>
               </motion.div>
