@@ -27,7 +27,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown, RefreshCw } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -167,8 +168,22 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const showSubscribeLocked = isOwner && !isMystic;
 
   // Parse section_images
-  const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string }> =
+  const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string; video_url?: string }> =
     Array.isArray((dream as any).section_images) ? (dream as any).section_images : [];
+
+  const handleSectionVideoGenerated = async (index: number, videoUrl: string) => {
+    const updated = [...sectionImages];
+    updated[index] = { ...updated[index], video_url: videoUrl };
+    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
+    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
+  };
+
+  const handleSectionImageRegenerated = async (index: number, newImageUrl: string, newPrompt: string) => {
+    const updated = [...sectionImages];
+    updated[index] = { ...updated[index], image_url: newImageUrl, prompt: newPrompt };
+    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
+    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
+  };
 
   const {
     isGenerating,
@@ -361,7 +376,20 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
                     {sec.text}
                   </p>
                   {sec.image_url && (
-                    <SectionImage imageUrl={sec.image_url} section={sec.section} index={i} />
+                    <SectionImage
+                      imageUrl={sec.image_url}
+                      section={sec.section}
+                      index={i}
+                      prompt={sec.prompt}
+                      sectionText={sec.text}
+                      videoUrl={sec.video_url}
+                      dreamId={dream.id}
+                      canGenerateVideo={canGenerateVideo}
+                      showSubscribeLocked={showSubscribeLocked}
+                      isOwner={isOwner}
+                      onVideoGenerated={(videoUrl) => handleSectionVideoGenerated(i, videoUrl)}
+                      onImageRegenerated={(newUrl, newPrompt) => handleSectionImageRegenerated(i, newUrl, newPrompt)}
+                    />
                   )}
                 </div>
               ))}
@@ -584,8 +612,31 @@ const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, vid
   );
 };
 
-const SectionImage: React.FC<{ imageUrl: string; section: number; index: number }> = ({ imageUrl, section, index }) => {
+interface SectionImageProps {
+  imageUrl: string;
+  section: number;
+  index: number;
+  prompt?: string;
+  sectionText?: string;
+  videoUrl?: string;
+  dreamId?: string;
+  canGenerateVideo?: boolean;
+  showSubscribeLocked?: boolean;
+  isOwner?: boolean;
+  onVideoGenerated?: (videoUrl: string) => void;
+  onImageRegenerated?: (newImageUrl: string, newPrompt: string) => void;
+}
+
+const SectionImage: React.FC<SectionImageProps> = ({
+  imageUrl, section, index, prompt, sectionText, videoUrl,
+  dreamId, canGenerateVideo, showSubscribeLocked, isOwner,
+  onVideoGenerated, onImageRegenerated,
+}) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [showRegeneratePrompt, setShowRegeneratePrompt] = useState(false);
+  const [editPrompt, setEditPrompt] = useState(prompt || "");
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
 
@@ -609,6 +660,33 @@ const SectionImage: React.FC<{ imageUrl: string; section: number; index: number 
     shareOrSaveImage(imageUrl, `dream-section-${section}.png`).catch(() => toast.error("Failed to save image"));
   };
 
+  const handleRegenerate = async () => {
+    if (isRegenerating) return;
+    setIsRegenerating(true);
+    try {
+      const promptToUse = editPrompt.trim() || sectionText || "";
+      const { data: promptData, error: promptError } = await supabase.functions.invoke("compose-cinematic-prompt", {
+        body: { sceneBrief: promptToUse },
+      });
+      if (promptError || !promptData?.cinematicPrompt) throw new Error("Failed to generate prompt");
+
+      const finalPrompt = promptData.cinematicPrompt;
+      const { data: imgData, error: imgError } = await supabase.functions.invoke("generate-dream-image", {
+        body: { prompt: finalPrompt },
+      });
+      if (imgError || !imgData?.imageUrl) throw new Error("Failed to generate image");
+
+      onImageRegenerated?.(imgData.imageUrl, finalPrompt);
+      setShowRegeneratePrompt(false);
+      toast.success("Image regenerated!");
+    } catch (err: any) {
+      console.error("Section regenerate failed:", err);
+      toast.error(`Regeneration failed: ${err.message}`);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
   return (
     <>
       <motion.div
@@ -622,15 +700,61 @@ const SectionImage: React.FC<{ imageUrl: string; section: number; index: number 
         onContextMenu={handleContextMenu}
         style={suppressNativeStyle}
       >
-        <img
-          src={imageUrl}
-          alt={`Section ${section}`}
-          className="w-full object-cover rounded-xl"
-          loading="lazy"
-          draggable={false}
-          style={suppressNativeStyle}
-        />
+        {videoUrl ? (
+          <video
+            src={videoUrl}
+            poster={imageUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full object-cover rounded-xl"
+            draggable={false}
+            style={suppressNativeStyle}
+          />
+        ) : (
+          <img
+            src={imageUrl}
+            alt={`Section ${section}`}
+            className="w-full object-cover rounded-xl"
+            loading="lazy"
+            draggable={false}
+            style={suppressNativeStyle}
+          />
+        )}
       </motion.div>
+
+      {/* Regenerate prompt editor */}
+      {showRegeneratePrompt && isOwner && (
+        <div className="mt-3 p-3 rounded-xl border border-border/40 bg-muted/20 space-y-2">
+          <Textarea
+            value={editPrompt}
+            onChange={(e) => setEditPrompt(e.target.value)}
+            placeholder="Customize the image prompt..."
+            rows={3}
+            className="resize-none text-sm"
+            disabled={isRegenerating}
+          />
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="gap-1.5"
+            >
+              {isRegenerating ? (
+                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Regenerating...</>
+              ) : (
+                <><RefreshCw className="h-3.5 w-3.5" /> Regenerate</>
+              )}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setShowRegeneratePrompt(false)} disabled={isRegenerating}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Drawer open={showMenu} onOpenChange={setShowMenu}>
         <DrawerContent>
           <DrawerHeader><DrawerTitle>Image Actions</DrawerTitle></DrawerHeader>
@@ -639,9 +763,50 @@ const SectionImage: React.FC<{ imageUrl: string; section: number; index: number 
               <Download className="h-5 w-5 text-primary" />
               <span className="font-medium">Save Image</span>
             </button>
+            {canGenerateVideo && !videoUrl && (
+              <button
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
+                onClick={() => { setShowMenu(false); setShowVideoDialog(true); }}
+              >
+                <Video className="h-5 w-5 text-primary" />
+                <span className="font-medium">Generate Video</span>
+              </button>
+            )}
+            {showSubscribeLocked && !videoUrl && (
+              <button
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left opacity-60"
+                disabled
+              >
+                <Crown className="h-5 w-5" />
+                <span className="font-medium">Generate Video (Subscribe)</span>
+              </button>
+            )}
+            {isOwner && (
+              <button
+                className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
+                onClick={() => { setShowMenu(false); setEditPrompt(prompt || ""); setShowRegeneratePrompt(true); }}
+              >
+                <RefreshCw className="h-5 w-5 text-primary" />
+                <span className="font-medium">Regenerate Image</span>
+              </button>
+            )}
           </div>
         </DrawerContent>
       </Drawer>
+
+      {/* Video dialog for this section */}
+      {dreamId && (
+        <GenerateVideoDialog
+          open={showVideoDialog}
+          onOpenChange={setShowVideoDialog}
+          dreamId={dreamId}
+          imageUrl={imageUrl}
+          dreamContent={sectionText || ""}
+          onVideoGenerated={(url) => {
+            onVideoGenerated?.(url);
+          }}
+        />
+      )}
     </>
   );
 };
