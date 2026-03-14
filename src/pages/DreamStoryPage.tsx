@@ -432,6 +432,20 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
       </div>
 
+      {/* Video Generation Dialog */}
+      {imageUrl && (
+        <GenerateVideoDialog
+          open={showVideoDialog}
+          onOpenChange={setShowVideoDialog}
+          dreamId={dream.id}
+          imageUrl={imageUrl}
+          dreamContent={dream.content}
+          onVideoGenerated={(videoUrl) => {
+            setDream(prev => prev ? { ...prev, video_url: videoUrl } : null);
+          }}
+        />
+      )}
+
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
