@@ -763,7 +763,7 @@ const SectionImage: React.FC<SectionImageProps> = ({
               <Download className="h-5 w-5 text-primary" />
               <span className="font-medium">Save Image</span>
             </button>
-            {canGenerateVideo && !videoUrl && (
+            {canGenerateVideo && (
               <button
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
                 onClick={() => { setShowMenu(false); setShowVideoDialog(true); }}
