@@ -13,6 +13,7 @@ import LucidityTrendCard from "@/components/lucid-stats/LucidityTrendCard";
 import AICoachCard from "@/components/lucid-stats/AICoachCard";
 import AchievementsCard from "@/components/lucid-stats/AchievementsCard";
 import LoadingSkeletonStats from "@/components/lucid-stats/LoadingSkeletonStats";
+import { Separator } from "@/components/ui/separator";
 import { Sparkles, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -23,7 +24,6 @@ const LucidStats: React.FC = () => {
   const { stats, isLoading, error, refetch, timeRange, setTimeRange } = useLucidStats();
   useLucidAchievements(stats);
 
-  // Auth guard
   if (!user) {
     return (
       <PageTransition className="min-h-screen pt-safe-top">
@@ -49,7 +49,6 @@ const LucidStats: React.FC = () => {
     );
   }
 
-  // Empty state — no stats data and no error (new user or RPC returned null)
   if (!stats && !error) {
     return (
       <PageTransition className="min-h-screen pt-safe-top">
@@ -82,23 +81,40 @@ const LucidStats: React.FC = () => {
   return (
     <PageTransition className="min-h-screen pt-safe-top">
       <PullToRefresh onRefresh={async () => { await refetch(); }}>
-        <div className="px-4 md:px-8 py-6 pb-8 max-w-6xl mx-auto">
-          {/* Hero spans full width */}
-          <div className="mb-4">
-            <StatsHeroCard stats={stats} />
-          </div>
-          {/* Dashboard grid: 2-col on lg+ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div className="px-4 md:px-8 py-6 pb-8 max-w-6xl mx-auto space-y-0">
+          {/* Hero / Page Header */}
+          <StatsHeroCard stats={stats} />
+
+          <Separator className="my-8" />
+
+          {/* Frequency + Recall — side by side on lg */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <LucidFrequencyCard stats={stats} timeRange={timeRange} onTimeRangeChange={setTimeRange} />
             <RecallStrengthCard stats={stats} />
+          </div>
+
+          <Separator className="my-8" />
+
+          {/* Techniques + Triggers */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <TechniqueEffectivenessCard stats={stats} />
             <TriggerDetectionCard stats={stats} />
-            <LucidityTrendCard stats={stats} />
-            <AICoachCard stats={stats} />
-            <div className="lg:col-span-2">
-              <AchievementsCard stats={stats} />
-            </div>
           </div>
+
+          <Separator className="my-8" />
+
+          {/* Lucidity Levels */}
+          <LucidityTrendCard stats={stats} />
+
+          <Separator className="my-8" />
+
+          {/* AI Coach — full-width banner */}
+          <AICoachCard stats={stats} />
+
+          <Separator className="my-8" />
+
+          {/* Achievements */}
+          <AchievementsCard stats={stats} />
         </div>
       </PullToRefresh>
     </PageTransition>

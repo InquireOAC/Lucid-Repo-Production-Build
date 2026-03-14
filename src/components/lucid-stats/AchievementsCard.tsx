@@ -32,15 +32,15 @@ const AchievementsCard: React.FC<Props> = ({ stats }) => {
   const unlockedKeys = new Set(stats?.achievements.map((a) => a.key) ?? []);
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Achievements</h2>
+        <h2 className="text-lg font-semibold text-foreground">Achievements</h2>
         <span className="text-xs text-muted-foreground">
           {unlockedKeys.size}/{allDefs.length}
         </span>
       </div>
 
-      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+      <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
         {allDefs.map((def) => {
           const unlocked = unlockedKeys.has(def.key);
           return (

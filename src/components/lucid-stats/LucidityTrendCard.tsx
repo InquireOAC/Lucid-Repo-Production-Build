@@ -25,8 +25,8 @@ const LucidityTrendCard: React.FC<Props> = ({ stats }) => {
 
   if (total === 0) {
     return (
-      <div className="glass-card rounded-2xl p-5 space-y-3 border border-primary/10">
-        <h2 className="text-base font-semibold text-foreground">Lucidity Levels</h2>
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Lucidity Levels</h2>
         <p className="text-sm text-muted-foreground">
           Rate your lucidity level on lucid dreams to track your control over time.
         </p>
@@ -35,13 +35,12 @@ const LucidityTrendCard: React.FC<Props> = ({ stats }) => {
   }
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Lucidity Levels</h2>
+        <h2 className="text-lg font-semibold text-foreground">Lucidity Levels</h2>
         <span className="text-sm font-bold text-primary">{stats.avg_lucidity_level} avg</span>
       </div>
 
-      {/* Segmented bar */}
       <div className="flex h-4 rounded-full overflow-hidden bg-muted/20">
         {["1", "2", "3"].map((level) => {
           const count = dist[level] ?? 0;

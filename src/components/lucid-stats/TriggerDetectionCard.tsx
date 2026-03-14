@@ -13,16 +13,16 @@ const TriggerDetectionCard: React.FC<Props> = ({ stats }) => {
 
   if (symbols.length === 0) {
     return (
-      <div className="glass-card rounded-2xl p-5 space-y-3 border border-primary/10">
-        <h2 className="text-base font-semibold text-foreground">Dream Triggers</h2>
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Dream Triggers</h2>
         <p className="text-sm text-muted-foreground">Add tags to your dreams to discover recurring triggers and symbols.</p>
       </div>
     );
   }
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
-      <h2 className="text-base font-semibold text-foreground">Dream Triggers</h2>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">Dream Triggers</h2>
 
       <div className="flex flex-wrap gap-2">
         {symbols.map((s) => (

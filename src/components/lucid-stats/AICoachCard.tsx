@@ -10,10 +10,10 @@ const AICoachCard: React.FC<Props> = ({ stats }) => {
   const insight = stats?.latest_insight;
 
   return (
-    <div className="rounded-2xl p-5 space-y-3 bg-gradient-to-br from-primary/15 via-accent/10 to-primary/5 border border-primary/20">
+    <div className="rounded-xl px-5 py-6 space-y-3 bg-gradient-to-r from-primary/10 via-accent/5 to-transparent">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-primary" />
-        <h2 className="text-base font-semibold text-foreground">AI Dream Coach</h2>
+        <h2 className="text-lg font-semibold text-foreground">AI Dream Coach</h2>
       </div>
 
       {insight?.summary_message ? (
