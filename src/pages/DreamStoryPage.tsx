@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown } from "lucide-react";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -43,6 +43,9 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Download } from "lucide-react";
+import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
