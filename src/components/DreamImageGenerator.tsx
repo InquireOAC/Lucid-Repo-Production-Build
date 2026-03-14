@@ -11,6 +11,8 @@ import GeneratingImage from "@/components/dreams/GeneratingImage";
 import ImagePromptInput from "@/components/dreams/ImagePromptInput";
 import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 import { cn } from "@/lib/utils";
