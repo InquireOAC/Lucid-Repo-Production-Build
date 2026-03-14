@@ -80,6 +80,9 @@ const DreamImageGenerator = ({
   onVideoDeleted,
 }: DreamImageGeneratorProps) => {
   const { hasActiveSubscription } = useFeatureUsage();
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
   const { user } = useAuth();
   const {
     imagePrompt,
