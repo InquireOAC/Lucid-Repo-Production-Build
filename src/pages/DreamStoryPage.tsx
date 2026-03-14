@@ -596,7 +596,7 @@ const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, vid
                 <span className="font-medium">Generate Video</span>
               </button>
             )}
-            {showSubscribeLocked && !videoUrl && (
+            {showSubscribeLocked && (
               <button
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left opacity-60"
                 disabled
