@@ -41,7 +41,7 @@ const DreamDetail = ({
   const { user, profile: authProfile } = useAuth();
   const { subscription } = useSubscriptionContext();
   const { isAdmin } = useUserRole();
-  const isSubscribed = isAdmin || !!subscription?.subscribed;
+  const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
   const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [videoUrl, setVideoUrl] = useState(dream.video_url || null);
