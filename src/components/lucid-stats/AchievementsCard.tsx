@@ -32,9 +32,9 @@ const AchievementsCard: React.FC<Props> = ({ stats }) => {
   const unlockedKeys = new Set(stats?.achievements.map((a) => a.key) ?? []);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Achievements</h2>
+        <h2 className="text-base font-semibold text-foreground">Achievements</h2>
         <span className="text-xs text-muted-foreground">
           {unlockedKeys.size}/{allDefs.length}
         </span>
@@ -46,10 +46,10 @@ const AchievementsCard: React.FC<Props> = ({ stats }) => {
           return (
             <div
               key={def.key}
-              className={`flex-shrink-0 w-20 text-center space-y-1.5 p-2 rounded-xl transition-all ${
+              className={`flex-shrink-0 w-20 text-center space-y-1.5 p-2.5 rounded-xl transition-all ${
                 unlocked
                   ? "bg-primary/10 border border-primary/20"
-                  : "bg-muted/10 border border-border/30 opacity-50"
+                  : "bg-muted/10 border border-border/30 opacity-40"
               }`}
             >
               <div className="text-2xl">{def.icon}</div>

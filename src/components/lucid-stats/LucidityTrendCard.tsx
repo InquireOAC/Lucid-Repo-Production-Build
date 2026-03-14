@@ -26,8 +26,8 @@ const LucidityTrendCard: React.FC<Props> = ({ stats }) => {
   if (total === 0) {
     return (
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-foreground">Lucidity Levels</h2>
-        <p className="text-sm text-muted-foreground">
+        <h2 className="text-base font-semibold text-foreground">Lucidity Levels</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Rate your lucidity level on lucid dreams to track your control over time.
         </p>
       </div>
@@ -35,9 +35,9 @@ const LucidityTrendCard: React.FC<Props> = ({ stats }) => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Lucidity Levels</h2>
+        <h2 className="text-base font-semibold text-foreground">Lucidity Levels</h2>
         <span className="text-sm font-bold text-primary">{stats.avg_lucidity_level} avg</span>
       </div>
 
@@ -59,7 +59,7 @@ const LucidityTrendCard: React.FC<Props> = ({ stats }) => {
 
       <div className="grid grid-cols-3 gap-2">
         {["1", "2", "3"].map((level) => (
-          <div key={level} className="text-center space-y-0.5">
+          <div key={level} className="text-center space-y-1">
             <div className={`w-3 h-3 rounded-full mx-auto ${levelColors[level]}`} />
             <p className="text-xs font-medium text-foreground">{dist[level] ?? 0}</p>
             <p className="text-[9px] text-muted-foreground">{levelLabels[level]}</p>
