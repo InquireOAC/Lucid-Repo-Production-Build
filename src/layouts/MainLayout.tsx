@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, Sparkles } from "lucide-react";
+import { Book, Moon, User, BarChart3 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,7 +72,7 @@ const MainLayout = () => {
           <div className="flex justify-around items-center h-14">
             <NavTab to="/" icon={<Book />} label="Journal" />
             <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
-            <NavTab to="/lucid-stats" icon={<Sparkles />} label="Stats" />
+            <NavTab to="/lucid-stats" icon={<BarChart3 />} label="Stats" />
             <NavTab to="/profile" icon={<User />} label="Profile" />
           </div>
         </motion.div>
@@ -86,7 +86,7 @@ const MainLayout = () => {
 const navItems = [
   { to: "/", icon: Book, label: "Journal" },
   { to: "/lucid-repo", icon: Moon, label: "Lucid Repo" },
-  { to: "/lucid-stats", icon: Sparkles, label: "Stats" },
+  { to: "/lucid-stats", icon: BarChart3, label: "Stats" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
