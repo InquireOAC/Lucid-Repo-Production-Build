@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
+import { supabase } from "@/integrations/supabase/client";
 import { VoiceRecorder } from "@/components/dreams/VoiceRecorder";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { useAudioUpload } from "@/hooks/useAudioUpload";
