@@ -469,7 +469,18 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
 
 /* ---------- Long-press saveable image sub-components ---------- */
 
-const HeroImage: React.FC<{ imageUrl: string; title: string; tags?: string[]; lucid?: boolean }> = ({ imageUrl, title, tags, lucid }) => {
+interface HeroImageProps {
+  imageUrl: string;
+  title: string;
+  tags?: string[];
+  lucid?: boolean;
+  videoUrl?: string | null;
+  canGenerateVideo?: boolean;
+  showSubscribeLocked?: boolean;
+  onGenerateVideo?: () => void;
+}
+
+const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, videoUrl, canGenerateVideo, showSubscribeLocked, onGenerateVideo }) => {
   const [showMenu, setShowMenu] = useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
