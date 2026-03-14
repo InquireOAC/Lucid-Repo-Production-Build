@@ -47,6 +47,7 @@ const EditDream = () => {
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
 
   // Pre-populate from existing dream
   useEffect(() => {
