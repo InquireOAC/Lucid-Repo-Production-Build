@@ -74,6 +74,7 @@ export const GenerateVideoDialog = ({
           dreamId,
           imageUrl,
           animationPrompt: prompt || undefined,
+          skipDreamUpdate: skipDreamUpdate || undefined,
         },
       });
 
