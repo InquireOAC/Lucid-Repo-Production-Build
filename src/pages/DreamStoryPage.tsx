@@ -168,8 +168,22 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const showSubscribeLocked = isOwner && !isMystic;
 
   // Parse section_images
-  const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string }> =
+  const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string; video_url?: string }> =
     Array.isArray((dream as any).section_images) ? (dream as any).section_images : [];
+
+  const handleSectionVideoGenerated = async (index: number, videoUrl: string) => {
+    const updated = [...sectionImages];
+    updated[index] = { ...updated[index], video_url: videoUrl };
+    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
+    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
+  };
+
+  const handleSectionImageRegenerated = async (index: number, newImageUrl: string, newPrompt: string) => {
+    const updated = [...sectionImages];
+    updated[index] = { ...updated[index], image_url: newImageUrl, prompt: newPrompt };
+    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
+    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
+  };
 
   const {
     isGenerating,
