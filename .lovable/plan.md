@@ -1,40 +1,47 @@
 
+Root cause identified:
+- The menu you’re opening is from `src/pages/DreamStoryPage.tsx` (`HeroImage` drawer), not `DreamImageWithVideo`.
+- That drawer only has **Save Image**, so **Generate Video** never appears there (even for admins).
+- Previous fixes were in `DreamDetail` / edit flow, so they don’t affect `/dream/:dreamId` story view.
 
-# Android Subscription Support
+Implementation plan:
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+1) Add video access gating to `DreamStoryPage`
+- In `DreamStoryContent`, add:
+  - `useSubscriptionContext()` + `useUserRole()`
+  - `isMystic = isAdmin || (subscription?.status === "active" && subscription?.plan === "Premium")`
+  - `canGenerateVideo = isOwner && isMystic`
+  - `showSubscribeLocked = isOwner && !isMystic`
+- Keep owner requirement for editing/generating on this page.
 
-## Changes Needed
+2) Extend `HeroImage` action drawer to support video generation
+- Update `HeroImage` props to receive:
+  - `dreamId`, `dreamContent`, `videoUrl`, `canGenerateVideo`, `showSubscribeLocked`, and callback(s) for video updates.
+- In drawer:
+  - Show **Generate Video** when `canGenerateVideo && !videoUrl`
+  - Show disabled **Generate Video (Subscribe)** when `showSubscribeLocked && !videoUrl`
+  - Keep **Save Image** always.
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+3) Wire in `GenerateVideoDialog` on Dream Story page
+- Add `showVideoDialog` state in `DreamStoryContent`.
+- Open dialog from HeroImage action.
+- On success, update local dream state (`video_url`) so UI reflects result immediately.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+4) Render generated video in Hero area when available
+- In `HeroImage`, render `<video ...>` when `videoUrl` exists (fallback poster/image if needed).
+- Keep current title/tag overlay and long-press/right-click behavior intact.
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+5) Enforce top-tier rule server-side (security hardening)
+- Update `supabase/functions/generate-dream-video/index.ts`:
+  - Admin bypass remains.
+  - Non-admin must have active subscription with top-tier price only (`price_premium` / `com.lucidrepo.unlimited.monthly`).
+  - Reject lower tiers.
+- This prevents client-side bypass attempts.
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
-
+6) Validation checklist
+- Admin owner on `/dream/:id`: right-click/long-press shows **Generate Video**.
+- Premium owner: shows **Generate Video**.
+- Basic owner: shows disabled **Generate Video (Subscribe)**.
+- Non-owner: no generation option.
+- After generation, video displays in hero and persists after refresh.
+- Verify on mobile (390w long-press drawer) and desktop (right-click drawer).
