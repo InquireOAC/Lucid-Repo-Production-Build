@@ -262,7 +262,18 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       </div>
 
       {/* Hero Image */}
-      {imageUrl && <HeroImage imageUrl={imageUrl} title={dream.title} tags={dream.tags} lucid={dream.lucid} />}
+      {imageUrl && (
+        <HeroImage
+          imageUrl={imageUrl}
+          title={dream.title}
+          tags={dream.tags}
+          lucid={dream.lucid}
+          videoUrl={dream.video_url}
+          canGenerateVideo={canGenerateVideo}
+          showSubscribeLocked={showSubscribeLocked}
+          onGenerateVideo={() => setShowVideoDialog(true)}
+        />
+      )}
 
       {/* No image fallback */}
       {!imageUrl && (
