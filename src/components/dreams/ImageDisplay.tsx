@@ -23,7 +23,7 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({
           <img
             src={displayUrl}
             alt="Dream visualization"
-            className="w-full aspect-[4/3] object-cover"
+            className="w-full rounded-2xl object-contain"
             onError={onError}
           />
         </div>
