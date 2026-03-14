@@ -27,6 +27,7 @@ export const GenerateVideoDialog = ({
   imageUrl,
   onVideoGenerated,
   dreamContent,
+  skipDreamUpdate,
 }: GenerateVideoDialogProps) => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
