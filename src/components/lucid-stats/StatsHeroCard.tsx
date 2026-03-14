@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles, Moon } from "lucide-react";
+import { BarChart3, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import type { LucidStatsData } from "@/hooks/useLucidStats";
