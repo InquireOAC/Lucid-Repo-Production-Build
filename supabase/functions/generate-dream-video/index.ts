@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio } = await req.json();
+    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio, skipDreamUpdate } = await req.json();
     if (!dreamId || !imageUrl) throw new Error("dreamId and imageUrl are required");
 
     // Check if user is admin (bypass subscription check)
