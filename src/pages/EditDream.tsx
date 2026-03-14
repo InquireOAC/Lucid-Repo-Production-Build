@@ -66,6 +66,7 @@ const EditDream = () => {
       lucid: dream.lucid || false,
     });
     setAudioUrl(dream.audioUrl || dream.audio_url || "");
+    setVideoUrl(dream.video_url || undefined);
     if (dream.analysis) setAnalysisOpen(true);
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
     setLoaded(true);
