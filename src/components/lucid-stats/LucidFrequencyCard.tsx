@@ -20,15 +20,15 @@ const LucidFrequencyCard: React.FC<Props> = ({ stats, timeRange, onTimeRangeChan
   }));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Lucid Frequency</h2>
+        <h2 className="text-base font-semibold text-foreground">Lucid Frequency</h2>
         <div className="flex gap-1">
           {ranges.map((r) => (
             <button
               key={r}
               onClick={() => onTimeRangeChange(r)}
-              className={`text-[10px] px-2 py-1 rounded-full transition-colors ${
+              className={`text-[10px] px-2.5 py-1 rounded-full transition-colors ${
                 timeRange === r
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted/30 text-muted-foreground hover:bg-muted/50"
@@ -78,7 +78,7 @@ const LucidFrequencyCard: React.FC<Props> = ({ stats, timeRange, onTimeRangeChan
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div>
+    <div className="space-y-0.5">
       <p className="text-lg font-bold text-foreground">{value}</p>
       <p className="text-[10px] text-muted-foreground">{label}</p>
     </div>
