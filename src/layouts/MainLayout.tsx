@@ -86,7 +86,7 @@ const MainLayout = () => {
 const navItems = [
   { to: "/", icon: Book, label: "Journal" },
   { to: "/lucid-repo", icon: Moon, label: "Lucid Repo" },
-  { to: "/lucid-stats", icon: Sparkles, label: "Stats" },
+  { to: "/lucid-stats", icon: BarChart3, label: "Stats" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 

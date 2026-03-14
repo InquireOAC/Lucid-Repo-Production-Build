@@ -35,7 +35,7 @@ const StatsHeroCard: React.FC<Props> = ({ stats }) => {
     <div className="space-y-5">
       <div className="space-y-2">
         <div className="flex items-center gap-3">
-          <Sparkles className="h-7 w-7 text-primary" />
+          <BarChart3 className="h-7 w-7 text-primary" />
           <h1 className="text-2xl font-bold text-foreground tracking-tight">Lucid Stats</h1>
         </div>
         {stats.latest_insight?.summary_message ? (
