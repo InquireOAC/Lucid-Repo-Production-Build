@@ -20,9 +20,9 @@ const LucidFrequencyCard: React.FC<Props> = ({ stats, timeRange, onTimeRangeChan
   }));
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-foreground">Lucid Frequency</h2>
+        <h2 className="text-lg font-semibold text-foreground">Lucid Frequency</h2>
         <div className="flex gap-1">
           {ranges.map((r) => (
             <button

@@ -1,33 +1,40 @@
 
 
-# Lucid Stats — Cardless Section-Based Redesign
+# Android Subscription Support
 
-Remove all individual `glass-card` wrappers and restructure the page as a single continuous page with distinct sections separated by dividers and spacing. Content sits directly on the page background.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-## Changes
+## Changes Needed
 
-### 1. `src/pages/LucidStats.tsx` — New section-based layout
-- Remove the grid layout of cards
-- Render each section sequentially with `Separator` dividers between them
-- Add a page title header at top
-- Each section: section title + content, no card wrapper
-- On `lg+`: use a two-column layout for paired sections (frequency + recall side by side, techniques + triggers side by side) using CSS grid, with dividers spanning full width between row groups
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-### 2. All section components — Strip card wrappers
-Each component loses its `glass-card rounded-2xl p-5 border` wrapper and becomes bare content:
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-- **`StatsHeroCard.tsx`**: Remove gradient card wrapper. Render as a page header section — large title, subtitle, and the 3 metric pills inline. Keep the pills styled.
-- **`LucidFrequencyCard.tsx`**: Remove `glass-card` div. Just render heading, stat row, chart, and footnote directly.
-- **`RecallStrengthCard.tsx`**: Same — remove card wrapper, keep stat grid and chart.
-- **`TechniqueEffectivenessCard.tsx`**: Remove card, keep heading + bars.
-- **`TriggerDetectionCard.tsx`**: Remove card, keep heading + badge cloud.
-- **`LucidityTrendCard.tsx`**: Remove card, keep segmented bar + legend.
-- **`AICoachCard.tsx`**: Keep its gradient background as a subtle highlight strip (not a card — full-width banner style).
-- **`AchievementsCard.tsx`**: Remove card, keep horizontal scroll of achievement items.
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-### 3. Visual separation approach
-- Use `Separator` component between major sections
-- Generous vertical spacing (`py-8` between sections)
-- Section headings: `text-lg font-semibold` with `text-muted-foreground` subtitles
-- On desktop (lg+), paired sections sit side-by-side in a 2-col grid; a full-width separator sits between each row
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+
+## Files to Modify
+
+| File | Change |
+|------|--------|
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 

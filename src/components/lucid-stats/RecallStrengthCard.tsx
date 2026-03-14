@@ -15,8 +15,8 @@ const RecallStrengthCard: React.FC<Props> = ({ stats }) => {
   }));
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
-      <h2 className="text-base font-semibold text-foreground">Dream Recall</h2>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">Dream Recall</h2>
 
       <div className="grid grid-cols-4 gap-2 text-center">
         <Stat label="Streak" value={`${stats.current_recall_streak}d`} />

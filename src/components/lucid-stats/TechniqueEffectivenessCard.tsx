@@ -12,8 +12,8 @@ const TechniqueEffectivenessCard: React.FC<Props> = ({ stats }) => {
 
   if (techniques.length === 0) {
     return (
-      <div className="glass-card rounded-2xl p-5 space-y-3 border border-primary/10">
-        <h2 className="text-base font-semibold text-foreground">Technique Effectiveness</h2>
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-foreground">Technique Effectiveness</h2>
         <p className="text-sm text-muted-foreground">
           Try recording the techniques you use before sleep to see what works best for you.
         </p>
@@ -25,8 +25,8 @@ const TechniqueEffectivenessCard: React.FC<Props> = ({ stats }) => {
   const best = techniques[0];
 
   return (
-    <div className="glass-card rounded-2xl p-5 space-y-4 border border-primary/10">
-      <h2 className="text-base font-semibold text-foreground">Technique Effectiveness</h2>
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold text-foreground">Technique Effectiveness</h2>
 
       {best && (
         <div className="flex items-center gap-2 text-xs">
