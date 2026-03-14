@@ -200,7 +200,7 @@ const DreamDetail = ({
               audioUrl={audioUrl || dream.audioUrl}
               videoUrl={videoUrl || undefined}
               isOwner={!!isOwner}
-              isSubscribed={isSubscribed}
+              isSubscribed={isMystic}
               onVideoGenerated={(url) => {
                 setVideoUrl(url);
                 if (onUpdate) onUpdate(dream.id, { video_url: url });
