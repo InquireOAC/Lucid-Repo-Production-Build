@@ -5,6 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Download, Loader2 } from "lucide-react";
 import { exportDreamBookPdf } from "@/utils/exportDreamBookPdf";
+import { saveAs } from "file-saver";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
+import { toast } from "sonner";
 
 interface DreamBookExportModalProps {
   open: boolean;
@@ -29,15 +34,29 @@ const DreamBookExportModal = ({
       const blob = await exportDreamBookPdf(dreams, { display_name: authorName }, (cur, total) => {
         setProgress(Math.round((cur / total) * 100));
       });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "dream-book.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
+
+      if (Capacitor.isNativePlatform()) {
+        const reader = new FileReader();
+        const base64 = await new Promise<string>((resolve, reject) => {
+          reader.onloadend = () => resolve((reader.result as string).split(",")[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+        const result = await Filesystem.writeFile({
+          path: "dream-book.pdf",
+          data: base64,
+          directory: Directory.Cache,
+        });
+        await Share.share({ title: "Dream Book", url: result.uri, dialogTitle: "Save Dream Book" });
+      } else {
+        saveAs(blob, "dream-book.pdf");
+      }
+
+      toast.success("Dream book exported!");
       onOpenChange(false);
     } catch (err) {
       console.error("Export failed", err);
+      toast.error("Failed to export dream book");
     } finally {
       setExporting(false);
     }
