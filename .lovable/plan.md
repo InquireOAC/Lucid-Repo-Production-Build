@@ -1,40 +1,80 @@
 
 
-# Android Subscription Support
+# Upgrade Dream Book to React Three Fiber
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Overview
+Replace the current CSS-based 3D book viewer with a proper Three.js 3D book using `@react-three/fiber@^8.18` and `@react-three/drei@^9.122.0`. The book will be a 3D mesh with textured pages that flip with realistic animations, lighting, and shadows.
 
-## Changes Needed
+## Dependencies
+- `three@>=0.133`
+- `@react-three/fiber@^8.18` (React 18 compatible)
+- `@react-three/drei@^9.122.0`
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+## Architecture
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+Replace `DreamBook3DViewer.tsx` entirely. Add a helper to render React page content to canvas textures.
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+```text
+src/components/dream-book/
+├── DreamBook3DViewer.tsx      ← rewrite (R3F Canvas + Book mesh)
+├── Book3DScene.tsx            ← new (scene: lights, camera, book)
+├── BookPage3D.tsx             ← new (single page mesh with flip animation)
+├── usePageTextures.ts         ← new (render page content to canvas textures)
+```
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+## Implementation
 
-## Files to Modify
+### 1. Install dependencies
+Add `three`, `@react-three/fiber@^8.18`, `@react-three/drei@^9.122.0`.
 
-| File | Change |
+### 2. `usePageTextures.ts`
+- For each page (cover, TOC, dream spreads), render a hidden HTML element to an offscreen canvas using `html-to-image` (already installed) or `html2canvas` (already installed)
+- Cache textures as `THREE.CanvasTexture` objects
+- Return array of textures keyed by page index
+- Regenerate when dreams data changes
+
+### 3. `BookPage3D.tsx`
+- A `<mesh>` component representing a single page (thin box or plane geometry)
+- Props: `frontTexture`, `backTexture`, `isFlipped`, `pageIndex`, `flipProgress`
+- Uses `useSpring` from drei or manual `useFrame` lerp for smooth rotation around the spine (left edge pivot)
+- Geometry: `PlaneGeometry` with slight curve using vertex displacement for realism
+- Double-sided with front/back textures mapped to respective faces
+
+### 4. `Book3DScene.tsx`
+- Sets up the scene inside R3F `<Canvas>`
+- Ambient light + soft directional light for premium shadow/glow
+- `<OrbitControls>` from drei — constrained to slight rotation (not full orbit), allows user to tilt the book
+- Book cover as a slightly thicker mesh with leather-like material
+- Spine mesh connecting pages
+- Ground shadow / contact shadow from drei
+- Camera positioned at a comfortable reading angle
+
+### 5. `DreamBook3DViewer.tsx` (rewrite)
+- Wraps everything in `<Canvas>` from R3F
+- Passes `currentPage`, `onPageChange`, `dreams`, `authorName` into the scene
+- Swipe/drag on the canvas triggers page flip (pointer events → `onPageChange`)
+- Fallback: if WebGL unavailable, show the old CSS-based viewer
+
+### 6. Page rendering flow
+1. Existing React components (`DreamBookCover`, `DreamBookPageSpread`, `DreamBookTableOfContents`) render into hidden DOM elements
+2. `html2canvas` captures each to a canvas
+3. Canvases become `THREE.CanvasTexture` applied to page meshes
+4. When `currentPage` changes, the corresponding `BookPage3D` animates its `rotateY` from 0 to -PI (flip left)
+
+## What stays the same
+- `DreamBook.tsx` page — no changes, same props to viewer
+- `DreamBookReader.tsx` — untouched
+- `DreamBookControls.tsx` — untouched, still drives `currentPage`
+- All filter/export logic — untouched
+- `DreamBookCover`, `DreamBookPageSpread`, `DreamBookTableOfContents` — kept as-is, reused for texture generation
+
+## Files
+
+| File | Action |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+| `package.json` | Add three, @react-three/fiber, @react-three/drei |
+| `src/components/dream-book/DreamBook3DViewer.tsx` | Rewrite |
+| `src/components/dream-book/Book3DScene.tsx` | Create |
+| `src/components/dream-book/BookPage3D.tsx` | Create |
+| `src/components/dream-book/usePageTextures.ts` | Create |
 
