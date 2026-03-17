@@ -72,37 +72,60 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
 
     // Title page in reader mode (for multi-scene dreams)
     if (isTitlePage) {
+      const validScenes = (dream.section_images || []).filter((s: SceneData) => s.text || s.image_url || s.video_url);
       return (
-        <article className="border-b border-border/30 pb-8 mb-4 last:border-0">
+        <article className="border-b border-border/30 pb-8 mb-4 last:border-0 rounded-2xl overflow-hidden"
+          style={{ background: 'linear-gradient(to bottom, hsl(var(--background)), hsl(var(--card) / 0.6), hsl(var(--background)))' }}
+        >
           {(heroVideo || heroImage) && (
-            <div className="w-full aspect-[16/10] rounded-lg overflow-hidden mb-5 bg-muted/20">
-              <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} />
+            <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 8px 40px -8px hsl(var(--primary) / 0.25)' }}>
+              <div className="w-full aspect-[9/16]">
+                <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-full object-contain bg-background" />
+              </div>
+              {/* Vignette overlay */}
+              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 50%, hsl(var(--background)) 100%)' }} />
             </div>
           )}
-          <h3 className="text-xl font-bold font-serif text-foreground mb-1">{dream.title}</h3>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
-            <span>{dateStr}</span>
-            {dream.mood && <span>· {dream.mood}</span>}
-            {dream.lucid && (
-              <span className="flex items-center gap-0.5 text-primary">
-                <Sparkles className="w-3 h-3" /> Lucid
-              </span>
-            )}
-            {dream.section_images && dream.section_images.length > 0 && (
-              <span className="flex items-center gap-0.5 text-muted-foreground/60">
-                <Film className="w-3 h-3" /> {dream.section_images.length} scenes
-              </span>
+
+          <div className="text-center px-4 pt-5 pb-2">
+            <h3 className="text-xl font-bold font-serif text-foreground drop-shadow-lg mb-2" style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.3)' }}>
+              {dream.title}
+            </h3>
+
+            {/* Ornamental divider */}
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="h-px w-12 bg-primary/30" />
+              <Sparkles className="w-3 h-3 text-primary/50" />
+              <div className="h-px w-12 bg-primary/30" />
+            </div>
+
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
+              {dateStr}{dream.mood && ` · ${dream.mood}`}
+            </p>
+
+            <div className="flex items-center justify-center gap-3 mb-3">
+              {dream.lucid && (
+                <span className="flex items-center gap-1 text-[10px] font-semibold text-primary" style={{ textShadow: '0 0 8px hsl(var(--primary) / 0.4)' }}>
+                  <Sparkles className="w-3 h-3" /> Lucid
+                </span>
+              )}
+              {validScenes.length > 0 && (
+                <span className="flex items-center gap-1 text-[10px] text-muted-foreground/70">
+                  <Film className="w-3 h-3" /> {validScenes.length} scenes
+                </span>
+              )}
+            </div>
+
+            {dream.tags && dream.tags.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {dream.tags.map((tag) => (
+                  <span key={tag} className="text-[10px] px-2.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary/80">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
             )}
           </div>
-          {dream.tags && dream.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {dream.tags.map((tag) => (
-                <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-accent/50 text-accent-foreground">
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
         </article>
       );
     }
@@ -176,41 +199,68 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
 
   // Title page in book mode (for multi-scene dreams)
   if (isTitlePage) {
+    const validScenes = (dream.section_images || []).filter((s: SceneData) => s.text || s.image_url || s.video_url);
     return (
-      <div className="w-full h-full relative bg-card/20">
-        {/* Full bleed cover image/video */}
+      <div className="w-full h-full flex flex-col items-center justify-center overflow-hidden"
+        style={{ background: 'radial-gradient(ellipse at 50% 30%, hsl(var(--primary) / 0.08) 0%, hsl(var(--background)) 70%)' }}
+      >
+        {/* Hero media with rounded corners and glow */}
         {(heroVideo || heroImage) ? (
-          <div className="absolute inset-0">
+          <div className="relative w-[85%] flex-1 min-h-0 my-3 rounded-2xl overflow-hidden" style={{ boxShadow: '0 8px 40px -8px hsl(var(--primary) / 0.3)' }}>
             <MediaElement
               imageUrl={heroImage}
               videoUrl={heroVideo}
               alt={dream.title}
-              className="w-full h-full object-contain bg-black/90"
+              className="w-full h-full object-contain bg-background"
             />
-            {/* Gradient overlay for text legibility */}
-            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
+            {/* Vignette overlay */}
+            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 40%, hsl(var(--background) / 0.6) 100%)' }} />
           </div>
         ) : (
-          <div className="absolute inset-0 bg-card/30 flex items-center justify-center">
-            <Moon className="w-16 h-16 text-primary/10" />
+          <div className="flex-1 flex items-center justify-center">
+            <Moon className="w-14 h-14 text-primary/15" />
           </div>
         )}
 
-        {/* Text overlay at bottom */}
-        <div className="absolute inset-x-0 bottom-0 p-5 text-center z-10">
-          <h2 className="text-lg font-bold font-serif text-white drop-shadow-lg mb-1">{dream.title}</h2>
-          <p className="text-[10px] text-white/70 drop-shadow mb-1">
-            {dateStr}
-            {dream.mood && ` · ${dream.mood}`}
-            {dream.lucid && " · ✦ Lucid"}
+        {/* Title and metadata below the image */}
+        <div className="text-center px-4 pb-3 pt-1 w-full shrink-0">
+          <h2 className="text-base font-bold font-serif text-foreground drop-shadow-lg leading-tight mb-1" style={{ textShadow: '0 0 16px hsl(var(--primary) / 0.3)' }}>
+            {dream.title}
+          </h2>
+
+          {/* Ornamental divider */}
+          <div className="flex items-center justify-center gap-1.5 my-1.5">
+            <div className="h-px w-8 bg-primary/30" />
+            <Sparkles className="w-2.5 h-2.5 text-primary/40" />
+            <div className="h-px w-8 bg-primary/30" />
+          </div>
+
+          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+            {dateStr}{dream.mood && ` · ${dream.mood}`}
           </p>
+
+          <div className="flex items-center justify-center gap-2 mt-1">
+            {dream.lucid && (
+              <span className="flex items-center gap-0.5 text-[9px] font-semibold text-primary" style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.4)' }}>
+                <Sparkles className="w-2.5 h-2.5" /> Lucid
+              </span>
+            )}
+            {validScenes.length > 0 && (
+              <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground/60">
+                <Film className="w-2.5 h-2.5" /> {validScenes.length} scenes
+              </span>
+            )}
+          </div>
+
           {dream.tags && dream.tags.length > 0 && (
-            <p className="text-[10px] text-white/50 italic mb-1">
-              {dream.tags.map((t) => `#${t}`).join("  ")}
-            </p>
+            <div className="flex flex-wrap justify-center gap-1 mt-1.5">
+              {dream.tags.slice(0, 4).map((t) => (
+                <span key={t} className="text-[8px] px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary/70">
+                  #{t}
+                </span>
+              ))}
+            </div>
           )}
-          <p className="text-[10px] text-white/40">
-          </p>
         </div>
       </div>
     );

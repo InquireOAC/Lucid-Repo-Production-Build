@@ -1,65 +1,40 @@
 
 
-# Redesign Dream Book Title Page — Dreamy Story Aesthetic
+# Android Subscription Support
 
-## Problem
-The current title page is plain: black background, squared-off image edges, and flat text overlay. It needs to feel like a cinematic dream story cover — atmospheric, elegant, and immersive.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-## Design Direction
-A rich, layered title page inspired by movie posters and storybook covers, using the Cosmic Tech palette:
+## Changes Needed
 
-- **Hero media** fills most of the page with **rounded corners** and a soft **vignette/glow border** — no hard square edges
-- **Radial gradient background** using the deep blue palette (#060B18 → primary blue glow) instead of flat black
-- **Dreamy decorative elements**: subtle sparkle icons, a thin ornamental divider line between title and metadata
-- **Typography hierarchy**: large serif title with text-shadow/glow, elegant small-caps date line, mood as a glowing badge, tags as floating pill chips
-- **Lucid indicator**: sparkle icon with a soft primary glow, not just plain text
-- **Scene count badge**: small "Chapter X scenes" indicator with a Film icon
-- **Soft gradient overlays** on the image — bottom-to-top AND a radial vignette around edges for the dreamy fade effect
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-## Changes
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-### `DreamBookPageSpread.tsx` — Book mode title page (lines 178-217)
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
 
-Replace the current flat layout with:
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
 
-```
-┌─────────────────────────────┐
-│  radial gradient bg         │
-│  ┌───────────────────────┐  │
-│  │                       │  │  ← hero media with rounded-2xl,
-│  │    image / video      │  │     soft shadow, vignette overlay
-│  │                       │  │
-│  │                       │  │
-│  └───────────────────────┘  │
-│                             │
-│     ✦ Dream Title ✦        │  ← serif, text glow
-│    ── ornamental line ──    │
-│    Jan 15, 2025 · Mystical  │  ← small caps metadata
-│    ☆ Lucid  · 4 scenes     │  ← badges with glow
-│    #flying  #ocean  #light  │  ← floating tag pills
-└─────────────────────────────┘
-```
-
-- Background: `bg-gradient-to-b from-[#060B18] via-[#0a1628] to-[#060B18]` with a radial glow behind the image
-- Image container: `rounded-2xl overflow-hidden shadow-2xl shadow-primary/20` with margin/padding, not edge-to-edge
-- Vignette overlay inside image: radial gradient from transparent center to dark edges
-- Title: `text-xl font-bold font-serif` with `drop-shadow` and subtle primary glow
-- Ornamental divider: thin line with Sparkles icon centered
-- Metadata: `tracking-widest uppercase text-[10px]`
-- Tags: small rounded-full pills with `bg-primary/10 border border-primary/20`
-
-### `DreamBookPageSpread.tsx` — Reader mode title page (lines 81-115)
-
-Apply matching aesthetic:
-- Rounded image with shadow and vignette
-- Same typography treatment and decorative divider
-- Tags as styled pills instead of plain text
-
-### No other files change — this is purely a visual redesign of the title page rendering.
-
-## Files
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/dream-book/DreamBookPageSpread.tsx` | Redesign both book-mode and reader-mode title pages |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
