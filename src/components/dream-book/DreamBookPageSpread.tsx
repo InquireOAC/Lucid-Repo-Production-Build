@@ -210,8 +210,8 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
             </p>
           )}
           <p className="text-[10px] text-white/40">
-            {dream.section_images?.length} scene{(dream.section_images?.length || 0) !== 1 ? "s" : ""}
-        </p>
+          </p>
+        </div>
       </div>
     );
   }
