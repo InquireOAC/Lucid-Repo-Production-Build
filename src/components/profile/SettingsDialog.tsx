@@ -147,10 +147,13 @@ const SettingsDialog = ({
                   <ImageIcon className="h-4 w-4 mr-2" />
                   Dream Gallery
                 </Button>
-                <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { onOpenChange(false); navigate("/dream-book"); }}>
                   <BookOpen className="h-4 w-4 mr-2" />
+                  Dream Book
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowExportJournal(true)}>
+                  <FileText className="h-4 w-4 mr-2" />
                   Export Dream Journal
-                  <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coming Soon</span>
                 </Button>
               </div>
 
