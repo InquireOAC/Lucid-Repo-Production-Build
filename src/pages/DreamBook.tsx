@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamEntry } from "@/types/dream";
-import DreamBook3DViewer from "@/components/dream-book/DreamBook3DViewer";
+import DreamBook3DViewer, { buildPages } from "@/components/dream-book/DreamBook3DViewer";
 import DreamBookReader from "@/components/dream-book/DreamBookReader";
 import DreamBookControls from "@/components/dream-book/DreamBookControls";
 import DreamBookFilterPanel, { BookFilter } from "@/components/dream-book/DreamBookFilterPanel";
