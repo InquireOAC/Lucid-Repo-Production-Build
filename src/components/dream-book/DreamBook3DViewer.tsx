@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import { DreamEntry } from "@/types/dream";
 import DreamBookCover from "./DreamBookCover";
@@ -12,10 +12,32 @@ interface DreamBook3DViewerProps {
   onPageChange: (page: number) => void;
 }
 
-type PageContent =
+export type PageContent =
   | { type: "cover" }
   | { type: "toc" }
-  | { type: "dream"; dream: DreamEntry };
+  | { type: "dream"; dream: DreamEntry }
+  | { type: "title"; dream: DreamEntry }
+  | { type: "scene"; dream: DreamEntry; scene: { section: number; text: string; image_url?: string; video_url?: string } };
+
+export function buildPages(dreams: DreamEntry[]): PageContent[] {
+  const pages: PageContent[] = [{ type: "cover" }, { type: "toc" }];
+
+  for (const dream of dreams) {
+    const scenes = dream.section_images;
+    if (scenes && scenes.length > 0) {
+      // Title page first, then one spread per scene
+      pages.push({ type: "title", dream });
+      for (const scene of scenes) {
+        pages.push({ type: "scene", dream, scene });
+      }
+    } else {
+      // Single spread for dreams without scenes
+      pages.push({ type: "dream", dream });
+    }
+  }
+
+  return pages;
+}
 
 const DreamBook3DViewer = ({
   dreams,
@@ -23,14 +45,9 @@ const DreamBook3DViewer = ({
   currentPage,
   onPageChange,
 }: DreamBook3DViewerProps) => {
-  const pages: PageContent[] = [
-    { type: "cover" },
-    { type: "toc" },
-    ...dreams.map((dream) => ({ type: "dream" as const, dream })),
-  ];
+  const pages = buildPages(dreams);
 
   const rotateY = useMotionValue(0);
-  const shadowOpacity = useTransform(rotateY, [-15, 0, 15], [0.3, 0.1, 0.3]);
 
   const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
     if (info.offset.x < -50 && currentPage < pages.length - 1) {
@@ -48,11 +65,21 @@ const DreamBook3DViewer = ({
         return (
           <DreamBookTableOfContents
             dreams={dreams}
-            onSelectDream={(i) => onPageChange(i + 2)}
+            onSelectDream={(i) => {
+              // Find page index for this dream
+              const idx = pages.findIndex(
+                (p) => (p.type === "dream" || p.type === "title") && p.dream.id === dreams[i]?.id
+              );
+              if (idx >= 0) onPageChange(idx);
+            }}
           />
         );
       case "dream":
         return <DreamBookPageSpread dream={page.dream} mode="book" />;
+      case "title":
+        return <DreamBookPageSpread dream={page.dream} mode="book" isTitlePage />;
+      case "scene":
+        return <DreamBookPageSpread dream={page.dream} mode="book" scene={page.scene} />;
     }
   };
 

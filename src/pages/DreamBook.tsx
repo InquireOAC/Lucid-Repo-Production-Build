@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useAuth } from "@/contexts/AuthContext";
 import { DreamEntry } from "@/types/dream";
-import DreamBook3DViewer from "@/components/dream-book/DreamBook3DViewer";
+import DreamBook3DViewer, { buildPages } from "@/components/dream-book/DreamBook3DViewer";
 import DreamBookReader from "@/components/dream-book/DreamBookReader";
 import DreamBookControls from "@/components/dream-book/DreamBookControls";
 import DreamBookFilterPanel, { BookFilter } from "@/components/dream-book/DreamBookFilterPanel";
@@ -35,8 +35,8 @@ const DreamBook = () => {
     return dreams;
   }, [entries, filter, selectedIds]);
 
-  // Total pages = cover + TOC + dreams
-  const totalPages = filteredDreams.length + 2;
+  // Total pages = built from the page expansion logic
+  const totalPages = useMemo(() => buildPages(filteredDreams).length, [filteredDreams]);
 
   const handleApplyFilter = (f: BookFilter, ids: Set<string>) => {
     setFilter(f);

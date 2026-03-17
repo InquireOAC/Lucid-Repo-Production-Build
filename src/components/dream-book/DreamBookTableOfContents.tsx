@@ -1,6 +1,7 @@
 import React from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
+import { Film } from "lucide-react";
 
 interface DreamBookTableOfContentsProps {
   dreams: DreamEntry[];
@@ -20,6 +21,8 @@ const DreamBookTableOfContents = ({ dreams, onSelectDream }: DreamBookTableOfCon
             dateStr = format(new Date(dream.date), "MMM d");
           } catch {}
 
+          const sceneCount = dream.section_images?.length || 0;
+
           return (
             <button
               key={dream.id}
@@ -32,6 +35,12 @@ const DreamBookTableOfContents = ({ dreams, onSelectDream }: DreamBookTableOfCon
               <span className="text-sm text-foreground group-hover:text-primary transition-colors truncate flex-1">
                 {dream.title}
               </span>
+              {sceneCount > 0 && (
+                <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground/40 shrink-0">
+                  <Film className="w-2.5 h-2.5" />
+                  {sceneCount}
+                </span>
+              )}
               <span className="text-xs text-muted-foreground/40 shrink-0">{dateStr}</span>
             </button>
           );
