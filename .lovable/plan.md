@@ -1,40 +1,67 @@
 
 
-# Android Subscription Support
+# Incorporate Scene Images and Videos into Dream Book
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Overview
+Extend the Dream Book so each dream with scenes becomes a multi-page illustrated story. Scene images get their own page spreads (image left, scene text right), and videos (both hero and scene-level) auto-play inline as muted looping elements.
 
-## Changes Needed
+## Data Changes
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+### `useJournalEntries.tsx`
+- Add `section_images` to the field mapping (currently omitted)
+- Add `section_images` to the `DreamEntry` type
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### `types/dream.ts`
+- Add `section_images?: Array<{ section: number; text: string; image_url?: string; prompt?: string; video_url?: string }>` to `DreamEntry`
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+## Book Structure Changes
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+### Current: 1 page per dream
+```text
+Cover → TOC → [Dream1: image|text] → [Dream2: image|text] → ...
+```
 
-## Files to Modify
+### New: Multiple pages per dream (story format)
+```text
+Cover → TOC → [Dream1 Title Page] → [Scene1: image|text] → [Scene2: image|text] → ... → [Dream2 Title Page] → ...
+```
+
+For dreams **without** scenes: keep the current single spread (hero image + full content).
+
+For dreams **with** scenes: render a title/intro page, then one spread per scene (scene image left, scene text right). The hero image and video appear on the title page.
+
+## Component Changes
+
+### `DreamBook3DViewer.tsx`
+- Update page generation logic: for each dream, if `section_images` has entries, emit a title page + one page per scene instead of a single spread
+- Update total page count accordingly
+
+### `DreamBookPageSpread.tsx`
+- Add a new rendering path for scene spreads: accepts an optional `scene` prop with `{ text, image_url, video_url }`
+- When `video_url` is present, render `<video autoPlay muted loop playsInline>` instead of `<img>` (both in book and reader modes)
+- Apply same treatment to the hero `video_url` on the main dream spread
+
+### `DreamBookReader.tsx`
+- For dreams with scenes, render each scene as a separate visual section within the dream article
+- Videos auto-play inline (muted, looping)
+
+### `DreamBookTableOfContents.tsx`
+- Show scene count per dream entry (e.g., "3 scenes")
+
+### `exportDreamBookPdf.ts`
+- For dreams with scenes, generate one PDF page per scene spread
+- Videos are represented by their poster frame (the `image_url` from the scene) since PDF can't play video
+
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+| `src/types/dream.ts` | Add `section_images` field |
+| `src/hooks/useJournalEntries.tsx` | Map `section_images` from DB |
+| `src/components/dream-book/DreamBook3DViewer.tsx` | Multi-page scene expansion |
+| `src/components/dream-book/DreamBookPageSpread.tsx` | Scene spread + video autoplay |
+| `src/components/dream-book/DreamBookReader.tsx` | Scene sections + video autoplay |
+| `src/components/dream-book/DreamBookTableOfContents.tsx` | Scene count display |
+| `src/utils/exportDreamBookPdf.ts` | Multi-scene PDF pages |
+| `src/pages/DreamBook.tsx` | Update totalPages calculation |
 
