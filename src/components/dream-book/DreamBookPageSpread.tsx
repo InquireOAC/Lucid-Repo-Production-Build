@@ -74,25 +74,18 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
     if (isTitlePage) {
       const validScenes = (dream.section_images || []).filter((s: SceneData) => s.text || s.image_url || s.video_url);
       return (
-        <article className="border-b border-border/30 pb-8 mb-4 last:border-0 rounded-2xl overflow-hidden"
-          style={{ background: 'linear-gradient(to bottom, hsl(var(--background)), hsl(var(--card) / 0.6), hsl(var(--background)))' }}
-        >
+        <article className="border-b border-border/30 pb-6 mb-4 last:border-0 overflow-hidden">
           {(heroVideo || heroImage) && (
-            <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 8px 40px -8px hsl(var(--primary) / 0.25)' }}>
-              <div className="w-full aspect-[9/16]">
-                <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-full object-contain bg-background" />
-              </div>
-              {/* Vignette overlay */}
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 50%, hsl(var(--background)) 100%)' }} />
+            <div className="w-full aspect-[9/16] overflow-hidden">
+              <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-full object-cover" />
             </div>
           )}
 
-          <div className="text-center px-4 pt-5 pb-2">
+          <div className="text-center px-4 pt-4 pb-2">
             <h3 className="text-xl font-bold font-serif text-foreground drop-shadow-lg mb-2" style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.3)' }}>
               {dream.title}
             </h3>
 
-            {/* Ornamental divider */}
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="h-px w-12 bg-primary/30" />
               <Sparkles className="w-3 h-3 text-primary/50" />
@@ -201,41 +194,38 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
   if (isTitlePage) {
     const validScenes = (dream.section_images || []).filter((s: SceneData) => s.text || s.image_url || s.video_url);
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center overflow-hidden"
-        style={{ background: 'radial-gradient(ellipse at 50% 30%, hsl(var(--primary) / 0.08) 0%, hsl(var(--background)) 70%)' }}
-      >
-        {/* Hero media with rounded corners and glow */}
+      <div className="w-full h-full relative overflow-hidden">
+        {/* Full-bleed hero media */}
         {(heroVideo || heroImage) ? (
-          <div className="relative w-[85%] flex-1 min-h-0 my-3 rounded-2xl overflow-hidden" style={{ boxShadow: '0 8px 40px -8px hsl(var(--primary) / 0.3)' }}>
+          <>
             <MediaElement
               imageUrl={heroImage}
               videoUrl={heroVideo}
               alt={dream.title}
-              className="w-full h-full object-contain bg-background"
+              className="absolute inset-0 w-full h-full object-cover"
             />
-            {/* Vignette overlay */}
-            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 40%, hsl(var(--background) / 0.6) 100%)' }} />
-          </div>
+            {/* Bottom gradient for text legibility */}
+            <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          </>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center" style={{ background: 'radial-gradient(ellipse at 50% 30%, hsl(var(--primary) / 0.08) 0%, hsl(var(--background)) 70%)' }}>
             <Moon className="w-14 h-14 text-primary/15" />
           </div>
         )}
 
-        {/* Title and metadata below the image */}
-        <div className="text-center px-4 pb-3 pt-1 w-full shrink-0">
-          <h2 className="text-base font-bold font-serif text-foreground drop-shadow-lg leading-tight mb-1" style={{ textShadow: '0 0 16px hsl(var(--primary) / 0.3)' }}>
+        {/* Overlaid title and metadata */}
+        <div className="absolute bottom-0 left-0 right-0 text-center px-4 pb-4 pt-8">
+          <h2 className="text-base font-bold font-serif text-white drop-shadow-lg leading-tight mb-1" style={{ textShadow: '0 0 16px hsl(var(--primary) / 0.4)' }}>
             {dream.title}
           </h2>
 
-          {/* Ornamental divider */}
           <div className="flex items-center justify-center gap-1.5 my-1.5">
-            <div className="h-px w-8 bg-primary/30" />
-            <Sparkles className="w-2.5 h-2.5 text-primary/40" />
-            <div className="h-px w-8 bg-primary/30" />
+            <div className="h-px w-8 bg-white/30" />
+            <Sparkles className="w-2.5 h-2.5 text-primary/60" />
+            <div className="h-px w-8 bg-white/30" />
           </div>
 
-          <p className="text-[9px] uppercase tracking-widest text-muted-foreground">
+          <p className="text-[9px] uppercase tracking-widest text-white/70">
             {dateStr}{dream.mood && ` · ${dream.mood}`}
           </p>
 
@@ -246,7 +236,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
               </span>
             )}
             {validScenes.length > 0 && (
-              <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground/60">
+              <span className="flex items-center gap-0.5 text-[9px] text-white/50">
                 <Film className="w-2.5 h-2.5" /> {validScenes.length} scenes
               </span>
             )}
@@ -255,7 +245,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
           {dream.tags && dream.tags.length > 0 && (
             <div className="flex flex-wrap justify-center gap-1 mt-1.5">
               {dream.tags.slice(0, 4).map((t) => (
-                <span key={t} className="text-[8px] px-1.5 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary/70">
+                <span key={t} className="text-[8px] px-1.5 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/70">
                   #{t}
                 </span>
               ))}
