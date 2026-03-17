@@ -74,25 +74,18 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
     if (isTitlePage) {
       const validScenes = (dream.section_images || []).filter((s: SceneData) => s.text || s.image_url || s.video_url);
       return (
-        <article className="border-b border-border/30 pb-8 mb-4 last:border-0 rounded-2xl overflow-hidden"
-          style={{ background: 'linear-gradient(to bottom, hsl(var(--background)), hsl(var(--card) / 0.6), hsl(var(--background)))' }}
-        >
+        <article className="border-b border-border/30 pb-6 mb-4 last:border-0 overflow-hidden">
           {(heroVideo || heroImage) && (
-            <div className="relative mx-4 mt-4 rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 8px 40px -8px hsl(var(--primary) / 0.25)' }}>
-              <div className="w-full aspect-[9/16]">
-                <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-full object-contain bg-background" />
-              </div>
-              {/* Vignette overlay */}
-              <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, transparent 50%, hsl(var(--background)) 100%)' }} />
+            <div className="w-full aspect-[9/16] overflow-hidden">
+              <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-full object-cover" />
             </div>
           )}
 
-          <div className="text-center px-4 pt-5 pb-2">
+          <div className="text-center px-4 pt-4 pb-2">
             <h3 className="text-xl font-bold font-serif text-foreground drop-shadow-lg mb-2" style={{ textShadow: '0 0 20px hsl(var(--primary) / 0.3)' }}>
               {dream.title}
             </h3>
 
-            {/* Ornamental divider */}
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="h-px w-12 bg-primary/30" />
               <Sparkles className="w-3 h-3 text-primary/50" />
