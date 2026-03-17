@@ -23,15 +23,15 @@ export function buildPages(dreams: DreamEntry[]): PageContent[] {
   const pages: PageContent[] = [{ type: "cover" }, { type: "toc" }];
 
   for (const dream of dreams) {
-    const scenes = dream.section_images;
-    if (scenes && scenes.length > 0) {
-      // Title page first, then one spread per scene
+    const scenes = (dream.section_images || []).filter(
+      (s: any) => s.text || s.image_url || s.video_url
+    );
+    if (scenes.length > 0) {
       pages.push({ type: "title", dream });
       for (const scene of scenes) {
         pages.push({ type: "scene", dream, scene });
       }
     } else {
-      // Single spread for dreams without scenes
       pages.push({ type: "dream", dream });
     }
   }
