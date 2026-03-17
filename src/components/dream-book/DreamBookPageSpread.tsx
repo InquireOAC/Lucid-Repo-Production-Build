@@ -177,25 +177,40 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
   // Title page in book mode (for multi-scene dreams)
   if (isTitlePage) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-card/20 p-6 text-center">
-        {(heroVideo || heroImage) && (
-          <div className="w-3/4 aspect-[16/10] rounded-lg overflow-hidden mb-4 bg-muted/20">
-            <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} />
+      <div className="w-full h-full relative bg-card/20">
+        {/* Full bleed cover image/video */}
+        {(heroVideo || heroImage) ? (
+          <div className="absolute inset-0">
+            <MediaElement
+              imageUrl={heroImage}
+              videoUrl={heroVideo}
+              alt={dream.title}
+              className="w-full h-full object-contain bg-black/90"
+            />
+            {/* Gradient overlay for text legibility */}
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/80 to-transparent" />
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-card/30 flex items-center justify-center">
+            <Moon className="w-16 h-16 text-primary/10" />
           </div>
         )}
-        <h2 className="text-lg font-bold font-serif text-foreground mb-1">{dream.title}</h2>
-        <p className="text-[10px] text-muted-foreground mb-2">
-          {dateStr}
-          {dream.mood && ` · ${dream.mood}`}
-          {dream.lucid && " · ✦ Lucid"}
-        </p>
-        {dream.tags && dream.tags.length > 0 && (
-          <p className="text-[10px] text-accent-foreground/60 italic mb-2">
-            {dream.tags.map((t) => `#${t}`).join("  ")}
+
+        {/* Text overlay at bottom */}
+        <div className="absolute inset-x-0 bottom-0 p-5 text-center z-10">
+          <h2 className="text-lg font-bold font-serif text-white drop-shadow-lg mb-1">{dream.title}</h2>
+          <p className="text-[10px] text-white/70 drop-shadow mb-1">
+            {dateStr}
+            {dream.mood && ` · ${dream.mood}`}
+            {dream.lucid && " · ✦ Lucid"}
           </p>
-        )}
-        <p className="text-[10px] text-muted-foreground/50">
-          {dream.section_images?.length} scene{(dream.section_images?.length || 0) !== 1 ? "s" : ""}
+          {dream.tags && dream.tags.length > 0 && (
+            <p className="text-[10px] text-white/50 italic mb-1">
+              {dream.tags.map((t) => `#${t}`).join("  ")}
+            </p>
+          )}
+          <p className="text-[10px] text-white/40">
+            {dream.section_images?.length} scene{(dream.section_images?.length || 0) !== 1 ? "s" : ""}
         </p>
       </div>
     );
