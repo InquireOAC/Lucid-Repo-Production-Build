@@ -1,40 +1,23 @@
 
 
-# Android Subscription Support
+# Fix Dream Book Download Button
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Problem
+The export modal's download logic uses `document.createElement("a").click()` which fails silently on native iOS (Capacitor) since there's no real browser download manager. Additionally, the error handling shows no user feedback — errors are only logged to console.
 
-## Changes Needed
+## Fix
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+### `src/components/dream-book/DreamBookExportModal.tsx`
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+1. **Use `file-saver`** (already in dependencies) for the web download path — `saveAs(blob, "dream-book.pdf")` instead of the manual anchor element approach
+2. **Use Capacitor Filesystem + Share** on native platforms — write the blob to cache, then open the native share sheet so the user can save/share the PDF
+3. **Add error toast** so users see feedback when export fails
+4. **Add success toast** on completion
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
-
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+Changes:
+- Import `saveAs` from `file-saver`, `Capacitor` from `@capacitor/core`, `Filesystem`/`Directory` from `@capacitor/filesystem`, `Share` from `@capacitor/share`, and `toast` from `sonner`
+- In `handleExport`, after generating the blob:
+  - If native platform: convert blob to base64, write to cache via `Filesystem.writeFile`, then call `Share.share({ url: fileUri })`
+  - If web: call `saveAs(blob, "dream-book.pdf")`
+- Wrap in try/catch with `toast.error("Failed to export dream book")` on failure and `toast.success("Dream book exported!")` on success
 
