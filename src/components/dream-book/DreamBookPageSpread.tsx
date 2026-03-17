@@ -127,8 +127,8 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
     return (
       <article className="border-b border-border/30 pb-8 mb-8 last:border-0">
         {(heroVideo || heroImage) && (
-          <div className="w-full aspect-[16/10] rounded-lg overflow-hidden mb-5 bg-muted/20">
-            <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} />
+          <div className="w-full rounded-lg overflow-hidden mb-5 bg-muted/20">
+            <MediaElement imageUrl={heroImage} videoUrl={heroVideo} alt={dream.title} className="w-full h-auto object-contain" />
           </div>
         )}
         <h3 className="text-xl font-bold font-serif text-foreground mb-1">{dream.title}</h3>
