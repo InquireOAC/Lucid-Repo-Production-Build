@@ -1,40 +1,34 @@
 
 
-# Android Subscription Support
+# Fix Video Title Page — Remove Cropping, Black Bars & Extra Border
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Problems
+1. **`object-contain` + `bg-background`** causes visible black bars around the video since the container aspect doesn't match the video's natural aspect
+2. **Extra wrapper div** with `rounded-2xl`, `boxShadow`, and `w-[85%]` creates a visible border/container around the media
+3. **Reader mode** has the same issue with `aspect-[9/16]` + `object-contain bg-background`
 
-## Changes Needed
+## Fix — Both Book & Reader Mode Title Pages
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+Replace the constrained container approach with **edge-to-edge `object-cover`** media that fills the available space naturally, with text overlaid at the bottom via gradient.
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### Book Mode Title Page (lines 200-266)
+- Remove the `w-[85%] rounded-2xl` wrapper with its box-shadow — make media fill the entire page with `absolute inset-0`
+- Switch from `object-contain bg-background` to `object-cover` — no black bars, no background color showing through
+- Remove the separate text section below; instead overlay title/metadata at the bottom using `absolute bottom-0` with a `bg-gradient-to-t from-black/80 via-black/40 to-transparent` for legibility
+- Keep the ornamental divider, tags, lucid badge etc. inside the overlay
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### Reader Mode Title Page (lines 74-131)
+- Remove the `mx-4 mt-4 rounded-2xl` wrapper and its box-shadow
+- Remove the inner `aspect-[9/16]` div — let the media use `aspect-[9/16] w-full` directly with `object-cover`, no `bg-background`
+- Remove extra border/container styling from the article wrapper
+- Keep text below the media (not overlaid) since reader mode scrolls vertically
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+### MediaElement default
+- Keep default class as `object-cover` (already is for non-overridden cases)
 
-## Files to Modify
+## Files Changed
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+| `src/components/dream-book/DreamBookPageSpread.tsx` | Fix both book-mode and reader-mode title pages to use edge-to-edge object-cover media, remove extra containers/borders |
 
