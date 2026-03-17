@@ -20,6 +20,7 @@ import Insights from './pages/Insights';
 import LucidStats from './pages/LucidStats';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import DreamStoryPage from './pages/DreamStoryPage';
+import DreamBook from './pages/DreamBook';
 import NotFound from './pages/NotFound';
 import AdminDashboard from './pages/AdminDashboard';
 import MainLayout from './layouts/MainLayout';
