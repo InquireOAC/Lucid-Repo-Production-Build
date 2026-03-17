@@ -51,7 +51,8 @@ export const useJournalEntries = () => {
             user_id: dream.user_id,
             audio_url: dream.audio_url,
             audioUrl: dream.audio_url,
-            video_url: dream.video_url
+            video_url: dream.video_url,
+            section_images: dream.section_images || []
           };
         });
         

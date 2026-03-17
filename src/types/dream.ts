@@ -39,6 +39,13 @@ export interface DreamEntry {
   dream_symbols?: string[];
   word_count?: number | null;
   dream_date?: string | null;
+  section_images?: Array<{
+    section: number;
+    text: string;
+    image_url?: string;
+    prompt?: string;
+    video_url?: string;
+  }>;
 }
 
 export interface DreamTag {
