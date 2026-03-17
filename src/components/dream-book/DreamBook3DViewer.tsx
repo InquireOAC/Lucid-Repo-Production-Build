@@ -1,9 +1,9 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import React, { Suspense, useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
 import { DreamEntry } from "@/types/dream";
-import DreamBookCover from "./DreamBookCover";
-import DreamBookTableOfContents from "./DreamBookTableOfContents";
-import DreamBookPageSpread from "./DreamBookPageSpread";
+import Book3DScene from "./Book3DScene";
+import { usePageTextures } from "./usePageTextures";
+import { Loader2 } from "lucide-react";
 
 interface DreamBook3DViewerProps {
   dreams: DreamEntry[];
@@ -12,93 +12,67 @@ interface DreamBook3DViewerProps {
   onPageChange: (page: number) => void;
 }
 
-type PageContent =
-  | { type: "cover" }
-  | { type: "toc" }
-  | { type: "dream"; dream: DreamEntry };
-
-const DreamBook3DViewer = ({
+const DreamBook3DViewerInner = ({
   dreams,
   authorName,
   currentPage,
   onPageChange,
 }: DreamBook3DViewerProps) => {
-  const pages: PageContent[] = [
-    { type: "cover" },
-    { type: "toc" },
-    ...dreams.map((dream) => ({ type: "dream" as const, dream })),
-  ];
+  const pageTextures = usePageTextures(dreams, authorName);
 
-  const rotateY = useMotionValue(0);
-  const shadowOpacity = useTransform(rotateY, [-15, 0, 15], [0.3, 0.1, 0.3]);
-
-  const handleDragEnd = (_: any, info: { offset: { x: number } }) => {
-    if (info.offset.x < -50 && currentPage < pages.length - 1) {
-      onPageChange(currentPage + 1);
-    } else if (info.offset.x > 50 && currentPage > 0) {
-      onPageChange(currentPage - 1);
-    }
-  };
-
-  const renderPage = (page: PageContent) => {
-    switch (page.type) {
-      case "cover":
-        return <DreamBookCover authorName={authorName} dreams={dreams} />;
-      case "toc":
-        return (
-          <DreamBookTableOfContents
-            dreams={dreams}
-            onSelectDream={(i) => onPageChange(i + 2)}
-          />
-        );
-      case "dream":
-        return <DreamBookPageSpread dream={page.dream} mode="book" />;
-    }
-  };
+  if (pageTextures.length === 0) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div
-      className="flex-1 flex items-center justify-center overflow-hidden px-4"
-      style={{ perspective: "1200px" }}
-    >
-      <motion.div
-        className="relative w-full max-w-lg aspect-[3/4] rounded-xl overflow-hidden border border-border/30 bg-card shadow-2xl"
-        style={{
-          transformStyle: "preserve-3d",
-          rotateY,
-        }}
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1}
-        onDragEnd={handleDragEnd}
+    <div className="flex-1 w-full" style={{ minHeight: 400 }}>
+      <Canvas
+        shadows
+        camera={{ position: [0, 2, 5], fov: 40 }}
+        gl={{ antialias: true, alpha: true }}
+        style={{ background: "transparent" }}
       >
-        {/* Spine shadow */}
-        <div className="absolute left-0 top-0 bottom-0 w-3 bg-gradient-to-r from-black/20 to-transparent z-10 pointer-events-none" />
-
-        {/* Page content */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentPage}
-            className="absolute inset-0"
-            initial={{ rotateY: 90, opacity: 0 }}
-            animate={{ rotateY: 0, opacity: 1 }}
-            exit={{ rotateY: -90, opacity: 0 }}
-            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-            style={{ transformStyle: "preserve-3d", backfaceVisibility: "hidden" }}
-          >
-            {pages[currentPage] && renderPage(pages[currentPage])}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Page edge effect */}
-        <div className="absolute right-0 top-2 bottom-2 w-[3px] flex flex-col gap-px pointer-events-none">
-          {[...Array(Math.min(pages.length, 8))].map((_, i) => (
-            <div key={i} className="flex-1 bg-border/20 rounded-r-sm" />
-          ))}
-        </div>
-      </motion.div>
+        <Suspense fallback={null}>
+          <Book3DScene
+            pageTextures={pageTextures}
+            currentPage={currentPage}
+            onPageChange={onPageChange}
+          />
+        </Suspense>
+      </Canvas>
     </div>
   );
+};
+
+const DreamBook3DViewer = (props: DreamBook3DViewerProps) => {
+  const [webGLSupported, setWebGLSupported] = useState(true);
+
+  useEffect(() => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl =
+        canvas.getContext("webgl2") || canvas.getContext("webgl");
+      if (!gl) setWebGLSupported(false);
+    } catch {
+      setWebGLSupported(false);
+    }
+  }, []);
+
+  if (!webGLSupported) {
+    return (
+      <div className="flex-1 flex items-center justify-center px-4 text-center">
+        <p className="text-muted-foreground text-sm">
+          3D view requires WebGL. Please use Reader mode instead.
+        </p>
+      </div>
+    );
+  }
+
+  return <DreamBook3DViewerInner {...props} />;
 };
 
 export default DreamBook3DViewer;
