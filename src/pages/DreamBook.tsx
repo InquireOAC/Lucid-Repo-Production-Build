@@ -35,8 +35,8 @@ const DreamBook = () => {
     return dreams;
   }, [entries, filter, selectedIds]);
 
-  // Total pages = cover + TOC + dreams
-  const totalPages = filteredDreams.length + 2;
+  // Total pages = built from the page expansion logic
+  const totalPages = useMemo(() => buildPages(filteredDreams).length, [filteredDreams]);
 
   const handleApplyFilter = (f: BookFilter, ids: Set<string>) => {
     setFilter(f);
