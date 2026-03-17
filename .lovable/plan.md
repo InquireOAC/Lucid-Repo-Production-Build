@@ -1,40 +1,129 @@
 
 
-# Android Subscription Support
+# Dream Book Feature Plan
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Overview
+A new premium page at `/dream-book` where users view their dream journal as an interactive book with two modes: a CSS-based 3D book with page-flip animations, and a clean reading view. Includes filtering/curation and polished PDF export built on the existing jsPDF setup.
 
-## Changes Needed
+## Architecture
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+```text
+src/
+├── pages/DreamBook.tsx              (main page, mode toggle, filter state)
+├── components/dream-book/
+│   ├── DreamBook3DViewer.tsx         (CSS 3D book with flip animations)
+│   ├── DreamBookReader.tsx           (flat reading view)
+│   ├── DreamBookCover.tsx            (cover/title page rendering)
+│   ├── DreamBookPageSpread.tsx       (single dream spread: image + text)
+│   ├── DreamBookControls.tsx         (prev/next, page indicator)
+│   ├── DreamBookFilterPanel.tsx      (filter drawer: all/lucid/favorites/date/manual)
+│   ├── DreamBookExportModal.tsx      (export dialog with progress)
+│   ├── DreamBookEmptyState.tsx       (beautiful empty state)
+│   └── DreamBookTableOfContents.tsx  (optional TOC page)
+├── utils/exportDreamBookPdf.ts       (enhanced PDF generation, reuses existing patterns)
+```
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+## Key Decisions
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+- **3D Book**: Built with pure CSS `perspective` + `transform-style: preserve-3d` + framer-motion for page flips. No Three.js dependency in v1 — keeps bundle small and mobile-friendly. Architecture is modular so `DreamBook3DViewer` can be swapped to a react-three-fiber version later.
+- **PDF Export**: Extends the existing `exportDreamJournalPdf.ts` pattern (jsPDF, landscape A4 spreads) but with enhanced chapter layouts, TOC, and end page. Called from structured data, not screenshots.
+- **Data Source**: Uses `useJournalEntries` hook to fetch user dreams from Supabase, then filters client-side.
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+## Implementation Steps
 
-## Files to Modify
+### 1. Create `DreamBook` page + route
+- New page at `src/pages/DreamBook.tsx`
+- Add route `/dream-book` inside MainLayout in `App.tsx`
+- State: `viewMode` (book/reader), `filteredDreams`, `currentPage`, filter state
+- Entry point from Profile settings or Journal header
 
-| File | Change |
+### 2. Filter Panel (`DreamBookFilterPanel.tsx`)
+- Drawer/sheet with filter options:
+  - All dreams (default)
+  - Lucid only (`lucid === true`)
+  - Date range (two date pickers)
+  - Manual selection (checkboxes per dream)
+- Outputs filtered + sorted `DreamEntry[]` to parent
+
+### 3. 3D Book Viewer (`DreamBook3DViewer.tsx`)
+- CSS 3D perspective container with book spine
+- Pages as absolutely-positioned divs with `backface-visibility: hidden`
+- Framer-motion `rotateY` animations for page flips (0 → -180deg)
+- Each "spread" = left page (image or placeholder) + right page (text content)
+- Cover page as first spread, TOC as second, then dream entries
+- Subtle shadow/glow effects using existing aurora CSS vars
+- Touch swipe support via framer-motion drag gestures
+
+### 4. Reading View (`DreamBookReader.tsx`)
+- Clean scrollable layout, one dream per section
+- Uses existing glass-card aesthetic
+- Dream image (full width), title, date, mood/tags, content, analysis
+- Sticky navigation between entries
+- Mobile-optimized with generous spacing
+
+### 5. Page Components
+- **`DreamBookCover.tsx`**: Renders cover with user's display name, dream count, date range, decorative elements matching cosmic theme
+- **`DreamBookPageSpread.tsx`**: Single dream rendered as a book spread (image left, text right in 3D view; stacked in reader view)
+- **`DreamBookTableOfContents.tsx`**: List of dream titles with page numbers
+- **`DreamBookControls.tsx`**: Prev/next buttons, page indicator, view mode toggle
+
+### 6. Export (`DreamBookExportModal.tsx` + `exportDreamBookPdf.ts`)
+- Dialog with "Generating..." progress bar
+- Enhanced PDF based on existing `exportDreamJournalPdf.ts`:
+  - Cover page, title page, TOC, dream spreads, end page
+  - Elegant typography (Playfair Display for titles, already imported)
+  - Full-page image sections when image exists
+  - Chapter-style layout with generous margins
+- Uses `jsPDF` (already installed) + `loadImageAsBase64` pattern from existing code
+
+### 7. Empty State (`DreamBookEmptyState.tsx`)
+- Shown when user has no dreams or no dreams match filters
+- Cosmic-themed illustration placeholder
+- CTA: "Your dreams deserve to be kept like stories."
+- Button navigating to `/journal/new`
+
+### 8. Styling
+- Cosmic theme using existing CSS variables (`--aurora-purple`, `--cosmic-black`, etc.)
+- Glass-card backgrounds for controls
+- Playfair Display for book typography (already imported in index.css)
+- Subtle particle/glow effects via CSS gradients
+- No toasts — all feedback via UI transitions and loading states
+
+## Component Flow
+
+```text
+DreamBook (page)
+├── DreamBookFilterPanel (drawer)
+├── DreamBookControls (mode toggle, nav)
+├── [viewMode === 'book']
+│   └── DreamBook3DViewer
+│       ├── DreamBookCover (first spread)
+│       ├── DreamBookTableOfContents (second spread)
+│       └── DreamBookPageSpread[] (one per dream)
+├── [viewMode === 'reader']
+│   └── DreamBookReader
+│       ├── DreamBookCover (header)
+│       └── DreamBookPageSpread[] (scrollable)
+├── DreamBookExportModal
+└── DreamBookEmptyState (conditional)
+```
+
+## Files Changed/Created
+
+| File | Action |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+| `src/pages/DreamBook.tsx` | Create |
+| `src/components/dream-book/DreamBook3DViewer.tsx` | Create |
+| `src/components/dream-book/DreamBookReader.tsx` | Create |
+| `src/components/dream-book/DreamBookCover.tsx` | Create |
+| `src/components/dream-book/DreamBookPageSpread.tsx` | Create |
+| `src/components/dream-book/DreamBookControls.tsx` | Create |
+| `src/components/dream-book/DreamBookFilterPanel.tsx` | Create |
+| `src/components/dream-book/DreamBookExportModal.tsx` | Create |
+| `src/components/dream-book/DreamBookEmptyState.tsx` | Create |
+| `src/components/dream-book/DreamBookTableOfContents.tsx` | Create |
+| `src/utils/exportDreamBookPdf.ts` | Create |
+| `src/App.tsx` | Add `/dream-book` route |
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+No database migrations needed — reads existing `dream_entries` table.
 
