@@ -27,36 +27,46 @@ import {
 /*  Particles                                                          */
 /* ------------------------------------------------------------------ */
 
-const PARTICLE_COUNT = 40;
+const STAR_COUNT = 80;
 
 const Particles = React.memo(() => {
-  const particles = useMemo(
+  const stars = useMemo(
     () =>
-      Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        size: Math.random() * 3 + 1,
-        delay: Math.random() * 6,
-        duration: Math.random() * 4 + 4,
-        opacity: Math.random() * 0.6 + 0.2,
-      })),
+      Array.from({ length: STAR_COUNT }, (_, i) => {
+        const isBright = Math.random() > 0.7;
+        const isBlue = Math.random() > 0.5;
+        return {
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          size: isBright ? Math.random() * 3 + 2 : Math.random() * 2 + 0.5,
+          delay: Math.random() * 8,
+          duration: Math.random() * 3 + 2,
+          color: isBlue
+            ? `hsla(220, 90%, 78%, ${isBright ? 0.9 : 0.4})`
+            : `hsla(0, 0%, 100%, ${isBright ? 0.8 : 0.3})`,
+          twinkle: isBright,
+        };
+      }),
     []
   );
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
+      {stars.map((s) => (
         <div
-          key={p.id}
+          key={s.id}
           className="absolute rounded-full"
           style={{
-            left: p.left,
-            top: p.top,
-            width: p.size,
-            height: p.size,
-            backgroundColor: `hsla(230, 80%, 72%, ${p.opacity})`,
-            animation: `onb-float ${p.duration}s ${p.delay}s ease-in-out infinite alternate`,
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            backgroundColor: s.color,
+            boxShadow: s.twinkle ? `0 0 ${s.size * 3}px ${s.color}` : undefined,
+            animation: s.twinkle
+              ? `onb-twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`
+              : `onb-float ${s.duration + 4}s ${s.delay}s ease-in-out infinite alternate`,
           }}
         />
       ))}
@@ -226,7 +236,7 @@ const screens: ScreenData[] = [
   {
     title: "",
     subtitle: "",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(260 60% 20%) 0%, hsl(230 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 60% 12%) 0%, hsl(225 70% 5%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="flex flex-col items-center gap-6">
         {/* Logo with glow */}
@@ -297,7 +307,7 @@ const screens: ScreenData[] = [
   {
     title: "Capture Every Dream",
     subtitle: "Record your dreams the moment you wake. Voice, text, or sketch — never lose a dream again.",
-    gradient: "radial-gradient(ellipse at 50% 30%, hsl(250 50% 18%) 0%, hsl(230 55% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 30%, hsl(215 55% 10%) 0%, hsl(220 70% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <OrbitalRing />
@@ -310,7 +320,7 @@ const screens: ScreenData[] = [
   {
     title: "AI-Powered Insights",
     subtitle: "Unlock hidden patterns. Our AI reveals the symbols, emotions, and meanings within your dreams.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(240 50% 18%) 0%, hsl(230 50% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 50%, hsl(225 50% 11%) 0%, hsl(220 65% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <ConstellationDots />
@@ -326,7 +336,7 @@ const screens: ScreenData[] = [
   {
     title: "See Your Dreams Come Alive",
     subtitle: "Transform your dreams into stunning AI-generated artwork and cinematic videos. Watch your subconscious unfold before your eyes.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(260 55% 20%) 0%, hsl(245 50% 10%) 55%, hsl(230 55% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(230 55% 12%) 0%, hsl(222 60% 5%) 55%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <GlowRing size={180} color="hsl(260, 60%, 60%)" />
@@ -341,7 +351,7 @@ const screens: ScreenData[] = [
   {
     title: "Join the Dream Community",
     subtitle: "Share dreams, discover connections, and explore the collective unconscious with dreamers worldwide.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(235 50% 18%) 0%, hsl(225 55% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 50%, hsl(218 50% 10%) 0%, hsl(222 65% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
         <Ripples />
@@ -354,7 +364,7 @@ const screens: ScreenData[] = [
   {
     title: "Your Journey Begins",
     subtitle: "Step through the gateway. Thousands of dreamers are already inside.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(255 55% 22%) 0%, hsl(240 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(225 55% 13%) 0%, hsl(220 60% 5%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center">
         <Portal />
@@ -365,7 +375,7 @@ const screens: ScreenData[] = [
   {
     title: "Terms & Privacy",
     subtitle: "Before you enter, please review and agree to our terms.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(250 50% 18%) 0%, hsl(235 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 50% 10%) 0%, hsl(222 60% 4%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
         <GlowRing size={140} color="hsl(230, 60%, 60%)" />
@@ -650,6 +660,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         @keyframes onb-shimmer {
           0% { background-position: 200% center; }
           100% { background-position: -200% center; }
+        }
+        @keyframes onb-twinkle {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2); }
         }
       `}</style>
     </div>
