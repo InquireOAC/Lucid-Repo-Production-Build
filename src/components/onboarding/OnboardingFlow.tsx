@@ -231,11 +231,12 @@ const screens: ScreenData[] = [
       <div className="relative flex items-center justify-center">
         <GlowRing size={160} />
         <img
-          src="/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png"
+          src={lucidRepoLogo}
           alt="Lucid Repo"
           className="absolute w-16 h-16 object-contain"
           style={{ filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.6))" }}
         />
+      </div>
       </div>
     ),
   },
