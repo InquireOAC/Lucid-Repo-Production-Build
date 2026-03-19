@@ -361,6 +361,13 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   const handleStart = async () => {
     try {
+      // Persist terms acceptance to Supabase
+      try {
+        await markTermsAsAccepted();
+      } catch (e) {
+        console.error("Failed to persist terms acceptance:", e);
+      }
+
       if (Capacitor.isNativePlatform()) {
         try {
           await Preferences.set({ key: "hasSeenOnboarding", value: "true" });
