@@ -307,6 +307,20 @@ const screens: ScreenData[] = [
       </div>
     ),
   },
+  {
+    title: "Terms & Privacy",
+    subtitle: "Before you enter, please review and agree to our terms.",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(250 50% 18%) 0%, hsl(235 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    renderVisual: () => (
+      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+        <GlowRing size={140} color="hsl(230, 60%, 60%)" />
+        <div className="absolute flex gap-3 z-10">
+          <Shield className="text-primary" size={36} strokeWidth={1.5} />
+          <FileText className="text-primary" size={36} strokeWidth={1.5} />
+        </div>
+      </div>
+    ),
+  },
 ];
 
 /* ------------------------------------------------------------------ */
