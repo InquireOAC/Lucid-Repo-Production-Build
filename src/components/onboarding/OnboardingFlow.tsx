@@ -237,7 +237,6 @@ const screens: ScreenData[] = [
           style={{ filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.6))" }}
         />
       </div>
-      </div>
     ),
   },
   {
