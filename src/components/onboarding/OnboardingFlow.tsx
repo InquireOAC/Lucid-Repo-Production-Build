@@ -224,18 +224,73 @@ interface ScreenData {
 
 const screens: ScreenData[] = [
   {
-    title: "Enter the Dream Realm",
-    subtitle: "Your dreams hold secrets. It's time to decode them.",
+    title: "",
+    subtitle: "",
     gradient: "radial-gradient(ellipse at 50% 40%, hsl(260 60% 20%) 0%, hsl(230 50% 10%) 50%, hsl(220 60% 5%) 100%)",
     renderVisual: () => (
-      <div className="relative flex items-center justify-center">
-        <GlowRing size={160} />
-        <img
-          src={lucidRepoLogo}
-          alt="Lucid Repo"
-          className="absolute w-16 h-16 object-contain"
-          style={{ filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.6))" }}
-        />
+      <div className="flex flex-col items-center gap-6">
+        {/* Logo with glow */}
+        <motion.div
+          className="relative flex items-center justify-center"
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <GlowRing size={180} />
+          <img
+            src={lucidRepoLogo}
+            alt="Lucid Repo"
+            className="absolute w-20 h-20 object-contain"
+            style={{ filter: "drop-shadow(0 0 24px hsl(var(--primary) / 0.7))" }}
+          />
+        </motion.div>
+
+        {/* Hello Dreamer */}
+        <motion.p
+          className="text-lg tracking-[0.3em] uppercase text-primary/80 font-light"
+          initial={{ opacity: 0, letterSpacing: "0.6em" }}
+          animate={{ opacity: 1, letterSpacing: "0.3em" }}
+          transition={{ delay: 0.6, duration: 0.8, ease: "easeOut" }}
+        >
+          Hello Dreamer
+        </motion.p>
+
+        {/* Welcome to */}
+        <motion.h1
+          className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-tight"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.0, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Welcome to
+        </motion.h1>
+
+        {/* Lucid Repo — grand reveal */}
+        <motion.h1
+          className="text-4xl sm:text-5xl font-extrabold tracking-tight"
+          style={{
+            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(260 80% 75%), hsl(var(--primary)))",
+            backgroundSize: "200% auto",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            animation: "onb-shimmer 3s linear infinite",
+          }}
+          initial={{ opacity: 0, scale: 0.8, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 1.4, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        >
+          Lucid Repo
+        </motion.h1>
+
+        {/* Tagline */}
+        <motion.p
+          className="text-sm text-muted-foreground max-w-xs leading-relaxed text-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2.0, duration: 0.8 }}
+        >
+          Your dreams hold secrets. It's time to decode them.
+        </motion.p>
       </div>
     ),
   },
@@ -444,24 +499,28 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             </motion.div>
 
             {/* Title */}
-            <motion.h1
-              className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.5 }}
-            >
-              {screen.title}
-            </motion.h1>
+            {screen.title && (
+              <motion.h1
+                className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.5 }}
+              >
+                {screen.title}
+              </motion.h1>
+            )}
 
             {/* Subtitle */}
-            <motion.p
-              className="text-sm sm:text-base text-muted-foreground max-w-xs leading-relaxed"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-            >
-              {screen.subtitle}
-            </motion.p>
+            {screen.subtitle && (
+              <motion.p
+                className="text-sm sm:text-base text-muted-foreground max-w-xs leading-relaxed"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.5 }}
+              >
+                {screen.subtitle}
+              </motion.p>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -587,6 +646,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         @keyframes onb-dot-pop {
           0% { r: 0; opacity: 0; }
           100% { r: 0.8; opacity: 1; }
+        }
+        @keyframes onb-shimmer {
+          0% { background-position: 200% center; }
+          100% { background-position: -200% center; }
         }
       `}</style>
     </div>
