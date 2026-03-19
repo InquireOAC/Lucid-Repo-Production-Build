@@ -85,14 +85,16 @@ const DreamBook3DViewer = ({
 
   return (
     <div
-      className="flex-1 flex items-center justify-center overflow-hidden px-4"
+      className="flex-1 flex items-center justify-center overflow-hidden px-4 py-2"
       style={{ perspective: "1200px" }}
     >
       <motion.div
-        className="relative w-full max-w-lg aspect-[3/4] rounded-xl overflow-hidden border border-border/30 bg-card shadow-2xl"
+        className="relative w-full max-w-sm md:max-w-md lg:max-w-lg rounded-xl overflow-hidden border border-border/30 bg-card shadow-2xl"
         style={{
           transformStyle: "preserve-3d",
           rotateY,
+          aspectRatio: "3/4",
+          maxHeight: "100%",
         }}
         drag="x"
         dragConstraints={{ left: 0, right: 0 }}
