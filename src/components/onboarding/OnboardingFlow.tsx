@@ -19,6 +19,8 @@ import {
   Eye,
   Heart,
   Compass,
+  Shield,
+  FileText,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
