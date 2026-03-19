@@ -279,11 +279,11 @@ const screens: ScreenData[] = [
         <motion.h1
           className="text-4xl sm:text-5xl font-extrabold tracking-tight"
           style={{
-            background: "linear-gradient(135deg, hsl(var(--primary)), hsl(260 80% 75%), hsl(var(--primary)))",
-            backgroundSize: "200% auto",
+            background: "linear-gradient(135deg, #3B82F6, #93C5FD, #ffffff, #93C5FD, #3B82F6)",
+            backgroundSize: "300% auto",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            animation: "onb-shimmer 3s linear infinite",
+            animation: "onb-shimmer 4s linear infinite",
           }}
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
