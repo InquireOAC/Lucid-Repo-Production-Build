@@ -320,7 +320,7 @@ const screens: ScreenData[] = [
   {
     title: "AI-Powered Insights",
     subtitle: "Unlock hidden patterns. Our AI reveals the symbols, emotions, and meanings within your dreams.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(240 50% 18%) 0%, hsl(230 50% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 50%, hsl(225 50% 11%) 0%, hsl(220 65% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <ConstellationDots />
