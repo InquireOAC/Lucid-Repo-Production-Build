@@ -491,24 +491,65 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           ))}
         </div>
 
+        {/* Terms checkbox on last screen */}
+        {isLastScreen && (
+          <div className="flex flex-col items-center gap-4 px-6">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-0.5 border-primary/50 data-[state=checked]:bg-primary"
+              />
+              <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                I agree to the{" "}
+                <a
+                  href="https://lucidrepo.lovable.app/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Terms of Use
+                </a>{" "}
+                and{" "}
+                <a
+                  href="https://lucidrepo.lovable.app/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Action button */}
         {isLastScreen ? (
           <Button
             onClick={handleStart}
-            className="w-64 h-14 text-base font-semibold rounded-full relative overflow-hidden"
+            disabled={!termsAccepted}
+            className="w-64 h-14 text-base font-semibold rounded-full relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: "hsl(var(--primary))",
-              boxShadow: "0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2)",
+              background: termsAccepted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)",
+              boxShadow: termsAccepted
+                ? "0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2)"
+                : "none",
             }}
           >
             <span className="relative z-10">Enter the Dream Realm</span>
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--primary)))",
-                animation: "onb-pulse-ring 2s ease-in-out infinite",
-              }}
-            />
+            {termsAccepted && (
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--primary)))",
+                  animation: "onb-pulse-ring 2s ease-in-out infinite",
+                }}
+              />
+            )}
           </Button>
         ) : (
           <Button
