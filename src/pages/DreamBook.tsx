@@ -57,7 +57,7 @@ const DreamBook = () => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)]">
+    <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] md:h-screen md:max-h-dvh">
       {/* Header */}
       <div className="text-center pt-4 pb-1 px-4">
         <h1 className="text-xl font-bold font-serif text-foreground">Dream Book</h1>
