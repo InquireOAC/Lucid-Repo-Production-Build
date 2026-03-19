@@ -351,7 +351,7 @@ const screens: ScreenData[] = [
   {
     title: "Join the Dream Community",
     subtitle: "Share dreams, discover connections, and explore the collective unconscious with dreamers worldwide.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(235 50% 18%) 0%, hsl(225 55% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 50%, hsl(218 50% 10%) 0%, hsl(222 65% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
         <Ripples />
