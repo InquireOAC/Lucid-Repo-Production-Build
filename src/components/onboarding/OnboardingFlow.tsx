@@ -2,8 +2,11 @@
 import React, { useState, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
+import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
+import lucidRepoLogo from "@/assets/LucidRepoLogoAndroid.png";
 import {
   Moon,
   Brain,
@@ -16,6 +19,8 @@ import {
   Eye,
   Heart,
   Compass,
+  Shield,
+  FileText,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -226,7 +231,7 @@ const screens: ScreenData[] = [
       <div className="relative flex items-center justify-center">
         <GlowRing size={160} />
         <img
-          src="/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png"
+          src={lucidRepoLogo}
           alt="Lucid Repo"
           className="absolute w-16 h-16 object-contain"
           style={{ filter: "drop-shadow(0 0 20px hsl(var(--primary) / 0.6))" }}
@@ -302,6 +307,20 @@ const screens: ScreenData[] = [
       </div>
     ),
   },
+  {
+    title: "Terms & Privacy",
+    subtitle: "Before you enter, please review and agree to our terms.",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(250 50% 18%) 0%, hsl(235 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    renderVisual: () => (
+      <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
+        <GlowRing size={140} color="hsl(230, 60%, 60%)" />
+        <div className="absolute flex gap-3 z-10">
+          <Shield className="text-primary" size={36} strokeWidth={1.5} />
+          <FileText className="text-primary" size={36} strokeWidth={1.5} />
+        </div>
+      </div>
+    ),
+  },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -325,7 +344,9 @@ interface OnboardingFlowProps {
 const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const { markTermsAsAccepted } = useTermsAcceptance();
 
   const goTo = useCallback(
     (idx: number) => {
@@ -340,6 +361,13 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   const handleStart = async () => {
     try {
+      // Persist terms acceptance to Supabase
+      try {
+        await markTermsAsAccepted();
+      } catch (e) {
+        console.error("Failed to persist terms acceptance:", e);
+      }
+
       if (Capacitor.isNativePlatform()) {
         try {
           await Preferences.set({ key: "hasSeenOnboarding", value: "true" });
@@ -463,24 +491,65 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           ))}
         </div>
 
+        {/* Terms checkbox on last screen */}
+        {isLastScreen && (
+          <div className="flex flex-col items-center gap-4 px-6">
+            <div className="flex items-start gap-3">
+              <Checkbox
+                id="terms"
+                checked={termsAccepted}
+                onCheckedChange={(checked) => setTermsAccepted(checked === true)}
+                className="mt-0.5 border-primary/50 data-[state=checked]:bg-primary"
+              />
+              <label htmlFor="terms" className="text-xs text-muted-foreground leading-relaxed cursor-pointer">
+                I agree to the{" "}
+                <a
+                  href="https://lucidrepo.lovable.app/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Terms of Use
+                </a>{" "}
+                and{" "}
+                <a
+                  href="https://lucidrepo.lovable.app/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Privacy Policy
+                </a>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Action button */}
         {isLastScreen ? (
           <Button
             onClick={handleStart}
-            className="w-64 h-14 text-base font-semibold rounded-full relative overflow-hidden"
+            disabled={!termsAccepted}
+            className="w-64 h-14 text-base font-semibold rounded-full relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: "hsl(var(--primary))",
-              boxShadow: "0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2)",
+              background: termsAccepted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)",
+              boxShadow: termsAccepted
+                ? "0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2)"
+                : "none",
             }}
           >
             <span className="relative z-10">Enter the Dream Realm</span>
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--primary)))",
-                animation: "onb-pulse-ring 2s ease-in-out infinite",
-              }}
-            />
+            {termsAccepted && (
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--primary)))",
+                  animation: "onb-pulse-ring 2s ease-in-out infinite",
+                }}
+              />
+            )}
           </Button>
         ) : (
           <Button

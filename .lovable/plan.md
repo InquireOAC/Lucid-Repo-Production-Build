@@ -1,32 +1,40 @@
 
 
-# Fix Onboarding Logo + Add Terms Screen
+# Android Subscription Support
 
-## 1. Replace Logo
-The onboarding welcome screen currently references `/lovable-uploads/4e6c9bed-1db7-420d-8424-3598e72f17bd.png`. Copy the uploaded `LucidRepoLogoAndroid.png` to `src/assets/` and update the import in `OnboardingFlow.tsx` to use it instead.
+## Current State
+The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
 
-## 2. Add Terms & Conditions Screen
-Per Apple's App Store requirements, users must agree to Terms of Use / Privacy Policy during onboarding. Add a final screen (screen 7, after "Your Journey Begins") — or integrate it into the last screen — that shows:
-- Links to Terms of Use and Privacy Policy
-- A checkbox: "I agree to the Terms of Use and Privacy Policy"
-- The "Enter the Dream Realm" CTA is disabled until the checkbox is checked
-- On acceptance, call the existing `markTermsAsAccepted` logic from `useTermsAcceptance` to persist to Supabase
+## Changes Needed
 
-The existing `TermsAcceptanceDialog` component and `useTermsAcceptance` hook already handle the DB persistence — we'll reuse that logic inline.
+### 1. NativeSubscriptionManager.tsx - Platform-aware text
+- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
+- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
+- The "Most Popular" badge and feature lists remain the same
 
-## Screen Flow (updated)
-1. Enter the Dream Realm (with correct logo)
-2. Capture Every Dream
-3. AI-Powered Insights
-4. See Your Dreams Come Alive
-5. Join the Dream Community
-6. Your Journey Begins (portal animation, "Next" button)
-7. **Terms & Privacy** — checkbox + "Enter the Dream Realm" CTA
+### 2. SubscriptionDialog.tsx - Platform-aware text
+- Change "Manage your subscription through App Store settings" to reference the correct store
 
-## Files Changed
+### 3. useNativeSubscription.ts - Platform-aware restore message
+- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+
+### 4. No RevenueCat code changes needed
+- The RevenueCat SDK automatically uses Google Play Billing on Android
+- The same `revenueCatManager.ts` singleton works on both platforms
+- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/assets/LucidRepoLogoAndroid.png` | Copy uploaded logo here |
-| `src/components/onboarding/OnboardingFlow.tsx` | Import new logo asset, replace image src on screen 1. Add screen 7 with terms checkbox, privacy/terms links, and gated CTA. Move "Enter the Dream Realm" button to screen 7. Screen 6 gets a "Next" button instead. |
+| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
+| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
+| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+
+## Manual Steps (User must do)
+After code changes:
+1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
+2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
+3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
+4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
 
