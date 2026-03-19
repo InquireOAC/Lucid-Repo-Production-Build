@@ -661,6 +661,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           0% { background-position: 200% center; }
           100% { background-position: -200% center; }
         }
+        @keyframes onb-twinkle {
+          0%, 100% { opacity: 0.3; transform: scale(0.8); }
+          50% { opacity: 1; transform: scale(1.2); }
+        }
       `}</style>
     </div>
   );
