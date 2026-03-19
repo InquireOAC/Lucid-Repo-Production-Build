@@ -281,7 +281,9 @@ const screens: ScreenData[] = [
           style={{
             background: "linear-gradient(135deg, #3B82F6, #93C5FD, #ffffff, #93C5FD, #3B82F6)",
             backgroundSize: "300% auto",
+            backgroundClip: "text",
             WebkitBackgroundClip: "text",
+            color: "transparent",
             WebkitTextFillColor: "transparent",
             animation: "onb-shimmer 4s linear infinite",
           }}
