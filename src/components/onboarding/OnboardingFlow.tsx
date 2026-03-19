@@ -6,7 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
-import lucidRepoLogo from "@/assets/LucidRepoLogoAndroid.png";
+import lucidRepoLogo from "@/assets/LogoForFramer.png";
 import {
   Moon,
   Brain,
