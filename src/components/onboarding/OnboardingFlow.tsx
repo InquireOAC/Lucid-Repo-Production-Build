@@ -344,7 +344,9 @@ interface OnboardingFlowProps {
 const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const touchStartX = useRef<number | null>(null);
+  const { markTermsAsAccepted } = useTermsAcceptance();
 
   const goTo = useCallback(
     (idx: number) => {
