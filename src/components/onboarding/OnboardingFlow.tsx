@@ -375,7 +375,7 @@ const screens: ScreenData[] = [
   {
     title: "Terms & Privacy",
     subtitle: "Before you enter, please review and agree to our terms.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(250 50% 18%) 0%, hsl(235 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 50% 10%) 0%, hsl(222 60% 4%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
         <GlowRing size={140} color="hsl(230, 60%, 60%)" />
