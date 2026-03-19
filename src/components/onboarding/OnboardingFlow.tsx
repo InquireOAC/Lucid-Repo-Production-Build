@@ -499,24 +499,28 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
             </motion.div>
 
             {/* Title */}
-            <motion.h1
-              className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25, duration: 0.5 }}
-            >
-              {screen.title}
-            </motion.h1>
+            {screen.title && (
+              <motion.h1
+                className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.5 }}
+              >
+                {screen.title}
+              </motion.h1>
+            )}
 
             {/* Subtitle */}
-            <motion.p
-              className="text-sm sm:text-base text-muted-foreground max-w-xs leading-relaxed"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-            >
-              {screen.subtitle}
-            </motion.p>
+            {screen.subtitle && (
+              <motion.p
+                className="text-sm sm:text-base text-muted-foreground max-w-xs leading-relaxed"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35, duration: 0.5 }}
+              >
+                {screen.subtitle}
+              </motion.p>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
