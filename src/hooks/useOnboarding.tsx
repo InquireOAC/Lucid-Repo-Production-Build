@@ -4,7 +4,7 @@ import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
 
 // DEV: force onboarding — set to true to always show onboarding during development
-const DEV_FORCE_ONBOARDING = true;
+const DEV_FORCE_ONBOARDING = false;
 
 export const useOnboarding = () => {
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
