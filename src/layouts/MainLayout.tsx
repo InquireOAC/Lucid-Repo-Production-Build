@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
-import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
+import lucidRepoLogo from "@/assets/LogoForFramer.png";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
