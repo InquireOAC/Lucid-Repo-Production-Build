@@ -236,7 +236,7 @@ const screens: ScreenData[] = [
   {
     title: "",
     subtitle: "",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(260 60% 20%) 0%, hsl(230 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 60% 12%) 0%, hsl(225 70% 5%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="flex flex-col items-center gap-6">
         {/* Logo with glow */}
