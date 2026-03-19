@@ -104,27 +104,29 @@ const DesktopSidebar = () => {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out",
+        "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out relative",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Logo + collapse toggle */}
-      <div className="flex items-center gap-3 px-3 py-6 border-b border-primary/10">
-        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 rounded-lg flex-shrink-0 ml-1" />
+      {/* Collapse toggle — pinned to right edge */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full border border-primary/20 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors shadow-sm"
+      >
+        {collapsed ? <PanelLeft className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
+      </button>
+
+      {/* Logo */}
+      <div className={cn(
+        "flex items-center gap-3 py-6 border-b border-primary/10",
+        collapsed ? "justify-center px-2" : "px-5"
+      )}>
+        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 rounded-lg flex-shrink-0" />
         {!collapsed && (
           <span className="text-lg font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
             Lucid Repo
           </span>
         )}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors flex-shrink-0",
-            collapsed ? "mx-auto" : "ml-auto"
-          )}
-        >
-          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
       </div>
 
       {/* Nav items */}
