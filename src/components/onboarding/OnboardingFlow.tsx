@@ -307,7 +307,7 @@ const screens: ScreenData[] = [
   {
     title: "Capture Every Dream",
     subtitle: "Record your dreams the moment you wake. Voice, text, or sketch — never lose a dream again.",
-    gradient: "radial-gradient(ellipse at 50% 30%, hsl(250 50% 18%) 0%, hsl(230 55% 8%) 60%, hsl(220 60% 4%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 30%, hsl(215 55% 10%) 0%, hsl(220 70% 4%) 60%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <OrbitalRing />
