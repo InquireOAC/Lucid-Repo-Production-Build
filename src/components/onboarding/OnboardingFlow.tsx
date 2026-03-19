@@ -364,7 +364,7 @@ const screens: ScreenData[] = [
   {
     title: "Your Journey Begins",
     subtitle: "Step through the gateway. Thousands of dreamers are already inside.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(255 55% 22%) 0%, hsl(240 50% 10%) 50%, hsl(220 60% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(225 55% 13%) 0%, hsl(220 60% 5%) 50%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center">
         <Portal />
