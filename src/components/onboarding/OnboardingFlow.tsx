@@ -643,6 +643,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           0% { r: 0; opacity: 0; }
           100% { r: 0.8; opacity: 1; }
         }
+        @keyframes onb-shimmer {
+          0% { background-position: 200% center; }
+          100% { background-position: -200% center; }
+        }
       `}</style>
     </div>
   );
