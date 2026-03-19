@@ -27,36 +27,46 @@ import {
 /*  Particles                                                          */
 /* ------------------------------------------------------------------ */
 
-const PARTICLE_COUNT = 40;
+const STAR_COUNT = 80;
 
 const Particles = React.memo(() => {
-  const particles = useMemo(
+  const stars = useMemo(
     () =>
-      Array.from({ length: PARTICLE_COUNT }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        size: Math.random() * 3 + 1,
-        delay: Math.random() * 6,
-        duration: Math.random() * 4 + 4,
-        opacity: Math.random() * 0.6 + 0.2,
-      })),
+      Array.from({ length: STAR_COUNT }, (_, i) => {
+        const isBright = Math.random() > 0.7;
+        const isBlue = Math.random() > 0.5;
+        return {
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          size: isBright ? Math.random() * 3 + 2 : Math.random() * 2 + 0.5,
+          delay: Math.random() * 8,
+          duration: Math.random() * 3 + 2,
+          color: isBlue
+            ? `hsla(220, 90%, 78%, ${isBright ? 0.9 : 0.4})`
+            : `hsla(0, 0%, 100%, ${isBright ? 0.8 : 0.3})`,
+          twinkle: isBright,
+        };
+      }),
     []
   );
 
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
+      {stars.map((s) => (
         <div
-          key={p.id}
+          key={s.id}
           className="absolute rounded-full"
           style={{
-            left: p.left,
-            top: p.top,
-            width: p.size,
-            height: p.size,
-            backgroundColor: `hsla(230, 80%, 72%, ${p.opacity})`,
-            animation: `onb-float ${p.duration}s ${p.delay}s ease-in-out infinite alternate`,
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            backgroundColor: s.color,
+            boxShadow: s.twinkle ? `0 0 ${s.size * 3}px ${s.color}` : undefined,
+            animation: s.twinkle
+              ? `onb-twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`
+              : `onb-float ${s.duration + 4}s ${s.delay}s ease-in-out infinite alternate`,
           }}
         />
       ))}
