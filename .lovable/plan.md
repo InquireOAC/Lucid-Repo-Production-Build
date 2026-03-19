@@ -1,40 +1,40 @@
 
 
-# Android Subscription Support
+# Revamp Onboarding — Complete Cinematic Experience (6 Screens)
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+## Development Mode
+- Hardcode `hasSeenOnboarding = false` in `useOnboarding.tsx` with `// DEV: force onboarding` comment
+- Render `OnboardingFlow` in `App.tsx` above the router, gated by `useOnboarding`
 
-## Changes Needed
+## 6 Screens
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+1. **"Enter the Dream Realm"** — Cosmic gradient background (purple → blue → black), floating particle stars, app logo with pulsing glow ring, tagline: *"Your dreams hold secrets. It's time to decode them."*
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+2. **"Capture Every Dream"** — Moon icon with orbital ring animation, wisps of gradient blur drifting across. *"Record your dreams the moment you wake. Voice, text, or sketch — never lose a dream again."*
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+3. **"AI-Powered Insights"** — Brain/Sparkles icon with constellation dots animation. *"Unlock hidden patterns. Our AI reveals the symbols, emotions, and meanings within your dreams."*
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+4. **"See Your Dreams Come Alive"** — Sparkles + Film icons with pulsing glow, film-frame border motif. *"Transform your dreams into stunning AI-generated artwork and cinematic videos. Watch your subconscious unfold before your eyes."*
 
-## Files to Modify
+5. **"Join the Dream Community"** — Globe/network icon with pulsing connection nodes, ripple effect. *"Share dreams, discover connections, and explore the collective unconscious with dreamers worldwide."*
+
+6. **"Your Journey Begins"** — Visual elements converge into a portal/gateway animation. *"Step through the gateway. Thousands of dreamers are already inside."* CTA: "Enter the Dream Realm" with glow effect.
+
+## Navigation
+- Dot indicators, swipe support via touch events, "Skip" in top-right
+- "Next" on screens 1-5, "Enter the Dream Realm" on screen 6
+
+## Technical Approach
+- All visuals code-driven: CSS keyframes + Framer Motion (`AnimatePresence` for transitions)
+- Particles: array of absolutely-positioned divs with randomized animation delays
+- Lucide icons for all screen iconography
+- Dark theme forced throughout
+
+## Files
 
 | File | Change |
 |------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
-
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+| `src/components/onboarding/OnboardingFlow.tsx` | Complete rewrite — 6 animated screens with particles, gradients, swipe, dot nav, skip |
+| `src/hooks/useOnboarding.tsx` | Add DEV override to force-show onboarding |
+| `src/App.tsx` | Render `OnboardingFlow` gated by `useOnboarding` above router |
 
