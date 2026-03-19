@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, BarChart3 } from "lucide-react";
+import { Book, Moon, User, BarChart3, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -92,6 +92,7 @@ const navItems = [
 
 const DesktopSidebar = () => {
   const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (to: string) => {
     if (to === "/") {
@@ -101,31 +102,51 @@ const DesktopSidebar = () => {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-64 h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0">
-      {/* Logo */}
-      <div className="flex items-center gap-3 px-5 py-6 border-b border-primary/10">
-        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 rounded-lg" />
-        <span className="text-lg font-bold text-foreground tracking-tight">Lucid Repo</span>
+    <aside
+      className={cn(
+        "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      {/* Logo + collapse toggle */}
+      <div className="flex items-center gap-3 px-3 py-6 border-b border-primary/10">
+        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 rounded-lg flex-shrink-0 ml-1" />
+        {!collapsed && (
+          <span className="text-lg font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
+            Lucid Repo
+          </span>
+        )}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/10 transition-colors flex-shrink-0",
+            collapsed ? "mx-auto" : "ml-auto"
+          )}
+        >
+          {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
       </div>
 
       {/* Nav items */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-2 py-4 space-y-1">
         {navItems.map((item) => {
           const active = isActive(item.to);
           return (
             <NavLink
               key={item.to}
               to={item.to}
+              title={collapsed ? item.label : undefined}
               className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200",
+                collapsed ? "justify-center px-2 py-3" : "px-4 py-3",
                 active
                   ? "bg-primary/15 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
               )}
             >
               <item.icon className="h-5 w-5 flex-shrink-0" />
-              <span>{item.label}</span>
-              {active && (
+              {!collapsed && <span>{item.label}</span>}
+              {active && !collapsed && (
                 <motion.div
                   layoutId="desktop-nav-indicator"
                   className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
@@ -138,10 +159,12 @@ const DesktopSidebar = () => {
       </nav>
 
       {/* Bottom section */}
-      <div className="px-3 py-4 border-t border-primary/10">
-        <div className="px-4 py-2 text-xs text-muted-foreground/60">
-          © Lucid Repo
-        </div>
+      <div className="px-2 py-4 border-t border-primary/10">
+        {!collapsed && (
+          <div className="px-4 py-2 text-xs text-muted-foreground/60">
+            © Lucid Repo
+          </div>
+        )}
       </div>
     </aside>
   );
