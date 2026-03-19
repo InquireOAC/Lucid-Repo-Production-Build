@@ -336,7 +336,7 @@ const screens: ScreenData[] = [
   {
     title: "See Your Dreams Come Alive",
     subtitle: "Transform your dreams into stunning AI-generated artwork and cinematic videos. Watch your subconscious unfold before your eyes.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(260 55% 20%) 0%, hsl(245 50% 10%) 55%, hsl(230 55% 5%) 100%)",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(230 55% 12%) 0%, hsl(222 60% 5%) 55%, #030810 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <GlowRing size={180} color="hsl(260, 60%, 60%)" />
