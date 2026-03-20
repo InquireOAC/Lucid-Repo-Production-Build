@@ -1,11 +1,39 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "jsr:@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+async function getGoogleAccessToken(saKey: any): Promise<string> {
+  const header = { alg: "RS256", typ: "JWT" };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iss: saKey.client_email,
+    scope: "https://www.googleapis.com/auth/cloud-platform",
+    aud: "https://oauth2.googleapis.com/token",
+    iat: now, exp: now + 3600,
+  };
+  const encode = (obj: any) => {
+    const b64 = btoa(JSON.stringify(obj));
+    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  };
+  const unsignedToken = `${encode(header)}.${encode(payload)}`;
+  const pemContents = saKey.private_key.replace(/-----BEGIN PRIVATE KEY-----/, "").replace(/-----END PRIVATE KEY-----/, "").replace(/\n/g, "");
+  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+  const cryptoKey = await crypto.subtle.importKey("pkcs8", binaryKey, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(unsignedToken));
+  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  const jwt = `${unsignedToken}.${sigB64}`;
+  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+  });
+  const tokenData = await tokenRes.json();
+  if (!tokenData.access_token) throw new Error(`Failed to get Google access token: ${JSON.stringify(tokenData)}`);
+  return tokenData.access_token;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -26,15 +54,12 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify user
     const anonClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } }
     );
-    const {
-      data: { user },
-    } = await anonClient.auth.getUser();
+    const { data: { user } } = await anonClient.auth.getUser();
     if (!user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -61,7 +86,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Get stats via RPC
     const { data: stats, error: statsErr } = await supabase.rpc(
       "get_lucid_stats",
       { p_user_id: user.id }
@@ -79,7 +103,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Build prompt
     const prompt = `You are an expert lucid dreaming coach. Based on the following dream statistics for a user, provide personalized coaching.
 
 Stats:
@@ -92,40 +115,70 @@ Stats:
 - Average word count per entry: ${stats.avg_word_count}
 - Average lucidity level: ${stats.avg_lucidity_level} (1=slight, 2=moderate, 3=full)
 - Top techniques: ${JSON.stringify(stats.techniques)}
-- Top dream symbols: ${JSON.stringify(stats.top_symbols?.slice(0, 5))}
+- Top dream symbols: ${JSON.stringify(stats.top_symbols?.slice(0, 5))}`;
 
-Respond with exactly this JSON (no markdown):
-{
-  "summary": "One sentence summarizing their current dream practice status.",
-  "recommendation": "One actionable tip or recommendation.",
-  "motivation": "One short motivational message."
-}`;
+    const saKeyRaw = Deno.env.get("GOOGLE_VERTEX_SA_KEY");
+    const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID");
+    if (!saKeyRaw || !projectId) throw new Error("Google Cloud credentials not configured");
+    const saKey = JSON.parse(saKeyRaw);
+    const accessToken = await getGoogleAccessToken(saKey);
 
-    const openaiKey = Deno.env.get("OPENAI_API_KEY");
-    const aiResponse = await fetch(
-      "https://api.openai.com/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${openaiKey}`,
-          "Content-Type": "application/json",
+    const model = "gemini-3-flash-preview";
+    const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`;
+
+    const aiResponse = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        tools: [
+          {
+            functionDeclarations: [
+              {
+                name: "return_insight",
+                description: "Return the personalized dream coaching insight",
+                parameters: {
+                  type: "OBJECT",
+                  properties: {
+                    summary: { type: "STRING", description: "One sentence summarizing their current dream practice status." },
+                    recommendation: { type: "STRING", description: "One actionable tip or recommendation." },
+                    motivation: { type: "STRING", description: "One short motivational message." },
+                  },
+                  required: ["summary", "recommendation", "motivation"],
+                },
+              },
+            ],
+          },
+        ],
+        toolConfig: {
+          functionCallingConfig: {
+            mode: "ANY",
+            allowedFunctionNames: ["return_insight"],
+          },
         },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          messages: [{ role: "user", content: prompt }],
+        generationConfig: {
           temperature: 0.7,
-          max_tokens: 300,
-        }),
-      }
-    );
+          maxOutputTokens: 300,
+        },
+      }),
+    });
+
+    if (!aiResponse.ok) {
+      const errText = await aiResponse.text();
+      console.error("Vertex AI error:", aiResponse.status, errText);
+      throw new Error(`Vertex AI error: ${aiResponse.status}`);
+    }
 
     const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content || "";
+    const functionCall = aiData.candidates?.[0]?.content?.parts?.[0]?.functionCall;
 
     let parsed: { summary: string; recommendation: string; motivation: string };
-    try {
-      parsed = JSON.parse(content);
-    } catch {
+    if (functionCall?.args) {
+      parsed = functionCall.args;
+    } else {
       parsed = {
         summary: "Your dream practice is progressing well.",
         recommendation: "Try maintaining a consistent journaling schedule.",
@@ -133,7 +186,6 @@ Respond with exactly this JSON (no markdown):
       };
     }
 
-    // Upsert insight
     const insightData = {
       user_id: user.id,
       summary_message: parsed.summary,
