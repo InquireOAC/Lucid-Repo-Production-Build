@@ -48,7 +48,7 @@ const SettingsDialog = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
-  const [showExportJournal, setShowExportJournal] = useState(false);
+  
   const [showSubscription, setShowSubscription] = useState(false);
   const [showDreamGallery, setShowDreamGallery] = useState(false);
 
