@@ -210,7 +210,7 @@ const SettingsDialog = ({
     <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
-    <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
+    
     <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
     <DreamGalleryDialog open={showDreamGallery} onOpenChange={setShowDreamGallery} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
