@@ -14,7 +14,7 @@ import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
-import ExportJournalDialog from "./ExportJournalDialog";
+
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import DreamGalleryDialog from "./DreamGalleryDialog";
 import { Crown } from "lucide-react";
