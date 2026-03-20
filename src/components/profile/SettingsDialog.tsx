@@ -151,10 +151,6 @@ const SettingsDialog = ({
                   <BookOpen className="h-4 w-4 mr-2" />
                   Dream Book
                 </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowExportJournal(true)}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export Dream Journal
-                </Button>
               </div>
 
               <Separator />
