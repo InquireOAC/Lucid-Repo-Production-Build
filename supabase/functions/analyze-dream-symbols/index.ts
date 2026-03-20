@@ -68,7 +68,7 @@ Rules:
 - Only include symbols that appear in at least 1 dream
 - Be specific but not overly granular (e.g. "Water/Ocean" not "Pacific Ocean wave #3")`;
 
-    const model = "gemini-3-flash-preview";
+    const model = "gemini-2.5-flash";
     const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`;
 
     const response = await fetch(endpoint, {

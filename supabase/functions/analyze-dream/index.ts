@@ -141,7 +141,7 @@ TONE RULES:
 - Express genuine curiosity and respect for the dreamer's inner world
 - Each section should be 2-4 sentences — substantive but not exhausting`
 
-    console.log(`Generating ${task} using Vertex AI gemini-3-flash-preview`)
+    console.log(`Generating ${task} using Vertex AI gemini-2.5-flash`)
 
     const saKeyRaw = Deno.env.get('GOOGLE_VERTEX_SA_KEY')
     const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID')
@@ -151,7 +151,7 @@ TONE RULES:
     const saKey = JSON.parse(saKeyRaw)
     const accessToken = await getGoogleAccessToken(saKey)
 
-    const model = 'gemini-3-flash-preview'
+    const model = 'gemini-2.5-flash'
     const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`
 
     const response = await fetch(endpoint, {
