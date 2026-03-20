@@ -33,7 +33,7 @@ import { useOnboarding } from './hooks/useOnboarding';
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { hasSeenOnboarding, isLoading, refreshOnboardingStatus } = useOnboarding();
+  const { hasSeenOnboarding, isLoading, completeOnboarding } = useOnboarding();
 
   useEffect(() => {
     setupOAuthDeepLinkListener();
@@ -44,7 +44,7 @@ function AppContent() {
 
   // Show onboarding if user hasn't seen it
   if (hasSeenOnboarding === false) {
-    return <OnboardingFlow onComplete={refreshOnboardingStatus} />;
+    return <OnboardingFlow onComplete={completeOnboarding} />;
   }
 
   return (

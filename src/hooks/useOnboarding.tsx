@@ -41,6 +41,26 @@ export const useOnboarding = () => {
     }
   }, []);
 
+  const completeOnboarding = useCallback(async () => {
+    // Immediately update state so onboarding never flashes back
+    setHasSeenOnboarding(true);
+
+    // Also persist to storage
+    try {
+      if (Capacitor.isNativePlatform()) {
+        try {
+          await Preferences.set({ key: 'hasSeenOnboarding', value: 'true' });
+        } catch {
+          localStorage.setItem('hasSeenOnboarding', 'true');
+        }
+      } else {
+        localStorage.setItem('hasSeenOnboarding', 'true');
+      }
+    } catch {
+      // State is already set, storage is best-effort
+    }
+  }, []);
+
   const refreshOnboardingStatus = useCallback(async () => {
     await checkOnboardingStatus();
   }, [checkOnboardingStatus]);
@@ -49,5 +69,5 @@ export const useOnboarding = () => {
     checkOnboardingStatus();
   }, [checkOnboardingStatus]);
 
-  return { hasSeenOnboarding, isLoading, refreshOnboardingStatus };
+  return { hasSeenOnboarding, isLoading, refreshOnboardingStatus, completeOnboarding };
 };
