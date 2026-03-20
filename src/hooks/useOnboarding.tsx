@@ -69,5 +69,5 @@ export const useOnboarding = () => {
     checkOnboardingStatus();
   }, [checkOnboardingStatus]);
 
-  return { hasSeenOnboarding, isLoading, refreshOnboardingStatus };
+  return { hasSeenOnboarding, isLoading, refreshOnboardingStatus, completeOnboarding };
 };
