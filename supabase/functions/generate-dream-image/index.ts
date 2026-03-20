@@ -172,7 +172,7 @@ Now render the following cinematic dream scene:`
       text: `[FINAL MANDATORY REMINDER] The output image MUST be in PORTRAIT / VERTICAL orientation (9:16 aspect ratio — taller than wide). Do NOT produce a landscape or square image under any circumstances.`
     })
 
-    const model = 'gemini-3-pro-image-preview'
+    const model = 'gemini-2.5-flash-image'
     const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`
 
     const response = await fetch(endpoint, {

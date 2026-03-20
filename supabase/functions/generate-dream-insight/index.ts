@@ -123,7 +123,7 @@ Stats:
     const saKey = JSON.parse(saKeyRaw);
     const accessToken = await getGoogleAccessToken(saKey);
 
-    const model = "gemini-3-flash-preview";
+    const model = "gemini-2.5-flash";
     const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`;
 
     const aiResponse = await fetch(endpoint, {

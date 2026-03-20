@@ -135,7 +135,7 @@ Format as a single continuous paragraph that could be injected into an image gen
     const base64 = btoa(binary)
     const mimeType = imgRes.headers.get('content-type') || 'image/jpeg'
 
-    const model = 'gemini-3-flash-preview'
+    const model = 'gemini-2.5-flash'
     const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`
 
     const response = await fetch(endpoint, {
