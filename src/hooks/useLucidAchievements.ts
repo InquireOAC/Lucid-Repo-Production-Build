@@ -57,11 +57,8 @@ export function useLucidAchievements(stats: LucidStatsData | null) {
           }
 
           if (met) {
-            const { error } = await supabase
-              .from("lucid_user_achievements")
-              .insert({ user_id: user.id, achievement_id: def.id })
-              .select()
-              .single();
+            const { data: granted, error } = await supabase
+              .rpc("grant_lucid_achievement", { p_achievement_id: def.id });
 
             if (!error) {
               toast.success(`🏆 Achievement Unlocked: ${def.title}`, {
