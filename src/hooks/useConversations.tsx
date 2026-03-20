@@ -82,7 +82,7 @@ export function useConversations(user: any) {
     try {
       // First, get the other user's profile
       const { data: otherUserProfile, error: profileError } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("*")
         .eq("id", otherUserId)
         .maybeSingle();
