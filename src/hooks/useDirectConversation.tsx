@@ -22,7 +22,7 @@ export function useDirectConversation(myId: string | null, otherUserId: string |
       }
       // For direct messages, just select the other user's profile
       const { data, error } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("*")
         .eq("id", otherUserId)
         .maybeSingle();
