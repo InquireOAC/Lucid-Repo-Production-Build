@@ -2567,30 +2567,39 @@ export type Database = {
           avatar_color: string | null
           avatar_symbol: string | null
           avatar_url: string | null
+          banner_image: string | null
           bio: string | null
+          color_scheme: string | null
           created_at: string | null
           display_name: string | null
           id: string | null
+          social_links: Json | null
           username: string | null
         }
         Insert: {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string | null
+          social_links?: Json | null
           username?: string | null
         }
         Update: {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string | null
+          social_links?: Json | null
           username?: string | null
         }
         Relationships: []
