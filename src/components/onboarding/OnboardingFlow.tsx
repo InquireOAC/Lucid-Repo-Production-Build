@@ -435,15 +435,6 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         console.error("Failed to persist terms acceptance:", e);
       }
 
-      if (Capacitor.isNativePlatform()) {
-        try {
-          await Preferences.set({ key: "hasSeenOnboarding", value: "true" });
-        } catch {
-          localStorage.setItem("hasSeenOnboarding", "true");
-        }
-      } else {
-        localStorage.setItem("hasSeenOnboarding", "true");
-      }
       onComplete();
     } catch {
       onComplete();
