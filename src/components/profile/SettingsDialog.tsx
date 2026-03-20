@@ -14,7 +14,7 @@ import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
-import ExportJournalDialog from "./ExportJournalDialog";
+
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import DreamGalleryDialog from "./DreamGalleryDialog";
 import { Crown } from "lucide-react";
@@ -48,7 +48,7 @@ const SettingsDialog = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
-  const [showExportJournal, setShowExportJournal] = useState(false);
+  
   const [showSubscription, setShowSubscription] = useState(false);
   const [showDreamGallery, setShowDreamGallery] = useState(false);
 
@@ -151,10 +151,6 @@ const SettingsDialog = ({
                   <BookOpen className="h-4 w-4 mr-2" />
                   Dream Book
                 </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowExportJournal(true)}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export Dream Journal
-                </Button>
               </div>
 
               <Separator />
@@ -214,7 +210,7 @@ const SettingsDialog = ({
     <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
-    <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
+    
     <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
     <DreamGalleryDialog open={showDreamGallery} onOpenChange={setShowDreamGallery} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}
