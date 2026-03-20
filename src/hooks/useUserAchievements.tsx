@@ -70,22 +70,14 @@ export const useUserAchievements = (userId?: string) => {
         return false; // Already unlocked
       }
 
-      const { data, error } = await supabase
-        .from('user_achievements')
-        .insert({
-          user_id: userId,
-          achievement_id: achievementId
-        })
-        .select(`
-          *,
-          learning_achievements (*)
-        `)
-        .single();
+      const { data: granted, error } = await supabase
+        .rpc("grant_learning_achievement", { p_achievement_id: achievementId });
 
       if (error) throw error;
+      if (!granted) return false;
 
-      setAchievements(prev => [data, ...prev]);
-      
+      // Refetch to get the full data with joins
+      await fetchAchievements();
       return true;
     } catch (error) {
       console.error('Error unlocking achievement:', error);

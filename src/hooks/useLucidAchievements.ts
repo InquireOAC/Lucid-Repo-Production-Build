@@ -60,7 +60,7 @@ export function useLucidAchievements(stats: LucidStatsData | null) {
             const { data: granted, error } = await supabase
               .rpc("grant_lucid_achievement", { p_achievement_id: def.id });
 
-            if (!error) {
+            if (!error && granted) {
               toast.success(`🏆 Achievement Unlocked: ${def.title}`, {
                 description: `${def.icon} ${def.key}`,
                 duration: 5000,
