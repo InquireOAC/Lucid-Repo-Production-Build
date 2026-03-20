@@ -2657,6 +2657,14 @@ export type Database = {
         Returns: undefined
       }
       get_lucid_stats: { Args: { p_user_id: string }; Returns: Json }
+      grant_learning_achievement: {
+        Args: { p_achievement_id: string }
+        Returns: boolean
+      }
+      grant_lucid_achievement: {
+        Args: { p_achievement_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
