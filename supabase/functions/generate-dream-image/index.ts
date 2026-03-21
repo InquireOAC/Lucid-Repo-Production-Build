@@ -104,20 +104,27 @@ serve(async (req) => {
 
 MANDATORY OUTPUT FORMAT: Generate this image in PORTRAIT orientation with a 9:16 aspect ratio (e.g., 1024x1820 or similar vertical dimensions). The frame MUST be taller than it is wide. This is non-negotiable.
 
-You are a world-class cinematographer and visual effects supervisor generating a SINGLE UNIFIED MOVIE FRAME from a dream world. Every image you produce must read as a real frame from a film set in an alternate reality — not an AI-generated composite.
+You are rendering a SINGLE FRAME from the most visually stunning film ever made — a $200 million cinematic masterpiece directed by Steven Spielberg, shot by Roger Deakins. This is not an illustration. This is not a composite. This is a REAL FRAME from an alternate-reality film shot on IMAX with supernatural production design.
+
+GRAND CINEMATIC QUALITY MANDATE:
+- Every frame must evoke AWE — breathtaking scale, dramatic depth, spectacular lighting
+- Compose with DEPTH: distinct foreground elements (slightly soft), sharp midground action, vast atmospheric background
+- Light must be SPECTACULAR: volumetric god rays, rim lighting that separates subjects like halos, dramatic color temperature contrasts between warm and cool zones
+- The environment must feel INFINITE — extending far beyond the frame edges with atmospheric perspective and haze
+- Use dramatic camera angles: low angles for power, wide lenses for scale, shallow depth of field for intimacy within grandeur
 
 PRIME DIRECTIVES:
-1. THINK IN 3D SPACE FIRST — Before rendering anything, mentally construct the complete 3D environment: its geometry, atmosphere, light sources, and physics.
-2. ONE UNIFIED RENDER — Generate the entire frame — character AND environment — in a single unified compositional pass.
-3. REFERENCE IMAGES ARE CASTING REFERENCES — Any reference images provided show you WHO the character is. They do NOT tell you the scene, background, lighting, or environment.
-4. UNIFIED PHYSICS — The character obeys the same physical laws as the environment.
+1. THINK IN 3D SPACE FIRST — Mentally construct the complete 3D environment: geometry, atmosphere, multiple light sources, and physics before placing any element.
+2. ONE UNIFIED RENDER — Generate the entire frame — character AND environment — in a single unified compositional pass. NEVER composite.
+3. REFERENCE IMAGES ARE CASTING REFERENCES — They show WHO the character is. They do NOT define the scene, background, or lighting.
+4. UNIFIED PHYSICS — Every element obeys identical physical laws.
 
-ABSOLUTE ANTI-COMPOSITE LAWS:
+ANTI-COMPOSITE LAWS:
 ✗ Halo or cut-out edges around any element
-✗ Character lit from different direction or color temperature than the environment
-✗ Character appears to float without ground-contact shadow
-✗ Character detail sharpness inconsistent with their depth in the scene
-✗ Any element that looks pasted-in, layered, or composited
+✗ Character lit from different direction or color temperature than environment
+✗ Character floating without ground-contact shadow
+✗ Detail sharpness inconsistent with depth position
+✗ Anything that looks pasted-in or layered
 
 Now render the following cinematic dream scene:`
     })
@@ -127,13 +134,13 @@ Now render the following cinematic dream scene:`
       const img = await fetchImageAsBase64(referenceImageUrl)
       if (img) {
         contentParts.push({
-          text: '[CHARACTER_IDENTITY_REFERENCE] The following image is the CHARACTER REFERENCE. Extract ONLY the person\'s identity (face, hair, skin, body) from this image. Do NOT extract the background, lighting, or environment.'
+          text: `[CHARACTER_IDENTITY_REFERENCE — STAR CASTING] The following image is the STAR of this cinematic masterpiece. This person is the HERO of the frame — the emotional center of a grand tableau. Extract their exact identity (face, hair, skin, body proportions) and CAST them into this dream world as its protagonist. They must be composed at a position of maximum visual power — rule of thirds, golden ratio, or dramatic center — with the entire environment serving as their stage. They are NOT a bystander; they are the reason this frame exists.`
         })
         contentParts.push({
           inlineData: { mimeType: img.contentType, data: img.base64 }
         })
         contentParts.push({
-          text: `[CHARACTER-WORLD INTEGRATION CONTRACT] This character is a NATIVE INHABITANT of the dream world. Render them physically embedded in the 3D space: lit by the same light sources, affected by the same atmospheric conditions.`
+          text: `[CHARACTER-WORLD INTEGRATION] This character is a NATIVE INHABITANT of the dream world, not a visitor. Render them as if they were BORN from this environment: lit by the same spectacular light sources, wrapped in the same atmospheric effects, casting shadows that ground them in the 3D space. Their pose should feel natural and emotionally resonant with the scene — heroic, contemplative, awestruck, or intimate — whatever serves the story. The environment should FRAME them with leading lines, architectural convergence, or light shafts that draw the eye to their presence.`
         })
       }
     }
