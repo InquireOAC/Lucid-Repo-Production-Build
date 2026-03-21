@@ -115,7 +115,7 @@ export const useChallenges = () => {
     const dreamIds = [...new Set(data.map((e: any) => e.dream_id))];
 
     const [profilesResult, dreamsResult] = await Promise.all([
-      supabase.from('profiles').select('id, username, display_name, avatar_url').in('id', userIds),
+      supabase.from('public_profiles').select('id, username, display_name, avatar_url').in('id', userIds),
       supabase.from('dream_entries').select('id, title, content, image_url').in('id', dreamIds),
     ]);
 
