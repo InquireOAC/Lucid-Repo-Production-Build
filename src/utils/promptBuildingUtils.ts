@@ -39,9 +39,11 @@ The character is a NATIVE INHABITANT of this dream world. Same lighting, same at
   if (hasPhoto) {
     return `${basePrompt}.
 
-CHARACTER IDENTITY REFERENCE: The provided reference image shows the DREAMER — the protagonist and central character of this scene. Replicate their exact facial features, hair, skin tone, and body proportions precisely.${aiContext.clothing_style ? ` They wear ${aiContext.clothing_style} style clothing adapted to the dream world.` : ''}
+CHARACTER IDENTITY REFERENCE: The provided reference image shows the DREAMER — the STAR and protagonist of this cinematic frame. Replicate their exact facial features, hair, skin tone, and body proportions precisely.${aiContext.clothing_style ? ` They wear ${aiContext.clothing_style} style clothing adapted to the dream world.` : ''}
 
-UNIFIED WORLD RENDERING: Render the character as a native inhabitant of this dream environment. Same lighting, same atmospheric effects, same physics — one unified composition, never composited.`;
+HERO COMPOSITION: Compose them as the emotional anchor of a grand tableau — at a position of maximum visual power, framed by the environment's leading lines and light. The world exists to stage their moment.
+
+WORLD INTEGRATION: Render as a native inhabitant of this dream world. Same spectacular lighting, same atmospheric effects, same physics — one unified composition, never composited.`;
   }
 
   if (aiContext.clothing_style) {
