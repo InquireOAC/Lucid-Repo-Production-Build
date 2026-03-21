@@ -1,38 +1,37 @@
 
 
-## Plan: Prioritize Videos Over Images in Share Media Collection
+## Fix: Video Not Filling Share Card Preview
 
-### Change
+### Problem
+In the animated share card preview, videos show black bars (visible at top in screenshot) instead of filling the entire 9:16 container like images do. Both should use cover-fit to fill the space.
 
-Update `collectDreamMedia()` in `src/utils/shareVideoRenderer.ts` so that when a video exists for a given slot (hero or section), it replaces the image rather than both being added.
+### Root Cause
+The `<video>` element likely needs `display: 'block'` to prevent inline element spacing issues, and may benefit from explicit sizing to ensure the browser renders it as a full cover element.
 
-**Current behavior**: Hero image + hero video + section image + section video all added sequentially → duplicates each scene.
+### Fix — `src/components/share/ShareButton.tsx` (line ~178-186)
 
-**New behavior**: For each slot (hero, each section), if a video exists use that; otherwise fall back to the image. This means a dream with hero video + section 1 video + section 2 image-only produces exactly 3 items: video, video, image.
+Add `display: 'block'` to the video style to match image rendering behavior:
 
-### File: `src/utils/shareVideoRenderer.ts` (lines 158-178)
-
-Replace the collection logic:
-```typescript
-// Hero: prefer video over image
-if (dream.video_url) {
-  items.push({ type: 'video', url: dream.video_url });
-} else {
-  const heroImage = dream.image_url || dream.generatedImage;
-  if (heroImage) items.push({ type: 'image', url: heroImage });
-}
-
-// Sections: prefer video over image per section
-if (dream.section_images) {
-  for (const section of dream.section_images) {
-    if (section.video_url) {
-      items.push({ type: 'video', url: section.video_url });
-    } else if (section.image_url) {
-      items.push({ type: 'image', url: section.image_url });
-    }
-  }
-}
+```tsx
+<video
+  key={current.url}
+  src={current.url}
+  autoPlay
+  muted
+  playsInline
+  loop
+  style={{
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    display: 'block',
+  }}
+/>
 ```
 
-One file, ~10 lines changed.
+Also add `display: 'block'` to the image element for consistency (line ~188-193).
+
+One file, two lines added.
 
