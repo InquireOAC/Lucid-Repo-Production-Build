@@ -14,39 +14,26 @@ export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imag
   if (hasPhoto && hasFingerprint) {
     return `${basePrompt}.
 
-CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY — OVERRIDE ALL DEFAULTS):
-- FACE: Exact same facial structure, eye shape, nose, lips, jawline, brow ridge as reference photo
-- SKIN: Precise tone, texture, markings, subsurface scattering matching reference exactly
-- HAIR: Exact color, texture, style, length, parting as reference
-- BODY: Same build, proportions, posture as reference
+CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY):
+- FACE: Exact same facial structure, eye shape, nose, lips, jawline as reference
+- SKIN: Precise tone and texture matching reference exactly
+- HAIR: Exact color, texture, style, length as reference
+- BODY: Same build and proportions as reference
 
 VISUAL FINGERPRINT OF THE DREAMER:
 ${aiContext.visual_fingerprint}
 
 ${aiContext.clothing_style ? `CLOTHING: The character wears ${aiContext.clothing_style} style clothing, adapted to the dream world's aesthetic.` : ''}
 
-UNIFIED WORLD RENDERING (MANDATORY — NO EXCEPTIONS):
-The character is NOT a visitor to this scene — they are a NATIVE INHABITANT born from the same dream physics as the environment.
+HERO COMPOSITION (MANDATORY):
+The character is the STAR of this frame — the emotional center of a grand cinematic tableau.
+- Place them at a compositionally POWERFUL position: rule of thirds power points, golden ratio, or dramatic center
+- The environment must FRAME them: leading lines, architectural convergence, light shafts, all drawing the eye to their presence
+- Scale contrast: they should feel both intimately human and significant against vast, awe-inspiring surroundings
+- Their pose and body language must tell the story of THIS moment — heroic, contemplative, awestruck, or intimate
 
-INTEGRATION LAWS:
-1. ENVIRONMENT FIRST: Mentally construct the complete 3D dream environment with all its light sources, atmosphere, and physics
-2. CHARACTER PLACEMENT: Place the character at their marked position WITHIN this pre-built 3D space
-3. UNIFIED PASS: Render the entire frame — character AND environment — in one single generative pass. NEVER composite separately.
-
-PHYSICS CONTRACT:
-- Light: Character is illuminated by the IDENTICAL light sources as the surrounding environment (same direction, same color temperature, same intensity falloff)
-- Shadow: Character casts contact shadows on surfaces. Environment elements cast shadows ON the character. All shadows point the same direction.
-- Atmosphere: Fog, haze, particles, rain, smoke, magical energy — these volumetric effects pass THROUGH and AROUND the character identically to how they affect the environment
-- Perspective: Character sits at the correct atmospheric depth — same aerial haze, same focus falloff as objects at equivalent distance
-- Ground contact: Feet press into surfaces naturally. Correct displacement, weight, and shadow underfoot.
-
-ANTI-COMPOSITE CHECKLIST (scan for these failure modes and AVOID them):
-✗ Cut-out or halo edges around the character
-✗ Character lit from different direction than the environment  
-✗ Character color temperature doesn't match scene (e.g., warm character in cool moonlit scene)
-✗ Character appears "floating" without ground contact shadow
-✗ Sharp character detail against soft/blurry environment at same depth
-✗ Character looks photographed separately and placed into scene`;
+WORLD INTEGRATION:
+The character is a NATIVE INHABITANT of this dream world. Same lighting, same atmosphere, same physics. They cast real shadows, are wrapped in the same volumetric effects, and exist at the correct atmospheric depth. One unified composition — never composited.`;
   }
 
   if (hasPhoto) {
