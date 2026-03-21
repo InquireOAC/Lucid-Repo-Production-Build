@@ -8,6 +8,13 @@ export interface ShareMediaItem {
   url: string;
 }
 
+interface SourceCropRect {
+  sx: number;
+  sy: number;
+  sw: number;
+  sh: number;
+}
+
 const CANVAS_W = 1080;
 const CANVAS_H = 1920;
 const IMAGE_DURATION = 3000; // ms per image
@@ -37,11 +44,101 @@ const loadVideoAsync = (src: string): Promise<HTMLVideoElement> =>
     video.src = src;
   });
 
-/** Draw an image cover-fitted onto the canvas */
-function drawCoverImage(ctx: CanvasRenderingContext2D, img: HTMLImageElement | HTMLVideoElement, w: number, h: number) {
-  const srcW = img instanceof HTMLImageElement ? img.naturalWidth : img.videoWidth;
-  const srcH = img instanceof HTMLImageElement ? img.naturalHeight : img.videoHeight;
+function detectVideoLetterboxRatios(video: HTMLVideoElement): { top: number; bottom: number } | null {
+  const srcW = video.videoWidth;
+  const srcH = video.videoHeight;
+  if (!srcW || !srcH) return null;
+
+  const sampleW = Math.max(120, Math.min(240, srcW));
+  const sampleH = Math.max(120, Math.round((srcH / srcW) * sampleW));
+  const canvas = document.createElement('canvas');
+  canvas.width = sampleW;
+  canvas.height = sampleH;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+
+  try {
+    ctx.drawImage(video, 0, 0, sampleW, sampleH);
+    const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+    const maxScanRows = Math.floor(sampleH * 0.4);
+    const sampleStep = Math.max(1, Math.floor(sampleW / 80));
+
+    const isBlackBarRow = (row: number): boolean => {
+      let sum = 0;
+      let sumSq = 0;
+      let count = 0;
+
+      for (let x = 0; x < sampleW; x += sampleStep) {
+        const i = (row * sampleW + x) * 4;
+        const lum = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        sum += lum;
+        sumSq += lum * lum;
+        count++;
+      }
+
+      if (!count) return false;
+      const mean = sum / count;
+      const variance = Math.max(sumSq / count - mean * mean, 0);
+      const stdDev = Math.sqrt(variance);
+
+      return mean < 18 && stdDev < 10;
+    };
+
+    let topRows = 0;
+    while (topRows < maxScanRows && isBlackBarRow(topRows)) topRows++;
+
+    let bottomRows = 0;
+    while (bottomRows < maxScanRows && isBlackBarRow(sampleH - 1 - bottomRows)) bottomRows++;
+
+    const combinedRatio = (topRows + bottomRows) / sampleH;
+    if (combinedRatio < 0.06) return null;
+
+    return {
+      top: topRows / sampleH,
+      bottom: bottomRows / sampleH,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function getVideoCropRect(video: HTMLVideoElement): SourceCropRect | null {
+  const letterbox = detectVideoLetterboxRatios(video);
+  if (!letterbox) return null;
+
+  const sy = Math.max(0, Math.floor(video.videoHeight * letterbox.top));
+  const sh = Math.max(1, Math.floor(video.videoHeight * (1 - letterbox.top - letterbox.bottom)));
+
+  if (sh < video.videoHeight * 0.55) return null;
+
+  return {
+    sx: 0,
+    sy,
+    sw: video.videoWidth,
+    sh,
+  };
+}
+
+export function estimateVideoLetterboxScale(video: HTMLVideoElement): number {
+  const crop = getVideoCropRect(video);
+  if (!crop) return 1;
+  return Math.min(1.8, Math.max(1, video.videoHeight / crop.sh));
+}
+
+/** Draw an image/video cover-fitted onto the canvas */
+function drawCoverImage(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement | HTMLVideoElement,
+  w: number,
+  h: number,
+  cropRect?: SourceCropRect | null
+) {
+  const naturalW = img instanceof HTMLImageElement ? img.naturalWidth : img.videoWidth;
+  const naturalH = img instanceof HTMLImageElement ? img.naturalHeight : img.videoHeight;
+  const srcW = cropRect?.sw ?? naturalW;
+  const srcH = cropRect?.sh ?? naturalH;
   if (!srcW || !srcH) return;
+
   const imgRatio = srcW / srcH;
   const canvasRatio = w / h;
   let drawW: number, drawH: number, drawX: number, drawY: number;
@@ -52,7 +149,9 @@ function drawCoverImage(ctx: CanvasRenderingContext2D, img: HTMLImageElement | H
     drawW = w; drawH = w / imgRatio;
     drawX = 0; drawY = (h - drawH) / 2;
   }
-  ctx.drawImage(img, drawX, drawY, drawW, drawH);
+  const sx = cropRect?.sx ?? 0;
+  const sy = cropRect?.sy ?? 0;
+  ctx.drawImage(img, sx, sy, srcW, srcH, drawX, drawY, drawW, drawH);
 }
 
 /** Wrap text into lines for canvas rendering */
@@ -230,7 +329,11 @@ export async function renderShareVideo(
   } catch { /* no logo */ }
 
   // Preload all media
-  const loadedMedia: Array<{ type: 'image' | 'video'; element: HTMLImageElement | HTMLVideoElement }> = [];
+  const loadedMedia: Array<{
+    type: 'image' | 'video';
+    element: HTMLImageElement | HTMLVideoElement;
+    cropRect?: SourceCropRect | null;
+  }> = [];
   for (const item of mediaItems) {
     try {
       if (item.type === 'image') {
@@ -238,7 +341,7 @@ export async function renderShareVideo(
         loadedMedia.push({ type: 'image', element: img });
       } else {
         const vid = await loadVideoAsync(item.url);
-        loadedMedia.push({ type: 'video', element: vid });
+        loadedMedia.push({ type: 'video', element: vid, cropRect: getVideoCropRect(vid) });
       }
     } catch (e) {
       console.warn('Failed to load media item:', item.url, e);
@@ -350,7 +453,7 @@ export async function renderShareVideo(
             activeVideoPlaying = vid;
           }
           if (vid.readyState >= 2) {
-            drawCoverImage(ctx, vid, CANVAS_W, CANVAS_H);
+            drawCoverImage(ctx, vid, CANVAS_W, CANVAS_H, media.cropRect);
           }
         }
       }
