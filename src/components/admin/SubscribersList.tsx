@@ -54,7 +54,7 @@ const SubscribersList = () => {
 
       const userIds = subs.map((s) => s.user_id);
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id, username, display_name, avatar_url")
         .in("id", userIds);
 

@@ -81,7 +81,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
       const dreamIds = activities.filter(a => a.dream_id).map(a => a.dream_id);
 
       const [{ data: users }, dreamsResult] = await Promise.all([
-        supabase.from('profiles').select('id, display_name, username, avatar_symbol, avatar_color, avatar_url').in('id', userIds),
+        supabase.from('public_profiles').select('id, display_name, username, avatar_symbol, avatar_color, avatar_url').in('id', userIds),
         dreamIds.length > 0
           ? supabase.from('dream_entries').select('id, title, content').in('id', dreamIds)
           : Promise.resolve({ data: [] as any[] }),

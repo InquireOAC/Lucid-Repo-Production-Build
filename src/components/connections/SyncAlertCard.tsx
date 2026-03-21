@@ -24,7 +24,7 @@ const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
     if (!alert.dreamer_ids?.length) return;
     const ids = alert.dreamer_ids.slice(0, MAX_AVATARS);
     supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id, username, display_name, avatar_url, avatar_symbol, avatar_color")
       .in("id", ids)
       .then(({ data }) => {

@@ -18,7 +18,7 @@ export default function ProfilePage({ usernameParam }) {
     async function fetchProfile() {
       try {
         const { data, error } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("*")
           .eq("username", usernameParam)
           .maybeSingle();
