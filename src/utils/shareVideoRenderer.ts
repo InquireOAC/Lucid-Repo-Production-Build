@@ -377,8 +377,8 @@ export async function renderShareVideo(
 
   const done = new Promise<Blob>((resolve, reject) => {
     recorder.onstop = () => {
-      const ext = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
-      resolve(new Blob(chunks, { type: ext }));
+      const blobType = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
+      resolve(new Blob(chunks, { type: blobType }));
     };
     recorder.onerror = (e) => reject(e);
   });
