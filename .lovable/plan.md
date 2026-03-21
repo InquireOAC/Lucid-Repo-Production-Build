@@ -1,64 +1,46 @@
 
 
-## Plan: Fix Anonymous Users on Lucid Repo (RLS Too Restrictive)
+## Plan: Elevate Cinematic Prompt to Spielberg-Level Grand Compositions
 
-### Root Cause
+### What Changes
 
-The previous security migration removed the "Authenticated users can view basic profile data" SELECT policy on `profiles`, leaving only "own profile" policies (`auth.uid() = id`). This means:
+Two files need major prompt rewrites to produce grand, cinematic, Spielberg-quality dream imagery with beautiful character composition:
 
-- All foreign key joins (`profiles!dream_entries_user_id_fkey(...)`) return `null` for other users
-- The `public_profiles` view also returns nothing because it queries `profiles` under the same RLS
-- Users appear as "Anonymous" everywhere and profile navigation is broken
+### 1. `supabase/functions/compose-cinematic-prompt/index.ts` — The Cinematic Director
 
-### Sensitive columns to protect
+**Current**: Generic "cinematographer" persona with basic camera angle and lighting instructions. Produces competent but not grand compositions.
 
-`age`, `available_credits`, `is_subscribed` — these should NOT be readable by other users.
+**New**: Rewrite the system prompt to embody a Spielberg/Deakins-level director of photography. Key additions:
+- **Grand scale mandate** — Every frame must feel like a pivotal moment in a $200M film. Favor sweeping compositions, dramatic depth, and awe-inspiring scale
+- **Spielberg composition principles** — Use his signature techniques: silhouette against vast light sources, characters dwarfed by magnificent environments, lens flare as emotional punctuation, foreground framing elements creating depth layers
+- **Character staging as storytelling** — When a character is present, they must be composed INTO the grandeur (not just placed in it). Think the bicycle across the moon, the figure at the end of the pier, the person standing at the edge of the impossible. The character becomes MORE powerful by contrast with scale
+- **Emotional crescendo lighting** — Not just "motivated lighting" but lighting designed to make the viewer gasp. God rays, volumetric shafts, bioluminescence, aurora reflections — light as spectacle
+- **Depth and layers** — Mandate foreground/midground/background composition with atmospheric separation. Every frame should have visual depth that pulls the viewer INTO the dream
+- **Output length** — Increase from 200-300 words to 300-400 words for richer description
 
-Safe columns: `id`, `username`, `display_name`, `avatar_url`, `avatar_symbol`, `avatar_color`, `bio`, `social_links`, `banner_image`, `color_scheme`, `created_at`, `profile_picture`
+### 2. `supabase/functions/generate-dream-image/index.ts` — The Rendering Directive
 
-### Solution
+**Current**: Basic "world-class cinematographer" preamble focused mostly on anti-compositing rules.
 
-**1. Database migration** — Add back a controlled SELECT policy on `profiles` for authenticated users, but use a security definer function that returns only safe columns... Actually, RLS policies control row access, not column access. We can't restrict columns via RLS.
+**New**: Enhance the cinematic rendering directive with:
+- **Grand cinematic quality mandate** — "This is a frame from the most visually stunning film ever made"
+- **Composition grandeur** — Dramatic depth of field, sweeping scale, breathtaking vistas even in intimate scenes
+- **Character integration beauty** — When reference images are provided, the character must be composed as the emotional anchor of a grand tableau, not just "placed" in the scene. Think hero shots, silhouettes against vast dreamscapes, intimate moments framed by epic environments
+- **Enhanced character reference instructions** — Instead of just "extract identity", instruct to "cast this person as the STAR of a cinematic masterpiece — they are the emotional center of an awe-inspiring frame"
 
-Better approach: **Recreate `public_profiles` as a `SECURITY DEFINER` view** that bypasses RLS, and add an RLS policy that only allows own-row SELECT on `profiles`. Then route all "other user" reads through `public_profiles`.
+### 3. `src/utils/promptBuildingUtils.ts` — Character Integration Directives
 
-Actually simplest correct fix: **Add back authenticated SELECT on `profiles` but only for the columns exposed in joins.** Since RLS is row-level not column-level, and the foreign key joins only select safe columns, the real risk was the old policy letting users query `SELECT *` directly. We solve this by:
+**Current**: Heavy on technical anti-composite rules but lacks cinematic composition guidance.
 
-1. Adding back `"Authenticated users can read profiles"` SELECT policy on `profiles` for authenticated users (`USING (true)`)
-2. Recreating `public_profiles` view with `security_invoker = false` (SECURITY DEFINER) so it bypasses RLS independently
-3. Dropping duplicate/redundant own-profile policies
+**New**: Add grand composition directives alongside the existing integration rules:
+- **Hero composition** — "Place the character at a compositionally powerful position — rule of thirds power points, leading lines converging on them, environmental framing"
+- **Scale and grandeur** — "The environment should feel vast and awe-inspiring around the character, creating a sense of the character being part of something magnificent"
+- Trim some of the verbose anti-composite checklist (the rendering directive already covers this) to keep prompt length reasonable
 
-The key insight: the foreign key joins from `dream_entries` to `profiles` ONLY select `username, display_name, avatar_url, avatar_symbol, avatar_color` — the app code controls which columns to select. Direct table access via PostgREST is the risk, but `public_profiles` view (which excludes `age`, `available_credits`, `is_subscribed`) is the proper channel.
+### Files Modified (3)
+1. `supabase/functions/compose-cinematic-prompt/index.ts` — Rewrite system prompt
+2. `supabase/functions/generate-dream-image/index.ts` — Enhance rendering directive
+3. `src/utils/promptBuildingUtils.ts` — Add grand composition to character directives
 
-**Final approach:**
-- Re-add authenticated SELECT on `profiles` with `USING (true)` — this restores all joins
-- Update `public_profiles` view to NOT include sensitive columns (already done)
-- Switch remaining direct `profiles` reads (for other users) to `public_profiles` in client code
-- Keep own-profile queries on `profiles` table (needed for settings, credits, etc.)
-
-### Files to modify
-
-**Migration (1 file):**
-- Add RLS policy: `"Authenticated users can read profiles" ON profiles FOR SELECT TO authenticated USING (true)`
-- Clean up duplicate own-profile SELECT policies (there are 3 redundant ones)
-
-**Client code (6 files) — switch from `profiles` to `public_profiles` for other-user reads:**
-1. `src/components/explore/UserSearchResults.tsx` — user search
-2. `src/components/social/ProfilePage.tsx` — profile fetch by username
-3. `src/store/notificationStore.ts` — notification actor names
-4. `src/hooks/useRepoSearch.tsx` — username search
-5. `src/hooks/useChallenges.tsx` — challenge participant profiles
-6. `src/components/connections/SyncAlertCard.tsx` — dreamer avatars
-7. `src/components/profile/SharedDreamCard.tsx` — shared dream author
-8. `src/components/admin/ModerationQueue.tsx` — moderation profiles
-9. `src/components/admin/SubscribersList.tsx` — subscriber profiles
-
-**No changes needed** for:
-- Foreign key joins (`profiles!dream_entries_user_id_fkey`) — these work once the SELECT policy is restored
-- Own-profile operations (AuthContext, ProfileEditing, ColorScheme, ProfileBanner) — these use `auth.uid() = id` which still works
-- Admin queries — admin users still need the general SELECT policy
-
-### Security Note
-
-The re-added policy allows authenticated users to read all rows from `profiles`. The sensitive columns (`age`, `available_credits`, `is_subscribed`) are still technically readable via direct PostgREST queries. To fully mitigate, we will also switch client-side other-user queries to `public_profiles`, and we can consider column-level security in a future pass. The tradeoff is acceptable because these columns are low-sensitivity (age, credit count, subscription boolean) and only accessible to authenticated users — not public.
+### No client-side changes needed — same API contracts, just better prompts.
 
