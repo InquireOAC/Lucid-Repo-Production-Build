@@ -290,9 +290,10 @@ export function collectDreamMedia(dream: {
 export function supportsVideoRecording(): boolean {
   if (typeof MediaRecorder === 'undefined') return false;
   try {
-    return MediaRecorder.isTypeSupported('video/webm; codecs=vp9') ||
-           MediaRecorder.isTypeSupported('video/webm') ||
-           MediaRecorder.isTypeSupported('video/mp4');
+    return MediaRecorder.isTypeSupported('video/mp4; codecs=avc1') ||
+           MediaRecorder.isTypeSupported('video/mp4') ||
+           MediaRecorder.isTypeSupported('video/webm; codecs=vp9') ||
+           MediaRecorder.isTypeSupported('video/webm');
   } catch {
     return false;
   }
