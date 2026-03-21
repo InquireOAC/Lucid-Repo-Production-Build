@@ -44,10 +44,18 @@ const loadVideoAsync = (src: string): Promise<HTMLVideoElement> =>
     video.src = src;
   });
 
-function detectVideoLetterboxRatios(video: HTMLVideoElement): { top: number; bottom: number } | null {
+/**
+ * Async multi-frame letterbox detector.
+ * Seeks the video to multiple timestamps and scans all four edges
+ * to produce a stable, reliable crop rect that works even when
+ * the first frame is a fade-to-black.
+ */
+async function analyzeVideoLetterbox(
+  video: HTMLVideoElement
+): Promise<{ top: number; bottom: number; left: number; right: number } | null> {
   const srcW = video.videoWidth;
   const srcH = video.videoHeight;
-  if (!srcW || !srcH) return null;
+  if (!srcW || !srcH || !isFinite(video.duration) || video.duration < 0.5) return null;
 
   const sampleW = Math.max(120, Math.min(240, srcW));
   const sampleH = Math.max(120, Math.round((srcH / srcW) * sampleW));
@@ -57,72 +65,139 @@ function detectVideoLetterboxRatios(video: HTMLVideoElement): { top: number; bot
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   if (!ctx) return null;
 
-  try {
-    ctx.drawImage(video, 0, 0, sampleW, sampleH);
-    const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
-    const maxScanRows = Math.floor(sampleH * 0.4);
-    const sampleStep = Math.max(1, Math.floor(sampleW / 80));
+  const sampleStep = Math.max(1, Math.floor(sampleW / 80));
+  const maxScanRows = Math.floor(sampleH * 0.4);
+  const maxScanCols = Math.floor(sampleW * 0.4);
 
-    const isBlackBarRow = (row: number): boolean => {
-      let sum = 0;
-      let sumSq = 0;
-      let count = 0;
+  const seekTo = (t: number): Promise<void> =>
+    new Promise((resolve) => {
+      const onSeeked = () => { video.removeEventListener('seeked', onSeeked); resolve(); };
+      video.addEventListener('seeked', onSeeked);
+      video.currentTime = t;
+    });
 
-      for (let x = 0; x < sampleW; x += sampleStep) {
-        const i = (row * sampleW + x) * 4;
-        const lum = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-        sum += lum;
-        sumSq += lum * lum;
-        count++;
+  const isBlackRow = (data: Uint8ClampedArray, row: number): boolean => {
+    let sum = 0, sumSq = 0, count = 0;
+    for (let x = 0; x < sampleW; x += sampleStep) {
+      const i = (row * sampleW + x) * 4;
+      const lum = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      sum += lum; sumSq += lum * lum; count++;
+    }
+    if (!count) return false;
+    const mean = sum / count;
+    const stdDev = Math.sqrt(Math.max(sumSq / count - mean * mean, 0));
+    return mean < 18 && stdDev < 10;
+  };
+
+  const isBlackCol = (data: Uint8ClampedArray, col: number): boolean => {
+    let sum = 0, sumSq = 0, count = 0;
+    for (let y = 0; y < sampleH; y += sampleStep) {
+      const i = (y * sampleW + col) * 4;
+      const lum = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+      sum += lum; sumSq += lum * lum; count++;
+    }
+    if (!count) return false;
+    const mean = sum / count;
+    const stdDev = Math.sqrt(Math.max(sumSq / count - mean * mean, 0));
+    return mean < 18 && stdDev < 10;
+  };
+
+  // Sample at 15%, 40%, 70% of duration
+  const timestamps = [0.15, 0.4, 0.7].map(p => Math.min(p * video.duration, video.duration - 0.1));
+  const samples: Array<{ top: number; bottom: number; left: number; right: number }> = [];
+
+  for (const ts of timestamps) {
+    try {
+      await seekTo(ts);
+      ctx.drawImage(video, 0, 0, sampleW, sampleH);
+      const data = ctx.getImageData(0, 0, sampleW, sampleH).data;
+
+      // Check if frame is entirely black (unusable)
+      let totalLum = 0, pixCount = 0;
+      for (let i = 0; i < data.length; i += 16) {
+        totalLum += 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+        pixCount++;
       }
+      if (pixCount > 0 && totalLum / pixCount < 5) continue; // skip all-black frame
 
-      if (!count) return false;
-      const mean = sum / count;
-      const variance = Math.max(sumSq / count - mean * mean, 0);
-      const stdDev = Math.sqrt(variance);
+      let topRows = 0;
+      while (topRows < maxScanRows && isBlackRow(data, topRows)) topRows++;
+      let bottomRows = 0;
+      while (bottomRows < maxScanRows && isBlackRow(data, sampleH - 1 - bottomRows)) bottomRows++;
+      let leftCols = 0;
+      while (leftCols < maxScanCols && isBlackCol(data, leftCols)) leftCols++;
+      let rightCols = 0;
+      while (rightCols < maxScanCols && isBlackCol(data, sampleW - 1 - rightCols)) rightCols++;
 
-      return mean < 18 && stdDev < 10;
-    };
-
-    let topRows = 0;
-    while (topRows < maxScanRows && isBlackBarRow(topRows)) topRows++;
-
-    let bottomRows = 0;
-    while (bottomRows < maxScanRows && isBlackBarRow(sampleH - 1 - bottomRows)) bottomRows++;
-
-    const combinedRatio = (topRows + bottomRows) / sampleH;
-    if (combinedRatio < 0.06) return null;
-
-    return {
-      top: topRows / sampleH,
-      bottom: bottomRows / sampleH,
-    };
-  } catch {
-    return null;
+      samples.push({
+        top: topRows / sampleH,
+        bottom: bottomRows / sampleH,
+        left: leftCols / sampleW,
+        right: rightCols / sampleW,
+      });
+    } catch {
+      continue;
+    }
   }
+
+  if (samples.length === 0) return null;
+
+  // Use median of samples for stability
+  const median = (arr: number[]) => { const s = [...arr].sort((a, b) => a - b); return s[Math.floor(s.length / 2)]; };
+  const result = {
+    top: median(samples.map(s => s.top)),
+    bottom: median(samples.map(s => s.bottom)),
+    left: median(samples.map(s => s.left)),
+    right: median(samples.map(s => s.right)),
+  };
+
+  const combinedVertical = result.top + result.bottom;
+  const combinedHorizontal = result.left + result.right;
+  if (combinedVertical < 0.04 && combinedHorizontal < 0.04) return null;
+
+  return result;
 }
 
-function getVideoCropRect(video: HTMLVideoElement): SourceCropRect | null {
-  const letterbox = detectVideoLetterboxRatios(video);
+async function getVideoCropRectAsync(video: HTMLVideoElement): Promise<SourceCropRect | null> {
+  const letterbox = await analyzeVideoLetterbox(video);
   if (!letterbox) return null;
 
   const sy = Math.max(0, Math.floor(video.videoHeight * letterbox.top));
   const sh = Math.max(1, Math.floor(video.videoHeight * (1 - letterbox.top - letterbox.bottom)));
+  const sx = Math.max(0, Math.floor(video.videoWidth * letterbox.left));
+  const sw = Math.max(1, Math.floor(video.videoWidth * (1 - letterbox.left - letterbox.right)));
 
-  if (sh < video.videoHeight * 0.55) return null;
+  // Safety: don't over-crop
+  if (sh < video.videoHeight * 0.55 || sw < video.videoWidth * 0.55) return null;
 
-  return {
-    sx: 0,
-    sy,
-    sw: video.videoWidth,
-    sh,
-  };
+  return { sx, sy, sw, sh };
 }
 
-export function estimateVideoLetterboxScale(video: HTMLVideoElement): number {
-  const crop = getVideoCropRect(video);
-  if (!crop) return 1;
-  return Math.min(1.8, Math.max(1, video.videoHeight / crop.sh));
+export interface VideoCropMeta {
+  crop: SourceCropRect;
+  scaleX: number;
+  scaleY: number;
+  translateX: number; // percent offset from center
+  translateY: number; // percent offset from center
+}
+
+/**
+ * Async analyzer that returns crop + CSS transform metadata for a video.
+ * Call once per video URL, cache the result.
+ */
+export async function analyzeVideoCrop(video: HTMLVideoElement): Promise<VideoCropMeta | null> {
+  const crop = await getVideoCropRectAsync(video);
+  if (!crop) return null;
+
+  const scaleX = video.videoWidth / crop.sw;
+  const scaleY = video.videoHeight / crop.sh;
+  // Calculate center offset as percentage of video dimensions
+  const cropCenterY = (crop.sy + crop.sh / 2) / video.videoHeight;
+  const cropCenterX = (crop.sx + crop.sw / 2) / video.videoWidth;
+  const translateY = (0.5 - cropCenterY) * 100; // percentage
+  const translateX = (0.5 - cropCenterX) * 100;
+
+  return { crop, scaleX, scaleY, translateX, translateY };
 }
 
 /** Draw an image/video cover-fitted onto the canvas */
@@ -341,7 +416,7 @@ export async function renderShareVideo(
         loadedMedia.push({ type: 'image', element: img });
       } else {
         const vid = await loadVideoAsync(item.url);
-        loadedMedia.push({ type: 'video', element: vid, cropRect: getVideoCropRect(vid) });
+        loadedMedia.push({ type: 'video', element: vid, cropRect: await getVideoCropRectAsync(vid) });
       }
     } catch (e) {
       console.warn('Failed to load media item:', item.url, e);

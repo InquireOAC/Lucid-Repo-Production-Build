@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share as CapacitorShare } from "@capacitor/share";
-import { collectDreamMedia, supportsVideoRecording, renderShareVideo, ShareMediaItem, estimateVideoLetterboxScale } from "@/utils/shareVideoRenderer";
+import { collectDreamMedia, supportsVideoRecording, renderShareVideo, ShareMediaItem, analyzeVideoCrop, VideoCropMeta } from "@/utils/shareVideoRenderer";
 
 const LOGO_PATH = "/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png";
 
@@ -146,7 +146,7 @@ const AnimatedPreview: React.FC<{
 }> = ({ mediaItems, title, dateStr, excerpt }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [fade, setFade] = useState(true);
-  const [videoScaleByUrl, setVideoScaleByUrl] = useState<Record<string, number>>({});
+  const [cropByUrl, setCropByUrl] = useState<Record<string, VideoCropMeta>>({});
 
   useEffect(() => {
     if (mediaItems.length <= 1) return;
@@ -160,8 +160,32 @@ const AnimatedPreview: React.FC<{
     return () => clearInterval(interval);
   }, [mediaItems.length]);
 
+  const handleVideoLoaded = useCallback(async (e: React.SyntheticEvent<HTMLVideoElement>) => {
+    const vid = e.currentTarget;
+    const url = vid.src;
+    if (cropByUrl[url]) return;
+    const meta = await analyzeVideoCrop(vid);
+    if (meta) {
+      setCropByUrl(prev => ({ ...prev, [url]: meta }));
+    }
+  }, [cropByUrl]);
+
   const current = mediaItems[currentIndex];
-  const currentVideoScale = current?.type === 'video' ? (videoScaleByUrl[current.url] ?? 1) : 1;
+  const cropMeta = current?.type === 'video' ? cropByUrl[current.url] : undefined;
+
+  const videoStyle: React.CSSProperties = {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    objectPosition: 'center center',
+    display: 'block',
+    ...(cropMeta ? {
+      transform: `translate(${cropMeta.translateX}%, ${cropMeta.translateY}%) scale(${Math.max(cropMeta.scaleX, cropMeta.scaleY)})`,
+      transformOrigin: 'center center',
+    } : {}),
+  };
 
   return (
     <div
@@ -184,21 +208,8 @@ const AnimatedPreview: React.FC<{
             muted
             playsInline
             loop
-            onLoadedData={(e) => {
-              const scale = estimateVideoLetterboxScale(e.currentTarget);
-              setVideoScaleByUrl((prev) => (prev[current.url] === scale ? prev : { ...prev, [current.url]: scale }));
-            }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center center',
-              display: 'block',
-              transform: currentVideoScale > 1 ? `scale(${currentVideoScale})` : undefined,
-              transformOrigin: 'center center',
-            }}
+            onLoadedData={handleVideoLoaded}
+            style={videoStyle}
           />
         ) : current?.url ? (
           <img
