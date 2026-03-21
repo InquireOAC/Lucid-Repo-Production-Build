@@ -67,8 +67,18 @@ export const useNativeSubscription = () => {
       const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
         console.log('Processing package:', pkg.product.identifier, pkg.product.priceString);
         
-        const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
-        const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
+        const identifier = pkg.product.identifier.toLowerCase();
+        const title = (pkg.product.title || '').toLowerCase();
+        
+        const isBasic = identifier === PRODUCT_IDS.BASIC
+          || identifier.includes('limited')
+          || identifier.includes('basic')
+          || identifier.includes('dreamer');
+        
+        const isPremium = identifier === PRODUCT_IDS.PREMIUM
+          || identifier.includes('unlimited')
+          || identifier.includes('premium')
+          || identifier.includes('mystic');
         
         let productName = 'Unknown Plan';
         let productId = 'price_unknown';
