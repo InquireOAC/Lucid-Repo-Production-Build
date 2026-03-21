@@ -1,46 +1,47 @@
 
 
-## Plan: Elevate Cinematic Prompt to Spielberg-Level Grand Compositions
+## Plan: Animated Share Card with Media Transitions
 
-### What Changes
+### What the user wants
+When a dream has multiple scene images/videos (hero image + section images + any videos), the share card should cycle through them with smooth crossfade transitions — producing a **video file** instead of a static PNG for sharing to socials.
 
-Two files need major prompt rewrites to produce grand, cinematic, Spielberg-quality dream imagery with beautiful character composition:
+### Media collection logic
+Gather all visual media from the dream in order:
+1. Hero image (`image_url` / `generatedImage`)
+2. Hero video (`video_url`)
+3. Section images (`section_images[].image_url`)
+4. Section videos (`section_images[].video_url`)
 
-### 1. `supabase/functions/compose-cinematic-prompt/index.ts` — The Cinematic Director
+Filter out nulls/empty. If only 1 image and no videos → fall back to current static PNG behavior.
 
-**Current**: Generic "cinematographer" persona with basic camera angle and lighting instructions. Produces competent but not grand compositions.
+### Approach: Canvas + MediaRecorder
 
-**New**: Rewrite the system prompt to embody a Spielberg/Deakins-level director of photography. Key additions:
-- **Grand scale mandate** — Every frame must feel like a pivotal moment in a $200M film. Favor sweeping compositions, dramatic depth, and awe-inspiring scale
-- **Spielberg composition principles** — Use his signature techniques: silhouette against vast light sources, characters dwarfed by magnificent environments, lens flare as emotional punctuation, foreground framing elements creating depth layers
-- **Character staging as storytelling** — When a character is present, they must be composed INTO the grandeur (not just placed in it). Think the bicycle across the moon, the figure at the end of the pier, the person standing at the edge of the impossible. The character becomes MORE powerful by contrast with scale
-- **Emotional crescendo lighting** — Not just "motivated lighting" but lighting designed to make the viewer gasp. God rays, volumetric shafts, bioluminescence, aurora reflections — light as spectacle
-- **Depth and layers** — Mandate foreground/midground/background composition with atmospheric separation. Every frame should have visual depth that pulls the viewer INTO the dream
-- **Output length** — Increase from 200-300 words to 300-400 words for richer description
+**Preview dialog** — Show a live cycling preview in the share dialog using React state and CSS crossfade transitions between the collected media items. Each item shows for ~3 seconds with a ~1 second crossfade.
 
-### 2. `supabase/functions/generate-dream-image/index.ts` — The Rendering Directive
+**Video export** — When the user taps "Save":
+1. Draw each media frame to an offscreen canvas (1080x1920) with the same text overlay (title, date, excerpt, logo)
+2. For images: draw for 3 seconds, crossfade to next over 1 second
+3. For videos: play video frames to canvas via `requestAnimationFrame` for up to 4 seconds
+4. Capture the canvas stream via `canvas.captureStream(30)` + `MediaRecorder`
+5. Output as `.webm` (or `.mp4` on native via a different codec if available)
+6. Share/download the video file
 
-**Current**: Basic "world-class cinematographer" preamble focused mostly on anti-compositing rules.
+**Fallback**: If MediaRecorder is unavailable (older iOS Safari), fall back to static PNG of the first image.
 
-**New**: Enhance the cinematic rendering directive with:
-- **Grand cinematic quality mandate** — "This is a frame from the most visually stunning film ever made"
-- **Composition grandeur** — Dramatic depth of field, sweeping scale, breathtaking vistas even in intimate scenes
-- **Character integration beauty** — When reference images are provided, the character must be composed as the emotional anchor of a grand tableau, not just "placed" in the scene. Think hero shots, silhouettes against vast dreamscapes, intimate moments framed by epic environments
-- **Enhanced character reference instructions** — Instead of just "extract identity", instruct to "cast this person as the STAR of a cinematic masterpiece — they are the emotional center of an awe-inspiring frame"
+### Files modified
 
-### 3. `src/utils/promptBuildingUtils.ts` — Character Integration Directives
+| File | Change |
+|---|---|
+| `src/components/share/ShareButton.tsx` | Add media collection logic, animated preview with cycling images/videos, video recording export path alongside existing PNG path |
+| `src/components/share/DreamShareCard.tsx` | Minor — no longer primary render path for multi-media dreams |
+| `src/utils/shareUtils.ts` | Add `renderShareVideo()` utility: canvas animation loop + MediaRecorder capture, returns a Blob |
 
-**Current**: Heavy on technical anti-composite rules but lacks cinematic composition guidance.
+### Key details
 
-**New**: Add grand composition directives alongside the existing integration rules:
-- **Hero composition** — "Place the character at a compositionally powerful position — rule of thirds power points, leading lines converging on them, environmental framing"
-- **Scale and grandeur** — "The environment should feel vast and awe-inspiring around the character, creating a sense of the character being part of something magnificent"
-- Trim some of the verbose anti-composite checklist (the rendering directive already covers this) to keep prompt length reasonable
-
-### Files Modified (3)
-1. `supabase/functions/compose-cinematic-prompt/index.ts` — Rewrite system prompt
-2. `supabase/functions/generate-dream-image/index.ts` — Enhance rendering directive
-3. `src/utils/promptBuildingUtils.ts` — Add grand composition to character directives
-
-### No client-side changes needed — same API contracts, just better prompts.
+- **Duration**: Each image/video shows ~3s, crossfade ~1s. Total video length = `mediaCount * 3 + (mediaCount - 1) * 1` seconds, capped at ~30s
+- **Text overlay**: Same bottom panel design (title, date, excerpt, logo) rendered on every frame via canvas drawing — identical to current `renderShareCardToCanvas` but called per-frame
+- **Video frames**: Use a hidden `<video>` element, seek/play it, draw frames to canvas via `ctx.drawImage(videoEl, ...)`
+- **Format**: `video/webm; codecs=vp9` on web, native platforms get the webm file shared via Capacitor Share
+- **Single media fallback**: If dream has only 1 image and no videos, use existing static PNG path (no change)
+- **Preview**: The dialog preview shows a live crossfading slideshow so the user sees what the output will look like before saving
 
