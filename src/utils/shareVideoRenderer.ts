@@ -416,7 +416,7 @@ export async function renderShareVideo(
         loadedMedia.push({ type: 'image', element: img });
       } else {
         const vid = await loadVideoAsync(item.url);
-        loadedMedia.push({ type: 'video', element: vid, cropRect: getVideoCropRect(vid) });
+        loadedMedia.push({ type: 'video', element: vid, cropRect: await getVideoCropRectAsync(vid) });
       }
     } catch (e) {
       console.warn('Failed to load media item:', item.url, e);
