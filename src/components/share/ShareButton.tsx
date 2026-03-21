@@ -182,14 +182,14 @@ const AnimatedPreview: React.FC<{
             muted
             playsInline
             loop
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : current?.url ? (
           <img
             key={current.url}
             src={current.url}
             alt=""
-            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
         ) : (
           <div style={{
