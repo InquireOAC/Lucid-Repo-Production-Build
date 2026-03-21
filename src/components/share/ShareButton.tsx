@@ -373,8 +373,7 @@ const ShareButton: React.FC<ShareButtonProps> = ({
     try {
       toast.info("Rendering share video...");
       const blob = await renderShareVideo(mediaItems, normalizedDream.title, formattedDate, excerpt, LOGO_PATH, setProgress);
-      const ext = blob.type.includes('mp4') ? 'mp4' : 'webm';
-      const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.${ext}`;
+      const filename = `${normalizedDream.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}-dream.mp4`;
 
       if (Capacitor.isNativePlatform()) {
         // Convert blob to base64 for filesystem write

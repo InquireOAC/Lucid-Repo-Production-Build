@@ -290,19 +290,21 @@ export function collectDreamMedia(dream: {
 export function supportsVideoRecording(): boolean {
   if (typeof MediaRecorder === 'undefined') return false;
   try {
-    return MediaRecorder.isTypeSupported('video/webm; codecs=vp9') ||
-           MediaRecorder.isTypeSupported('video/webm') ||
-           MediaRecorder.isTypeSupported('video/mp4');
+    return MediaRecorder.isTypeSupported('video/mp4; codecs=avc1') ||
+           MediaRecorder.isTypeSupported('video/mp4') ||
+           MediaRecorder.isTypeSupported('video/webm; codecs=vp9') ||
+           MediaRecorder.isTypeSupported('video/webm');
   } catch {
     return false;
   }
 }
 
 function getRecorderMimeType(): string {
+  if (MediaRecorder.isTypeSupported('video/mp4; codecs=avc1')) return 'video/mp4; codecs=avc1';
+  if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
   if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) return 'video/webm; codecs=vp9';
   if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
-  if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
-  return 'video/webm';
+  return 'video/mp4';
 }
 
 /**
@@ -375,8 +377,8 @@ export async function renderShareVideo(
 
   const done = new Promise<Blob>((resolve, reject) => {
     recorder.onstop = () => {
-      const ext = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
-      resolve(new Blob(chunks, { type: ext }));
+      const blobType = mimeType.includes('mp4') ? 'video/mp4' : 'video/webm';
+      resolve(new Blob(chunks, { type: blobType }));
     };
     recorder.onerror = (e) => reject(e);
   });
