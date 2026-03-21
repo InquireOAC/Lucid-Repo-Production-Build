@@ -155,7 +155,8 @@ Deno.serve(async (req) => {
     // Get Google access token
     const accessToken = await getGoogleAccessToken(saKey);
 
-    const prompt = animationPrompt || "Gently animate this dream scene with subtle, dreamlike motion and atmospheric effects";
+    const prompt = (animationPrompt || "Gently animate this dream scene with subtle, dreamlike motion and atmospheric effects") +
+      " CRITICAL FRAMING: Full-frame vertical composition filling the entire 9:16 frame edge-to-edge. No letterbox bars, no cinematic black bars, no pillarboxing. The content must occupy every pixel of the frame.";
     const modelId = "veo-3.0-generate-preview";
     const location = "us-central1";
 

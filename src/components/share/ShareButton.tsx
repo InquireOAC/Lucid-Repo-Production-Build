@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share as CapacitorShare } from "@capacitor/share";
-import { collectDreamMedia, supportsVideoRecording, renderShareVideo, ShareMediaItem, estimateVideoLetterboxScale } from "@/utils/shareVideoRenderer";
+import { collectDreamMedia, supportsVideoRecording, renderShareVideo, ShareMediaItem, analyzeVideoCrop, VideoCropMeta } from "@/utils/shareVideoRenderer";
 
 const LOGO_PATH = "/lovable-uploads/e94fd126-8216-43a0-a62d-cf081a8c036f.png";
 
