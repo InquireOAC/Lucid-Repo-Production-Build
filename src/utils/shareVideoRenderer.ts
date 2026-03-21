@@ -300,10 +300,11 @@ export function supportsVideoRecording(): boolean {
 }
 
 function getRecorderMimeType(): string {
+  if (MediaRecorder.isTypeSupported('video/mp4; codecs=avc1')) return 'video/mp4; codecs=avc1';
+  if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
   if (MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) return 'video/webm; codecs=vp9';
   if (MediaRecorder.isTypeSupported('video/webm')) return 'video/webm';
-  if (MediaRecorder.isTypeSupported('video/mp4')) return 'video/mp4';
-  return 'video/webm';
+  return 'video/mp4';
 }
 
 /**
