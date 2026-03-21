@@ -163,14 +163,22 @@ export function collectDreamMedia(dream: {
 }): ShareMediaItem[] {
   const items: ShareMediaItem[] = [];
   
-  const heroImage = dream.image_url || dream.generatedImage;
-  if (heroImage) items.push({ type: 'image', url: heroImage });
-  if (dream.video_url) items.push({ type: 'video', url: dream.video_url });
+  // Hero: prefer video over image
+  if (dream.video_url) {
+    items.push({ type: 'video', url: dream.video_url });
+  } else {
+    const heroImage = dream.image_url || dream.generatedImage;
+    if (heroImage) items.push({ type: 'image', url: heroImage });
+  }
   
+  // Sections: prefer video over image per section
   if (dream.section_images) {
     for (const section of dream.section_images) {
-      if (section.image_url) items.push({ type: 'image', url: section.image_url });
-      if (section.video_url) items.push({ type: 'video', url: section.video_url });
+      if (section.video_url) {
+        items.push({ type: 'video', url: section.video_url });
+      } else if (section.image_url) {
+        items.push({ type: 'image', url: section.image_url });
+      }
     }
   }
   
