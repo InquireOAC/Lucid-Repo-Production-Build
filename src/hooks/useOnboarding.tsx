@@ -53,19 +53,19 @@ export const useOnboarding = () => {
     // Immediately update state so onboarding never flashes back
     setHasSeenOnboarding(true);
 
-    // Also persist to storage
+    // Persist to ALL available storage mechanisms
     try {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          await Preferences.set({ key: 'hasSeenOnboarding', value: 'true' });
-        } catch {
-          localStorage.setItem('hasSeenOnboarding', 'true');
-        }
-      } else {
-        localStorage.setItem('hasSeenOnboarding', 'true');
-      }
+      localStorage.setItem('hasSeenOnboarding', 'true');
     } catch {
-      // State is already set, storage is best-effort
+      // localStorage unavailable
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Preferences.set({ key: 'hasSeenOnboarding', value: 'true' });
+      } catch {
+        // Preferences unavailable, localStorage already set
+      }
     }
   }, []);
 
