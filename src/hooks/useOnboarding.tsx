@@ -22,15 +22,23 @@ export const useOnboarding = () => {
     try {
       let hasSeenIt = false;
       
-      if (Capacitor.isNativePlatform()) {
+      // Always check localStorage first (fastest, works everywhere)
+      if (localStorage.getItem('hasSeenOnboarding') === 'true') {
+        hasSeenIt = true;
+      }
+      
+      // On native, also check Capacitor Preferences as backup
+      if (!hasSeenIt && Capacitor.isNativePlatform()) {
         try {
           const result = await Preferences.get({ key: 'hasSeenOnboarding' });
-          hasSeenIt = result.value === 'true';
+          if (result.value === 'true') {
+            hasSeenIt = true;
+            // Sync back to localStorage so future checks are instant
+            localStorage.setItem('hasSeenOnboarding', 'true');
+          }
         } catch {
-          hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
+          // Preferences unavailable, localStorage already checked
         }
-      } else {
-        hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
       }
       
       setHasSeenOnboarding(hasSeenIt);
