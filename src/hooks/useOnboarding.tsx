@@ -22,15 +22,23 @@ export const useOnboarding = () => {
     try {
       let hasSeenIt = false;
       
-      if (Capacitor.isNativePlatform()) {
+      // Always check localStorage first (fastest, works everywhere)
+      if (localStorage.getItem('hasSeenOnboarding') === 'true') {
+        hasSeenIt = true;
+      }
+      
+      // On native, also check Capacitor Preferences as backup
+      if (!hasSeenIt && Capacitor.isNativePlatform()) {
         try {
           const result = await Preferences.get({ key: 'hasSeenOnboarding' });
-          hasSeenIt = result.value === 'true';
+          if (result.value === 'true') {
+            hasSeenIt = true;
+            // Sync back to localStorage so future checks are instant
+            localStorage.setItem('hasSeenOnboarding', 'true');
+          }
         } catch {
-          hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
+          // Preferences unavailable, localStorage already checked
         }
-      } else {
-        hasSeenIt = localStorage.getItem('hasSeenOnboarding') === 'true';
       }
       
       setHasSeenOnboarding(hasSeenIt);
@@ -45,19 +53,19 @@ export const useOnboarding = () => {
     // Immediately update state so onboarding never flashes back
     setHasSeenOnboarding(true);
 
-    // Also persist to storage
+    // Persist to ALL available storage mechanisms
     try {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          await Preferences.set({ key: 'hasSeenOnboarding', value: 'true' });
-        } catch {
-          localStorage.setItem('hasSeenOnboarding', 'true');
-        }
-      } else {
-        localStorage.setItem('hasSeenOnboarding', 'true');
-      }
+      localStorage.setItem('hasSeenOnboarding', 'true');
     } catch {
-      // State is already set, storage is best-effort
+      // localStorage unavailable
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Preferences.set({ key: 'hasSeenOnboarding', value: 'true' });
+      } catch {
+        // Preferences unavailable, localStorage already set
+      }
     }
   }, []);
 
