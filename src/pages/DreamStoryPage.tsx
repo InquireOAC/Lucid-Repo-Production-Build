@@ -402,7 +402,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
 
         {/* Generate section images button (owner only) */}
-        {isOwner && !sectionImages.some(s => s.image_url) && (
+        {isOwner && sectionImages.length === 0 && (
           <div className="mt-8 p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
             <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
             <p className="text-sm font-medium mb-1">Generate Story Images</p>
@@ -431,7 +431,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         )}
 
         {/* Generating progress inline */}
-        {isGenerating && !sectionImages.some(s => s.image_url) && (
+        {isGenerating && sectionImages.length === 0 && (
           <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Creating image {progress} of {totalSections}...
