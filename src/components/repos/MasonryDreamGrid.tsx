@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { Heart, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -67,15 +66,9 @@ const MasonryDreamCard = ({
   const showFullContent = index % 3 === 0 && hasLongContent;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20, scale: 0.97 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{
-        duration: 0.4,
-        delay: Math.min(index * 0.06, 0.4),
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group"
+    <div
+      className="masonry-item vault-glass vault-card-lift vault-light-sweep rounded-xl overflow-hidden cursor-pointer group animate-fade-in-up will-change-transform"
+      style={{ animationDelay: `${Math.min(index * 60, 400)}ms`, animationFillMode: 'backwards' }}
       onClick={() => onOpenDream(dream)}
     >
       {/* Image */}
@@ -175,7 +168,7 @@ const MasonryDreamCard = ({
           </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

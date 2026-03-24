@@ -55,16 +55,29 @@ const EditProfileDialog = ({
     avatarUrl ? "dream" : "symbol"
   );
 
-  // Load the user's saved Dream Avatar from ai_context
+  // Load the user's saved Dream Avatar from dream_characters (first character's photo)
   useEffect(() => {
     if (isOpen && user) {
       supabase
-        .from("ai_context")
+        .from("dream_characters")
         .select("photo_url")
         .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(1)
         .maybeSingle()
         .then(({ data }) => {
           if (data?.photo_url) setDreamAvatarUrl(data.photo_url);
+          else {
+            // Fallback to ai_context for backward compat
+            supabase
+              .from("ai_context")
+              .select("photo_url")
+              .eq("user_id", user.id)
+              .maybeSingle()
+              .then(({ data: aiData }) => {
+                if (aiData?.photo_url) setDreamAvatarUrl(aiData.photo_url);
+              });
+          }
         });
     }
   }, [isOpen, user]);

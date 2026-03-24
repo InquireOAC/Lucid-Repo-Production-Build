@@ -64,27 +64,57 @@ export const useNativeSubscription = () => {
         });
       });
 
-      const nativeProducts: NativeProduct[] = availablePackages.map((pkg: PurchasesPackage) => {
-        console.log('Processing package:', pkg.product.identifier, pkg.product.priceString);
-        
-        const isBasic = pkg.product.identifier === PRODUCT_IDS.BASIC;
-        const isPremium = pkg.product.identifier === PRODUCT_IDS.PREMIUM;
-        
-        let productName = 'Unknown Plan';
-        let productId = 'price_unknown';
-        let features: string[] = [];
+      // Deduplicate packages by product identifier
+      const seen = new Set<string>();
+      const uniquePackages = availablePackages.filter((pkg: PurchasesPackage) => {
+        const id = pkg.product.identifier;
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+      });
 
-        if (isBasic) {
-          productName = 'Basic';
-          productId = 'price_basic';
-          features = [
-            'Unlimited Dream Analysis',
-            '10 Dream Art Generations',
-            'Dream Video Generation',
-            'Voice-to-Text Journaling',
-            'Priority Support'
-          ];
-        } else if (isPremium) {
+      // Sort by price ascending so we can assign tiers by price
+      const sorted = [...uniquePackages].sort((a: PurchasesPackage, b: PurchasesPackage) => {
+        const priceA = a.product.price ?? 0;
+        const priceB = b.product.price ?? 0;
+        return priceA - priceB;
+      });
+
+      const nativeProducts: NativeProduct[] = sorted.map((pkg: PurchasesPackage, index: number) => {
+        console.log('Processing package:', pkg.product.identifier, pkg.product.priceString, 'price:', pkg.product.price);
+        
+        const identifier = pkg.product.identifier.toLowerCase();
+        const title = (pkg.product.title || '').toLowerCase();
+        
+        let isBasic = identifier === PRODUCT_IDS.BASIC
+          || identifier.includes('limited')
+          || identifier.includes('dreamer')
+          || title.includes('dreamer')
+          || title.includes('basic');
+        
+        let isPremium = identifier === PRODUCT_IDS.PREMIUM
+          || identifier.includes('unlimited')
+          || identifier.includes('mystic')
+          || title.includes('mystic')
+          || title.includes('premium')
+          || title.includes('unlimited');
+
+        // If both or neither matched, fall back to price-based tier assignment
+        if ((isBasic && isPremium) || (!isBasic && !isPremium)) {
+          if (sorted.length >= 2) {
+            isBasic = index === 0;
+            isPremium = index === sorted.length - 1;
+          } else {
+            isBasic = true;
+            isPremium = false;
+          }
+        }
+        
+        let productName: string;
+        let productId: string;
+        let features: string[];
+
+        if (isPremium) {
           productName = 'Premium';
           productId = 'price_premium';
           features = [
@@ -95,11 +125,15 @@ export const useNativeSubscription = () => {
             'Priority Support'
           ];
         } else {
-          productName = pkg.product.title || pkg.product.identifier;
-          productId = `price_${pkg.product.identifier.replace(/\./g, '_')}`;
-          features = ['All features included'];
-          console.warn('Unexpected product ID:', pkg.product.identifier);
-          console.warn('Expected either:', PRODUCT_IDS.BASIC, 'or', PRODUCT_IDS.PREMIUM);
+          productName = 'Basic';
+          productId = 'price_basic';
+          features = [
+            'Unlimited Dream Analysis',
+            '10 Dream Art Generations',
+            'Dream Video Generation',
+            'Voice-to-Text Journaling',
+            'Priority Support'
+          ];
         }
 
         return {
@@ -111,8 +145,13 @@ export const useNativeSubscription = () => {
         };
       });
 
-      console.log('Processed native products:', nativeProducts);
-      setProducts(nativeProducts);
+      // Keep only one Basic and one Premium (cheapest basic, most expensive premium)
+      const basicProduct = nativeProducts.find(p => p.id === 'price_basic');
+      const premiumProduct = nativeProducts.find(p => p.id === 'price_premium');
+      const finalProducts = [basicProduct, premiumProduct].filter(Boolean) as NativeProduct[];
+
+      console.log('Final native products:', finalProducts);
+      setProducts(finalProducts);
     } catch (error) {
       console.error('Failed to initialize RevenueCat:', error);
       toast.error(`Failed to load subscription options: ${error.message || 'Unknown error'}`);

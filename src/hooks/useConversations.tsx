@@ -41,7 +41,7 @@ export function useConversations(user: any) {
         // Fetch profiles for all conversation partners
         const partnerIds = Array.from(conversationMap.keys());
         const { data: profiles, error: profilesError } = await supabase
-          .from("profiles")
+          .from("public_profiles")
           .select("*")
           .in("id", partnerIds);
           
@@ -82,7 +82,7 @@ export function useConversations(user: any) {
     try {
       // First, get the other user's profile
       const { data: otherUserProfile, error: profileError } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("*")
         .eq("id", otherUserId)
         .maybeSingle();

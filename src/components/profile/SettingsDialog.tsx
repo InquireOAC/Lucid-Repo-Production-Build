@@ -14,7 +14,7 @@ import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
-import ExportJournalDialog from "./ExportJournalDialog";
+
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import DreamGalleryDialog from "./DreamGalleryDialog";
 import { Crown } from "lucide-react";
@@ -48,7 +48,7 @@ const SettingsDialog = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
-  const [showExportJournal, setShowExportJournal] = useState(false);
+  
   const [showSubscription, setShowSubscription] = useState(false);
   const [showDreamGallery, setShowDreamGallery] = useState(false);
 
@@ -147,10 +147,9 @@ const SettingsDialog = ({
                   <ImageIcon className="h-4 w-4 mr-2" />
                   Dream Gallery
                 </Button>
-                <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { onOpenChange(false); navigate("/dream-book"); }}>
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Export Dream Journal
-                  <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coming Soon</span>
+                  Dream Book
                 </Button>
               </div>
 
@@ -211,7 +210,7 @@ const SettingsDialog = ({
     <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
-    <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
+    
     <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
     <DreamGalleryDialog open={showDreamGallery} onOpenChange={setShowDreamGallery} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}

@@ -8,6 +8,7 @@ interface ProfileTabsProps {
   likedDreams: any[];
   isOwnProfile: boolean;
   refreshDreams?: () => void;
+  userId?: string;
 }
 
 const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile, refreshDreams }: ProfileTabsProps) => {

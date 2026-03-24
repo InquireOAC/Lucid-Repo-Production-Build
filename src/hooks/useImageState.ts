@@ -12,6 +12,7 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
   const [imageError, setImageError] = useState(false);
   const [useAIContext, setUseAIContext] = useState(false);
   const [imageStyle, setImageStyle] = useState("surreal");
+  const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(null);
 
   // Determine if we should show the initial prompt or the full interface
   const showInfo = !existingPrompt && !existingImage;
@@ -41,5 +42,7 @@ export const useImageState = ({ existingPrompt, existingImage }: UseImageStatePr
     setUseAIContext,
     imageStyle,
     setImageStyle,
+    selectedCharacterId,
+    setSelectedCharacterId,
   };
 };

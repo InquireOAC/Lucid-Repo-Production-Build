@@ -1,18 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Calendar, Tag, Wand2 } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"@/components/ui/select";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import { VoiceRecorder } from "@/components/dreams/VoiceRecorder";
@@ -23,6 +17,9 @@ import DreamImageGenerator from "@/components/DreamImageGenerator";
 import { toast } from "sonner";
 import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+
+const CHARACTER_LIMIT = 3000;
 
 const NewDream = () => {
   const navigate = useNavigate();
@@ -39,17 +36,16 @@ const NewDream = () => {
     analysis: "",
     generatedImage: "",
     imagePrompt: "",
-    lucid: false
+    lucid: false,
   });
 
-  const [inputMode, setInputMode] = useState<'text' | 'voice'>('text');
+  const [inputMode, setInputMode] = useState<"text" | "voice">("text");
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string>('');
-  const CHARACTER_LIMIT = 3000;
+  const [audioUrl, setAudioUrl] = useState<string>("");
+  const [analysisOpen, setAnalysisOpen] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
 
-  const handleChange = (
-  e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-  {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === "content" && value.length > CHARACTER_LIMIT) return;
     setFormData((p) => ({ ...p, [name]: value }));
@@ -58,52 +54,35 @@ const NewDream = () => {
   const handleTagSelect = (tagId: string) => {
     setFormData((p) => ({
       ...p,
-      tags: p.tags.includes(tagId) ?
-      p.tags.filter((id) => id !== tagId) :
-      [...p.tags, tagId]
+      tags: p.tags.includes(tagId) ? p.tags.filter((id) => id !== tagId) : [...p.tags, tagId],
     }));
   };
 
   const handleVoiceRecording = async (audioBlob: Blob) => {
     setRecordedAudio(audioBlob);
-    const localAudioUrl = URL.createObjectURL(audioBlob);
-    setAudioUrl(localAudioUrl);
+    setAudioUrl(URL.createObjectURL(audioBlob));
   };
 
   const handleTranscriptionComplete = (text: string) => {
     setFormData((p) => ({
       ...p,
-      content: p.content ? (p.content + '\n\n' + text).trim() : text
+      content: p.content ? (p.content + "\n\n" + text).trim() : text,
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-
-    if (!formData.title.trim()) {
-      toast.error("Please add a title for your dream");
-      return;
-    }
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!user) { navigate("/auth"); return; }
+    if (!formData.title.trim()) { toast.error("Please add a title for your dream"); return; }
 
     const textToCheck = `${formData.title} ${formData.content}`;
-    if (containsInappropriateContent(textToCheck)) {
-      toast.error(getContentWarningMessage());
-      return;
-    }
+    if (containsInappropriateContent(textToCheck)) { toast.error(getContentWarningMessage()); return; }
 
     let uploadedAudioUrl = audioUrl;
     if (recordedAudio) {
-      const uploaded = await uploadAudio(recordedAudio, 'new');
-      if (uploaded) {
-        uploadedAudioUrl = uploaded;
-      } else {
-        toast.error('Failed to upload audio recording');
-        return;
-      }
+      const uploaded = await uploadAudio(recordedAudio, "new");
+      if (uploaded) { uploadedAudioUrl = uploaded; }
+      else { toast.error("Failed to upload audio recording"); return; }
     }
 
     try {
@@ -116,7 +95,7 @@ const NewDream = () => {
         analysis: formData.analysis,
         generatedImage: formData.generatedImage,
         imagePrompt: formData.imagePrompt,
-        audioUrl: uploadedAudioUrl || undefined
+        audioUrl: uploadedAudioUrl || undefined,
       });
       navigate("/");
     } catch (error) {
@@ -125,212 +104,273 @@ const NewDream = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen dream-tome-bg animate-page-reveal">
-      {/* Header */}
-      <div className="sticky top-0 z-30 glass-card border-b border-primary/10 pt-safe-top">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/")}
-            className="text-white/70 hover:text-white">
+  const dateDisplay = format(new Date(formData.date), "MMM d, yyyy");
 
+  return (
+    <div className="min-h-screen starry-background animate-page-reveal">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b border-border/30 pt-safe-top">
+        <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-muted-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg font-semibold white-text">What did you dream?</h1>
           <Button
-            variant="aurora"
+            variant="ghost"
             size="sm"
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             disabled={isSubmitting || isUploading || !formData.title.trim()}
-            className="gap-2">
-
-            <Save className="h-4 w-4" />
-            Save
+            className="text-primary font-semibold"
+          >
+            {isSubmitting ? "Saving..." : "Save"}
           </Button>
         </div>
       </div>
 
-      <div className="px-4 py-6 pb-24 space-y-8 max-w-2xl lg:max-w-3xl mx-auto">
-
-        {/* Title Input */}
-        <div className="space-y-2">
+      <div className="px-4 md:px-8 py-6 pb-28 md:pb-6 space-y-6 max-w-2xl mx-auto">
+        {/* Title + date */}
+        <div className="space-y-1">
           <Input
             type="text"
             name="title"
             placeholder="Title your dream..."
             value={formData.title}
             onChange={handleChange}
-            className="text-xl font-medium bg-transparent border-0 border-b border-primary/20 rounded-none px-0 focus:border-primary/50 placeholder:text-muted-foreground/50" />
-
-        </div>
-
-        {/* Input Mode Toggle */}
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            type="button"
-            variant={inputMode === 'text' ? "aurora" : "outline"}
-            size="sm"
-            onClick={() => setInputMode('text')}
-            className="flex items-center gap-2">
-
-            <FileText className="h-4 w-4" />
-            Text
-          </Button>
-          <Button
-            type="button"
-            variant={inputMode === 'voice' ? "aurora" : "outline"}
-            size="sm"
-            onClick={() => setInputMode('voice')}
-            className="flex items-center gap-2">
-
-            <Mic className="h-4 w-4" />
-            Voice
-          </Button>
-        </div>
-
-        {/* Content Area */}
-        <div className="space-y-4">
-          {inputMode === 'voice' ?
-          <div className="space-y-4">
-              {/* Voice Recorder */}
-              <div className="luminous-card p-6 rounded-2xl">
-                <VoiceRecorder
-                onRecordingComplete={handleVoiceRecording}
-                onTranscriptionComplete={handleTranscriptionComplete}
-                onClear={() => {
-                  setRecordedAudio(null);
-                  if (audioUrl && audioUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(audioUrl);
-                    setAudioUrl('');
-                  }
-                }}
-                disabled={isUploading || isSubmitting} />
-
-              </div>
-
-              {/* Show recording preview */}
-              {audioUrl &&
-            <div className="glass-card p-4 rounded-xl">
-                  <AudioPlayer
-                audioUrl={audioUrl}
-                title="Dream Recording"
-                compact />
-
-                </div>
-            }
-
-              {/* Optional notes */}
-              <div className="space-y-2">
-                <Label className="text-muted-foreground">Additional Notes (Optional)</Label>
-                <Textarea
-                name="content"
-                placeholder="Add any extra details..."
-                value={formData.content}
-                onChange={handleChange}
-                className="dream-input resize-none min-h-[100px]"
-                maxLength={CHARACTER_LIMIT} />
-
-              </div>
-            </div> :
-
-          <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <Label className="text-muted-foreground">Describe your dream</Label>
-                <span className={cn(
-                "text-xs",
-                formData.content.length > CHARACTER_LIMIT * 0.9 ?
-                'text-destructive' :
-                'text-muted-foreground'
-              )}>
-                  {formData.content.length}/{CHARACTER_LIMIT}
-                </span>
-              </div>
-              <Textarea
-              name="content"
-              placeholder="Close your eyes and let the dream flow back to you..."
-              value={formData.content}
-              onChange={handleChange}
-              className="dream-input resize-none min-h-[200px] text-base leading-relaxed"
-              maxLength={CHARACTER_LIMIT} />
-
-            </div>
-          }
-        </div>
-
-        {/* Metadata Section */}
-        <div className="grid grid-cols-2 gap-3 items-end">
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2 text-muted-foreground text-xs">
-              <Calendar className="h-3.5 w-3.5" />
-              Date
-            </Label>
-            <Input
+            className="text-2xl font-bold bg-transparent border-0 border-b-2 border-blue-500 rounded-none px-0 h-auto py-2 focus:border-blue-400 placeholder:text-muted-foreground/40"
+          />
+          <div className="flex items-center gap-2">
+            <input
               type="date"
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="dream-input w-full h-10 text-sm" />
+              className="text-xs text-muted-foreground bg-transparent border-0 cursor-pointer"
+            />
           </div>
         </div>
 
-        {/* Tags */}
-        <div className="space-y-3">
-          <Label className="flex items-center gap-2 text-muted-foreground">
-            <Tag className="h-4 w-4" />
+        {/* Segmented control */}
+        <div className="flex items-center bg-muted/30 rounded-full p-1 w-fit mx-auto">
+          <button
+            type="button"
+            onClick={() => setInputMode("text")}
+            className={cn(
+              "flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all",
+              inputMode === "text"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Text
+          </button>
+          <button
+            type="button"
+            onClick={() => setInputMode("voice")}
+            className={cn(
+              "flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all",
+              inputMode === "voice"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Mic className="h-3.5 w-3.5" />
+            Voice
+          </button>
+        </div>
+
+        {/* Content area */}
+        {inputMode === "voice" ? (
+          <div className="space-y-4">
+            <div className="border border-border/30 rounded-2xl p-6 bg-muted/5">
+              <VoiceRecorder
+                onRecordingComplete={handleVoiceRecording}
+                onTranscriptionComplete={handleTranscriptionComplete}
+                onClear={() => {
+                  setRecordedAudio(null);
+                  if (audioUrl?.startsWith("blob:")) { URL.revokeObjectURL(audioUrl); setAudioUrl(""); }
+                }}
+                disabled={isUploading || isSubmitting}
+              />
+            </div>
+            {audioUrl && (
+              <div className="border border-border/30 rounded-xl p-4 bg-muted/5">
+                <AudioPlayer audioUrl={audioUrl} title="Dream Recording" compact />
+              </div>
+            )}
+            <Textarea
+              name="content"
+              placeholder="Add any extra details..."
+              value={formData.content}
+              onChange={handleChange}
+              className="resize-none min-h-[120px] bg-transparent border-border/20 focus:border-primary/40"
+              maxLength={CHARACTER_LIMIT}
+            />
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex justify-end">
+              <span className={cn("text-xs", formData.content.length > CHARACTER_LIMIT * 0.9 ? "text-destructive" : "text-muted-foreground")}>
+                {formData.content.length}/{CHARACTER_LIMIT}
+              </span>
+            </div>
+            <Textarea
+              name="content"
+              placeholder="Close your eyes and let the dream flow back to you..."
+              value={formData.content}
+              onChange={handleChange}
+              className="resize-none min-h-[300px] text-base leading-relaxed bg-transparent border-blue-500 focus:border-blue-400 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-shadow"
+              maxLength={CHARACTER_LIMIT}
+            />
+          </div>
+        )}
+
+        {/* Tags - horizontal scroll */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+            <Tag className="h-3.5 w-3.5" />
             Tags
           </Label>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <Badge
               variant={formData.lucid ? "lucid" : "outline"}
-              className="cursor-pointer transition-all hover:scale-105"
-              onClick={() => setFormData((p) => ({ ...p, lucid: !p.lucid }))}>
-
+              className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
+              onClick={() => setFormData((p) => ({ ...p, lucid: !p.lucid }))}
+            >
               ✦ Lucid
             </Badge>
-            {tags.map((tag) =>
-            <Badge
-              key={tag.id}
-              variant={formData.tags.includes(tag.id) ? "aurora" : "outline"}
-              className="cursor-pointer transition-all hover:scale-105"
-              onClick={() => handleTagSelect(tag.id)}>
-
+            {tags.map((tag) => (
+              <Badge
+                key={tag.id}
+                variant={formData.tags.includes(tag.id) ? "aurora" : "outline"}
+                className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
+                onClick={() => handleTagSelect(tag.id)}
+              >
                 {tag.name}
               </Badge>
-            )}
+            ))}
           </div>
         </div>
 
-        {/* Transform Section - Always visible */}
-        <div className="space-y-4">
-          <DreamAnalysis
-            dreamContent={formData.content}
-            existingAnalysis={formData.analysis}
-            onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))} />
-          <DreamImageGenerator
-            dreamContent={formData.content}
-            existingImage={formData.generatedImage}
-            existingPrompt={formData.imagePrompt}
-            onImageGenerated={(image, prompt) =>
-              setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
-            } />
-        </div>
+        {/* Dream Tools */}
+        <motion.div
+          className="space-y-3"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
+          <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dream Tools</Label>
 
-        {/* Save Button (mobile bottom) */}
-        <div className="pt-4">
+          {/* AI Analysis */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => setAnalysisOpen(!analysisOpen)}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+            >
+              <motion.div
+                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                animate={{ rotate: analysisOpen ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Sparkles className="h-4 w-4 text-primary" />
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">AI Analysis</p>
+                <p className="text-xs text-muted-foreground">Get insights about your dream</p>
+              </div>
+              <motion.div
+                animate={{ rotate: analysisOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </button>
+          </motion.div>
+          <AnimatePresence>
+            {analysisOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2">
+                  <DreamAnalysis
+                    dreamContent={formData.content}
+                    existingAnalysis={formData.analysis}
+                    onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Dream Image */}
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <button
+              type="button"
+              onClick={() => setImageOpen(!imageOpen)}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+            >
+              <motion.div
+                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                animate={{ rotate: imageOpen ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <ImageIcon className="h-4 w-4 text-primary" />
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground">Dream Image</p>
+                <p className="text-xs text-muted-foreground">Generate art from your dream</p>
+              </div>
+              <motion.div
+                animate={{ rotate: imageOpen ? 180 : 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              >
+                <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              </motion.div>
+            </button>
+          </motion.div>
+          <AnimatePresence>
+            {imageOpen && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="overflow-hidden"
+              >
+                <div className="pt-2">
+                  <DreamImageGenerator
+                    dreamContent={formData.content}
+                    existingImage={formData.generatedImage}
+                    existingPrompt={formData.imagePrompt}
+                    onImageGenerated={(image, prompt) =>
+                      setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
+                    }
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
+
+      {/* Fixed bottom save — mobile only; inline on desktop */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/60 backdrop-blur-lg border-t border-border/30 pb-safe-bottom z-20 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:pb-0 md:max-w-2xl md:mx-auto md:mt-2 md:mb-8">
+        <div className="max-w-2xl mx-auto">
           <Button
-            variant="luminous"
-            className="w-full h-12 text-lg font-semibold text-secondary-foreground"
-            onClick={handleSubmit}
-            disabled={isSubmitting || isUploading || !formData.title.trim()}>
-
+            className="w-full h-12 text-base font-semibold"
+            onClick={() => handleSubmit()}
+            disabled={isSubmitting || isUploading || !formData.title.trim()}
+          >
             {isSubmitting ? "Saving..." : "Save Dream"}
           </Button>
         </div>
       </div>
-    </div>);
-
+    </div>
+  );
 };
 
 export default NewDream;

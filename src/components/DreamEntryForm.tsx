@@ -66,6 +66,8 @@ const DreamEntryForm = ({
     generatedImage: existingDream?.generatedImage || existingDream?.image_url || "",
     imagePrompt: existingDream?.imagePrompt || existingDream?.image_prompt || "",
     lucid: existingDream?.lucid || false,
+    lucidity_level: existingDream?.lucidity_level ?? null as number | null,
+    technique_used: existingDream?.technique_used ?? "" as string,
   });
   
   const [availableTags, setAvailableTags] = useState<DreamTag[]>(tags);
@@ -185,12 +187,8 @@ const DreamEntryForm = ({
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
 
-    // Check for inappropriate content
-    const textToCheck = `${formData.title} ${formData.content}`;
-    if (containsInappropriateContent(textToCheck)) {
-      toast.error(getContentWarningMessage());
-      return;
-    }
+    // Content filter is only applied when making dreams public, not during private saves
+    // Dreams naturally contain themes of death, violence, etc. which are normal to journal about
 
     let uploadedAudioUrl = audioUrl;
 
@@ -239,7 +237,8 @@ const DreamEntryForm = ({
 
     setIsSubmitting(true);
     try {
-      const dreamData = {
+      const wordCount = formData.content.trim() ? formData.content.trim().split(/\s+/).length : 0;
+      const dreamData: Record<string, any> = {
         title: formData.title,
         content: formData.content,
         dream_date: formData.date,
@@ -251,7 +250,10 @@ const DreamEntryForm = ({
         image_url: formData.generatedImage,
         image_prompt: formData.imagePrompt,
         lucid: formData.lucid,
-        audio_url: uploadedAudioUrl || null
+        audio_url: uploadedAudioUrl || null,
+        technique_used: formData.technique_used || null,
+        lucidity_level: formData.lucid ? formData.lucidity_level : null,
+        word_count: wordCount,
       };
 
       console.log("Saving dream with image URL:", formData.generatedImage);
@@ -466,7 +468,60 @@ const DreamEntryForm = ({
                 required
               />
             </div>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Technique Used</Label>
+              <Select
+                value={formData.technique_used}
+                onValueChange={(v) => setFormData((p) => ({ ...p, technique_used: v }))}
+              >
+                <SelectTrigger className="dream-input h-9 text-sm">
+                  <SelectValue placeholder="None" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="MILD">MILD</SelectItem>
+                  <SelectItem value="WILD">WILD</SelectItem>
+                  <SelectItem value="WBTB">WBTB</SelectItem>
+                  <SelectItem value="Reality Checks">Reality Checks</SelectItem>
+                  <SelectItem value="Meditation">Meditation</SelectItem>
+                  <SelectItem value="Supplements">Supplements</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+
+          {/* Lucidity Level — only shown when lucid is checked */}
+          {formData.lucid && (
+            <div className="space-y-2">
+              <Label className="text-sm">Lucidity Level</Label>
+              <div className="flex gap-2">
+                {[
+                  { value: 1, label: "Slight", desc: "Awareness" },
+                  { value: 2, label: "Moderate", desc: "Control" },
+                  { value: 3, label: "Full", desc: "Control" },
+                ].map((level) => (
+                  <button
+                    key={level.value}
+                    type="button"
+                    onClick={() =>
+                      setFormData((p) => ({
+                        ...p,
+                        lucidity_level: p.lucidity_level === level.value ? null : level.value,
+                      }))
+                    }
+                    className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+                      formData.lucidity_level === level.value
+                        ? "bg-primary/20 border-primary/40 text-foreground"
+                        : "bg-muted/10 border-border/30 text-muted-foreground"
+                    }`}
+                  >
+                    <p className="text-sm font-medium">{level.label}</p>
+                    <p className="text-[10px]">{level.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Dream Tags */}

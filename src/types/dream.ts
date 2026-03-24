@@ -34,6 +34,18 @@ export interface DreamEntry {
   audio_url?: string;
   image_dataurl?: string;
   video_url?: string;
+  lucidity_level?: number | null;
+  technique_used?: string | null;
+  dream_symbols?: string[];
+  word_count?: number | null;
+  dream_date?: string | null;
+  section_images?: Array<{
+    section: number;
+    text: string;
+    image_url?: string;
+    prompt?: string;
+    video_url?: string;
+  }>;
 }
 
 export interface DreamTag {

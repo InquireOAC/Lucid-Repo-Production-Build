@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen } from "lucide-react";
+import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen, CreditCard } from "lucide-react";
 import ExploreContentManager from "@/components/admin/ExploreContentManager";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminStats } from "@/hooks/useAdminStats";
@@ -14,6 +14,7 @@ import ModerationQueue from "@/components/admin/ModerationQueue";
 import UserManager from "@/components/admin/UserManager";
 import ChallengeComposer from "@/components/admin/ChallengeComposer";
 import ChallengeManager from "@/components/admin/ChallengeManager";
+import SubscribersList from "@/components/admin/SubscribersList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { motion } from "framer-motion";
 
@@ -70,6 +71,7 @@ const AdminDashboard = () => {
     { value: "announcements", label: "Announce", icon: Megaphone },
     { value: "events", label: "Events", icon: Trophy },
     { value: "moderation", label: "Moderate", icon: Shield, badge: flagCount },
+    { value: "subscribers", label: "Subs", icon: CreditCard, badge: stats.activeSubscriptions },
     { value: "users", label: "Users", icon: Users },
     { value: "content", label: "Content", icon: BookOpen },
   ];
@@ -146,6 +148,10 @@ const AdminDashboard = () => {
 
           <TabsContent value="moderation" className="mt-4">
             <ModerationQueue />
+          </TabsContent>
+
+          <TabsContent value="subscribers" className="mt-4">
+            <SubscribersList />
           </TabsContent>
 
           <TabsContent value="users" className="mt-4">

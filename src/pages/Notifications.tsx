@@ -22,7 +22,7 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen pt-safe-top pb-20 px-4 pl-safe-left pr-safe-right">
+    <div className="min-h-screen pt-safe-top pb-20 md:pb-8 px-4 md:px-8 pl-safe-left pr-safe-right">
       <div className="max-w-2xl lg:max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pt-4">
