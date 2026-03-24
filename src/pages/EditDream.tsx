@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown } from "lucide-react";
+import SectionImagesManager from "@/components/dreams/SectionImagesManager";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
