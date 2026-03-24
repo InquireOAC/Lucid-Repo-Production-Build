@@ -187,12 +187,8 @@ const DreamEntryForm = ({
     e.preventDefault();
     if (!user && !onSubmit) return navigate("/auth");
 
-    // Check for inappropriate content
-    const textToCheck = `${formData.title} ${formData.content}`;
-    if (containsInappropriateContent(textToCheck)) {
-      toast.error(getContentWarningMessage());
-      return;
-    }
+    // Content filter is only applied when making dreams public, not during private saves
+    // Dreams naturally contain themes of death, violence, etc. which are normal to journal about
 
     let uploadedAudioUrl = audioUrl;
 
