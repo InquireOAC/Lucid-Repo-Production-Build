@@ -74,6 +74,7 @@ const EditDream = () => {
     });
     setAudioUrl(dream.audioUrl || dream.audio_url || "");
     setVideoUrl(dream.video_url || undefined);
+    setSectionImages(Array.isArray((dream as any).section_images) ? (dream as any).section_images : []);
     if (dream.analysis) setAnalysisOpen(true);
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
     setLoaded(true);
