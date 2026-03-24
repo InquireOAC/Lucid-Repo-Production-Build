@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown, Film, Loader2, Trash2 } from "lucide-react";
+import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import SectionImagesManager from "@/components/dreams/SectionImagesManager";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -35,6 +36,8 @@ const EditDream = () => {
   const { isAdmin } = useUserRole();
   const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
 
+  const currentDream = entries.find(e => e.id === dreamId);
+
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -55,6 +58,21 @@ const EditDream = () => {
   const [loaded, setLoaded] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
   const [sectionImages, setSectionImages] = useState<any[]>([]);
+  const [scenesOpen, setScenesOpen] = useState(false);
+
+  const {
+    isGenerating: isScenesGenerating,
+    progress: scenesProgress,
+    totalSections: scenesTotalSections,
+    generateSectionImages,
+  } = useSectionImageGeneration(
+    currentDream || { id: dreamId || "", content: formData.content, title: formData.title } as any,
+    (updated) => {
+      if ((updated as any).section_images) {
+        setSectionImages((updated as any).section_images);
+      }
+    }
+  );
 
   // Pre-populate from existing dream
   useEffect(() => {
@@ -74,9 +92,11 @@ const EditDream = () => {
     });
     setAudioUrl(dream.audioUrl || dream.audio_url || "");
     setVideoUrl(dream.video_url || undefined);
-    setSectionImages(Array.isArray((dream as any).section_images) ? (dream as any).section_images : []);
+    const loadedSections = Array.isArray((dream as any).section_images) ? (dream as any).section_images : [];
+    setSectionImages(loadedSections);
     if (dream.analysis) setAnalysisOpen(true);
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
+    if (loadedSections.length > 0) setScenesOpen(true);
     setLoaded(true);
   }, [dreamId, entries, loaded]);
 
@@ -140,6 +160,33 @@ const EditDream = () => {
       console.error("Edit error:", error);
       toast.error("Failed to save changes");
     }
+  };
+
+  const handleClearAllScenes = async () => {
+    if (!dreamId) return;
+    for (const sec of sectionImages) {
+      if (sec.image_url) {
+        try {
+          const url = new URL(sec.image_url);
+          const pathParts = url.pathname.split("/dream-images/");
+          if (pathParts.length > 1) {
+            await supabase.storage.from("dream-images").remove([decodeURIComponent(pathParts[1])]);
+          }
+        } catch {}
+      }
+      if (sec.video_url) {
+        try {
+          const url = new URL(sec.video_url);
+          const pathParts = url.pathname.split("/dream-videos/");
+          if (pathParts.length > 1) {
+            await supabase.storage.from("dream-videos").remove([decodeURIComponent(pathParts[1])]);
+          }
+        } catch {}
+      }
+    }
+    await supabase.from("dream_entries").update({ section_images: [] }).eq("id", dreamId);
+    setSectionImages([]);
+    toast.success("All scenes cleared");
   };
 
   if (!loaded && entries.length > 0 && dreamId && !entries.find((e) => e.id === dreamId)) {
@@ -409,16 +456,108 @@ const EditDream = () => {
             )}
           </AnimatePresence>
 
-          {/* Section Images Manager */}
-          {dreamId && sectionImages.length > 0 && (
-            <div className="mt-4">
-              <SectionImagesManager
-                dreamId={dreamId}
-                sectionImages={sectionImages}
-                onUpdate={setSectionImages}
-                isMystic={isMystic}
-              />
-            </div>
+          {/* Scene Images */}
+          {dreamId && (
+            <>
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <button
+                  type="button"
+                  onClick={() => setScenesOpen(!scenesOpen)}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+                >
+                  <motion.div
+                    className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                    animate={{ rotate: scenesOpen ? 10 : 0 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Film className="h-4 w-4 text-primary" />
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">Scene Images</p>
+                      {sectionImages.length > 0 && (
+                        <span className="inline-flex items-center justify-center rounded-full bg-primary/15 text-primary text-[10px] font-semibold px-1.5 py-0.5 min-w-[18px]">
+                          {sectionImages.length}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {sectionImages.length > 0
+                        ? `${sectionImages.filter(s => s.image_url).length}/${sectionImages.length} scenes with images`
+                        : "Split your dream into cinematic scenes"}
+                    </p>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: scenesOpen ? 180 : 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+              </motion.div>
+              <AnimatePresence>
+                {scenesOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-2">
+                      {sectionImages.length === 0 ? (
+                        <div className="p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
+                          <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
+                          <p className="text-sm font-medium mb-1">Generate Story Scenes</p>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            AI splits your dream into scenes and creates a cinematic image for each (2–4 image credits)
+                          </p>
+                          <Button
+                            onClick={generateSectionImages}
+                            disabled={isScenesGenerating || !formData.content.trim()}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            {isScenesGenerating ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                Generating {scenesProgress}/{scenesTotalSections}...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-3.5 w-3.5" />
+                                Generate Story Scenes
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <SectionImagesManager
+                            dreamId={dreamId}
+                            sectionImages={sectionImages}
+                            onUpdate={setSectionImages}
+                            isMystic={isMystic}
+                            dreamContent={formData.content}
+                            dreamTitle={formData.title}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-destructive hover:text-destructive gap-2"
+                            onClick={handleClearAllScenes}
+                            disabled={isScenesGenerating}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Clear All Scenes
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
         </motion.div>
       </div>
