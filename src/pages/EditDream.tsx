@@ -19,7 +19,7 @@ import { useAudioUpload } from "@/hooks/useAudioUpload";
 import DreamAnalysis from "@/components/DreamAnalysis";
 import DreamImageGenerator from "@/components/DreamImageGenerator";
 import { toast } from "sonner";
-import { containsInappropriateContent, getContentWarningMessage } from "@/utils/contentFilter";
+
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -110,8 +110,6 @@ const EditDream = () => {
     if (!user || !dreamId) { navigate("/auth"); return; }
     if (!formData.title.trim()) { toast.error("Please add a title for your dream"); return; }
 
-    const textToCheck = `${formData.title} ${formData.content}`;
-    if (containsInappropriateContent(textToCheck)) { toast.error(getContentWarningMessage()); return; }
 
     let uploadedAudioUrl = audioUrl;
     if (recordedAudio) {
