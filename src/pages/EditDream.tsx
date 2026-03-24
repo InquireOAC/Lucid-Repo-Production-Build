@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown } from "lucide-react";
+import SectionImagesManager from "@/components/dreams/SectionImagesManager";
+import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +31,9 @@ const EditDream = () => {
   const { user } = useAuth();
   const { tags, entries, handleEditDream, isSubmitting } = useDreamJournal();
   const { uploadAudio, isUploading } = useAudioUpload();
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
 
   const [formData, setFormData] = useState({
     title: "",
@@ -48,6 +54,7 @@ const EditDream = () => {
   const [imageOpen, setImageOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
+  const [sectionImages, setSectionImages] = useState<any[]>([]);
 
   // Pre-populate from existing dream
   useEffect(() => {
@@ -67,6 +74,7 @@ const EditDream = () => {
     });
     setAudioUrl(dream.audioUrl || dream.audio_url || "");
     setVideoUrl(dream.video_url || undefined);
+    setSectionImages(Array.isArray((dream as any).section_images) ? (dream as any).section_images : []);
     if (dream.analysis) setAnalysisOpen(true);
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
     setLoaded(true);
@@ -400,6 +408,18 @@ const EditDream = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Section Images Manager */}
+          {dreamId && sectionImages.length > 0 && (
+            <div className="mt-4">
+              <SectionImagesManager
+                dreamId={dreamId}
+                sectionImages={sectionImages}
+                onUpdate={setSectionImages}
+                isMystic={isMystic}
+              />
+            </div>
+          )}
         </motion.div>
       </div>
 
