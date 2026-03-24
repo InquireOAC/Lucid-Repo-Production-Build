@@ -281,11 +281,11 @@ const SectionImagesManager: React.FC<SectionImagesManagerProps> = ({
             className="resize-none text-sm"
             disabled={isRegenerating}
           />
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => handleRegenerate(regenerateIndex)} disabled={isRegenerating} className="gap-1.5">
-              {isRegenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Regenerating...</> : <><RefreshCw className="h-3.5 w-3.5" /> Regenerate</>}
+          <div className="flex gap-2 w-full">
+            <Button size="sm" onClick={() => handleRegenerate(regenerateIndex)} disabled={isRegenerating} className="gap-1.5 flex-1 min-w-0">
+              {isRegenerating ? <><Loader2 className="h-3.5 w-3.5 animate-spin flex-shrink-0" /> <span className="truncate">Regenerating…</span></> : <><RefreshCw className="h-3.5 w-3.5 flex-shrink-0" /> Regenerate</>}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setRegenerateIndex(null)} disabled={isRegenerating}>Cancel</Button>
+            <Button size="sm" variant="ghost" onClick={() => setRegenerateIndex(null)} disabled={isRegenerating} className="flex-shrink-0">Cancel</Button>
           </div>
         </div>
       )}
