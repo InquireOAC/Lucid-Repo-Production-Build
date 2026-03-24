@@ -31,6 +31,9 @@ const EditDream = () => {
   const { user } = useAuth();
   const { tags, entries, handleEditDream, isSubmitting } = useDreamJournal();
   const { uploadAudio, isUploading } = useAudioUpload();
+  const { subscription } = useSubscriptionContext();
+  const { isAdmin } = useUserRole();
+  const isMystic = isAdmin || (subscription?.status === 'active' && subscription?.plan === 'Premium');
 
   const [formData, setFormData] = useState({
     title: "",
