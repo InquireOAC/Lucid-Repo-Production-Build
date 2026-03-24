@@ -408,6 +408,18 @@ const EditDream = () => {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Section Images Manager */}
+          {dreamId && sectionImages.length > 0 && (
+            <div className="mt-4">
+              <SectionImagesManager
+                dreamId={dreamId}
+                sectionImages={sectionImages}
+                onUpdate={setSectionImages}
+                isMystic={isMystic}
+              />
+            </div>
+          )}
         </motion.div>
       </div>
 
