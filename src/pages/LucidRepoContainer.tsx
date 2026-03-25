@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthDialog from "@/components/repos/AuthDialog";
 import DiscoveryHero from "@/components/repos/DiscoveryHero";
@@ -37,10 +37,11 @@ const FILTER_CATEGORIES = ["All", "Lucid", "Nightmare", "Recurring", "Adventure"
 const LucidRepoDiscovery = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const expandedSectionKey = searchParams.get("section");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
-  const [expandedSection, setExpandedSection] = useState<{ title: string; dreams: DreamEntry[] } | null>(null);
   const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
   const { series: publicSeries } = usePublicSeries();
 
