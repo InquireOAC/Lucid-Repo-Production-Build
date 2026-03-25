@@ -46,7 +46,7 @@ const TechniqueDetailPage: React.FC = () => {
       {/* Back button + Pin */}
       <div className="p-4 flex items-center justify-between">
         <button
-          onClick={() => navigate("/explore")}
+          onClick={() => navigate("/")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
