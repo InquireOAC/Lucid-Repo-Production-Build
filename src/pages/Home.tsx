@@ -10,6 +10,12 @@ import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAca
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { techniques } from "@/components/insights/techniqueData";
 import { getDifficultyStyles } from "@/utils/techniqueStyles";
+import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpeg";
+import techniqueImgSsild from "@/assets/techniques/ssild.jpeg";
+import techniqueImgWild from "@/assets/techniques/wild.jpeg";
+import techniqueImgFild from "@/assets/techniques/fild.jpeg";
+import techniqueImgDeild from "@/assets/techniques/deild.jpeg";
+import techniqueImgMeditation from "@/assets/techniques/meditation.jpeg";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -466,8 +472,15 @@ const AcademyEntryCard = () => {
   );
 };
 
-/* Sleep-onset technique indices from techniqueData */
-const FALLING_ASLEEP_INDICES = [3, 4, 5, 6, 7]; // WILD, SSILD, FILD, DEILD, Meditation
+/* Sleep-onset technique cards with custom images */
+const FALLING_ASLEEP_CARDS: { idx: number; image: string }[] = [
+  { idx: 3, image: techniqueImgWild },
+  { idx: 4, image: techniqueImgSsild },
+  { idx: 5, image: techniqueImgFild },
+  { idx: 6, image: techniqueImgDeild },
+  { idx: 7, image: techniqueImgMeditation },
+  { idx: 0, image: techniqueImgRealityChecks },
+];
 
 const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinnedIndices }) => {
   const navigate = useNavigate();
@@ -535,34 +548,28 @@ const FallingAsleepSection: React.FC = () => {
         While Falling Asleep
       </h2>
       <div className="grid grid-cols-2 gap-3">
-        {FALLING_ASLEEP_INDICES.map((idx) => {
+        {FALLING_ASLEEP_CARDS.map(({ idx, image }) => {
           const t = techniques[idx];
           if (!t) return null;
-          const styles = getDifficultyStyles(t.difficulty);
           return (
-            <Card
+            <div
               key={idx}
               onClick={() => navigate(`/insights/technique/${idx}`)}
-              className={`cursor-pointer border ${styles.border} bg-gradient-to-br ${styles.gradient} backdrop-blur-md hover:brightness-110 transition-all overflow-hidden`}
+              className="cursor-pointer relative rounded-2xl overflow-hidden aspect-square group"
             >
-              <CardContent className="p-4 flex flex-col items-center text-center gap-2 min-h-[140px] justify-center">
-                <span className="text-4xl">{t.icon}</span>
-                <h3 className="font-semibold text-foreground text-sm leading-tight">
+              <img
+                src={image}
+                alt={t.name}
+                className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-3">
+                <h3 className="font-semibold text-white text-sm leading-tight drop-shadow-md">
                   {t.acronym || t.name}
                 </h3>
-                <div className="flex gap-1">
-                  {[1, 2, 3].map((dot) => (
-                    <div
-                      key={dot}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        dot <= t.difficultyRating ? "bg-primary" : "bg-muted-foreground/20"
-                      }`}
-                    />
-                  ))}
-                </div>
-                <p className="text-[10px] text-muted-foreground">{t.difficulty}</p>
-              </CardContent>
-            </Card>
+                <p className="text-[10px] text-white/70 mt-0.5">{t.shortDescription}</p>
+              </div>
+            </div>
           );
         })}
       </div>
