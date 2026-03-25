@@ -317,6 +317,25 @@ const LucidRepoDiscovery = () => {
             />
           )}
 
+          {/* Continue Reading — from reading history */}
+          {recentIds.length > 0 && !searchQuery && (() => {
+            const continueReading = uniqueDreams.filter(d => recentIds.includes(d.id));
+            if (continueReading.length === 0) return null;
+            return (
+              <DiscoveryRow title="📚 Continue Reading">
+                {continueReading.map(dream => (
+                  <DiscoveryDreamCard
+                    key={dream.id}
+                    dream={dream}
+                    onOpenDream={handleOpenDream}
+                    onLike={handleDreamLikeFromCard}
+                    onUserClick={handleNavigateToProfile}
+                  />
+                ))}
+              </DiscoveryRow>
+            );
+          })()}
+
           {/* From People You Follow — horizontal cards */}
           {user && filterDreams(following).length > 0 && (
             <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => navigateToSection('following')}>
