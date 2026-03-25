@@ -53,6 +53,7 @@ const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToHistory } = useReadingHistory();
   const [dream, setDream] = useState<DreamEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
