@@ -1,7 +1,9 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pin, PinOff } from "lucide-react";
 import { techniques } from "./techniqueData";
+import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
+import { Button } from "@/components/ui/button";
 
 const DotRating: React.FC<{ label: string; value: number; max?: number }> = ({
   label,
@@ -26,7 +28,10 @@ const DotRating: React.FC<{ label: string; value: number; max?: number }> = ({
 const TechniqueDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const technique = techniques[Number(id)];
+  const index = Number(id);
+  const technique = techniques[index];
+  const { isPinned, pinTechnique, unpinTechnique } = usePinnedTechniques();
+  const pinned = !isNaN(index) && isPinned(index);
 
   if (!technique) {
     return (
@@ -38,8 +43,8 @@ const TechniqueDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-32 pt-safe-top">
-      {/* Back button */}
-      <div className="p-4">
+      {/* Back button + Pin */}
+      <div className="p-4 flex items-center justify-between">
         <button
           onClick={() => navigate("/explore")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -47,6 +52,15 @@ const TechniqueDetailPage: React.FC = () => {
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Back</span>
         </button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className={pinned ? "text-primary" : "text-muted-foreground"}
+          onClick={() => (pinned ? unpinTechnique(index) : pinTechnique(index))}
+        >
+          {pinned ? <PinOff size={18} /> : <Pin size={18} />}
+          <span className="ml-1.5 text-xs">{pinned ? "Unpin" : "Pin"}</span>
+        </Button>
       </div>
 
       {/* Icon hero */}

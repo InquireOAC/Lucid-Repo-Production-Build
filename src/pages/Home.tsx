@@ -7,6 +7,9 @@ import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
+import { techniques } from "@/components/insights/techniqueData";
+import { getDifficultyStyles } from "@/utils/techniqueStyles";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +34,7 @@ import {
   MessageSquare,
   ChevronRight,
   Sparkles,
+  Pin,
 } from "lucide-react";
 
 const Home = () => {
@@ -39,6 +43,7 @@ const Home = () => {
   const { dreams, isLoading: feedLoading } = useFeedPublicDreams(user);
   const { challenges } = useChallenges();
   const { stats } = useLucidStats();
+  const { pinnedIndices } = usePinnedTechniques();
 
   const activeChallenge = challenges.find(
     (c: Challenge) => c.status === "active"
@@ -60,7 +65,7 @@ const Home = () => {
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* Greeting + Record CTA */}
         <div className="pt-4">
           <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -129,6 +134,12 @@ const Home = () => {
             onClick={() => navigate("/dream-book")}
           />
         </div>
+
+        {/* Pinned Techniques */}
+        <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
+
+        {/* While Falling Asleep */}
+        <FallingAsleepSection />
 
         {/* Dream Academy Card */}
         <AcademyEntryCard />
@@ -452,6 +463,110 @@ const AcademyEntryCard = () => {
         </div>
       </CardContent>
     </Card>
+  );
+};
+
+/* Sleep-onset technique indices from techniqueData */
+const FALLING_ASLEEP_INDICES = [3, 4, 5, 6, 7]; // WILD, SSILD, FILD, DEILD, Meditation
+
+const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinnedIndices }) => {
+  const navigate = useNavigate();
+
+  if (pinnedIndices.length === 0) {
+    return (
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+          <Pin size={18} className="text-primary" />
+          Pinned Techniques
+        </h2>
+        <Card className="glass-card border-primary/10">
+          <CardContent className="p-5 text-center">
+            <p className="text-sm text-muted-foreground">
+              Pin a technique from the Explore page to display it here.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+        <Pin size={18} className="text-primary" />
+        Pinned Techniques
+      </h2>
+      <div className="space-y-3">
+        {pinnedIndices.map((idx) => {
+          const t = techniques[idx];
+          if (!t) return null;
+          const styles = getDifficultyStyles(t.difficulty);
+          return (
+            <div
+              key={idx}
+              onClick={() => navigate(`/insights/technique/${idx}`)}
+              className={`flex items-center gap-4 rounded-2xl border ${styles.border} bg-gradient-to-r ${styles.gradient} backdrop-blur-md p-4 cursor-pointer hover:brightness-110 transition-all`}
+            >
+              <div className={`w-14 h-14 rounded-full ${styles.iconBg} flex items-center justify-center shrink-0`}>
+                <span className="text-3xl">{t.icon}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground text-sm">
+                  {t.name}
+                  {t.acronym && <span className="text-primary ml-1.5 text-xs font-normal">({t.acronym})</span>}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{t.shortDescription}</p>
+              </div>
+              <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+const FallingAsleepSection: React.FC = () => {
+  const navigate = useNavigate();
+
+  return (
+    <div>
+      <h2 className="text-lg font-bold text-foreground mb-4">
+        While Falling Asleep
+      </h2>
+      <div className="grid grid-cols-2 gap-3">
+        {FALLING_ASLEEP_INDICES.map((idx) => {
+          const t = techniques[idx];
+          if (!t) return null;
+          const styles = getDifficultyStyles(t.difficulty);
+          return (
+            <Card
+              key={idx}
+              onClick={() => navigate(`/insights/technique/${idx}`)}
+              className={`cursor-pointer border ${styles.border} bg-gradient-to-br ${styles.gradient} backdrop-blur-md hover:brightness-110 transition-all overflow-hidden`}
+            >
+              <CardContent className="p-4 flex flex-col items-center text-center gap-2 min-h-[140px] justify-center">
+                <span className="text-4xl">{t.icon}</span>
+                <h3 className="font-semibold text-foreground text-sm leading-tight">
+                  {t.acronym || t.name}
+                </h3>
+                <div className="flex gap-1">
+                  {[1, 2, 3].map((dot) => (
+                    <div
+                      key={dot}
+                      className={`w-1.5 h-1.5 rounded-full ${
+                        dot <= t.difficultyRating ? "bg-primary" : "bg-muted-foreground/20"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground">{t.difficulty}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
