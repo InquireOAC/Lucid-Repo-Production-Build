@@ -45,6 +45,7 @@ const LucidRepoDiscovery = () => {
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
   const { series: publicSeries } = usePublicSeries();
+  const { recentIds } = useReadingHistory();
 
   const {
     featured,
