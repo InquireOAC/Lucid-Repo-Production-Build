@@ -1,74 +1,36 @@
 
 
-## Plan: Onboarding Persistence Fix + Wattpad-Style Lucid Repo Redesign
+## Plan: Fix Category Page Navigation Issues
 
-### Part 1: Onboarding Persistence Hardening
+### Problem
+Two related bugs when browsing a category ("See All") on Lucid Repo:
 
-**Current state**: The logic is correct (localStorage + Capacitor Preferences), but the skip button on non-final screens calls `handleStart` which tries `markTermsAsAccepted()` before `onComplete()`. If the user isn't logged in, this could throw and the catch does call `onComplete()`, so it should work. However, there's a subtle race: `AppContent` sits inside `AuthProvider`, and if the auth state reloads (e.g., token refresh), `AppContent` re-mounts, re-runs `useOnboarding`, and the `checkOnboardingStatus` runs again. If localStorage is somehow cleared (incognito, Safari ITP), onboarding reappears.
+1. **"Dream not found" flash**: Tapping a dream briefly shows "Dream not found" before loading the actual dream. This happens because `DreamStoryPage` shows the error state before the fetch completes — it initializes with `dream: null` and `loading: true`, but the loading skeleton and error state race.
 
-**Fix** (`src/App.tsx`):
-- Move `useOnboarding` initialization higher and memoize the result to prevent re-checks on auth state changes
-- Add a session-level guard: once `completeOnboarding` is called in a session, never show onboarding again regardless of storage reads
+2. **Back button doesn't return to category**: The expanded category view is stored in React component state (`expandedSection`). When navigating to `/dream/{id}`, `LucidRepoContainer` unmounts, losing this state. Pressing back returns to `/lucid-repo` with no expanded section.
 
-**Fix** (`src/hooks/useOnboarding.tsx`):
-- Add a module-level `sessionCompleted` flag that persists across re-renders/re-mounts within the same browser session
-- If `sessionCompleted` is true, skip all storage checks and return `hasSeenOnboarding: true` immediately
-- Set `sessionCompleted = true` in `completeOnboarding` AND when storage check finds `true`
+### Fix
 
-### Part 2: Wattpad-Style Lucid Repo Redesign
+#### 1. Fix "Dream not found" flash (`src/pages/DreamStoryPage.tsx`)
+The issue is subtle: `loading` starts as `true`, but the `if (!dream)` check on line 131 can briefly render before the `if (loading)` check on line 119 catches it. Actually, looking again, the loading check comes first so it should show skeletons. The real cause is likely that when the component re-mounts (navigating from the same route structure), `loading` briefly flips to `false` before the `useEffect` fires. Fix by ensuring `loading` is reset to `true` when `dreamId` changes, and only show "not found" after fetch actually completes with no result.
 
-**Goal**: Transform the Lucid Repo from a discovery feed into a story-browsing experience optimized for continuous reading, inspired by Wattpad.
+- Add an explicit `notFound` state (default `false`) that's only set to `true` after the fetch returns no data
+- Keep showing skeletons while loading, show "not found" only when `notFound === true`
 
-#### 2a. Redesign Discovery Layout (`src/pages/LucidRepoContainer.tsx`)
+#### 2. Persist category state via URL (`src/pages/LucidRepoContainer.tsx`)
+Replace the `expandedSection` React state with URL search params so the category view survives navigation:
 
-Replace the current horizontal-scroll discovery rows with a more immersive layout:
+- Use `?category=Lucid` (or similar) search param instead of `expandedSection` state
+- When "See All" is clicked, call `navigate('?category=Lucid')` instead of `setExpandedSection(...)`
+- On mount, read the `category` param from the URL to determine if we're in expanded view
+- The back button in expanded view calls `navigate('/lucid-repo')` to clear the param
+- This way, when the user navigates to a dream and presses back, the browser restores the `?category=...` URL automatically
 
-- **Top banner**: Keep featured hero but make it taller with a "Start Reading" CTA button
-- **"Continue Reading" row** (new): If the user has viewed dreams before, show recently viewed dreams with a progress-style indicator (based on view history)
-- **Trending Stories**: Vertical list cards (not horizontal scroll) showing cover image, title, author, excerpt, read count, like count -- similar to Wattpad's story list
-- **Category chips**: Keep existing filter bar but restyle as rounded pills
-- **For You / Recommended**: Personalized row based on tags from user's own dreams
+#### 3. Fix back button in StoryListCard (`src/components/repos/StoryListCard.tsx`)
+No changes needed — the card already navigates to `/dream/{id}` which is correct. Browser back will now correctly restore the `?category=...` URL.
 
-#### 2b. New Story List Card (`src/components/repos/StoryListCard.tsx`)
-
-A horizontal card layout (Wattpad-style) for the main feed:
-- Left: Cover image thumbnail (aspect 2:3, ~80px wide)
-- Right: Title (bold, 2-line clamp), author row with avatar, excerpt (2-line clamp), stats row (reads, likes, comments, scene count)
-- Tap navigates to `/dream/{id}`
-- More compact than current cards, allowing 5-6 visible per screen
-
-#### 2c. Continuous Reading (`src/pages/DreamStoryPage.tsx`)
-
-Add a "Keep Reading" section at the bottom of each dream story:
-- After comments section, show a "Next Story" card with the next dream from the same category/tag, or a random trending dream
-- Include a "Read Next" button that navigates to the next dream
-- Show 2-3 suggested stories in a horizontal mini-row
-- Pass navigation context (source list) so the reader can swipe through a queue
-
-**Implementation**: Add a `useNextDreams` helper that fetches 3 related dreams (same tags or trending) excluding the current one. Render at bottom of `DreamStoryContent`.
-
-#### 2d. Reading Queue State
-
-Add lightweight reading queue to the dream store or a new context:
-- When user enters a dream from a discovery row, store the row's dream IDs as the reading queue
-- DreamStoryPage shows "Next" / "Previous" navigation arrows in the header
-- Swiping left at end of story goes to next in queue
-
-**Implementation**: Use URL search params or a simple zustand slice in `src/store/dreamStore.ts` to track `readingQueue: string[]` and `currentQueueIndex: number`.
-
-### Files Modified (6)
-
-1. `src/hooks/useOnboarding.tsx` -- Add session-level guard flag
-2. `src/pages/LucidRepoContainer.tsx` -- Redesign to Wattpad-style vertical story list layout with Continue Reading
-3. `src/components/repos/StoryListCard.tsx` -- New horizontal story card component
-4. `src/pages/DreamStoryPage.tsx` -- Add "Keep Reading" section with next story suggestions
-5. `src/store/dreamStore.ts` -- Add reading queue state
-6. `src/hooks/useDiscoveryDreams.tsx` -- Add helper to fetch related/next dreams
-
-### Technical Details
-
-- StoryListCard uses flexbox row layout: `flex gap-3` with fixed-width image and flex-1 content
-- Continuous reading fetches 3 dreams with matching tags via Supabase `.or()` filter, excluding current ID
-- Reading queue stored in zustand alongside existing dream store, persisted only in memory (not localStorage)
-- Session guard uses `let sessionCompleted = false` at module scope in useOnboarding.tsx
+### Files Modified (3)
+1. `src/pages/DreamStoryPage.tsx` — Add `notFound` state to prevent flash
+2. `src/pages/LucidRepoContainer.tsx` — Replace `expandedSection` state with URL search params
+3. `src/components/repos/StoryListCard.tsx` — No changes needed
 
