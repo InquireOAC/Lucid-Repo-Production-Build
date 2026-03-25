@@ -317,7 +317,7 @@ const LucidRepoDiscovery = () => {
 
           {/* From People You Follow — horizontal cards */}
           {user && filterDreams(following).length > 0 && (
-            <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => setExpandedSection({ title: "📖 From People You Follow", dreams: filterDreams(following) })}>
+            <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => navigateToSection('following')}>
               {filterDreams(following).map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
@@ -336,7 +336,7 @@ const LucidRepoDiscovery = () => {
               <div className="flex items-center justify-between mb-3 px-1">
                 <h2 className="text-base font-bold text-foreground">🔥 Trending Stories</h2>
                 <button
-                  onClick={() => setExpandedSection({ title: "🔥 Trending Stories", dreams: filterDreams(trending) })}
+                  onClick={() => navigateToSection('trending')}
                   className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   See all
@@ -362,7 +362,7 @@ const LucidRepoDiscovery = () => {
               <div className="flex items-center justify-between mb-3 px-1">
                 <h2 className="text-base font-bold text-foreground">✨ New Releases</h2>
                 <button
-                  onClick={() => setExpandedSection({ title: "✨ New Releases", dreams: filterDreams(newReleases) })}
+                  onClick={() => navigateToSection('new')}
                   className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   See all
@@ -397,7 +397,7 @@ const LucidRepoDiscovery = () => {
 
           {/* Tag sections — horizontal cards */}
           {!searchQuery && tagSections.map(section => (
-            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`} onSeeAll={() => setExpandedSection({ title: `${section.tag} Dreams`, dreams: section.dreams })}>
+            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`} onSeeAll={() => navigateToSection(`tag-${section.tag.toLowerCase()}`)}>
               {section.dreams.map(dream => (
                 <DiscoveryDreamCard
                   key={dream.id}
