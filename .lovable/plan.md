@@ -1,39 +1,47 @@
 
 
-## Plan: Use Technique Images as Detail Page Header Backgrounds
+## Plan: Flat-Colored Technique Cards
 
-Replace the emoji hero section on `TechniqueDetailPage.tsx` with the corresponding technique card images as a full-width background header.
+Replace glass-morphism styling on both the **While Falling Asleep** cards and **Pinned Techniques** cards with flat, solid-color backgrounds that match the app's cosmic aesthetic.
 
-### Changes to `src/components/insights/TechniqueDetailPage.tsx`
+### Color Scheme
 
-**1. Import technique images** — Import all 6 images from `src/assets/techniques/` and create an index-to-image map (same mapping as `FALLING_ASLEEP_CARDS` in Home.tsx).
+Each difficulty level gets a flat dark-toned background derived from the existing palette:
 
-**2. Replace emoji hero with image hero** — Replace the current emoji icon block (lines 66-75) with a full-width image container (~200px tall) that uses the technique's image as a background with a gradient overlay. The back button and pin button will be overlaid on top of the image (white text/icons for contrast). For techniques without a mapped image (e.g. MILD at index 1, WBTB at index 2), fall back to the current emoji display.
+- **Beginner** — `bg-emerald-950/80` with `text-emerald-400` accent
+- **Intermediate** — `bg-amber-950/80` with `text-amber-400` accent  
+- **Advanced** — `bg-blue-950/80` with `text-blue-400` accent
 
-**3. Move back/pin buttons into the image header** — The navigation bar (lines 47-64) moves inside the image container with absolute positioning so it sits on top of the background image with white icons.
+### Changes to `src/pages/Home.tsx`
 
-**4. Adjust title/subtitle styling** — Title and subtitle below the image remain as-is but with reduced top margin since the image provides visual weight.
+**While Falling Asleep cards (lines 554-572):**
+- Keep the image background and gradient overlay (these are the uploaded artwork cards)
+- Remove any `glass-card` or `backdrop-blur` classes if present
+- These cards already use flat image backgrounds with gradient overlays — they stay as-is since they don't use glass styling
 
-### Image-to-Index Map
+**Pinned Techniques cards (lines 517-534):**
+- Replace `bg-gradient-to-r ${styles.gradient} backdrop-blur-md` with flat solid colors based on difficulty
+- Replace `${styles.border}` with subtle solid borders (e.g., `border-emerald-800/40`)
+- Remove `backdrop-blur` entirely
+- Keep the rounded-2xl shape and hover brightness effect
 
-```typescript
-const TECHNIQUE_IMAGES: Record<number, string> = {
-  0: realityChecksImg,
-  3: wildImg,
-  4: ssildImg,
-  5: fildImg,
-  6: deildImg,
-  7: meditationImg,
-};
-```
+**Pinned Techniques empty state (line 495):**
+- Replace `glass-card border-primary/10` with `bg-[#0d1425] border-primary/15` — a flat dark card matching the app background
 
 ### Technical Detail
 
-| Section | Before | After |
-|---------|--------|-------|
-| Hero | 120px emoji + sparkle dots | ~220px background image with gradient overlay |
-| Back/Pin buttons | Below safe area, dark themed | Overlaid on image, white themed |
-| Fallback (no image) | N/A | Shows emoji as before for indices 1, 2 |
+Add a helper function to map difficulty to flat colors:
 
-Single file change: `src/components/insights/TechniqueDetailPage.tsx`
+```typescript
+function getFlatDifficultyBg(difficulty: string) {
+  switch (difficulty) {
+    case "Beginner": return "bg-emerald-950/80 border-emerald-800/30";
+    case "Intermediate": return "bg-amber-950/80 border-amber-800/30";
+    case "Advanced": return "bg-blue-950/80 border-blue-800/30";
+    default: return "bg-card/80 border-border/30";
+  }
+}
+```
+
+Single file change: `src/pages/Home.tsx`
 
