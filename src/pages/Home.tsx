@@ -6,6 +6,8 @@ import { useChallenges, Challenge } from "@/hooks/useChallenges";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +27,7 @@ import {
   BookOpen,
   Brain,
   Heart,
+  GraduationCap,
   MessageSquare,
   ChevronRight,
   Sparkles,
@@ -126,6 +129,9 @@ const Home = () => {
             onClick={() => navigate("/dream-book")}
           />
         </div>
+
+        {/* Dream Academy Card */}
+        <AcademyEntryCard />
 
         {/* Today's Repo Activity */}
         {todayCount != null && todayCount > 0 && (
@@ -412,5 +418,41 @@ const FeedDreamCard = ({
     </CardContent>
   </Card>
 );
+
+const AcademyEntryCard = () => {
+  const navigate = useNavigate();
+  const { progress } = useAcademyProgress();
+  const tier = getTierInfo(progress?.current_tier || 1);
+  const next = getNextTierInfo(progress?.total_xp || 0);
+
+  return (
+    <Card
+      className="glass-card border-primary/20 overflow-hidden cursor-pointer hover:border-primary/30 transition-colors"
+      onClick={() => navigate("/learn")}
+    >
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/15">
+            <GraduationCap className="text-primary" size={22} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-xs font-medium text-primary uppercase tracking-wide">Dream Academy</p>
+              <span className="text-sm">{tier.icon}</span>
+            </div>
+            <h3 className="font-semibold text-foreground text-sm">{tier.name}</h3>
+            {next && (
+              <div className="mt-1.5 flex items-center gap-2">
+                <Progress value={next.progress} className="h-1.5 flex-1 bg-muted/30" />
+                <span className="text-[10px] text-muted-foreground">{progress?.total_xp || 0} XP</span>
+              </div>
+            )}
+          </div>
+          <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default Home;

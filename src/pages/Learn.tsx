@@ -1,73 +1,40 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLearningPaths } from '@/hooks/useLearningPaths';
-import { usePathProgress } from '@/hooks/usePathProgress';
-import { useLearningProgress } from '@/hooks/useLearningProgress';
-import { usePathLevels } from '@/hooks/usePathLevels';
-import { PathCard } from '@/components/learning/PathCard';
-import { RecommendedNextStep } from '@/components/learning/RecommendedNextStep';
-import { StreakCounter } from '@/components/learning/StreakCounter';
-import { PathDetailView } from '@/components/learning/PathDetailView';
-import { LevelContentView } from '@/components/learning/LevelContentView';
-import { AchievementNotification } from '@/components/learning/AchievementNotification';
-import { PathLevel } from '@/hooks/usePathLevels';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { useAcademyProgress } from '@/hooks/useAcademyProgress';
+import { useAcademyModules, ModuleWithProgress } from '@/hooks/useAcademyModules';
+import { useAcademyLessons, useAcademyLessonProgress, AcademyLesson } from '@/hooks/useAcademyLesson';
+import { useAcademyBadges } from '@/hooks/useAcademyBadges';
+import { AcademyHeroCard } from '@/components/academy/AcademyHeroCard';
+import { ModuleList } from '@/components/academy/ModuleList';
+import { ModuleDetail } from '@/components/academy/ModuleDetail';
+import { LessonFlow } from '@/components/academy/LessonFlow';
+import { WeeklyChallengeCard } from '@/components/academy/WeeklyChallengeCard';
+import { BadgeShowcase } from '@/components/academy/BadgeShowcase';
+import PageTransition from '@/components/ui/PageTransition';
 
 const Learn = () => {
-  const navigate = useNavigate();
-  const { user, loading } = useAuth();
-  const { data: paths, isLoading: pathsLoading } = useLearningPaths();
-  const { progress: pathProgress, initializePathProgress } = usePathProgress();
-  const { progress: learningProgress } = useLearningProgress(user?.id);
-  
-  const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [selectedLevel, setSelectedLevel] = useState<PathLevel | null>(null);
-  const [achievement, setAchievement] = useState<any>(null);
-  const [showComingSoon, setShowComingSoon] = useState(true);
-  
-  const { data: levels } = usePathLevels(selectedPath || undefined);
+  const { user, loading: authLoading } = useAuth();
+  const { progress, isLoading: progressLoading, initProgress } = useAcademyProgress();
+  const { data: modules, isLoading: modulesLoading } = useAcademyModules();
+  const { data: badges } = useAcademyBadges();
 
-  const handleCloseComingSoon = () => {
-    setShowComingSoon(false);
-    navigate('/');
-  };
-  
-  const currentPath = paths?.find(p => p.id === selectedPath);
-  const currentPathProgress = pathProgress?.find(p => p.path_id === selectedPath);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<AcademyLesson | null>(null);
 
-  const handlePathClick = async (pathId: string) => {
-    // Initialize progress if not exists
-    const existingProgress = pathProgress?.find(p => p.path_id === pathId);
-    if (!existingProgress) {
-      await initializePathProgress.mutateAsync(pathId);
+  const { data: lessons } = useAcademyLessons(selectedModuleId || undefined);
+  const { data: lessonProgress } = useAcademyLessonProgress(selectedModuleId || undefined);
+
+  // Auto-init progress for new users
+  useEffect(() => {
+    if (user && !progressLoading && !progress) {
+      initProgress.mutate();
     }
-    setSelectedPath(pathId);
-  };
+  }, [user, progressLoading, progress]);
 
-  const handleLevelClick = (level: PathLevel) => {
-    setSelectedLevel(level);
-  };
-
-  const handleBack = () => {
-    if (selectedLevel) {
-      setSelectedLevel(null);
-    } else if (selectedPath) {
-      setSelectedPath(null);
-    }
-  };
-
-  if (loading) {
+  if (authLoading || progressLoading || modulesLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-safe-top">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary" />
       </div>
     );
   }
@@ -77,115 +44,73 @@ const Learn = () => {
       <div className="flex items-center justify-center min-h-screen pt-safe-top px-4">
         <div className="text-center">
           <h2 className="text-xl font-semibold mb-2">Sign in required</h2>
-          <p className="text-muted-foreground">Please sign in to access the learning system.</p>
+          <p className="text-muted-foreground">Please sign in to access the Dream Academy.</p>
         </div>
       </div>
     );
   }
 
-  if (pathsLoading) {
+  const selectedModule = modules?.find(m => m.id === selectedModuleId);
+
+  // Lesson flow view
+  if (selectedLesson && selectedModuleId) {
+    const existingProgress = lessonProgress?.find(p => p.lesson_id === selectedLesson.id);
     return (
-      <div className="flex items-center justify-center min-h-screen pt-safe-top">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
+      <PageTransition className="min-h-screen bg-background pt-safe-top px-4 py-6 pb-24">
+        <div className="max-w-2xl mx-auto">
+          <LessonFlow
+            lesson={selectedLesson}
+            existingProgress={existingProgress}
+            onBack={() => setSelectedLesson(null)}
+            onComplete={() => setSelectedLesson(null)}
+          />
+        </div>
+      </PageTransition>
     );
   }
 
-  // Show level content if selected
-  if (selectedLevel && currentPath) {
+  // Module detail view
+  if (selectedModule && lessons) {
     return (
-      <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
-        <LevelContentView
-          level={selectedLevel}
-          pathId={currentPath.id}
-          onBack={handleBack}
-        />
-        <AchievementNotification
-          achievement={achievement}
-          onClose={() => setAchievement(null)}
-        />
-      </div>
+      <PageTransition className="min-h-screen bg-background pt-safe-top px-4 py-6 pb-24">
+        <div className="max-w-2xl mx-auto">
+          <ModuleDetail
+            module={selectedModule}
+            lessons={lessons}
+            lessonProgress={lessonProgress || []}
+            onBack={() => setSelectedModuleId(null)}
+            onLessonClick={(lesson) => setSelectedLesson(lesson)}
+          />
+        </div>
+      </PageTransition>
     );
   }
 
-  // Show path detail if selected
-  if (selectedPath && currentPath && levels) {
-    return (
-      <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
-        <PathDetailView
-          path={currentPath}
-          levels={levels}
-          progress={currentPathProgress}
-          onLevelClick={handleLevelClick}
-          onBack={handleBack}
-        />
-      </div>
-    );
-  }
-
-  // Main dashboard
+  // Academy home
   return (
-    <>
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-center">🚧 Coming Soon</DialogTitle>
-            <DialogDescription className="text-center pt-4 text-base">
-              The Learning System is currently under development. We're building an amazing experience to help you master lucid dreaming!
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center pt-4">
-            <Button onClick={handleCloseComingSoon} className="w-full sm:w-auto">
-              Go Back Home
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      
-      <div className="flex flex-col min-h-screen bg-background pt-safe-top pl-safe-left pr-safe-right px-4 py-8">
-        <div className="max-w-7xl mx-auto w-full space-y-6">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold gradient-text mb-2">🎯 My Learning Journey</h1>
-          <div className="flex items-center justify-center gap-4 text-sm">
-            <span className="text-primary font-semibold">XP: {learningProgress?.total_xp || 0}</span>
-            <span className="text-muted-foreground">Level {learningProgress?.current_level || 1}</span>
-          </div>
-        </div>
+    <PageTransition className="min-h-screen bg-background pt-safe-top px-4 py-6 pb-24">
+      <div className="max-w-2xl mx-auto space-y-5">
+        <h1 className="text-2xl font-bold text-foreground text-center">🎓 Dream Academy</h1>
 
-        <StreakCounter 
-          currentStreak={learningProgress?.current_streak || 0}
-          longestStreak={learningProgress?.longest_streak || 0}
+        <AcademyHeroCard
+          totalXP={progress?.total_xp || 0}
+          currentTier={progress?.current_tier || 1}
+          currentStreak={progress?.current_streak || 0}
+          longestStreak={progress?.longest_streak || 0}
         />
 
-        {pathProgress && pathProgress.length > 0 && (
-          <RecommendedNextStep
-            pathTitle={paths?.find(p => p.id === pathProgress[0].path_id)?.title || "Dream Recall Mastery"}
-            levelTitle={`Level ${pathProgress[0].current_level}`}
-            onClick={() => handlePathClick(pathProgress[0].path_id)}
+        <WeeklyChallengeCard />
+
+        {badges && <BadgeShowcase badges={badges} />}
+
+        {modules && (
+          <ModuleList
+            modules={modules}
+            onModuleClick={setSelectedModuleId}
           />
         )}
-
-        <div>
-          <h2 className="text-2xl font-semibold mb-4">📊 My Paths</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {paths?.map((path) => (
-              <PathCard
-                key={path.id}
-                path={path}
-                progress={pathProgress?.find((p) => p.path_id === path.id)}
-                onClick={() => handlePathClick(path.id)}
-              />
-            ))}
-          </div>
-        </div>
-
-        <AchievementNotification
-          achievement={achievement}
-          onClose={() => setAchievement(null)}
-        />
-        </div>
       </div>
-    </>
+    </PageTransition>
   );
 };
 
