@@ -27,7 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown, RefreshCw } from "lucide-react";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Sparkles, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown, RefreshCw, BookOpen } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
@@ -458,6 +458,9 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           <h3 className="text-sm font-semibold text-foreground mb-4">Comments</h3>
           <DreamComments dreamId={dream.id} onCommentCountChange={setCommentCount} />
         </div>
+
+        {/* Keep Reading section */}
+        <KeepReadingSection currentDreamId={dream.id} tags={dream.tags} />
       </div>
 
       {/* Video Generation Dialog */}
@@ -492,6 +495,111 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </AlertDialogContent>
       </AlertDialog>
     </motion.div>
+  );
+};
+
+/* ---------- Keep Reading Section ---------- */
+
+const KeepReadingSection: React.FC<{ currentDreamId: string; tags?: string[] }> = ({ currentDreamId, tags }) => {
+  const navigate = useNavigate();
+  const [suggestions, setSuggestions] = useState<DreamEntry[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const fetchNext = async () => {
+      // Check URL for queue param
+      const params = new URLSearchParams(window.location.search);
+      const queueParam = params.get("queue");
+      let queueIds: string[] = [];
+      if (queueParam) {
+        queueIds = queueParam.split(",").filter(id => id !== currentDreamId);
+      }
+
+      // Fetch related dreams by tags, or trending
+      let query = supabase
+        .from("dream_entries")
+        .select("*, profiles!dream_entries_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+        .eq("is_public", true)
+        .neq("id", currentDreamId)
+        .order("like_count", { ascending: false })
+        .limit(6);
+
+      // Prefer queue dreams first
+      if (queueIds.length > 0) {
+        const { data } = await supabase
+          .from("dream_entries")
+          .select("*, profiles!dream_entries_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+          .in("id", queueIds.slice(0, 3))
+          .eq("is_public", true);
+        if (data && data.length > 0) {
+          setSuggestions(data.map((d: any) => ({
+            ...d,
+            generatedImage: d.generatedImage || d.image_url,
+            like_count: d.like_count || 0,
+            comment_count: d.comment_count || 0,
+            view_count: d.view_count || 0,
+          })) as DreamEntry[]);
+          setLoaded(true);
+          return;
+        }
+      }
+
+      const { data } = await query;
+      if (data) {
+        setSuggestions(data.map((d: any) => ({
+          ...d,
+          generatedImage: d.generatedImage || d.image_url,
+          like_count: d.like_count || 0,
+          comment_count: d.comment_count || 0,
+          view_count: d.view_count || 0,
+        })) as DreamEntry[]);
+      }
+      setLoaded(true);
+    };
+    fetchNext();
+  }, [currentDreamId]);
+
+  if (!loaded || suggestions.length === 0) return null;
+
+  return (
+    <div className="mt-10 border-t border-border/30 pt-6 pb-4">
+      <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
+        <BookOpen className="h-4 w-4 text-primary" />
+        Keep Reading
+      </h3>
+      <div className="space-y-2">
+        {suggestions.slice(0, 3).map(dream => {
+          const imgUrl = dream.generatedImage || dream.image_url;
+          const prof = dream.profiles || {} as any;
+          const name = prof.display_name || prof.username || "Anonymous";
+          return (
+            <div
+              key={dream.id}
+              onClick={() => navigate(`/dream/${dream.id}`)}
+              className="flex gap-3 p-3 rounded-xl bg-card/50 border border-border/20 hover:bg-card/80 transition-colors cursor-pointer"
+            >
+              <div className="flex-shrink-0 w-16 aspect-[2/3] rounded-lg overflow-hidden bg-muted/30">
+                {imgUrl ? (
+                  <img src={imgUrl} alt={dream.title} className="w-full h-full object-cover" loading="lazy" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
+                    <span className="text-xl">🌙</span>
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                <h4 className="text-sm font-semibold text-foreground line-clamp-2 leading-snug mb-0.5">{dream.title}</h4>
+                <p className="text-[11px] text-muted-foreground">{name}</p>
+                <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                  <span className="flex items-center gap-0.5"><Heart className="h-2.5 w-2.5" />{dream.like_count || 0}</span>
+                  <span className="flex items-center gap-0.5"><Eye className="h-2.5 w-2.5" />{dream.view_count || 0}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 };
 
