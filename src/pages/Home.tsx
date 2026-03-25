@@ -482,6 +482,15 @@ const FALLING_ASLEEP_CARDS: { idx: number; image: string }[] = [
   { idx: 0, image: techniqueImgRealityChecks },
 ];
 
+function getFlatDifficultyBg(difficulty: string) {
+  switch (difficulty) {
+    case "Beginner": return "bg-emerald-950/80 border-emerald-800/30";
+    case "Intermediate": return "bg-amber-950/80 border-amber-800/30";
+    case "Advanced": return "bg-blue-950/80 border-blue-800/30";
+    default: return "bg-card/80 border-border/30";
+  }
+}
+
 const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinnedIndices }) => {
   const navigate = useNavigate();
 
@@ -492,7 +501,7 @@ const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinned
           <Pin size={18} className="text-primary" />
           Pinned Techniques
         </h2>
-        <Card className="glass-card border-primary/10">
+        <Card className="bg-[#0d1425] border-primary/15">
           <CardContent className="p-5 text-center">
             <p className="text-sm text-muted-foreground">
               Pin a technique from the Explore page to display it here.
@@ -513,14 +522,14 @@ const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinned
         {pinnedIndices.map((idx) => {
           const t = techniques[idx];
           if (!t) return null;
-          const styles = getDifficultyStyles(t.difficulty);
+          const flatBg = getFlatDifficultyBg(t.difficulty);
           return (
             <div
               key={idx}
               onClick={() => navigate(`/insights/technique/${idx}`)}
-              className={`flex items-center gap-4 rounded-2xl border ${styles.border} bg-gradient-to-r ${styles.gradient} backdrop-blur-md p-4 cursor-pointer hover:brightness-110 transition-all`}
+              className={`flex items-center gap-4 rounded-2xl border ${flatBg} p-4 cursor-pointer hover:brightness-110 transition-all`}
             >
-              <div className={`w-14 h-14 rounded-full ${styles.iconBg} flex items-center justify-center shrink-0`}>
+              <div className={`w-14 h-14 rounded-full ${getDifficultyStyles(t.difficulty).iconBg} flex items-center justify-center shrink-0`}>
                 <span className="text-3xl">{t.icon}</span>
               </div>
               <div className="flex-1 min-w-0">
