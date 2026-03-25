@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useReadingHistory } from "@/hooks/useReadingHistory";
@@ -52,12 +52,16 @@ import { useUserRole } from "@/hooks/useUserRole";
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { addToHistory } = useReadingHistory();
   const [dream, setDream] = useState<DreamEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const fetchedIdRef = useRef<string | null>(null);
+
+  const fromParam = searchParams.get("from");
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -116,6 +120,7 @@ const DreamStoryPage: React.FC = () => {
         audio_url: data.audio_url,
       } as DreamEntry);
       setCommentCount(cCount || 0);
+      fetchedIdRef.current = dreamId;
       setLoading(false);
       // Track in reading history
       if (dreamId) addToHistory(dreamId);
@@ -123,7 +128,18 @@ const DreamStoryPage: React.FC = () => {
     fetchDream();
   }, [dreamId, user]);
 
-  if (loading) {
+  const handleBack = () => {
+    if (fromParam) {
+      navigate(decodeURIComponent(fromParam), { replace: true });
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Show skeleton if still loading OR if dreamId changed but fetch hasn't completed yet
+  const isTransitioning = dreamId !== fetchedIdRef.current;
+
+  if (loading || isTransitioning) {
     return (
       <div className="container mx-auto max-w-2xl px-4 pt-safe-top pb-20">
         <div className="pt-4 mb-4"><Skeleton className="h-8 w-20" /></div>
@@ -139,12 +155,12 @@ const DreamStoryPage: React.FC = () => {
     return (
       <div className="container mx-auto max-w-2xl px-4 pt-safe-top pb-20 text-center py-20">
         <p className="text-muted-foreground">Dream not found</p>
-        <Button variant="ghost" className="mt-4" onClick={() => navigate(-1)}>← Go back</Button>
+        <Button variant="ghost" className="mt-4" onClick={handleBack}>← Go back</Button>
       </div>
     );
   }
 
-  return <DreamStoryContent dream={dream} setDream={setDream} commentCount={commentCount} setCommentCount={setCommentCount} />;
+  return <DreamStoryContent dream={dream} setDream={setDream} commentCount={commentCount} setCommentCount={setCommentCount} onBack={handleBack} />;
 };
 
 interface DreamStoryContentProps {
@@ -152,9 +168,10 @@ interface DreamStoryContentProps {
   setDream: React.Dispatch<React.SetStateAction<DreamEntry | null>>;
   commentCount: number;
   setCommentCount: (count: number) => void;
+  onBack: () => void;
 }
 
-const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, commentCount, setCommentCount }) => {
+const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, commentCount, setCommentCount, onBack }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
@@ -243,7 +260,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
     >
       {/* Header bar */}
       <div className="flex items-center justify-between px-4 py-3 sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border/30">
-        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1 text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={onBack} className="gap-1 text-muted-foreground">
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
         <div className="flex items-center gap-1">

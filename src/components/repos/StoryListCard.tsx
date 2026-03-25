@@ -24,8 +24,10 @@ const StoryListCard: React.FC<StoryListCardProps> = ({ dream, onLike, onUserClic
     : 0;
 
   const handleClick = () => {
-    const params = queueIds ? `?queue=${queueIds.join(",")}` : "";
-    navigate(`/dream/${dream.id}${params}`);
+    const currentPath = window.location.pathname + window.location.search;
+    const fromParam = `from=${encodeURIComponent(currentPath)}`;
+    const queueParam = queueIds ? `&queue=${queueIds.join(",")}` : "";
+    navigate(`/dream/${dream.id}?${fromParam}${queueParam}`);
   };
 
   return (
