@@ -4,22 +4,30 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
 import { useChallenges, Challenge } from "@/hooks/useChallenges";
 import { useLucidStats } from "@/hooks/useLucidStats";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
-import SymbolAvatar from "@/components/profile/SymbolAvatar";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from "recharts";
 import {
   Pencil,
   Trophy,
   Flame,
   MessageCircle,
-  Compass,
   BookOpen,
   Brain,
   Heart,
   MessageSquare,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 
 const Home = () => {
@@ -32,6 +40,20 @@ const Home = () => {
   const activeChallenge = challenges.find(
     (c: Challenge) => c.status === "active"
   );
+
+  const { data: todayCount } = useQuery({
+    queryKey: ["repo-today-count"],
+    queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
+      const { count } = await supabase
+        .from("dream_entries")
+        .select("*", { count: "exact", head: true })
+        .eq("is_public", true)
+        .gte("created_at", today);
+      return count ?? 0;
+    },
+    staleTime: 60_000,
+  });
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
@@ -54,26 +76,8 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Streak + Stats Row */}
-        {stats && (
-          <div className="grid grid-cols-3 gap-3">
-            <MiniStatCard
-              icon={<Flame className="text-orange-400" size={20} />}
-              value={stats.current_recall_streak}
-              label="Day Streak"
-            />
-            <MiniStatCard
-              icon={<Brain className="text-primary" size={20} />}
-              value={stats.total_lucid_dreams}
-              label="Lucid Dreams"
-            />
-            <MiniStatCard
-              icon={<BookOpen className="text-emerald-400" size={20} />}
-              value={stats.total_entries}
-              label="Total Dreams"
-            />
-          </div>
-        )}
+        {/* Stats Card */}
+        {stats && <StatsCard stats={stats} />}
 
         {/* Active Challenge */}
         {activeChallenge && (
@@ -123,6 +127,23 @@ const Home = () => {
           />
         </div>
 
+        {/* Today's Repo Activity */}
+        {todayCount != null && todayCount > 0 && (
+          <button
+            onClick={() => navigate("/lucid-repo")}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-primary/10 border border-primary/15 hover:bg-primary/15 transition-colors"
+          >
+            <span className="text-sm">🌙</span>
+            <span className="text-xs font-medium text-primary">
+              {todayCount} dream{todayCount !== 1 ? "s" : ""} shared to the Repo today
+            </span>
+            <ChevronRight size={14} className="text-primary/60" />
+          </button>
+        )}
+
+        {/* Lucid Insights */}
+        {stats && <LucidInsightsCard stats={stats} onTap={() => navigate("/lucid-stats")} />}
+
         {/* Feed */}
         <div>
           <h2 className="text-lg font-semibold text-foreground mb-3">
@@ -168,25 +189,152 @@ const Home = () => {
 
 /* ===== Sub-components ===== */
 
-const MiniStatCard = ({
+interface StatsCardProps {
+  stats: {
+    current_recall_streak: number;
+    total_lucid_dreams: number;
+    total_entries: number;
+  };
+}
+
+const StatsCard: React.FC<StatsCardProps> = ({ stats }) => (
+  <Card className="glass-card border-primary/10 overflow-hidden">
+    <CardContent className="p-4">
+      <div className="grid grid-cols-3 divide-x divide-border/30">
+        <StatColumn
+          icon={<Flame size={18} className="text-orange-400" />}
+          accentColor="bg-orange-400"
+          value={stats.current_recall_streak}
+          label="Day Streak"
+        />
+        <StatColumn
+          icon={<Brain size={18} className="text-primary" />}
+          accentColor="bg-primary"
+          value={stats.total_lucid_dreams}
+          label="Lucid Dreams"
+        />
+        <StatColumn
+          icon={<BookOpen size={18} className="text-emerald-400" />}
+          accentColor="bg-emerald-400"
+          value={stats.total_entries}
+          label="Total Dreams"
+        />
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const StatColumn = ({
   icon,
+  accentColor,
   value,
   label,
 }: {
   icon: React.ReactNode;
+  accentColor: string;
   value: number;
   label: string;
 }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex flex-col items-center gap-1.5 px-2 relative">
+    <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-8 h-0.5 rounded-full ${accentColor} opacity-60`} />
     {icon}
-    <div className="flex flex-col">
-      <span className="text-xl font-bold text-foreground leading-tight">{value}</span>
-      <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
-        {label}
-      </span>
-    </div>
+    <span className="text-2xl font-bold text-foreground leading-none">{value}</span>
+    <span className="text-[10px] text-muted-foreground uppercase tracking-wide text-center leading-tight">
+      {label}
+    </span>
   </div>
 );
+
+interface LucidInsightsProps {
+  stats: {
+    recall_chart: { day?: string; count?: number }[];
+    total_lucid_dreams: number;
+    total_entries: number;
+    techniques: { technique: string; rate: number }[];
+    avg_lucidity_level: number;
+  };
+  onTap: () => void;
+}
+
+const LucidInsightsCard: React.FC<LucidInsightsProps> = ({ stats, onTap }) => {
+  const chartData = (stats.recall_chart || []).slice(-14).map((p) => ({
+    day: p.day ? new Date(p.day).toLocaleDateString(undefined, { day: "numeric" }) : "",
+    count: p.count ?? 0,
+  }));
+
+  const lucidRate =
+    stats.total_entries > 0
+      ? Math.round((stats.total_lucid_dreams / stats.total_entries) * 100)
+      : 0;
+
+  const topTechnique = stats.techniques?.[0];
+
+  return (
+    <Card
+      className="glass-card border-primary/10 overflow-hidden cursor-pointer hover:border-primary/25 transition-colors"
+      onClick={onTap}
+    >
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-primary" />
+            <h2 className="text-sm font-semibold text-foreground">Lucid Insights</h2>
+          </div>
+          <ChevronRight size={16} className="text-muted-foreground" />
+        </div>
+
+        {chartData.length > 2 && (
+          <div className="h-24 -mx-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={chartData}>
+                <defs>
+                  <linearGradient id="insightGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <XAxis
+                  dataKey="day"
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
+                <YAxis hide allowDecimals={false} />
+                <Area
+                  type="monotone"
+                  dataKey="count"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#insightGrad)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div>
+            <p className="text-lg font-bold text-foreground">{lucidRate}%</p>
+            <p className="text-[10px] text-muted-foreground">Lucid Rate</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-foreground truncate">
+              {topTechnique ? topTechnique.technique : "—"}
+            </p>
+            <p className="text-[10px] text-muted-foreground">
+              {topTechnique ? `${topTechnique.rate}% success` : "Top Technique"}
+            </p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-foreground">{stats.avg_lucidity_level}</p>
+            <p className="text-[10px] text-muted-foreground">Avg Lucidity</p>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const QuickLink = ({
   icon,
@@ -221,7 +369,6 @@ const FeedDreamCard = ({
   >
     <CardContent className="p-0">
       <div className="flex gap-3 p-3">
-        {/* Image thumbnail */}
         {(dream.image_url || dream.generatedImage) && (
           <img
             src={dream.image_url || dream.generatedImage}
@@ -230,7 +377,6 @@ const FeedDreamCard = ({
           />
         )}
         <div className="flex-1 min-w-0">
-          {/* Author */}
           <div className="flex items-center gap-1.5 mb-1">
             {dream.profiles?.avatar_url ? (
               <img
@@ -247,14 +393,12 @@ const FeedDreamCard = ({
                 "Dreamer"}
             </span>
           </div>
-          {/* Title + preview */}
           <h3 className="font-semibold text-sm text-foreground truncate">
             {dream.title}
           </h3>
           <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
             {dream.content?.slice(0, 120)}
           </p>
-          {/* Engagement */}
           <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
               <Heart size={12} /> {dream.like_count || 0}
