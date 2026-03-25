@@ -1,11 +1,13 @@
 
 import React from "react";
+import { useLocalMedia } from "@/hooks/useLocalMedia";
 
 interface ImageDisplayProps {
   imageUrl: string;
   imageDataUrl?: string;
   onError: () => void;
   disabled?: boolean;
+  dreamId?: string;
 }
 
 const ImageDisplay: React.FC<ImageDisplayProps> = ({
@@ -13,8 +15,10 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({
   imageDataUrl,
   onError,
   disabled = false,
+  dreamId,
 }) => {
-  const displayUrl = imageDataUrl || imageUrl;
+  const cachedUrl = useLocalMedia(dreamId, imageUrl || imageDataUrl, 'image');
+  const displayUrl = imageDataUrl || cachedUrl || imageUrl;
 
   return (
     <>
