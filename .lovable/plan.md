@@ -1,76 +1,43 @@
 
 
-## Plan: Offline Dream Storage with Local Media Caching
+## Plan: Home Page Spacing, Pinned Techniques, and Falling Asleep Section
 
-### Problem
-Dream entry text data is saved to localStorage (via Zustand store), but generated images and videos are only stored as remote URLs pointing to Supabase Storage. Without internet, users can't view their dream media. localStorage also has ~5MB limits which won't hold media.
+Inspired by the reference screenshots, this plan improves section spacing and adds two new sections to the home page.
 
-### Solution
-Use **IndexedDB** (via a lightweight wrapper) to cache dream media blobs locally. When dreams sync from the database, download and cache their images/videos. When displaying media, serve from local cache first, falling back to remote URL.
+### Changes to `src/pages/Home.tsx`
 
-### What Changes
+**1. Better spacing** — Change `space-y-6` to `space-y-8` on the main container for more breathing room between sections, matching the reference screenshots' generous vertical spacing.
 
-**1. Local media cache utility (`src/utils/localMediaCache.ts`)**
-- IndexedDB store called `dream-media` with two object stores: `images` and `videos`
-- Functions: `cacheMedia(key, blob)`, `getCachedMedia(key): string | null` (returns object URL), `deleteCachedMedia(key)`, `cacheMediaFromUrl(url): Promise<string>` (fetches and caches)
-- Keys are the dream ID + type suffix (e.g., `dreamId-image`, `dreamId-video`)
-- On native (Capacitor), uses `@capacitor/filesystem` to write to app data directory instead of IndexedDB for better persistence
+**2. Add "Pinned Techniques" section** — New section placed after Quick Links / Academy card. Uses localStorage to persist an array of pinned technique indices. Shows a glass card placeholder if no techniques are pinned ("Pin a technique from the Insights page to display it here."). When populated, renders compact technique cards that link to the technique detail page.
 
-**2. Background media sync in `useJournalEntries.tsx`**
-- After `setAllEntries`, iterate entries with image/video URLs and call `cacheMediaFromUrl` for each in the background (non-blocking)
-- Track which entries have been cached to avoid re-downloading
+**3. Add "While Falling Asleep" section** — A 2-column grid of technique cards (matching the reference screenshot layout) showing sleep-onset techniques: WILD, MILD, SSILD, FILD, and the advanced ones. Each card shows the technique emoji icon, name, and a lock icon for non-begininner techniques (linking to Insights detail). Cards navigate to `/insights/technique/:index` on tap.
 
-**3. Offline-aware media display**
-- Create `useLocalMedia(dreamId, remoteUrl, type)` hook that returns the best available URL (cached blob URL or remote)
-- Update `ImageDisplay.tsx` and video display components to use this hook
-- If offline and no cache exists, show a placeholder
+**4. Section headers** — Use consistent `text-lg font-bold` headers with more spacing (`mb-4`) to match reference style.
 
-**4. Cache on save**
-- In `useJournalActions.tsx`, after a dream is saved with an image, cache the image blob locally immediately
+### New file: `src/hooks/usePinnedTechniques.ts`
+- Simple hook wrapping localStorage for pinned technique indices
+- `pinnedIndices: number[]`, `pinTechnique(index)`, `unpinTechnique(index)`, `isPinned(index)`
 
-**5. Cache cleanup on delete**
-- In `handleDeleteDream`, also call `deleteCachedMedia` for the dream's image and video
+### Modified file: `src/components/insights/TechniqueDetailPage.tsx`
+- Add a "Pin/Unpin" button so users can pin techniques from the detail page
 
 ### Files
 
 | File | Action |
 |------|--------|
-| `src/utils/localMediaCache.ts` | Create — IndexedDB wrapper for media blob storage |
-| `src/hooks/useLocalMedia.ts` | Create — hook returning cached or remote URL |
-| `src/hooks/useJournalEntries.tsx` | Modify — trigger background media caching after sync |
-| `src/hooks/useJournalActions.tsx` | Modify — cache media on save, clean on delete |
-| `src/components/dreams/ImageDisplay.tsx` | Modify — use `useLocalMedia` hook |
+| `src/pages/Home.tsx` | Modify — increase spacing, add Pinned Techniques and While Falling Asleep sections |
+| `src/hooks/usePinnedTechniques.ts` | Create — localStorage-backed pinned technique state |
+| `src/components/insights/TechniqueDetailPage.tsx` | Modify — add Pin/Unpin button |
 
 ### Technical Detail
 
-**IndexedDB approach** (works on web + Capacitor WebView):
+**Pinned Techniques storage:**
 ```typescript
-const DB_NAME = 'dream-media-cache';
-const STORE_NAME = 'media';
-
-async function cacheMediaFromUrl(key: string, url: string): Promise<void> {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  // Store blob in IndexedDB keyed by dreamId-type
-}
-
-function getCachedMediaUrl(key: string): Promise<string | null> {
-  // Retrieve blob from IndexedDB, return URL.createObjectURL(blob)
-}
+const STORAGE_KEY = 'pinned-techniques';
+// Stores array of technique indices from techniqueData.ts
 ```
 
-**Background sync** (non-blocking, won't slow UI):
-```typescript
-// After setAllEntries in syncDreamsFromDb:
-formattedDreams.forEach(dream => {
-  if (dream.generatedImage) {
-    cacheMediaFromUrl(`${dream.id}-image`, dream.generatedImage).catch(() => {});
-  }
-  if (dream.video_url) {
-    cacheMediaFromUrl(`${dream.id}-video`, dream.video_url).catch(() => {});
-  }
-});
-```
+**While Falling Asleep filter** — filters `techniques` array for those with `difficulty !== "Beginner"` (WILD, SSILD, FILD, DEILD, Meditation) — the sleep-onset/transition techniques. Displayed in a 2-column grid with glass cards showing emoji, name, and difficulty dots.
 
-**Size management**: IndexedDB has much higher limits than localStorage (typically 50%+ of available disk). No explicit eviction needed for MVP — most users won't exceed limits with dream images.
+**Technique card in grid** — Compact square-ish card (~160px tall) with centered emoji icon, technique name, and difficulty indicator. Tapping navigates to `/insights/technique/:index`.
 
