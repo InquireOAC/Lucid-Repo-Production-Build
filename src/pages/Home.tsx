@@ -117,7 +117,7 @@ const Home = () => {
         <div className="grid grid-cols-2 gap-2">
           <QuickLink
             icon={<MessageCircle size={20} />}
-            label="Chat"
+            label="AI Dream Chat"
             onClick={() => navigate("/chat")}
           />
           <QuickLink
