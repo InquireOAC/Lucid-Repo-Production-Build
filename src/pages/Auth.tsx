@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
+
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
@@ -83,7 +83,7 @@ const Auth = () => {
   }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasAcceptedTerms, isLoading: termsLoading, markTermsAsAccepted } = useTermsAcceptance();
+  
 
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -98,14 +98,10 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user && !termsLoading) {
-      if (hasAcceptedTerms === true) {
-        navigate("/");
-      } else if (hasAcceptedTerms === false) {
-        console.log("User needs to accept terms");
-      }
+    if (user) {
+      navigate("/", { replace: true });
     }
-  }, [user, hasAcceptedTerms, termsLoading, navigate]);
+  }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +143,6 @@ const Auth = () => {
           : error.message);
         return;
       }
-      await markTermsAsAccepted();
       toast.success("Account created successfully! Please check your email to verify your account.");
     } catch (error) {
       console.error("Sign up error:", error);
@@ -157,55 +152,6 @@ const Auth = () => {
     }
   };
 
-  const handleAcceptTerms = async () => {
-    if (!user) return;
-    try {
-      await markTermsAsAccepted();
-      toast.success("Terms accepted successfully!");
-      navigate("/");
-    } catch (error) {
-      console.error("Error accepting terms:", error);
-      toast.error("Failed to accept terms. Please try again.");
-    }
-  };
-
-  /* ── loading state ── */
-  if (termsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen pt-safe-top" style={{ background: C.bg, color: C.text }}>
-        Loading…
-      </div>
-    );
-  }
-
-  /* ── terms acceptance for existing users ── */
-  if (user && hasAcceptedTerms === false) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe-top px-4" style={{ background: C.bg }}>
-        <div className="w-full max-w-md rounded-2xl p-6" style={{ background: C.surface, border: `1px solid ${C.surfaceBorder}` }}>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: C.text, fontFamily: "'Playfair Display', serif" }}>Terms of Use</h2>
-            <p className="text-sm mt-1" style={{ color: C.muted }}>Please accept our Terms of Use to continue using Lucid Repo</p>
-          </div>
-          <ScrollArea className="h-48 w-full rounded-xl p-3 mb-4" style={{ border: `1px solid ${C.surfaceBorder}`, background: "rgba(56,130,246,0.03)" }}>
-            <TermsText />
-          </ScrollArea>
-          <button
-            onClick={handleAcceptTerms}
-            className="w-full h-11 text-sm font-medium rounded-2xl"
-            style={{
-              background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
-              color: "#fff",
-              border: "none",
-              boxShadow: `0 4px 20px ${C.primaryGlow}`,
-            }}
-          >
-            Accept Terms and Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   /* ═══════════════════════════════════════════
      MAIN AUTH — Cosmic Tech Theme
