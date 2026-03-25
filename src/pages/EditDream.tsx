@@ -54,9 +54,29 @@ const EditDream = () => {
   const [audioUrl, setAudioUrl] = useState<string>("");
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
+  const [scenesOpen, setScenesOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
   const [sectionImages, setSectionImages] = useState<any[]>([]);
+
+  const hasSceneImages = sectionImages.some(s => s.image_url);
+
+  const dreamForSceneGen: DreamEntry = {
+    id: dreamId || "",
+    date: formData.date,
+    title: formData.title,
+    content: formData.content,
+    tags: formData.tags,
+    lucid: formData.lucid,
+    user_id: user?.id,
+  };
+
+  const sceneGen = useSectionImageGeneration(dreamForSceneGen, (updates) => {
+    if (updates.section_images && Array.isArray(updates.section_images)) {
+      setSectionImages(updates.section_images);
+      setScenesOpen(true);
+    }
+  });
 
   // Pre-populate from existing dream
   useEffect(() => {
