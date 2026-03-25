@@ -402,7 +402,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
 
         {/* Generate section images button (owner only) */}
-        {isOwner && sectionImages.length === 0 && (
+        {isOwner && sectionImages.filter(s => s.image_url).length === 0 && (
           <div className="mt-8 p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
             <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
             <p className="text-sm font-medium mb-1">Generate Story Images</p>

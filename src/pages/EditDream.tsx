@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown, Film, Loader2 } from "lucide-react";
 import SectionImagesManager from "@/components/dreams/SectionImagesManager";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -19,6 +19,8 @@ import { useAudioUpload } from "@/hooks/useAudioUpload";
 import DreamAnalysis from "@/components/DreamAnalysis";
 import DreamImageGenerator from "@/components/DreamImageGenerator";
 import { toast } from "sonner";
+import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
+import { DreamEntry } from "@/types/dream";
 
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -407,16 +409,99 @@ const EditDream = () => {
             )}
           </AnimatePresence>
 
-          {/* Section Images Manager */}
-          {dreamId && sectionImages.length > 0 && (
-            <div className="mt-4">
-              <SectionImagesManager
-                dreamId={dreamId}
-                sectionImages={sectionImages}
-                onUpdate={setSectionImages}
-                isMystic={isMystic}
-              />
-            </div>
+          {/* Dream Scenes */}
+          {dreamId && formData.content.trim().length > 50 && (
+            <>
+              <motion.div whileTap={{ scale: 0.98 }}>
+                <button
+                  type="button"
+                  onClick={() => setScenesOpen(!scenesOpen)}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
+                >
+                  <motion.div
+                    className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
+                    animate={{ rotate: scenesOpen ? 10 : 0 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <Film className="h-4 w-4 text-primary" />
+                  </motion.div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground">Dream Scenes</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasSceneImages ? `${sectionImages.filter(s => s.image_url).length} scene images` : "Split dream into visual scenes"}
+                    </p>
+                  </div>
+                  <motion.div
+                    animate={{ rotate: scenesOpen ? 180 : 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </motion.div>
+                </button>
+              </motion.div>
+              <AnimatePresence>
+                {scenesOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-2 space-y-3">
+                      {hasSceneImages ? (
+                        <SectionImagesManager
+                          dreamId={dreamId}
+                          sectionImages={sectionImages}
+                          onUpdate={setSectionImages}
+                          isMystic={isMystic}
+                        />
+                      ) : null}
+
+                      {!hasSceneImages && !sceneGen.isGenerating && (
+                        <div className="p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
+                          <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
+                          <p className="text-sm font-medium mb-1">Generate Story Images</p>
+                          <p className="text-xs text-muted-foreground mb-3">
+                            AI will split your dream into scenes and create cinematic images for each (uses 2-4 image credits)
+                          </p>
+                          <Button
+                            onClick={sceneGen.generateSectionImages}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            <ImageIcon className="h-3.5 w-3.5" />
+                            Generate Scenes
+                          </Button>
+                        </div>
+                      )}
+
+                      {sceneGen.isGenerating && (
+                        <div className="p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
+                          <Loader2 className="h-5 w-5 mx-auto text-primary mb-2 animate-spin" />
+                          <p className="text-sm font-medium">
+                            Generating scene {sceneGen.progress}/{sceneGen.totalSections}…
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">This may take a minute</p>
+                        </div>
+                      )}
+
+                      {hasSceneImages && !sceneGen.isGenerating && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={sceneGen.generateSectionImages}
+                          className="w-full gap-2"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Regenerate All Scenes
+                        </Button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
           )}
         </motion.div>
       </div>
