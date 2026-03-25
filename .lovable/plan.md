@@ -1,61 +1,59 @@
 
 
-## Plan: Fix Back Button & "Dream Not Found" Flash
+## Plan: Redesign Home Stats + Add Lucid Insights Section + Repo Activity Stat
 
-### Problem 1: Back button navigates to previous dream instead of Lucid Repo
-`DreamStoryPage` uses `navigate(-1)` (line 246). When opening dreams from a queue (Continue Reading or section list), each dream pushes a new history entry. Pressing back goes to the previous dream instead of the repo page.
+### What Changes
 
-### Problem 2: Brief "Dream not found" flash
-When `dreamId` changes (e.g., navigating between dreams), React re-renders with the new `dreamId` but stale state (`loading: false`, `dream: null`). The `useEffect` hasn't fired yet, so the "not found" screen briefly appears before loading begins.
+**1. Redesign the top stats row** (currently 3 plain icon+number pairs that look unfinished)
+- Replace with a single glass card containing 3 stat columns with colored accent bars/dots, proper spacing, and visual hierarchy
+- Each stat gets a subtle colored top border accent matching its icon color
 
-### Fix
+**2. Add "Lucid Insights" section before the Following Feed**
+- A glass card with a small area chart (recharts `AreaChart`) showing lucid dream frequency over the last 30 days from `stats.lucid_chart`
+- Below the chart: a row of 3 mini stats — lucid rate (lucid/total as %), best technique, and avg lucidity level
+- Tappable to navigate to `/lucid-stats` for full details
 
-**File: `src/pages/DreamStoryPage.tsx`**
-- Back button: Replace `navigate(-1)` with smarter logic. If URL has a `?queue=` param (meaning user came from Lucid Repo), navigate to `/lucid-repo` (preserving any `?section=` from `document.referrer` or sessionStorage). Otherwise fall back to `navigate(-1)`.
-- Store the originating URL (e.g., `/lucid-repo?section=trending`) in `sessionStorage` when the page loads from a repo context, so back always returns there.
-- Flash fix: Track `dreamId` in a ref. If the current `dreamId` doesn't match what was last fetched, treat it as loading. This prevents the gap between re-render and effect execution.
+**3. Add "Dreams Added Today" community stat**
+- New query in Home that counts public `dream_entries` created today (`created_at >= start of today`)
+- Displayed as a small banner/pill between the quick links and the insights section: "🌙 X dreams shared to the Repo today"
 
-**File: `src/components/repos/StoryListCard.tsx`**
-- When navigating to a dream, also pass a `from` search param (e.g., `?from=lucid-repo`) so `DreamStoryPage` knows the origin without relying on browser history.
-- Keep the existing `queue` param.
-
-### Changes Summary
+### Files Modified
 
 | File | Change |
 |------|--------|
-| `src/pages/DreamStoryPage.tsx` | Smart back navigation + fix loading race condition |
-| `src/components/repos/StoryListCard.tsx` | Add `from` param to navigation URL |
-| `src/components/repos/DiscoveryDreamCard.tsx` | Add `from` param for consistency |
-| `src/components/repos/DiscoveryHero.tsx` | Add `from` param for consistency |
+| `src/pages/Home.tsx` | Redesign `MiniStatCard` into a proper stats card, add Lucid Insights chart section, add today's repo count query, reorder sections |
 
 ### Technical Detail
 
-**Back button logic:**
-```typescript
-const searchParams = new URLSearchParams(window.location.search);
-const from = searchParams.get("from");
-
-const handleBack = () => {
-  if (from) {
-    navigate(from, { replace: true });
-  } else {
-    navigate(-1);
-  }
-};
+**Stats card redesign:**
 ```
-
-**Flash fix:**
-```typescript
-const fetchedIdRef = useRef<string | null>(null);
-// In render: if dreamId !== fetchedIdRef.current, show skeleton
-// In effect: after fetch, set fetchedIdRef.current = dreamId
+┌─────────────────────────────────────┐
+│  🔥 12        🧠 23       📖 94    │
+│  Day Streak   Lucid       Total    │
+│              Dreams      Dreams    │
+└─────────────────────────────────────┘
 ```
+Single glass card, 3 columns, each with colored icon above bold number above muted label.
 
-**StoryListCard navigation:**
+**Lucid Insights section:**
+- Uses recharts `AreaChart` with gradient fill from `stats.recall_chart` (last 14 days for compactness)
+- Below: lucid rate `(total_lucid / total_entries * 100)%`, top technique name + rate, avg lucidity level
+- Wrapped in a tappable card that navigates to `/lucid-stats`
+
+**Today's repo count:**
 ```typescript
-const handleClick = () => {
-  const currentPath = window.location.pathname + window.location.search;
-  navigate(`/dream/${dream.id}?from=${encodeURIComponent(currentPath)}`);
-};
+const { data: todayCount } = useQuery({
+  queryKey: ["repo-today-count"],
+  queryFn: async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const { count } = await supabase
+      .from("dream_entries")
+      .select("*", { count: "exact", head: true })
+      .eq("is_public", true)
+      .gte("created_at", today);
+    return count ?? 0;
+  },
+  staleTime: 60_000,
+});
 ```
 
