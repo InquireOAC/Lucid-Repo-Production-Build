@@ -151,12 +151,31 @@ const LucidRepoDiscovery = () => {
   // Build queue IDs for continuous reading
   const trendingIds = trending.map(d => d.id);
 
+  // Derive expanded section from URL param
+  const expandedSection = useMemo(() => {
+    if (!expandedSectionKey) return null;
+    const sectionMap: Record<string, { title: string; dreams: DreamEntry[] }> = {
+      following: { title: "📖 From People You Follow", dreams: filterDreams(following) },
+      trending: { title: "🔥 Trending Stories", dreams: filterDreams(trending) },
+      new: { title: "✨ New Releases", dreams: filterDreams(newReleases) },
+    };
+    // Check tag sections
+    for (const section of tagSections) {
+      sectionMap[`tag-${section.tag.toLowerCase()}`] = { title: `${section.tag} Dreams`, dreams: section.dreams };
+    }
+    return sectionMap[expandedSectionKey] || null;
+  }, [expandedSectionKey, following, trending, newReleases, tagSections, searchQuery, activeFilter]);
+
+  const navigateToSection = (key: string) => {
+    navigate(`/lucid-repo?section=${encodeURIComponent(key)}`);
+  };
+
   // Expanded section view
   if (expandedSection) {
     return (
       <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
         <div className="flex items-center gap-3 pt-3 mb-4">
-          <Button variant="ghost" size="icon" onClick={() => setExpandedSection(null)}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/lucid-repo')}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-lg font-bold text-foreground">{expandedSection.title}</h1>
