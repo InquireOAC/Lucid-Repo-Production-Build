@@ -456,3 +456,4 @@ const AcademyEntryCard = () => {
 };
 
 export default Home;
+
