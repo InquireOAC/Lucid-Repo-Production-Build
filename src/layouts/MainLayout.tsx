@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, BarChart3, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, Book, Moon, User, BarChart3, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -70,10 +70,11 @@ const MainLayout = () => {
           className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right md:hidden"
         >
           <div className="flex justify-around items-center h-14">
-            <NavTab to="/" icon={<Book />} label="Journal" />
-            <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
-            <NavTab to="/lucid-stats" icon={<BarChart3 />} label="Stats" />
-            <NavTab to="/profile" icon={<User />} label="Profile" />
+            <NavTab to="/" icon={<Home size={20} />} label="Home" />
+            <NavTab to="/journal" icon={<Book size={20} />} label="Journal" />
+            <NavTab to="/lucid-repo" icon={<Moon size={20} />} label="Repo" />
+            <NavTab to="/lucid-stats" icon={<BarChart3 size={20} />} label="Stats" />
+            <NavTab to="/profile" icon={<User size={20} />} label="Profile" />
           </div>
         </motion.div>
       </div>
@@ -84,7 +85,8 @@ const MainLayout = () => {
 /* ========== Desktop Sidebar ========== */
 
 const navItems = [
-  { to: "/", icon: Book, label: "Journal" },
+  { to: "/", icon: Home, label: "Home" },
+  { to: "/journal", icon: Book, label: "Journal" },
   { to: "/lucid-repo", icon: Moon, label: "Lucid Repo" },
   { to: "/lucid-stats", icon: BarChart3, label: "Stats" },
   { to: "/profile", icon: User, label: "Profile" },
@@ -95,9 +97,7 @@ const DesktopSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
 
   const isActive = (to: string) => {
-    if (to === "/") {
-      return location.pathname === "/" || location.pathname === "/journal" || location.pathname === "/journal/new";
-    }
+    if (to === "/") return location.pathname === "/";
     return location.pathname === to || location.pathname.startsWith(to + "/");
   };
 
@@ -184,8 +184,8 @@ interface NavTabProps {
 const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
   const location = useLocation();
   
-  const isActive = to === "/" 
-    ? (location.pathname === "/" || location.pathname === "/journal" || location.pathname === "/journal/new")
+  const isActive = to === "/"
+    ? location.pathname === "/"
     : location.pathname === to || location.pathname.startsWith(to + "/");
   
   return (
@@ -220,6 +220,12 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
           </div>
         )}
       </div>
+      <span className={cn(
+        "text-[10px] font-medium leading-none",
+        isActive ? "text-primary" : "text-white/50"
+      )}>
+        {label}
+      </span>
     </NavLink>
   );
 };
