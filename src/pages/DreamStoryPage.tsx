@@ -54,6 +54,7 @@ const DreamStoryPage: React.FC = () => {
   const { user } = useAuth();
   const [dream, setDream] = useState<DreamEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
 
   useEffect(() => {
@@ -64,6 +65,7 @@ const DreamStoryPage: React.FC = () => {
     if (!dreamId) return;
     const fetchDream = async () => {
       setLoading(true);
+      setNotFound(false);
       const { data, error } = await supabase
         .from("dream_entries")
         .select("*, profiles!dream_entries_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
@@ -71,6 +73,7 @@ const DreamStoryPage: React.FC = () => {
         .maybeSingle();
 
       if (error || !data) {
+        setNotFound(true);
         setLoading(false);
         return;
       }
@@ -128,7 +131,7 @@ const DreamStoryPage: React.FC = () => {
     );
   }
 
-  if (!dream) {
+  if (notFound || !dream) {
     return (
       <div className="container mx-auto max-w-2xl px-4 pt-safe-top pb-20 text-center py-20">
         <p className="text-muted-foreground">Dream not found</p>
