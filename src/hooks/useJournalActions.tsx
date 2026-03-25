@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useDreamDbActions } from "./useDreamDbActions";
 import { useDreamImageManager } from "./useDreamImageManager";
 import { uploadDreamImage } from "@/utils/imageUtils";
+import { cacheMediaFromUrl, deleteCachedMedia, mediaCacheKey } from "@/utils/localMediaCache";
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -96,6 +97,11 @@ export const useJournalActions = () => {
         audioUrl: dreamData.audioUrl || null
       });
       
+      // Cache media locally for offline access
+      if (finalImageUrl) {
+        cacheMediaFromUrl(mediaCacheKey(newDreamForStore.id, 'image'), finalImageUrl).catch(() => {});
+      }
+
       toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
@@ -291,6 +297,9 @@ export const useJournalActions = () => {
       }
       
       deleteEntry(id); // Delete from local store
+      // Clean up local media cache
+      deleteCachedMedia(mediaCacheKey(id, 'image')).catch(() => {});
+      deleteCachedMedia(mediaCacheKey(id, 'video')).catch(() => {});
       toast.success("Dream deleted successfully");
       setIsSubmitting(false);
       return true;
