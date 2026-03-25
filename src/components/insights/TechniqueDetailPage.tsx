@@ -5,6 +5,22 @@ import { techniques } from "./techniqueData";
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { Button } from "@/components/ui/button";
 
+import realityChecksImg from "@/assets/techniques/reality-checks.jpeg";
+import wildImg from "@/assets/techniques/wild.jpeg";
+import ssildImg from "@/assets/techniques/ssild.jpeg";
+import fildImg from "@/assets/techniques/fild.jpeg";
+import deildImg from "@/assets/techniques/deild.jpeg";
+import meditationImg from "@/assets/techniques/meditation.jpeg";
+
+const TECHNIQUE_IMAGES: Record<number, string> = {
+  0: realityChecksImg,
+  3: wildImg,
+  4: ssildImg,
+  5: fildImg,
+  6: deildImg,
+  7: meditationImg,
+};
+
 const DotRating: React.FC<{ label: string; value: number; max?: number }> = ({
   label,
   value,
@@ -32,6 +48,7 @@ const TechniqueDetailPage: React.FC = () => {
   const technique = techniques[index];
   const { isPinned, pinTechnique, unpinTechnique } = usePinnedTechniques();
   const pinned = !isNaN(index) && isPinned(index);
+  const headerImage = TECHNIQUE_IMAGES[index];
 
   if (!technique) {
     return (
@@ -43,39 +60,61 @@ const TechniqueDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen pb-32 pt-safe-top">
-      {/* Back button + Pin */}
-      <div className="p-4 flex items-center justify-between">
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm">Back</span>
-        </button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className={pinned ? "text-primary" : "text-muted-foreground"}
-          onClick={() => (pinned ? unpinTechnique(index) : pinTechnique(index))}
-        >
-          {pinned ? <PinOff size={18} /> : <Pin size={18} />}
-          <span className="ml-1.5 text-xs">{pinned ? "Unpin" : "Pin"}</span>
-        </Button>
-      </div>
-
-      {/* Icon hero */}
-      <div className="flex flex-col items-center px-6 pt-4">
-        <div className="relative">
-          <span className="text-[120px] leading-none">{technique.icon}</span>
-          {/* Decorative sparkles */}
-          <div className="absolute -top-2 -right-3 w-3 h-3 rounded-full bg-primary/30 animate-pulse" />
-          <div className="absolute top-4 -left-4 w-2 h-2 rounded-full bg-accent/25 animate-pulse delay-500" />
-          <div className="absolute -bottom-1 right-2 w-2.5 h-2.5 rounded-full bg-primary/20 animate-pulse delay-1000" />
-          <div className="absolute top-1/2 -right-5 w-1.5 h-1.5 rounded-full bg-accent/30 animate-pulse delay-300" />
+      {/* Image hero or emoji fallback */}
+      {headerImage ? (
+        <div className="relative h-56 w-full overflow-hidden">
+          <img src={headerImage} alt={technique.name} className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
+          {/* Overlaid nav */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex items-center justify-between z-10">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1.5 text-white/90 hover:text-white transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm">Back</span>
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`${pinned ? "text-primary" : "text-white/80"} hover:bg-white/20`}
+              onClick={() => (pinned ? unpinTechnique(index) : pinTechnique(index))}
+            >
+              {pinned ? <PinOff size={18} /> : <Pin size={18} />}
+              <span className="ml-1.5 text-xs">{pinned ? "Unpin" : "Pin"}</span>
+            </Button>
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Fallback: nav + emoji */}
+          <div className="p-4 flex items-center justify-between">
+            <button
+              onClick={() => navigate("/")}
+              className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm">Back</span>
+            </button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={pinned ? "text-primary" : "text-muted-foreground"}
+              onClick={() => (pinned ? unpinTechnique(index) : pinTechnique(index))}
+            >
+              {pinned ? <PinOff size={18} /> : <Pin size={18} />}
+              <span className="ml-1.5 text-xs">{pinned ? "Unpin" : "Pin"}</span>
+            </Button>
+          </div>
+          <div className="flex flex-col items-center px-6 pt-4">
+            <span className="text-[120px] leading-none">{technique.icon}</span>
+          </div>
+        </>
+      )}
 
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-foreground text-center mt-4">
+      {/* Title + meta */}
+      <div className="flex flex-col items-center px-6 pt-4">
+        <h1 className="text-2xl font-bold text-foreground text-center">
           {technique.name}
           {technique.acronym && (
             <span className="text-primary ml-2 text-lg font-normal">
@@ -83,13 +122,9 @@ const TechniqueDetailPage: React.FC = () => {
             </span>
           )}
         </h1>
-
-        {/* Subtitle */}
         <p className="text-sm text-primary/70 mt-1.5 text-center">
           {technique.shortDescription}
         </p>
-
-        {/* Rating pills */}
         <div className="flex gap-3 mt-5">
           <DotRating label="Difficulty" value={technique.difficultyRating} />
           <DotRating label="Effectiveness" value={technique.effectiveness} />
