@@ -177,15 +177,15 @@ const MiniStatCard = ({
   value: number;
   label: string;
 }) => (
-  <Card className="glass-card border-primary/10">
-    <CardContent className="p-3 flex flex-col items-center gap-1">
-      {icon}
-      <span className="text-xl font-bold text-foreground">{value}</span>
+  <div className="flex items-center gap-2">
+    {icon}
+    <div className="flex flex-col">
+      <span className="text-xl font-bold text-foreground leading-tight">{value}</span>
       <span className="text-[10px] text-muted-foreground uppercase tracking-wide">
         {label}
       </span>
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 );
 
 const QuickLink = ({
