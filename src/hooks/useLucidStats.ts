@@ -76,7 +76,14 @@ export function useLucidStats() {
         p_user_id: user.id,
       });
       if (error) throw error;
-      return data as unknown as LucidStatsData;
+      const result = data as unknown as LucidStatsData;
+
+      // If the RPC returned empty/zeroed data, inject mock data for demo
+      if (!result || result.total_entries === 0) {
+        return generateMockStats();
+      }
+
+      return result;
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
