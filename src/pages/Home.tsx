@@ -7,6 +7,9 @@ import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
+import { techniques } from "@/components/insights/techniqueData";
+import { getDifficultyStyles } from "@/utils/techniqueStyles";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,6 +34,7 @@ import {
   MessageSquare,
   ChevronRight,
   Sparkles,
+  Pin,
 } from "lucide-react";
 
 const Home = () => {
@@ -39,6 +43,7 @@ const Home = () => {
   const { dreams, isLoading: feedLoading } = useFeedPublicDreams(user);
   const { challenges } = useChallenges();
   const { stats } = useLucidStats();
+  const { pinnedIndices } = usePinnedTechniques();
 
   const activeChallenge = challenges.find(
     (c: Challenge) => c.status === "active"
@@ -60,7 +65,7 @@ const Home = () => {
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* Greeting + Record CTA */}
         <div className="pt-4">
           <h1 className="text-2xl font-bold text-foreground mb-1">
@@ -129,6 +134,12 @@ const Home = () => {
             onClick={() => navigate("/dream-book")}
           />
         </div>
+
+        {/* Pinned Techniques */}
+        <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
+
+        {/* While Falling Asleep */}
+        <FallingAsleepSection />
 
         {/* Dream Academy Card */}
         <AcademyEntryCard />
