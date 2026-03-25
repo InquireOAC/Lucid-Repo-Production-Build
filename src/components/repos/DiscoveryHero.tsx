@@ -27,7 +27,10 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
   return (
     <div
       className="relative rounded-2xl overflow-hidden mb-6 cursor-pointer stable-card"
-      onClick={() => navigate(`/lucid-repo/${dream.id}`)}
+      onClick={() => {
+        const currentPath = window.location.pathname + window.location.search;
+        navigate(`/lucid-repo/${dream.id}?from=${encodeURIComponent(currentPath)}`);
+      }}
     >
       <div className="aspect-[16/9] md:aspect-[21/9] relative">
         {imageUrl ? (
