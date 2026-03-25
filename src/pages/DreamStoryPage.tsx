@@ -117,6 +117,8 @@ const DreamStoryPage: React.FC = () => {
       } as DreamEntry);
       setCommentCount(cCount || 0);
       setLoading(false);
+      // Track in reading history
+      if (dreamId) addToHistory(dreamId);
     };
     fetchDream();
   }, [dreamId, user]);
