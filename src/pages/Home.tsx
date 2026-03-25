@@ -110,21 +110,11 @@ const Home = () => {
         )}
 
         {/* Quick Links */}
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <QuickLink
             icon={<MessageCircle size={20} />}
             label="Chat"
             onClick={() => navigate("/chat")}
-          />
-          <QuickLink
-            icon={<Compass size={20} />}
-            label="Learn"
-            onClick={() => navigate("/learn")}
-          />
-          <QuickLink
-            icon={<Brain size={20} />}
-            label="Insights"
-            onClick={() => navigate("/insights")}
           />
           <QuickLink
             icon={<BookOpen size={20} />}
