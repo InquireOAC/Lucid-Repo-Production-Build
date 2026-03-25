@@ -197,6 +197,9 @@ Now render the following cinematic dream scene:`
         ],
         generationConfig: {
           responseModalities: ["TEXT", "IMAGE"],
+          imageConfig: {
+            aspectRatio: "9:16",
+          },
         },
       }),
     })
