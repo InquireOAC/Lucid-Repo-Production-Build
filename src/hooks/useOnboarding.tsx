@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect, useCallback } from "react";
 import { Preferences } from "@capacitor/preferences";
 import { Capacitor } from "@capacitor/core";
@@ -6,11 +7,24 @@ import { Capacitor } from "@capacitor/core";
 // DEV: force onboarding — set to true to always show onboarding during development
 const DEV_FORCE_ONBOARDING = false;
 
+// Session-level guard: once onboarding is completed or confirmed seen in this
+// browser/app session, never show it again regardless of storage state.
+let sessionCompleted = false;
+
 export const useOnboarding = () => {
-  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(
+    sessionCompleted ? true : null
+  );
+  const [isLoading, setIsLoading] = useState(!sessionCompleted);
 
   const checkOnboardingStatus = useCallback(async () => {
+    // Session guard — skip all checks
+    if (sessionCompleted) {
+      setHasSeenOnboarding(true);
+      setIsLoading(false);
+      return;
+    }
+
     // DEV: force onboarding override
     if (DEV_FORCE_ONBOARDING) {
       console.log('DEV: Forcing onboarding to show');
@@ -40,6 +54,9 @@ export const useOnboarding = () => {
           // Preferences unavailable, localStorage already checked
         }
       }
+
+      // Lock session guard so re-mounts never re-check
+      if (hasSeenIt) sessionCompleted = true;
       
       setHasSeenOnboarding(hasSeenIt);
     } catch {
@@ -50,6 +67,8 @@ export const useOnboarding = () => {
   }, []);
 
   const completeOnboarding = useCallback(async () => {
+    // Lock session guard immediately
+    sessionCompleted = true;
     // Immediately update state so onboarding never flashes back
     setHasSeenOnboarding(true);
 
