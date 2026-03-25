@@ -118,8 +118,8 @@ const Home = () => {
           />
           <QuickLink
             icon={<Compass size={20} />}
-            label="Explore"
-            onClick={() => navigate("/explore")}
+            label="Learn"
+            onClick={() => navigate("/learn")}
           />
           <QuickLink
             icon={<Brain size={20} />}
