@@ -15,7 +15,8 @@ import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
-import { ArrowLeft, Moon, Search, BookOpen } from "lucide-react";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
+import { ArrowLeft, Moon, Search, BookOpen, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
@@ -44,6 +45,7 @@ const LucidRepoDiscovery = () => {
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
   const { series: publicSeries } = usePublicSeries();
+  const { recentIds } = useReadingHistory();
 
   const {
     featured,
@@ -314,6 +316,25 @@ const LucidRepoDiscovery = () => {
               onUserClick={handleNavigateToProfile}
             />
           )}
+
+          {/* Continue Reading — from reading history */}
+          {recentIds.length > 0 && !searchQuery && (() => {
+            const continueReading = uniqueDreams.filter(d => recentIds.includes(d.id));
+            if (continueReading.length === 0) return null;
+            return (
+              <DiscoveryRow title="📚 Continue Reading">
+                {continueReading.map(dream => (
+                  <DiscoveryDreamCard
+                    key={dream.id}
+                    dream={dream}
+                    onOpenDream={handleOpenDream}
+                    onLike={handleDreamLikeFromCard}
+                    onUserClick={handleNavigateToProfile}
+                  />
+                ))}
+              </DiscoveryRow>
+            );
+          })()}
 
           {/* From People You Follow — horizontal cards */}
           {user && filterDreams(following).length > 0 && (

@@ -18,6 +18,8 @@ import Learn from './pages/Learn';
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import LucidStats from './pages/LucidStats';
+import Explore from './pages/Explore';
+import DreamConnections from './pages/DreamConnections';
 import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
 import DreamStoryPage from './pages/DreamStoryPage';
 import DreamBook from './pages/DreamBook';
@@ -69,6 +71,8 @@ function AppContent() {
           <Route path="insights" element={<Insights />} />
           <Route path="insights/technique/:id" element={<TechniqueDetailPage />} />
           <Route path="learn" element={<Learn />} />
+          <Route path="explore" element={<Explore />} />
+          <Route path="connections" element={<DreamConnections />} />
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>

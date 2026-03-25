@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
 import { DreamEntry } from "@/types/dream";
 import { useDreamLikes } from "@/hooks/useDreamLikes";
 import DreamComments from "@/components/DreamComments";
@@ -52,6 +53,7 @@ const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToHistory } = useReadingHistory();
   const [dream, setDream] = useState<DreamEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -115,6 +117,8 @@ const DreamStoryPage: React.FC = () => {
       } as DreamEntry);
       setCommentCount(cCount || 0);
       setLoading(false);
+      // Track in reading history
+      if (dreamId) addToHistory(dreamId);
     };
     fetchDream();
   }, [dreamId, user]);
