@@ -6,6 +6,8 @@ import { useChallenges, Challenge } from "@/hooks/useChallenges";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +27,7 @@ import {
   BookOpen,
   Brain,
   Heart,
+  GraduationCap,
   MessageSquare,
   ChevronRight,
   Sparkles,
@@ -126,6 +129,9 @@ const Home = () => {
             onClick={() => navigate("/dream-book")}
           />
         </div>
+
+        {/* Dream Academy Card */}
+        <AcademyEntryCard />
 
         {/* Today's Repo Activity */}
         {todayCount != null && todayCount > 0 && (
