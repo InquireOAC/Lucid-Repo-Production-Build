@@ -4,15 +4,12 @@ import { Calendar, Pencil, Flame } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import DailyQuote from "./DailyQuote";
-import { useLucidStats } from "@/hooks/useLucidStats";
-
 interface JournalHeaderProps {
   onAddDream: () => void;
 }
 
 const JournalHeader = ({ onAddDream }: JournalHeaderProps) => {
   const navigate = useNavigate();
-  const { stats } = useLucidStats();
 
   const handleRecordDream = () => {
     navigate("/journal/new");
