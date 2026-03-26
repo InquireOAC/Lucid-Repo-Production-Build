@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, ImageIcon, MessageCircle, Brain, Crown,
@@ -58,7 +58,6 @@ const PaywallDialog = () => {
 
   const isNative = Capacitor.isNativePlatform();
 
-  // Listen for paywall events
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
@@ -69,12 +68,21 @@ const PaywallDialog = () => {
     return () => window.removeEventListener("show-paywall", handler);
   }, []);
 
-  // Fetch products when opened
   useEffect(() => {
     if (isOpen && !isNative) {
       fetchStripeProducts();
     }
   }, [isOpen, isNative]);
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [isOpen]);
 
   const fetchStripeProducts = async () => {
     try {
@@ -95,18 +103,8 @@ const PaywallDialog = () => {
   };
 
   const getFallbackProducts = (): Product[] => [
-    {
-      id: "price_basic",
-      name: "Dreamer",
-      price: "$4.99/month",
-      features: PLAN_FEATURES.dreamer.map((f) => f.label),
-    },
-    {
-      id: "price_premium",
-      name: "Mystic",
-      price: "$15.99/month",
-      features: PLAN_FEATURES.mystic.map((f) => f.label),
-    },
+    { id: "price_basic", name: "Dreamer", price: "$4.99/month", features: PLAN_FEATURES.dreamer.map((f) => f.label) },
+    { id: "price_premium", name: "Mystic", price: "$15.99/month", features: PLAN_FEATURES.mystic.map((f) => f.label) },
   ];
 
   const handleStripeSubscribe = async (priceId: string) => {
@@ -127,7 +125,6 @@ const PaywallDialog = () => {
   const featureConfig = FEATURE_CONFIG[feature];
   const FeatureIcon = featureConfig.icon;
 
-  // Sort: premium last
   const sortedProducts = [...products].sort((a, b) => {
     const aP = a.name.toLowerCase().includes("mystic") || a.name.toLowerCase().includes("premium");
     const bP = b.name.toLowerCase().includes("mystic") || b.name.toLowerCase().includes("premium");
@@ -135,114 +132,147 @@ const PaywallDialog = () => {
   });
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="w-[95vw] max-w-lg p-0 gap-0 border-border/50 bg-background overflow-hidden max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="relative px-6 pt-8 pb-5 text-center">
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
-          <div className="relative">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/15 mb-4">
-              <FeatureIcon className="h-7 w-7 text-primary" />
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[60] bg-background/80 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Full-page slide-up panel */}
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", damping: 30, stiffness: 300 }}
+            className="fixed inset-0 z-[61] flex flex-col bg-background pt-safe-top pb-safe-bottom"
+          >
+            {/* Fixed header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/50">
+              <div className="w-10" />
+              <h1 className="text-base font-semibold text-foreground">Upgrade</h1>
+              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-1.5">
-              Unlock {featureConfig.title}
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
-              {featureConfig.description}
-            </p>
-          </div>
-        </div>
 
-        {/* Plans */}
-        <div className="px-5 pb-6 space-y-3">
-          {isNative ? (
-            <NativePaywallPlans onClose={() => setIsOpen(false)} />
-          ) : loading ? (
-            <div className="flex justify-center py-10">
-              <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-            </div>
-          ) : (
-            sortedProducts.map((product) => {
-              const isPremium =
-                product.name.toLowerCase().includes("mystic") ||
-                product.name.toLowerCase().includes("premium");
-              const planFeatures = isPremium ? PLAN_FEATURES.mystic : PLAN_FEATURES.dreamer;
-
-              return (
-                <div
-                  key={product.id}
-                  className={`relative rounded-xl border p-5 transition-all ${
-                    isPremium
-                      ? "border-primary/40 bg-primary/5"
-                      : "border-border/50 bg-card/50"
-                  }`}
-                >
-                  {isPremium && (
-                    <div className="absolute top-0 right-0 w-28 h-28 bg-primary/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                  )}
-
-                  <div className="relative space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
-                        <h3 className="font-semibold text-foreground">{product.name}</h3>
-                      </div>
-                      {isPremium && (
-                        <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                          Popular
-                        </span>
-                      )}
-                    </div>
-
-                    <p className="text-2xl font-bold text-foreground">
-                      {product.price.replace("/month", "")}
-                      <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                    </p>
-
-                    <ul className="space-y-2">
-                      {planFeatures.map((f, i) => (
-                        <li key={i} className="flex items-center gap-2.5 text-sm text-foreground/90">
-                          <f.icon className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                          <span>{f.label}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Button
-                      className={`w-full mt-1 ${isPremium ? "bg-primary hover:bg-primary/90 text-primary-foreground" : ""}`}
-                      variant={isPremium ? "default" : "outline"}
-                      onClick={() => handleStripeSubscribe(product.id)}
-                      disabled={!!subscribing}
-                    >
-                      {subscribing === product.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Subscribe"
-                      )}
-                    </Button>
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: "touch" }}>
+              {/* Hero header */}
+              <div className="relative px-6 pt-10 pb-6 text-center">
+                <div className="absolute inset-0 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
+                <div className="relative">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 mb-5">
+                    <FeatureIcon className="h-8 w-8 text-primary" />
                   </div>
+                  <h2 className="text-2xl font-bold text-foreground mb-2">
+                    Unlock {featureConfig.title}
+                  </h2>
+                  <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                    {featureConfig.description}
+                  </p>
                 </div>
-              );
-            })
-          )}
-        </div>
+              </div>
 
-        {/* Footer */}
-        <div className="px-6 pb-5 text-center">
-          <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
-            Auto-renews unless canceled 24hrs before period end.{" "}
-            <a
-              href="https://www.lucidrepo.com/terms-of-service"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary/60 underline hover:text-primary"
-            >
-              Terms
-            </a>
-          </p>
-        </div>
-      </DialogContent>
-    </Dialog>
+              {/* Plans */}
+              <div className="px-5 space-y-4">
+                {isNative ? (
+                  <NativePaywallPlans onClose={() => setIsOpen(false)} />
+                ) : loading ? (
+                  <div className="flex justify-center py-14">
+                    <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                  </div>
+                ) : (
+                  sortedProducts.map((product) => {
+                    const isPremium =
+                      product.name.toLowerCase().includes("mystic") ||
+                      product.name.toLowerCase().includes("premium");
+                    const planFeatures = isPremium ? PLAN_FEATURES.mystic : PLAN_FEATURES.dreamer;
+
+                    return (
+                      <div
+                        key={product.id}
+                        className={`relative rounded-xl border p-5 transition-all ${
+                          isPremium
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-border/50 bg-card/50"
+                        }`}
+                      >
+                        {isPremium && (
+                          <div className="absolute top-0 right-0 w-28 h-28 bg-primary/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                        )}
+
+                        <div className="relative space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
+                              <h3 className="font-semibold text-foreground">{product.name}</h3>
+                            </div>
+                            {isPremium && (
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                                Popular
+                              </span>
+                            )}
+                          </div>
+
+                          <p className="text-2xl font-bold text-foreground">
+                            {product.price.replace("/month", "")}
+                            <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                          </p>
+
+                          <ul className="space-y-2">
+                            {planFeatures.map((f, i) => (
+                              <li key={i} className="flex items-center gap-2.5 text-sm text-foreground/90">
+                                <f.icon className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                                <span>{f.label}</span>
+                              </li>
+                            ))}
+                          </ul>
+
+                          <Button
+                            className={`w-full mt-1 ${isPremium ? "bg-primary hover:bg-primary/90 text-primary-foreground" : ""}`}
+                            variant={isPremium ? "default" : "outline"}
+                            onClick={() => handleStripeSubscribe(product.id)}
+                            disabled={!!subscribing}
+                          >
+                            {subscribing === product.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              "Subscribe"
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 pt-8 pb-6 text-center">
+                <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+                  Auto-renews unless canceled 24hrs before period end.{" "}
+                  <a
+                    href="https://www.lucidrepo.com/terms-of-service"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary/60 underline hover:text-primary"
+                  >
+                    Terms
+                  </a>
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 
@@ -252,7 +282,7 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center py-10">
+      <div className="flex justify-center py-14">
         <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
       </div>
     );
@@ -267,7 +297,7 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {products.map((product) => {
         const isPremium = product.name.toLowerCase().includes("premium") || product.name.toLowerCase().includes("unlimited");
         return (
