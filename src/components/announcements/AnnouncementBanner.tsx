@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import PollVotingModal from "./PollVotingModal";
 
 const typeConfig: Record<string, { icon: React.ReactNode; gradient: string; glow: string; label: string; emoji: string }> = {
   announcement: {
@@ -41,6 +42,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; gradient: string; glow
 const AnnouncementBanner = () => {
   const { currentAnnouncement, dismissAnnouncement } = useAnnouncements();
   const [modalOpen, setModalOpen] = useState(false);
+  const [pollModalOpen, setPollModalOpen] = useState(false);
 
   if (!currentAnnouncement) return null;
 
@@ -70,7 +72,7 @@ const AnnouncementBanner = () => {
               "backdrop-blur-sm",
               "hover:border-primary/30 transition-all duration-300"
             )}
-            onClick={() => setModalOpen(true)}
+            onClick={() => currentAnnouncement.type === 'poll' ? setPollModalOpen(true) : setModalOpen(true)}
           >
             {/* Shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-pulse" />
@@ -156,6 +158,14 @@ const AnnouncementBanner = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {currentAnnouncement.type === 'poll' && (
+        <PollVotingModal
+          open={pollModalOpen}
+          onOpenChange={setPollModalOpen}
+          announcement={currentAnnouncement}
+          onDismiss={() => dismissAnnouncement(currentAnnouncement.id)}
+        />
+      )}
     </>
   );
 };
