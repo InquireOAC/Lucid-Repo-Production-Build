@@ -88,9 +88,9 @@ const Learn = () => {
 
   // Academy home
   return (
-    <PageTransition className="min-h-screen bg-background pt-safe-top px-4 py-6 pb-24">
+    <PageTransition className="min-h-screen bg-background pt-safe-top px-4 pt-12 pb-24">
       <div className="max-w-2xl mx-auto space-y-5">
-        <h1 className="text-2xl font-bold text-foreground mt-6">🎓 Dream Academy</h1>
+        <h1 className="text-2xl font-bold text-foreground">🎓 Dream Academy</h1>
 
         <AcademyHeroCard
           totalXP={progress?.total_xp || 0}
