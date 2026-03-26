@@ -67,7 +67,7 @@ const Home = () => {
     <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Greeting + Record CTA */}
-        <div className="pt-12 mb-4">
+        <div className="pt-12 mb-8">
           <h1 className="text-3xl font-bold text-foreground leading-tight">
             {user ? "Welcome back," : "Sign in to get started"}
           </h1>
