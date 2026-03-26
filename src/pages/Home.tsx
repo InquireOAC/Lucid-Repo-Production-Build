@@ -499,7 +499,7 @@ const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinned
               </p>
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <Clock size={12} /> {t.timeEstimate || "15m"}
+                  <Clock size={12} /> 15m
                 </span>
                 <span className="flex items-center gap-1">
                   <ArrowUpRight size={12} /> {t.difficulty}
