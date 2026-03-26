@@ -1,47 +1,25 @@
+## Plan: Reorder Home Page Sections
 
+Move Dream Academy, Lucid Insights, and Following Feed above the "While Falling Asleep" section.
 
-## Plan: Flat-Colored Technique Cards
+### Current order (lines 144-207):
 
-Replace glass-morphism styling on both the **While Falling Asleep** cards and **Pinned Techniques** cards with flat, solid-color backgrounds that match the app's cosmic aesthetic.
+1. Pinned Techniques
+2. While Falling Asleep
+3. Dream Academy Card
+4. Today's Repo Activity
+5. Lucid Insights
+6. Following Feed
 
-### Color Scheme
+### New order:
 
-Each difficulty level gets a flat dark-toned background derived from the existing palette:
+1. Pinned Techniques
+2. Dream Academy Card
+3. Lucid Insights
+4. Following Feed
+5. Today's Repo Activity
+6. While Falling Asleep
 
-- **Beginner** — `bg-emerald-950/80` with `text-emerald-400` accent
-- **Intermediate** — `bg-amber-950/80` with `text-amber-400` accent  
-- **Advanced** — `bg-blue-950/80` with `text-blue-400` accent
+### Change in `src/pages/Home.tsx` (lines 144-207)
 
-### Changes to `src/pages/Home.tsx`
-
-**While Falling Asleep cards (lines 554-572):**
-- Keep the image background and gradient overlay (these are the uploaded artwork cards)
-- Remove any `glass-card` or `backdrop-blur` classes if present
-- These cards already use flat image backgrounds with gradient overlays — they stay as-is since they don't use glass styling
-
-**Pinned Techniques cards (lines 517-534):**
-- Replace `bg-gradient-to-r ${styles.gradient} backdrop-blur-md` with flat solid colors based on difficulty
-- Replace `${styles.border}` with subtle solid borders (e.g., `border-emerald-800/40`)
-- Remove `backdrop-blur` entirely
-- Keep the rounded-2xl shape and hover brightness effect
-
-**Pinned Techniques empty state (line 495):**
-- Replace `glass-card border-primary/10` with `bg-[#0d1425] border-primary/15` — a flat dark card matching the app background
-
-### Technical Detail
-
-Add a helper function to map difficulty to flat colors:
-
-```typescript
-function getFlatDifficultyBg(difficulty: string) {
-  switch (difficulty) {
-    case "Beginner": return "bg-emerald-950/80 border-emerald-800/30";
-    case "Intermediate": return "bg-amber-950/80 border-amber-800/30";
-    case "Advanced": return "bg-blue-950/80 border-blue-800/30";
-    default: return "bg-card/80 border-border/30";
-  }
-}
-```
-
-Single file change: `src/pages/Home.tsx`
-
+Rearrange the JSX blocks so lines 150-207 (Academy, Repo Activity, Insights, Feed) come before line 148 (FallingAsleepSection), with Today's Repo Activity moved to the end after While Falling Asleep.
