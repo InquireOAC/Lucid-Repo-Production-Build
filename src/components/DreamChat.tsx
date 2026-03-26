@@ -387,7 +387,7 @@ const DreamChat = () => {
                     </p>
                     <Button
                       size="sm"
-                      onClick={() => showSubscriptionPrompt('analysis')}
+                      onClick={() => showSubscriptionPrompt('chat')}
                       variant="luminous"
                     >
                       Upgrade Now

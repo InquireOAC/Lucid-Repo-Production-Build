@@ -115,9 +115,8 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
   }
 };
 
-export const showSubscriptionPrompt = (featureType: 'analysis' | 'image') => {
-  const feature = featureType === 'analysis' ? 'dream analysis' : 'image generation';
-  console.warn(`Premium feature limit reached: ${feature}`);
+export const showSubscriptionPrompt = (featureType: 'analysis' | 'image' | 'chat') => {
+  window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: featureType } }));
 };
 
 export const hasActiveSubscription = async (): Promise<boolean> => {

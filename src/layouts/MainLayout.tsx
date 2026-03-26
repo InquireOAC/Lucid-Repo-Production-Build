@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import PaywallDialog from "@/components/paywall/PaywallDialog";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Home, Book, Moon, User, BarChart3, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -61,6 +62,8 @@ const MainLayout = () => {
             <Outlet />
           </div>
         </div>
+        
+        <PaywallDialog />
         
         {/* Mobile bottom tab bar */}
         <motion.div
