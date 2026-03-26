@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, ImageIcon, MessageCircle, Brain, Crown,
+  Sparkles, ImageIcon, MessageCircle, Brain, Crown, Video, Mic,
   Check, Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -36,14 +36,15 @@ const PLAN_FEATURES = {
   dreamer: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "10 Dream Art Generations", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
+    { label: "Voice-to-Text Journaling", icon: Mic },
   ],
   mystic: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "Unlimited Dream Art", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Video },
+    { label: "Voice-to-Text Journaling", icon: Mic },
     { label: "Priority Support", icon: Crown },
   ],
 };
