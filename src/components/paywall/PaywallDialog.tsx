@@ -157,7 +157,7 @@ const PaywallDialog = () => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-[61] flex flex-col bg-background pt-safe-top pb-safe-bottom"
+            className="fixed inset-0 z-[61] flex flex-col bg-background pt-safe-top pb-safe-bottom overflow-x-hidden"
           >
             {/* Fixed header */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/50">
