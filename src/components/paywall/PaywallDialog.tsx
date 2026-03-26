@@ -37,22 +37,14 @@ const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: s
   },
 };
 
-const PLAN_FEATURES = {
-  dreamer: [
-    { label: "Unlimited Dream Analysis", icon: Infinity },
-    { label: "10 Dream Art Generations", icon: ImageIcon },
-    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
-    { label: "Voice-to-Text Journaling", icon: Mic },
-  ],
-  mystic: [
-    { label: "Unlimited Dream Analysis", icon: Infinity },
-    { label: "Unlimited Dream Art", icon: ImageIcon },
-    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
-    { label: "Dream Video Generation", icon: Video },
-    { label: "Voice-to-Text Journaling", icon: Mic },
-    { label: "Priority Support", icon: Crown },
-  ],
-};
+const PLAN_FEATURES = [
+  { label: "Unlimited Dream Analysis", icon: Infinity },
+  { label: "AI Dream Art Generation", icon: ImageIcon },
+  { label: "AI Dream Chat", icon: MessageCircle },
+  { label: "Dream Video Generation", icon: Video },
+  { label: "Voice-to-Text Journaling", icon: Mic },
+  { label: "Priority Support", icon: Crown },
+];
 
 const PaywallDialog = () => {
   const { user } = useAuth();
@@ -60,7 +52,8 @@ const PaywallDialog = () => {
   const [feature, setFeature] = useState<PaywallFeature>("analysis");
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -80,7 +73,6 @@ const PaywallDialog = () => {
     }
   }, [isOpen, isNative]);
 
-  // Lock body scroll when open
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -97,51 +89,57 @@ const PaywallDialog = () => {
         body: { action: "getProducts" },
       });
       if (!error && data?.products) {
-        setProducts(data.products.map(normalizeProduct));
+        const normalized = data.products.map(normalizeProduct);
+        setProducts(normalized);
+        // Default select the premium (most expensive) plan
+        const sorted = [...normalized].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+        if (sorted.length > 0) setSelectedPlan(sorted[0].id);
       } else {
-        setProducts(getFallbackProducts());
+        const fb = getFallbackProducts();
+        setProducts(fb);
+        setSelectedPlan(fb[1]?.id || fb[0]?.id);
       }
     } catch {
-      setProducts(getFallbackProducts());
+      const fb = getFallbackProducts();
+      setProducts(fb);
+      setSelectedPlan(fb[1]?.id || fb[0]?.id);
     } finally {
       setLoading(false);
     }
   };
 
+  const parsePrice = (price: string) => parseFloat(price.replace(/[^0-9.]/g, '')) || 0;
+
   const getFallbackProducts = (): Product[] => [
-    { id: "price_basic", name: "Dreamer", price: "$4.99/month", features: PLAN_FEATURES.dreamer.map((f) => f.label) },
-    { id: "price_premium", name: "Mystic", price: "$15.99/month", features: PLAN_FEATURES.mystic.map((f) => f.label) },
+    { id: "price_basic", name: "Dreamer", price: "$4.99/month", features: [] },
+    { id: "price_premium", name: "Mystic", price: "$15.99/month", features: [] },
   ];
 
-  const handleStripeSubscribe = async (priceId: string) => {
+  const handleSubscribe = async () => {
+    if (!selectedPlan) return;
     try {
-      setSubscribing(priceId);
+      setSubscribing(true);
       const { data, error } = await supabase.functions.invoke("create-checkout-session", {
-        body: { action: "createSession", priceId },
+        body: { action: "createSession", priceId: selectedPlan },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast.error("Failed to start checkout", { description: err.message });
     } finally {
-      setSubscribing(null);
+      setSubscribing(false);
     }
   };
 
   const featureConfig = FEATURE_CONFIG[feature];
   const FeatureIcon = featureConfig.icon;
 
-  const sortedProducts = [...products].sort((a, b) => {
-    const priceA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
-    const priceB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
-    return priceA - priceB; // cheaper (Dreamer) first
-  });
+  const sortedProducts = [...products].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -151,7 +149,6 @@ const PaywallDialog = () => {
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Full-page slide-up panel */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -159,7 +156,7 @@ const PaywallDialog = () => {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed inset-0 z-[61] flex flex-col bg-background pt-safe-top pb-safe-bottom overflow-x-hidden"
           >
-            {/* Fixed header */}
+            {/* Header */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/50">
               <div className="w-10" />
               <h1 className="text-base font-semibold text-foreground">Upgrade</h1>
@@ -169,13 +166,13 @@ const PaywallDialog = () => {
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto pb-24" style={{ WebkitOverflowScrolling: "touch" }}>
-              {/* Hero header */}
+            <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+              {/* Hero */}
               <div className="relative px-6 pt-10 pb-6 text-center">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
                 <div className="relative">
-                  <div className="inline-flex items-center justify-center w-48 h-48 rounded-2xl mb-2">
-                    <FeatureIcon className="h-24 w-24" />
+                  <div className="inline-flex items-center justify-center w-36 h-36 rounded-2xl mb-2">
+                    <FeatureIcon className="h-20 w-20" />
                   </div>
                   <h2 className="text-2xl font-bold text-foreground mb-2">
                     Unlock {featureConfig.title}
@@ -186,8 +183,20 @@ const PaywallDialog = () => {
                 </div>
               </div>
 
-              {/* Plans */}
-              <div className="px-5 space-y-4 overflow-hidden">
+              {/* Feature list */}
+              <div className="px-6 pb-4">
+                <ul className="space-y-2.5">
+                  {PLAN_FEATURES.map((f, i) => (
+                    <li key={i} className="flex items-center gap-3 text-sm text-foreground/90">
+                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      <span>{f.label}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Plan selection */}
+              <div className="px-5 pb-8">
                 {isNative ? (
                   <NativePaywallPlans onClose={() => setIsOpen(false)} />
                 ) : loading ? (
@@ -195,75 +204,60 @@ const PaywallDialog = () => {
                     <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                   </div>
                 ) : (
-                  sortedProducts.map((product, index) => {
-                    // With price-sorted products, the last (most expensive) is premium
-                    const isPremium = sortedProducts.length > 1
-                      ? index === sortedProducts.length - 1
-                      : product.id === "price_premium";
-                    const planFeatures = isPremium ? PLAN_FEATURES.mystic : PLAN_FEATURES.dreamer;
+                  <div className="space-y-3">
+                    {sortedProducts.map((product, index) => {
+                      const isSelected = selectedPlan === product.id;
+                      const isBestValue = index === 0 && sortedProducts.length > 1;
+                      const priceNum = parsePrice(product.price);
+                      const priceDisplay = `$${priceNum.toFixed(2)}`;
 
-                    return (
-                      <div
-                        key={product.id}
-                        className={`relative rounded-xl border p-5 transition-all ${
-                          isPremium
-                            ? "border-primary/40 bg-primary/5"
-                            : "border-border/50 bg-card/50"
-                        }`}
-                      >
-                        {isPremium && (
-                          <div className="absolute top-0 right-0 w-28 h-28 bg-primary/8 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-                        )}
-
-                        <div className="relative space-y-3">
+                      return (
+                        <button
+                          key={product.id}
+                          onClick={() => setSelectedPlan(product.id)}
+                          className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-border/30 bg-card/30"
+                          }`}
+                        >
+                          {isBestValue && (
+                            <span className="absolute -top-2.5 right-4 text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2.5 py-0.5 rounded-full">
+                              Best value
+                            </span>
+                          )}
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
-                              <h3 className="font-semibold text-foreground">{product.name}</h3>
+                            <div>
+                              <h3 className="font-semibold text-foreground text-base">{product.name}</h3>
+                              <p className="text-muted-foreground text-sm mt-0.5">
+                                {priceDisplay}/month
+                              </p>
                             </div>
-                            {isPremium && (
-                              <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                                Popular
-                              </span>
-                            )}
+                            <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                              isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                            }`}>
+                              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                            </div>
                           </div>
-
-                          <p className="text-2xl font-bold text-foreground">
-                            {product.price.replace("/month", "")}
-                            <span className="text-sm font-normal text-muted-foreground">/mo</span>
-                          </p>
-
-                          <ul className="space-y-2">
-                            {planFeatures.map((f, i) => (
-                              <li key={i} className="flex items-center gap-2.5 text-sm text-foreground/90">
-                                <f.icon className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                                <span>{f.label}</span>
-                              </li>
-                            ))}
-                          </ul>
-
-                          <Button
-                            className={`w-full mt-1 ${isPremium ? "bg-primary hover:bg-primary/90 text-primary-foreground" : ""}`}
-                            variant={isPremium ? "default" : "outline"}
-                            onClick={() => handleStripeSubscribe(product.id)}
-                            disabled={!!subscribing}
-                          >
-                            {subscribing === product.id ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              "Subscribe"
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
+            </div>
 
-              {/* Footer */}
-              <div className="px-6 pt-8 pb-6 text-center">
-                <p className="text-[11px] text-muted-foreground/60 leading-relaxed">
+            {/* Fixed bottom bar */}
+            {!isNative && !loading && products.length > 0 && (
+              <div className="flex-shrink-0 px-5 pb-6 pt-3 border-t border-border/30 bg-background">
+                <Button
+                  className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={handleSubscribe}
+                  disabled={subscribing || !selectedPlan}
+                >
+                  {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Subscribe"}
+                </Button>
+                <p className="text-[11px] text-muted-foreground/60 text-center mt-3 leading-relaxed">
                   Auto-renews unless canceled 24hrs before period end.{" "}
                   <a
                     href="https://www.lucidrepo.com/terms-of-service"
@@ -275,7 +269,7 @@ const PaywallDialog = () => {
                   </a>
                 </p>
               </div>
-            </div>
+            )}
           </motion.div>
         </>
       )}
@@ -286,6 +280,15 @@ const PaywallDialog = () => {
 /** Native (iOS/Android) plan cards using RevenueCat */
 const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
   const { products, isLoading, purchaseSubscription, restorePurchases } = useNativeSubscription();
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [subscribing, setSubscribing] = useState(false);
+
+  useEffect(() => {
+    if (products.length > 0 && !selectedPlan) {
+      // Default to first (usually premium)
+      setSelectedPlan(products[0]?.id);
+    }
+  }, [products, selectedPlan]);
 
   if (isLoading) {
     return (
@@ -303,49 +306,54 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
     );
   }
 
+  const handleSubscribe = async () => {
+    if (!selectedPlan) return;
+    setSubscribing(true);
+    await purchaseSubscription(selectedPlan);
+    setSubscribing(false);
+  };
+
   return (
-    <div className="space-y-4">
-      {products.map((product) => {
-        const isPremium = product.name.toLowerCase().includes("premium") || product.name.toLowerCase().includes("unlimited");
+    <div className="space-y-3">
+      {products.map((product, index) => {
+        const isSelected = selectedPlan === product.id;
+        const isBestValue = index === 0 && products.length > 1;
+
         return (
-          <div
+          <button
             key={product.id}
-            className={`rounded-xl border p-5 space-y-3 ${
-              isPremium ? "border-primary/40 bg-primary/5" : "border-border/50 bg-card/50"
+            onClick={() => setSelectedPlan(product.id)}
+            className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
+              isSelected ? "border-primary bg-primary/5" : "border-border/30 bg-card/30"
             }`}
           >
+            {isBestValue && (
+              <span className="absolute -top-2.5 right-4 text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2.5 py-0.5 rounded-full">
+                Best value
+              </span>
+            )}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
-                <h3 className="font-semibold text-foreground">{product.name}</h3>
+              <div>
+                <h3 className="font-semibold text-foreground text-base">{product.name}</h3>
+                <p className="text-muted-foreground text-sm mt-0.5">{product.price}/month</p>
               </div>
-              {isPremium && (
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 px-2 py-0.5 rounded-full">
-                  Popular
-                </span>
-              )}
+              <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
+                isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+              }`}>
+                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+              </div>
             </div>
-            <p className="text-2xl font-bold text-foreground">
-              {product.price}<span className="text-sm font-normal text-muted-foreground">/mo</span>
-            </p>
-            <ul className="space-y-1.5">
-              {product.features.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm">
-                  <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                  <span>{f}</span>
-                </li>
-              ))}
-            </ul>
-            <Button
-              className={`w-full ${isPremium ? "bg-primary hover:bg-primary/90" : ""}`}
-              variant={isPremium ? "default" : "outline"}
-              onClick={() => purchaseSubscription(product.id)}
-            >
-              Subscribe
-            </Button>
-          </div>
+          </button>
         );
       })}
+
+      <Button
+        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+        onClick={handleSubscribe}
+        disabled={subscribing || !selectedPlan}
+      >
+        {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Subscribe"}
+      </Button>
 
       <Button
         variant="ghost"
@@ -355,6 +363,18 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
         <RotateCcw className="h-3.5 w-3.5 mr-2" />
         Restore Purchases
       </Button>
+
+      <p className="text-[11px] text-muted-foreground/60 text-center leading-relaxed">
+        Auto-renews unless canceled 24hrs before period end.{" "}
+        <a
+          href="https://www.lucidrepo.com/terms-of-service"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary/60 underline hover:text-primary"
+        >
+          Terms
+        </a>
+      </p>
     </div>
   );
 };
