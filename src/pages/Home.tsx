@@ -412,7 +412,7 @@ const FallingAsleepSection: React.FC = () => {
             <div
               key={idx}
               onClick={() => navigate(`/insights/technique/${idx}`)}
-              className="cursor-pointer relative rounded-2xl overflow-hidden aspect-[9/16] group"
+              className="cursor-pointer relative rounded-2xl overflow-hidden aspect-square group"
             >
               <img
                 src={image}
