@@ -42,6 +42,7 @@ const typeConfig: Record<string, { icon: React.ReactNode; gradient: string; glow
 const AnnouncementBanner = () => {
   const { currentAnnouncement, dismissAnnouncement } = useAnnouncements();
   const [modalOpen, setModalOpen] = useState(false);
+  const [pollModalOpen, setPollModalOpen] = useState(false);
 
   if (!currentAnnouncement) return null;
 
