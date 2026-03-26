@@ -76,14 +76,21 @@ const Home = () => {
           <p className="text-muted-foreground text-xs mb-3">
             What did you dream last night?
           </p>
-          <Button
-            variant="aurora"
-            className="w-auto inline-flex items-center gap-2 text-sm px-6 py-2.5 rounded-full"
+          <div
+            className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
             onClick={() => navigate("/journal/new")}
           >
-            <Pencil size={16} />
-            Record a Dream
-          </Button>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <Pencil size={16} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground text-sm">Record a Dream</h3>
+                <p className="text-xs text-muted-foreground">What did you dream last night?</p>
+              </div>
+              <ArrowUpRight size={16} className="text-primary shrink-0" />
+            </div>
+          </div>
         </div>
 
         {/* Dream Book CTA */}
