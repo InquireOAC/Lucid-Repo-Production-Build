@@ -69,18 +69,20 @@ const Home = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Greeting + Record CTA */}
         <div className="pt-4">
-          <h1 className="text-2xl font-bold text-foreground mb-1">
-            Welcome back{user ? "" : " — sign in to get started"}
+          <h1 className="text-lg font-semibold text-foreground mb-0.5">
+            {user
+              ? `Welcome back, ${profile?.display_name || profile?.username || "Dreamer"}`
+              : "Sign in to get started"}
           </h1>
-          <p className="text-muted-foreground text-sm mb-4">
+          <p className="text-muted-foreground text-xs mb-3">
             What did you dream last night?
           </p>
           <Button
             variant="aurora"
-            className="w-full flex items-center gap-2 text-base py-6"
+            className="w-auto inline-flex items-center gap-2 text-sm px-6 py-2.5 rounded-full"
             onClick={() => navigate("/journal/new")}
           >
-            <Pencil size={20} />
+            <Pencil size={16} />
             Record a Dream
           </Button>
         </div>
