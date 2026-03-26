@@ -9,9 +9,8 @@ export function useDreamLikes(user: any, dream: DreamEntry) {
 
   useEffect(() => {
     if (!user) return;
-    // Check if this dream is liked by current user
     supabase
-      .from("likes")
+      .from("dream_likes")
       .select("id")
       .eq("user_id", user.id)
       .eq("dream_id", dream.id)
@@ -22,20 +21,29 @@ export function useDreamLikes(user: any, dream: DreamEntry) {
   const handleLikeToggle = async () => {
     if (!user) return;
     if (liked) {
-      // Remove like
-      await supabase.from("likes")
+      await supabase.from("dream_likes")
         .delete()
         .eq("user_id", user.id)
         .eq("dream_id", dream.id);
       setLiked(false);
-      setLikeCount(c => Math.max(0, c - 1));
     } else {
-      // Add like
-      await supabase.from("likes")
+      await supabase.from("dream_likes")
         .insert([{ user_id: user.id, dream_id: dream.id }]);
       setLiked(true);
-      setLikeCount(c => c + 1);
     }
+
+    // Sync like_count from actual DB state
+    const { count } = await supabase
+      .from("dream_likes")
+      .select("id", { count: "exact", head: true })
+      .eq("dream_id", dream.id);
+    const newCount = count || 0;
+    setLikeCount(newCount);
+
+    await supabase
+      .from("dream_entries")
+      .update({ like_count: newCount })
+      .eq("id", dream.id);
   };
 
   return { likeCount, liked, handleLikeToggle };
