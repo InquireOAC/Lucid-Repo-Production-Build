@@ -4,6 +4,7 @@ import PullToRefresh from "@/components/ui/PullToRefresh";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useLucidAchievements } from "@/hooks/useLucidAchievements";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import StatsHeroCard from "@/components/lucid-stats/StatsHeroCard";
 import LucidFrequencyCard from "@/components/lucid-stats/LucidFrequencyCard";
 import RecallStrengthCard from "@/components/lucid-stats/RecallStrengthCard";
@@ -13,7 +14,7 @@ import LucidityTrendCard from "@/components/lucid-stats/LucidityTrendCard";
 import AICoachCard from "@/components/lucid-stats/AICoachCard";
 import AchievementsCard from "@/components/lucid-stats/AchievementsCard";
 import LoadingSkeletonStats from "@/components/lucid-stats/LoadingSkeletonStats";
-import { Sparkles, Moon } from "lucide-react";
+import { Sparkles, Moon, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +27,7 @@ const SectionDivider = () => (
 const LucidStats: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { hasActiveSubscription } = useFeatureUsage();
   const { stats, isLoading, error, refetch, timeRange, setTimeRange } = useLucidStats();
   useLucidAchievements(stats);
 
@@ -38,6 +40,35 @@ const LucidStats: React.FC = () => {
             <h2 className="text-xl font-bold text-foreground">Sign in to view your stats</h2>
             <p className="text-sm text-muted-foreground">Track your lucid dreaming progress with detailed analytics.</p>
             <Button onClick={() => navigate("/auth")} className="mt-2">Sign In</Button>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
+  if (!hasActiveSubscription) {
+    return (
+      <PageTransition className="min-h-screen pt-safe-top">
+        <div className="px-4 md:px-8 py-20 max-w-6xl mx-auto text-center">
+          <div className="glass-card rounded-2xl p-8 md:p-12 max-w-md mx-auto space-y-5">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/15 flex items-center justify-center">
+              <Crown className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Premium Feature</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Unlock detailed lucid dreaming analytics, technique tracking, AI coaching insights, and achievement badges with a subscription.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Available on Dreamer & Mystic plans</span>
+            </div>
+            <Button
+              onClick={() => window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }))}
+              className="mt-2 w-full"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              Upgrade to Unlock
+            </Button>
           </div>
         </div>
       </PageTransition>

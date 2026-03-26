@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard, Image as ImageIcon } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard, Image as ImageIcon, Lock } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
@@ -40,6 +41,7 @@ const SettingsDialog = ({
 }: SettingsDialogProps) => {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { hasActiveSubscription } = useFeatureUsage();
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
@@ -136,9 +138,22 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Dream Avatar</h4>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowAIContext(true)}>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => {
+                  if (hasActiveSubscription || isAdmin) {
+                    setShowAIContext(true);
+                  } else {
+                    onOpenChange(false);
+                    window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }));
+                  }
+                }}>
                   <User className="h-4 w-4 mr-2" />
                   Edit Avatar
+                  {!hasActiveSubscription && !isAdmin && (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-primary">
+                      <Crown className="h-3.5 w-3.5" />
+                      Pro
+                    </span>
+                  )}
                 </Button>
               </div>
 
