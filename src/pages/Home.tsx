@@ -425,7 +425,7 @@ const AcademyEntryCard = () => {
         <div className="text-right">
           <p className="text-lg font-bold text-foreground">{progress?.total_xp || 0} XP</p>
           {next && (
-            <p className="text-[10px] text-muted-foreground">{next.xpToNext} to next level</p>
+            <p className="text-[10px] text-muted-foreground">{next.xpNeeded - (progress?.total_xp || 0)} to next level</p>
           )}
         </div>
       </div>
