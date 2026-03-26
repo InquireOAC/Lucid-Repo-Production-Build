@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic,
+  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic, Infinity,
   Check, Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -39,13 +39,13 @@ const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: s
 
 const PLAN_FEATURES = {
   dreamer: [
-    { label: "Unlimited Dream Analysis", icon: LogoIcon },
+    { label: "Unlimited Dream Analysis", icon: Infinity },
     { label: "10 Dream Art Generations", icon: ImageIcon },
     { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
     { label: "Voice-to-Text Journaling", icon: Mic },
   ],
   mystic: [
-    { label: "Unlimited Dream Analysis", icon: LogoIcon },
+    { label: "Unlimited Dream Analysis", icon: Infinity },
     { label: "Unlimited Dream Art", icon: ImageIcon },
     { label: "Unlimited AI Dream Chat", icon: MessageCircle },
     { label: "Dream Video Generation", icon: Video },
