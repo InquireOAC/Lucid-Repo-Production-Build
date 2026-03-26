@@ -1,31 +1,26 @@
 
 
-## Plan: Fix Feature List Not Switching Between Plans
+## Plan: Fix Likes Table Mismatch
 
 ### Root Cause
-The tier detection logic on line 148-150 checks if the product name includes "mystic" or if the ID equals "price_premium". Real Stripe products have auto-generated IDs (like `price_1Abc...`) and may have different casing/naming. When neither condition matches, **both** plans fall through to the "dreamer" tier.
+There are two like hooks using **different database tables**:
+- `useDreamLikes` (used on `DreamStoryPage`) reads/writes from the `likes` table
+- `useLikes` (used on Lucid Repo list views) and `useProfileDreams` (profile "Likes" tab) both use the `dream_likes` table
+
+When a user taps the heart on a dream story page, the like goes into `likes` but the profile reads from `dream_likes` — so it never appears.
 
 ### Fix
-In `src/components/paywall/PaywallDialog.tsx`, replace the name/ID-based tier detection with **price-based detection**: the most expensive product is "mystic" tier, the cheaper one is "dreamer" tier. This is reliable regardless of Stripe product naming.
+Update `src/hooks/useDreamLikes.tsx` to use the `dream_likes` table instead of `likes`, matching the rest of the codebase.
 
-**Change** (lines 147-151):
-```tsx
-// Before
-const selectedProduct = products.find(p => p.id === selectedPlan);
-const selectedTierKey = selectedProduct
-  ? (selectedProduct.name.toLowerCase().includes("mystic") || selectedProduct.id === "price_premium" ? "mystic" : "dreamer")
-  : "mystic";
+**Changes in `useDreamLikes.tsx`**:
+- Line 13: Change `.from("likes")` to `.from("dream_likes")`
+- Line 24: Change `.from("likes")` to `.from("dream_likes")`
+- Line 30: Change `.from("likes")` to `.from("dream_likes")`
 
-// After
-const selectedProduct = products.find(p => p.id === selectedPlan);
-const maxPrice = Math.max(...products.map(p => parsePrice(p.price)));
-const selectedTierKey = selectedProduct
-  ? (parsePrice(selectedProduct.price) >= maxPrice ? "mystic" : "dreamer")
-  : "mystic";
-```
+Also update the like count sync: after toggling, refetch the actual count from `dream_likes` and update `dream_entries.like_count` (same pattern as `useLikes` does) so counts stay consistent.
 
 ### Files
 | File | Action |
 |---|---|
-| `src/components/paywall/PaywallDialog.tsx` | Fix tier detection to use price comparison instead of name/ID matching |
+| `src/hooks/useDreamLikes.tsx` | Change all `likes` table references to `dream_likes`, add like_count sync |
 
