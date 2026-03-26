@@ -145,8 +145,9 @@ const PaywallDialog = () => {
   const sortedProducts = [...products].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
 
   const selectedProduct = products.find(p => p.id === selectedPlan);
+  const maxPrice = Math.max(...products.map(p => parsePrice(p.price)));
   const selectedTierKey = selectedProduct
-    ? (selectedProduct.name.toLowerCase().includes("mystic") || selectedProduct.id === "price_premium" ? "mystic" : "dreamer")
+    ? (parsePrice(selectedProduct.price) >= maxPrice ? "mystic" : "dreamer")
     : "mystic";
   const activeFeatures = PLAN_FEATURES[selectedTierKey];
 
