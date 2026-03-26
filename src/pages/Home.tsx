@@ -2,14 +2,14 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
-import { useChallenges, Challenge } from "@/hooks/useChallenges";
+
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { techniques } from "@/components/insights/techniqueData";
-import { getDifficultyStyles } from "@/utils/techniqueStyles";
+
 import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpeg";
 import techniqueImgSsild from "@/assets/techniques/ssild.jpeg";
 import techniqueImgWild from "@/assets/techniques/wild.jpeg";
@@ -18,7 +18,7 @@ import techniqueImgDeild from "@/assets/techniques/deild.jpeg";
 import techniqueImgMeditation from "@/assets/techniques/meditation.jpeg";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
 import {
@@ -30,13 +30,12 @@ import {
 } from "recharts";
 import {
   Pencil,
-  Trophy,
   Flame,
-  MessageCircle,
+  BookOpen,
   BookOpen,
   Brain,
   Heart,
-  GraduationCap,
+  
   MessageSquare,
   ChevronRight,
   Sparkles,
