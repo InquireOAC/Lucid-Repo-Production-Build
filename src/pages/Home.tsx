@@ -190,60 +190,6 @@ const Home = () => {
 
 /* ===== Sub-components ===== */
 
-interface StatsCardsProps {
-  stats: {
-    current_recall_streak: number;
-    total_lucid_dreams: number;
-    total_entries: number;
-  };
-}
-
-const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => (
-  <div className="space-y-2">
-    <StatRow
-      icon={<Flame size={20} className="text-orange-400" />}
-      value={stats.current_recall_streak}
-      unit="Days"
-      label="Day Streak"
-    />
-    <StatRow
-      icon={<Sparkles size={20} className="text-primary" />}
-      value={stats.total_lucid_dreams}
-      unit="Dreams"
-      label="Lucid State"
-    />
-    <StatRow
-      icon={<BookOpen size={20} className="text-emerald-400" />}
-      value={stats.total_entries}
-      unit="Total"
-      label="Library"
-    />
-  </div>
-);
-
-const StatRow = ({
-  icon,
-  value,
-  unit,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: number;
-  unit: string;
-  label: string;
-}) => (
-  <div className="flex items-center justify-between rounded-2xl bg-[#0d1425] border border-border/20 px-5 py-4">
-    <div className="flex items-center gap-4">
-      {icon}
-      <div>
-        <span className="text-3xl font-bold text-foreground leading-none">{value}</span>
-        <span className="text-sm text-muted-foreground ml-2 uppercase">{unit}</span>
-      </div>
-    </div>
-    <span className="text-xs font-medium text-primary uppercase tracking-wider">{label}</span>
-  </div>
-);
-
 interface LucidInsightsProps {
   stats: {
     recall_chart: { day?: string; count?: number }[];
