@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ImagePlus, Lock } from "lucide-react";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { showSubscriptionPrompt } from "@/lib/stripe";
-import { Capacitor } from "@capacitor/core";
+
 
 interface InitialImagePromptProps {
   disabled: boolean;
@@ -55,13 +55,7 @@ const InitialImagePrompt = ({
   }
 
   const handleSubscriptionPrompt = () => {
-    if (Capacitor.isNativePlatform()) {
-      // On native platforms, we can't show Stripe subscription prompt
-      // The user should go to the subscription dialog instead
-      console.log('Native platform: User should use subscription dialog');
-    } else {
-      showSubscriptionPrompt('image');
-    }
+    showSubscriptionPrompt('image');
   };
 
   return (

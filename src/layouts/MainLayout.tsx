@@ -63,6 +63,8 @@ const MainLayout = () => {
           </div>
         </div>
         
+        <PaywallDialog />
+        
         {/* Mobile bottom tab bar */}
         <motion.div
           initial={{ y: 60 }}
