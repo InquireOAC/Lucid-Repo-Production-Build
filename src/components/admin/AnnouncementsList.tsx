@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, Megaphone, Bell, PartyPopper, BarChart3 } from "lucide-react";
+import { Trash2, Megaphone, Bell, PartyPopper, BarChart3, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { motion } from "framer-motion";
 
 const typeIcons: Record<string, React.ReactNode> = {
   announcement: <Megaphone className="h-4 w-4" />,
@@ -15,12 +17,63 @@ const typeIcons: Record<string, React.ReactNode> = {
   poll: <BarChart3 className="h-4 w-4" />,
 };
 
+interface PollResult {
+  selected_option: string;
+  vote_count: number;
+}
+
+const PollResults = ({ announcementId }: { announcementId: string }) => {
+  const [results, setResults] = useState<PollResult[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data } = await supabase.rpc("get_poll_results", { p_announcement_id: announcementId });
+      if (data) setResults(data as PollResult[]);
+      setLoading(false);
+    };
+    fetch();
+  }, [announcementId]);
+
+  if (loading) return <p className="text-[10px] text-muted-foreground py-2">Loading results…</p>;
+
+  const totalVotes = results.reduce((s, r) => s + Number(r.vote_count), 0);
+
+  if (totalVotes === 0) return <p className="text-[10px] text-muted-foreground py-2">No votes yet</p>;
+
+  return (
+    <div className="space-y-2 pt-2">
+      <p className="text-[10px] font-medium text-muted-foreground">{totalVotes} total vote{totalVotes !== 1 ? "s" : ""}</p>
+      {results.map((r) => {
+        const pct = Math.round((Number(r.vote_count) / totalVotes) * 100);
+        return (
+          <div key={r.selected_option} className="space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span className="truncate">{r.selected_option}</span>
+              <span className="text-muted-foreground shrink-0 ml-2">{r.vote_count} ({pct}%)</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-primary"
+                initial={{ width: 0 }}
+                animate={{ width: `${pct}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 interface AnnouncementsListProps {
   refreshKey?: number;
 }
 
 const AnnouncementsList = ({ refreshKey }: AnnouncementsListProps) => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [expandedPolls, setExpandedPolls] = useState<Set<string>>(new Set());
 
   const fetchAll = async () => {
     const { data } = await supabase
@@ -44,6 +97,14 @@ const AnnouncementsList = ({ refreshKey }: AnnouncementsListProps) => {
     fetchAll();
   };
 
+  const togglePollExpand = (id: string) => {
+    setExpandedPolls(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
   if (announcements.length === 0) {
     return <p className="text-sm text-muted-foreground text-center py-6">No announcements yet</p>;
   }
@@ -65,6 +126,20 @@ const AnnouncementsList = ({ refreshKey }: AnnouncementsListProps) => {
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">{ann.content}</p>
                 <p className="text-[10px] text-muted-foreground mt-1">{format(new Date(ann.created_at), "MMM d, yyyy h:mm a")}</p>
+
+                {ann.type === "poll" && (
+                  <div className="mt-2">
+                    <button
+                      onClick={() => togglePollExpand(ann.id)}
+                      className="flex items-center gap-1 text-[11px] text-primary font-medium"
+                    >
+                      <BarChart3 className="h-3 w-3" />
+                      {expandedPolls.has(ann.id) ? "Hide Results" : "View Results"}
+                      <ChevronDown className={`h-3 w-3 transition-transform ${expandedPolls.has(ann.id) ? "rotate-180" : ""}`} />
+                    </button>
+                    {expandedPolls.has(ann.id) && <PollResults announcementId={ann.id} />}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Switch checked={ann.is_active} onCheckedChange={() => toggleActive(ann.id, ann.is_active)} />
