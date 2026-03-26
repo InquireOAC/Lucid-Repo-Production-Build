@@ -14,7 +14,7 @@ import Profile from './pages/Profile';
 import Auth from './pages/Auth';
 import LucidRepoContainer from './pages/LucidRepo';
 import Chat from './pages/Chat';
-import Learn from './pages/Learn';
+
 import Notifications from './pages/Notifications';
 import Insights from './pages/Insights';
 import LucidStats from './pages/LucidStats';
@@ -68,7 +68,7 @@ function AppContent() {
           <Route path="notifications" element={<Notifications />} />
           <Route path="insights" element={<Insights />} />
           <Route path="insights/technique/:id" element={<TechniqueDetailPage />} />
-          <Route path="learn" element={<Learn />} />
+          
           <Route path="admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Route>

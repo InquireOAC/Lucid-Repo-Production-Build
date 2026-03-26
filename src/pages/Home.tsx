@@ -6,7 +6,7 @@ import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { techniques } from "@/components/insights/techniqueData";
 
@@ -16,7 +16,7 @@ import techniqueImgWild from "@/assets/techniques/wild.jpeg";
 import techniqueImgFild from "@/assets/techniques/fild.jpeg";
 import techniqueImgDeild from "@/assets/techniques/deild.jpeg";
 import techniqueImgMeditation from "@/assets/techniques/meditation.jpeg";
-import { Progress } from "@/components/ui/progress";
+
 import { Button } from "@/components/ui/button";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,8 +110,6 @@ const Home = () => {
         {/* Pinned Techniques */}
         <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
 
-        {/* Dream Academy Card */}
-        <AcademyEntryCard />
 
         {/* Lucid Insights */}
         {stats && <LucidInsightsCard stats={stats} onTap={() => navigate("/lucid-stats")} />}
@@ -321,45 +319,6 @@ const FeedDreamCard = ({
 );
 
 
-const ACADEMY_QUOTES = [
-  "The path to lucidity is paved with consistency.",
-  "Every dream remembered is a step toward awareness.",
-  "Your subconscious speaks — learn to listen.",
-];
-
-const AcademyEntryCard = () => {
-  const navigate = useNavigate();
-  const { progress } = useAcademyProgress();
-  const tier = getTierInfo(progress?.current_tier || 1);
-  const next = getNextTierInfo(progress?.total_xp || 0);
-  const quote = ACADEMY_QUOTES[(progress?.total_xp || 0) % ACADEMY_QUOTES.length];
-
-  return (
-    <div
-      className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 cursor-pointer hover:border-primary/25 transition-colors"
-      onClick={() => navigate("/learn")}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-lg font-bold text-foreground">Dream Academy</h3>
-          <p className="text-xs font-medium text-primary uppercase tracking-wider">
-            Rank: {tier.name}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-lg font-bold text-foreground">{progress?.total_xp || 0} XP</p>
-          {next && (
-            <p className="text-[10px] text-muted-foreground">{next.xpNeeded - (progress?.total_xp || 0)} to next level</p>
-          )}
-        </div>
-      </div>
-      {next && (
-        <Progress value={next.progress} className="h-2 bg-muted/20 mb-3" />
-      )}
-      <p className="text-xs text-muted-foreground italic">"{quote}"</p>
-    </div>
-  );
-};
 
 /* Sleep-onset technique cards with custom images */
 const FALLING_ASLEEP_CARDS: { idx: number; image: string }[] = [
