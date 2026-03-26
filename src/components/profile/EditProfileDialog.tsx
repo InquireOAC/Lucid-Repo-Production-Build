@@ -324,8 +324,8 @@ const EditProfileDialog = ({
               </div>
             </div>
 
-            {/* Sticky save bar */}
-            <div className="flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-xl px-6 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}>
+            {/* Sticky save bar - above tab bar */}
+            <div className="flex-shrink-0 border-t border-border bg-background px-6 py-4 mb-16" style={{ paddingBottom: "env(safe-area-inset-bottom)" }}>
               <Button onClick={handleSave} className="w-full h-12 text-base font-semibold">
                 Save Changes
               </Button>
