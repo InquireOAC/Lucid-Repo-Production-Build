@@ -277,90 +277,123 @@ const LucidInsightsCard: React.FC<LucidInsightsProps> = ({ stats, onTap }) => {
   const topTechnique = stats.techniques?.[0];
 
   return (
-    <Card
-      className="glass-card border-primary/10 overflow-hidden cursor-pointer hover:border-primary/25 transition-colors"
+    <div
+      className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 space-y-3 cursor-pointer hover:border-primary/25 transition-colors"
       onClick={onTap}
     >
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Lucid Insights</h2>
-          </div>
-          <ChevronRight size={16} className="text-muted-foreground" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold text-foreground">Lucid Insights</h2>
         </div>
+        <ChevronRight size={16} className="text-muted-foreground" />
+      </div>
 
-        {chartData.length > 2 && (
-          <div className="h-24 -mx-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="insightGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis hide allowDecimals={false} />
-                <Area
-                  type="monotone"
-                  dataKey="count"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  fill="url(#insightGrad)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        <div className="grid grid-cols-3 gap-2 text-center">
-          <div>
-            <p className="text-lg font-bold text-foreground">{lucidRate}%</p>
-            <p className="text-[10px] text-muted-foreground">Lucid Rate</p>
-          </div>
-          <div>
-            <p className="text-lg font-bold text-foreground truncate">
-              {topTechnique ? topTechnique.technique : "—"}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {topTechnique ? `${topTechnique.rate}% success` : "Top Technique"}
-            </p>
-          </div>
-          <div>
-            <p className="text-lg font-bold text-foreground">{stats.avg_lucidity_level}</p>
-            <p className="text-[10px] text-muted-foreground">Avg Lucidity</p>
-          </div>
+      {chartData.length > 2 && (
+        <div className="h-24 -mx-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="insightGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis hide allowDecimals={false} />
+              <Area
+                type="monotone"
+                dataKey="count"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                fill="url(#insightGrad)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div>
+          <p className="text-lg font-bold text-foreground">{lucidRate}%</p>
+          <p className="text-[10px] text-muted-foreground">Lucid Rate</p>
+        </div>
+        <div>
+          <p className="text-lg font-bold text-foreground truncate">
+            {topTechnique ? topTechnique.technique : "—"}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            {topTechnique ? `${topTechnique.rate}% success` : "Top Technique"}
+          </p>
+        </div>
+        <div>
+          <p className="text-lg font-bold text-foreground">{stats.avg_lucidity_level}</p>
+          <p className="text-[10px] text-muted-foreground">Avg Lucidity</p>
+        </div>
+      </div>
+    </div>
   );
 };
 
-const QuickLink = ({
-  icon,
-  label,
+const FeedDreamCard = ({
+  dream,
   onClick,
 }: {
-  icon: React.ReactNode;
-  label: string;
+  dream: any;
   onClick: () => void;
 }) => (
-  <button
+  <div
+    className="rounded-2xl bg-[#0d1425] border border-border/20 cursor-pointer hover:border-primary/25 transition-colors overflow-hidden"
     onClick={onClick}
-    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card/50 border border-primary/10 hover:bg-primary/10 transition-colors"
   >
-    <span className="text-primary">{icon}</span>
-    <span className="text-[11px] font-medium text-muted-foreground">
-      {label}
-    </span>
-  </button>
+    <div className="flex gap-3 p-3">
+      {(dream.image_url || dream.generatedImage) && (
+        <img
+          src={dream.image_url || dream.generatedImage}
+          alt=""
+          className="w-20 h-20 rounded-lg object-cover shrink-0"
+        />
+      )}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-1">
+          {dream.profiles?.avatar_url ? (
+            <img
+              src={dream.profiles.avatar_url}
+              className="w-5 h-5 rounded-full"
+              alt=""
+            />
+          ) : (
+            <div className="w-5 h-5 rounded-full bg-primary/20" />
+          )}
+          <span className="text-xs text-muted-foreground truncate">
+            {dream.profiles?.display_name ||
+              dream.profiles?.username ||
+              "Dreamer"}
+          </span>
+        </div>
+        <h3 className="font-semibold text-sm text-foreground truncate">
+          {dream.title}
+        </h3>
+        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+          {dream.content?.slice(0, 120)}
+        </p>
+        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Heart size={12} /> {dream.like_count || 0}
+          </span>
+          <span className="flex items-center gap-1">
+            <MessageSquare size={12} /> {dream.comment_count || 0}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 );
 
 const FeedDreamCard = ({
