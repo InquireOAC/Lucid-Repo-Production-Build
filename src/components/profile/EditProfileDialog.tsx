@@ -143,84 +143,82 @@ const EditProfileDialog = ({
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-              {/* Banner gradient */}
-              <div className="h-24 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
+              {/* Banner gradient - taller to house avatars */}
+              <div className="h-44 bg-gradient-to-br from-primary/25 via-primary/10 to-background relative" />
 
-              <div className="px-6 -mt-12 pb-28 space-y-8">
+              <div className="px-6 -mt-28 pb-28 space-y-8">
                 {/* Avatar Section */}
-                <div className="space-y-4">
-                  <div className="flex gap-5 justify-center">
-                    {/* Symbol Avatar Option */}
-                    <button
-                      type="button"
-                      onClick={handleSelectSymbol}
-                      className={cn(
-                        "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                        selectedAvatarType === "symbol"
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-muted-foreground/30"
+                <div className="flex gap-4 justify-center">
+                  {/* Symbol Avatar Option */}
+                  <button
+                    type="button"
+                    onClick={handleSelectSymbol}
+                    className={cn(
+                      "flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all w-[160px]",
+                      selectedAvatarType === "symbol"
+                        ? "border-primary bg-primary/10 backdrop-blur-sm"
+                        : "border-border/50 bg-muted/20 backdrop-blur-sm hover:border-muted-foreground/30"
+                    )}
+                  >
+                    <div className="relative">
+                      <ProfileAvatar
+                        avatarSymbol={avatarSymbol}
+                        avatarColor={avatarColor}
+                        avatarUrl={null}
+                        username={username}
+                        isOwnProfile={false}
+                        onEdit={() => {}}
+                      />
+                      {selectedAvatarType === "symbol" && (
+                        <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
                       )}
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Symbol</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => { e.stopPropagation(); setSymbolPickerOpen(true); }}
+                      className="text-xs text-primary h-7 px-3"
                     >
-                      <div className="relative">
-                        <ProfileAvatar
-                          avatarSymbol={avatarSymbol}
-                          avatarColor={avatarColor}
-                          avatarUrl={null}
-                          username={username}
-                          isOwnProfile={false}
-                          onEdit={() => {}}
-                        />
-                        {selectedAvatarType === "symbol" && (
-                          <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">Symbol</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); setSymbolPickerOpen(true); }}
-                        className="text-xs text-primary h-7"
-                      >
-                        Change
-                      </Button>
-                    </button>
+                      Change
+                    </Button>
+                  </button>
 
-                    {/* Dream Avatar Option */}
-                    <button
-                      type="button"
-                      onClick={handleSelectDreamAvatar}
-                      disabled={!dreamAvatarUrl}
-                      className={cn(
-                        "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                        !dreamAvatarUrl && "opacity-40 cursor-not-allowed",
-                        selectedAvatarType === "dream" && dreamAvatarUrl
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-muted-foreground/30"
-                      )}
-                    >
-                      <div className="relative">
-                        {dreamAvatarUrl ? (
-                          <>
-                            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary/30 shadow-lg">
-                              <img src={dreamAvatarUrl} alt="Dream Avatar" className="w-full h-full object-cover" />
-                            </div>
-                            {selectedAvatarType === "dream" && (
-                              <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
-                            )}
-                          </>
-                        ) : (
-                          <div className="w-24 h-24 rounded-full border-4 border-dashed border-border flex items-center justify-center">
-                            <span className="text-muted-foreground text-xs text-center px-2">No Dream Avatar</span>
+                  {/* Dream Avatar Option */}
+                  <button
+                    type="button"
+                    onClick={handleSelectDreamAvatar}
+                    disabled={!dreamAvatarUrl}
+                    className={cn(
+                      "flex flex-col items-center gap-3 p-4 rounded-2xl border-2 transition-all w-[160px]",
+                      !dreamAvatarUrl && "opacity-40 cursor-not-allowed",
+                      selectedAvatarType === "dream" && dreamAvatarUrl
+                        ? "border-primary bg-primary/10 backdrop-blur-sm"
+                        : "border-border/50 bg-muted/20 backdrop-blur-sm hover:border-muted-foreground/30"
+                    )}
+                  >
+                    <div className="relative">
+                      {dreamAvatarUrl ? (
+                        <>
+                          <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary/30 shadow-lg">
+                            <img src={dreamAvatarUrl} alt="Dream Avatar" className="w-full h-full object-cover" />
                           </div>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">Dream Avatar</span>
-                      {!dreamAvatarUrl && (
-                        <span className="text-[10px] text-muted-foreground text-center">Set in Avatar settings</span>
+                          {selectedAvatarType === "dream" && (
+                            <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
+                          )}
+                        </>
+                      ) : (
+                        <div className="w-24 h-24 rounded-full border-4 border-dashed border-border flex items-center justify-center">
+                          <span className="text-muted-foreground text-xs text-center px-2">No Dream Avatar</span>
+                        </div>
                       )}
-                    </button>
-                  </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground font-medium">Dream Avatar</span>
+                    {!dreamAvatarUrl && (
+                      <span className="text-[10px] text-muted-foreground text-center">Set in Avatar settings</span>
+                    )}
+                  </button>
                 </div>
 
                 <Separator />
