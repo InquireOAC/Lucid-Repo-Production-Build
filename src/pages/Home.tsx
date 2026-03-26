@@ -396,62 +396,6 @@ const FeedDreamCard = ({
   </div>
 );
 
-const FeedDreamCard = ({
-  dream,
-  onClick,
-}: {
-  dream: any;
-  onClick: () => void;
-}) => (
-  <Card
-    className="glass-card border-primary/10 cursor-pointer hover:border-primary/25 transition-colors overflow-hidden"
-    onClick={onClick}
-  >
-    <CardContent className="p-0">
-      <div className="flex gap-3 p-3">
-        {(dream.image_url || dream.generatedImage) && (
-          <img
-            src={dream.image_url || dream.generatedImage}
-            alt=""
-            className="w-20 h-20 rounded-lg object-cover shrink-0"
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 mb-1">
-            {dream.profiles?.avatar_url ? (
-              <img
-                src={dream.profiles.avatar_url}
-                className="w-5 h-5 rounded-full"
-                alt=""
-              />
-            ) : (
-              <div className="w-5 h-5 rounded-full bg-primary/20" />
-            )}
-            <span className="text-xs text-muted-foreground truncate">
-              {dream.profiles?.display_name ||
-                dream.profiles?.username ||
-                "Dreamer"}
-            </span>
-          </div>
-          <h3 className="font-semibold text-sm text-foreground truncate">
-            {dream.title}
-          </h3>
-          <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-            {dream.content?.slice(0, 120)}
-          </p>
-          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1">
-              <Heart size={12} /> {dream.like_count || 0}
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageSquare size={12} /> {dream.comment_count || 0}
-            </span>
-          </div>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
-);
 
 const AcademyEntryCard = () => {
   const navigate = useNavigate();
