@@ -21,7 +21,7 @@ type PaywallFeature = "analysis" | "image" | "chat";
 
 const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: string; description: string }> = {
   analysis: {
-    icon: Brain,
+    icon: LogoIcon,
     title: "Dream Analysis",
     description: "AI-powered dream interpretation with symbols, emotions, and subconscious insights.",
   },
