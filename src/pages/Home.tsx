@@ -93,55 +93,38 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Stats Card */}
-        {stats && <StatsCard stats={stats} />}
+        {/* Stats Cards — stacked */}
+        {stats && <StatsCards stats={stats} />}
 
-        {/* Active Challenge */}
-        {activeChallenge && (
-          <Card className="glass-card border-primary/20 overflow-hidden">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-xl bg-primary/15">
-                  <Trophy className="text-primary" size={22} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-primary uppercase tracking-wide mb-0.5">
-                    Today's Challenge
-                  </p>
-                  <h3 className="font-semibold text-foreground text-sm truncate">
-                    {activeChallenge.title}
-                  </h3>
-                  {activeChallenge.description && (
-                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                      {activeChallenge.description}
-                    </p>
-                  )}
-                </div>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="text-primary shrink-0"
-                  onClick={() => navigate("/lucid-repo")}
-                >
-                  Join
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+        {/* AI Dream Analyst CTA */}
+        <div
+          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-5 cursor-pointer hover:border-primary/25 transition-colors"
+          onClick={() => navigate("/chat")}
+        >
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
+              <Crosshair size={20} className="text-primary" />
+            </div>
+            <h3 className="font-semibold text-foreground text-lg">AI Dream Analyst</h3>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+            Uncover the hidden patterns of your subconscious with our quantum-powered dream interpretation engine.
+          </p>
+          <button className="flex items-center gap-1.5 text-primary text-sm font-medium">
+            Start Interpretation <ArrowUpRight size={16} />
+          </button>
+        </div>
 
-        {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-2">
-          <QuickLink
-            icon={<MessageCircle size={20} />}
-            label="AI Dream Chat"
-            onClick={() => navigate("/chat")}
-          />
-          <QuickLink
-            icon={<BookOpen size={20} />}
-            label="Dream Book"
-            onClick={() => navigate("/dream-book")}
-          />
+        {/* Dream Book CTA */}
+        <div
+          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-6 cursor-pointer hover:border-primary/25 transition-colors text-center"
+          onClick={() => navigate("/dream-book")}
+        >
+          <BookOpen size={36} className="text-primary mx-auto mb-3" />
+          <h3 className="font-semibold text-foreground text-lg mb-1">Dream Book</h3>
+          <p className="text-sm text-muted-foreground">
+            Browse your personal gallery of subconscious adventures.
+          </p>
         </div>
 
         {/* Pinned Techniques */}
