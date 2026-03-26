@@ -32,10 +32,8 @@ import {
   Pencil,
   Flame,
   BookOpen,
-  BookOpen,
   Brain,
   Heart,
-  
   MessageSquare,
   ChevronRight,
   Sparkles,
@@ -49,13 +47,8 @@ const Home = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { dreams, isLoading: feedLoading } = useFeedPublicDreams(user);
-  const { challenges } = useChallenges();
   const { stats } = useLucidStats();
   const { pinnedIndices } = usePinnedTechniques();
-
-  const activeChallenge = challenges.find(
-    (c: Challenge) => c.status === "active"
-  );
 
   const { data: todayCount } = useQuery({
     queryKey: ["repo-today-count"],
