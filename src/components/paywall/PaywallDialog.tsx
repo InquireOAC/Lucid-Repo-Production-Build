@@ -37,14 +37,22 @@ const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: s
   },
 };
 
-const PLAN_FEATURES = [
-  { label: "Unlimited Dream Analysis", icon: Infinity },
-  { label: "AI Dream Art Generation", icon: ImageIcon },
-  { label: "AI Dream Chat", icon: MessageCircle },
-  { label: "Dream Video Generation", icon: Video },
-  { label: "Voice-to-Text Journaling", icon: Mic },
-  { label: "Priority Support", icon: Crown },
-];
+const PLAN_FEATURES: Record<string, { label: string; icon: React.ElementType }[]> = {
+  dreamer: [
+    { label: "Unlimited Dream Analysis", icon: Infinity },
+    { label: "10 Dream Art Generations", icon: ImageIcon },
+    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
+    { label: "Voice-to-Text Journaling", icon: Mic },
+  ],
+  mystic: [
+    { label: "Unlimited Dream Analysis", icon: Infinity },
+    { label: "Unlimited Dream Art", icon: ImageIcon },
+    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Video },
+    { label: "Voice-to-Text Journaling", icon: Mic },
+    { label: "Priority Support", icon: Crown },
+  ],
+};
 
 const PaywallDialog = () => {
   const { user } = useAuth();
@@ -136,6 +144,12 @@ const PaywallDialog = () => {
 
   const sortedProducts = [...products].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
 
+  const selectedProduct = products.find(p => p.id === selectedPlan);
+  const selectedTierKey = selectedProduct
+    ? (selectedProduct.name.toLowerCase().includes("mystic") || selectedProduct.id === "price_premium" ? "mystic" : "dreamer")
+    : "mystic";
+  const activeFeatures = PLAN_FEATURES[selectedTierKey];
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -186,7 +200,7 @@ const PaywallDialog = () => {
               {/* Feature list */}
               <div className="px-6 pb-4">
                 <ul className="space-y-2.5">
-                  {PLAN_FEATURES.map((f, i) => (
+                  {activeFeatures.map((f, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-foreground/90">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" />
                       <span>{f.label}</span>
