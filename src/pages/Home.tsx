@@ -503,7 +503,7 @@ const FallingAsleepSection: React.FC = () => {
   return (
     <div>
       <h2 className="text-lg font-bold text-foreground mb-4">
-        While Falling Asleep
+        Lucid Techniques
       </h2>
       <div className="grid grid-cols-2 gap-3">
         {FALLING_ASLEEP_CARDS.map(({ idx, image }) => {
