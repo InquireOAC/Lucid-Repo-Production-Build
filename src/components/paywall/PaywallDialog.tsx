@@ -174,7 +174,7 @@ const PaywallDialog = () => {
               <div className="relative px-6 pt-10 pb-6 text-center">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
                 <div className="relative">
-                  <div className="inline-flex items-center justify-center w-48 h-48 rounded-2xl mb-5">
+                  <div className="inline-flex items-center justify-center w-48 h-48 rounded-2xl mb-2">
                     <FeatureIcon className="h-24 w-24" />
                   </div>
                   <h2 className="text-2xl font-bold text-foreground mb-2">
