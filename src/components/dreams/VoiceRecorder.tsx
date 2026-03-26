@@ -100,7 +100,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
               description: 'Your audio recording has been saved, but transcription requires a subscription.',
               action: {
                 label: 'Upgrade',
-                onClick: () => window.location.href = '/profile?tab=subscription'
+                onClick: () => window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }))
               },
               duration: 5000
             });
