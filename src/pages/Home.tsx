@@ -462,49 +462,49 @@ const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinned
   if (pinnedIndices.length === 0) {
     return (
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-          <Pin size={18} className="text-primary" />
-          Pinned Techniques
+        <h2 className="text-sm font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
+          <Pin size={14} className="text-primary" />
+          Pinned Technique
         </h2>
-        <Card className="bg-[#0d1425] border-primary/15">
-          <CardContent className="p-5 text-center">
-            <p className="text-sm text-muted-foreground">
-              Pin a technique from the Explore page to display it here.
-            </p>
-          </CardContent>
-        </Card>
+        <div className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 text-center">
+          <p className="text-sm text-muted-foreground">
+            Pin a technique from the Explore page to display it here.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
     <div>
-      <h2 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
-        <Pin size={18} className="text-primary" />
-        Pinned Techniques
-      </h2>
       <div className="space-y-3">
         {pinnedIndices.map((idx) => {
           const t = techniques[idx];
           if (!t) return null;
-          const flatBg = getFlatDifficultyBg(t.difficulty);
           return (
             <div
               key={idx}
               onClick={() => navigate(`/insights/technique/${idx}`)}
-              className={`flex items-center gap-4 rounded-2xl border ${flatBg} p-4 cursor-pointer hover:brightness-110 transition-all`}
+              className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 cursor-pointer hover:border-primary/25 transition-colors"
             >
-              <div className={`w-14 h-14 rounded-full ${getDifficultyStyles(t.difficulty).iconBg} flex items-center justify-center shrink-0`}>
-                <span className="text-3xl">{t.icon}</span>
+              <p className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <Pin size={12} />
+                Pinned Technique
+              </p>
+              <h3 className="text-xl font-bold text-foreground mb-1">
+                {t.acronym || t.name}
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                {t.name}{t.acronym ? `. ${t.shortDescription}` : ""}
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Clock size={12} /> {t.timeEstimate || "15m"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ArrowUpRight size={12} /> {t.difficulty}
+                </span>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground text-sm">
-                  {t.name}
-                  {t.acronym && <span className="text-primary ml-1.5 text-xs font-normal">({t.acronym})</span>}
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{t.shortDescription}</p>
-              </div>
-              <ChevronRight size={16} className="text-muted-foreground shrink-0" />
             </div>
           );
         })}
