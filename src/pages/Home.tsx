@@ -68,11 +68,14 @@ const Home = () => {
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Greeting + Record CTA */}
         <div className="pt-12 mb-4">
-          <h1 className="text-lg font-semibold text-foreground mb-0.5">
-            {user
-              ? `Welcome back, ${profile?.display_name || profile?.username || "Dreamer"}`
-              : "Sign in to get started"}
+          <h1 className="text-3xl font-bold text-foreground leading-tight">
+            {user ? "Welcome back," : "Sign in to get started"}
           </h1>
+          {user && (
+            <p className="text-2xl font-semibold text-primary mt-1">
+              {profile?.display_name || profile?.username || "Dreamer"}
+            </p>
+          )}
           
           <div
             className="mt-2 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
