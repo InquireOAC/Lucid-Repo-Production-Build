@@ -9,6 +9,9 @@ import { Progress } from "@/components/ui/progress";
 import { Video, Loader2, Sparkles, Wand2, X, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { showSubscriptionPrompt } from "@/lib/stripe";
+import { toast } from "sonner";
 
 interface GenerateVideoDialogProps {
   open: boolean;
@@ -60,7 +63,22 @@ export const GenerateVideoDialog = ({
     craftPrompt();
   }, [open, dreamContent, imageUrl]);
 
+  const { canUseFeature, subscriptionTier } = useFeatureUsage();
+
   const handleGenerate = async () => {
+    // Video generation is Mystic-only
+    const canUse = await canUseFeature('video');
+    if (!canUse) {
+      toast.error("Dream Video Generation requires a Mystic subscription.");
+      showSubscriptionPrompt('video');
+      return;
+    }
+    if (subscriptionTier === 'dreamer') {
+      toast.error("Dream Video Generation is a Mystic-tier feature.");
+      showSubscriptionPrompt('video');
+      return;
+    }
+
     setIsGenerating(true);
     setProgress(10);
 

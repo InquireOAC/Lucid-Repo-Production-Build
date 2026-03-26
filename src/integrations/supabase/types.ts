@@ -1672,6 +1672,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_free_trials: {
+        Row: {
+          feature: string
+          id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          id?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          id?: string
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       followers: {
         Row: {
           created_at: string | null

@@ -25,7 +25,7 @@ export const useImageGeneration = ({
 }: UseImageGenerationProps) => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature, recordFeatureUsage } = useFeatureUsage();
+  const { hasUsedFeature, canUseFeature, recordFeatureUsage } = useFeatureUsage();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -117,13 +117,9 @@ export const useImageGeneration = ({
 
       // 4. Record feature usage and refresh subscription data
       if (!isAdmin) {
-        if (!hasUsedFeature("image")) {
-          markFeatureAsUsed("image");
-        } else {
-          console.log('Recording image usage in database...');
-          const usageRecorded = await recordFeatureUsage("image");
-          console.log('Image usage recorded:', usageRecorded);
-        }
+        console.log('Recording image usage...');
+        const usageRecorded = await recordFeatureUsage("image");
+        console.log('Image usage recorded:', usageRecorded);
         
         if (onSubscriptionRefresh) {
           console.log('Refreshing subscription data after image generation...');
@@ -147,8 +143,6 @@ export const useImageGeneration = ({
     dreamId,
     isAdmin,
     canUseFeature,
-    markFeatureAsUsed,
-    hasUsedFeature,
     recordFeatureUsage,
     onImageGenerated,
     onSubscriptionRefresh,
