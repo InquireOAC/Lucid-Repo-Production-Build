@@ -1,7 +1,6 @@
 import React from 'react';
-import { getTierInfo, getNextTierInfo, TIER_THRESHOLDS } from '@/hooks/useAcademyProgress';
+import { getTierInfo, getNextTierInfo } from '@/hooks/useAcademyProgress';
 import { Progress } from '@/components/ui/progress';
-import { Flame } from 'lucide-react';
 
 interface AcademyHeroCardProps {
   totalXP: number;
@@ -18,48 +17,43 @@ export const AcademyHeroCard: React.FC<AcademyHeroCardProps> = ({
 }) => {
   const tier = getTierInfo(currentTier);
   const next = getNextTierInfo(totalXP);
+  const maxXP = next ? next.xp + next.xpNeeded - (next.xp - totalXP) : totalXP;
+  const targetXP = next ? next.xp + next.xpNeeded : totalXP;
 
   return (
-    <div className="rounded-2xl bg-gradient-to-br from-primary/20 via-card to-card border border-primary/20 p-5 space-y-4">
-      {/* Tier + XP */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{tier.icon}</span>
-          <div>
-            <h2 className="text-lg font-bold text-foreground">{tier.name}</h2>
-            <p className="text-xs text-muted-foreground">Tier {tier.tier}</p>
-          </div>
+    <div className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 space-y-5">
+      {/* Rank + Level Progress */}
+      <div className="flex items-start justify-between">
+        <div>
+          <p className="text-[10px] uppercase tracking-widest text-primary/70 font-medium mb-1">Current Rank</p>
+          <h2 className="text-2xl font-bold text-foreground">{tier.name}</h2>
         </div>
         <div className="text-right">
-          <p className="text-2xl font-bold text-primary">{totalXP.toLocaleString()}</p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Total XP</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium mb-1">Level Progress</p>
+          <p className="text-lg font-bold text-foreground">
+            <span className="text-primary">{totalXP.toLocaleString()}</span>
+            <span className="text-muted-foreground text-sm font-normal"> / {next ? (totalXP + next.xpNeeded).toLocaleString() : totalXP.toLocaleString()} XP</span>
+          </p>
         </div>
       </div>
 
-      {/* Progress to next tier */}
+      {/* Progress bar */}
       {next && (
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Next: {next.icon} {next.name}</span>
-            <span>{next.xpNeeded} XP to go</span>
-          </div>
-          <Progress value={next.progress} className="h-2.5 bg-muted/30" />
-        </div>
+        <Progress value={next.progress} className="h-2 bg-muted/20" />
       )}
       {!next && (
-        <p className="text-sm text-primary/80 text-center font-medium">✨ Maximum tier reached!</p>
+        <Progress value={100} className="h-2 bg-muted/20" />
       )}
 
-      {/* Streak */}
-      <div className="flex items-center justify-center gap-6 pt-1">
-        <div className="flex items-center gap-1.5">
-          <Flame size={18} className="text-orange-400" />
-          <span className="text-sm font-bold text-foreground">{currentStreak}</span>
-          <span className="text-xs text-muted-foreground">day streak</span>
+      {/* Streak boxes */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-border/30 bg-background/30 px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium mb-1">Day Streak</p>
+          <p className="text-2xl font-bold text-foreground">{currentStreak}</p>
         </div>
-        <div className="w-px h-4 bg-border" />
-        <div className="text-xs text-muted-foreground">
-          Best: <span className="font-semibold text-foreground">{longestStreak}</span> days
+        <div className="rounded-xl border border-border/30 bg-background/30 px-4 py-3">
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium mb-1">Best Streak</p>
+          <p className="text-2xl font-bold text-foreground">{longestStreak}</p>
         </div>
       </div>
     </div>

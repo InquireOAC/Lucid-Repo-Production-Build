@@ -1,7 +1,6 @@
 import React from 'react';
 import { ModuleWithProgress } from '@/hooks/useAcademyModules';
-import { Progress } from '@/components/ui/progress';
-import { Lock, CheckCircle2, ChevronRight } from 'lucide-react';
+import { ChevronRight, Lock } from 'lucide-react';
 
 interface ModuleListProps {
   modules: ModuleWithProgress[];
@@ -14,64 +13,67 @@ export const ModuleList: React.FC<ModuleListProps> = ({ modules, onModuleClick }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold text-foreground mb-3">🌙 Lucid Dreaming</h2>
-        <div className="space-y-2">
-          {ldModules.map(m => (
-            <ModuleCard key={m.id} module={m} onClick={() => onModuleClick(m.id)} />
-          ))}
-        </div>
-      </div>
-
+      <TrackSection
+        title="Lucid Dreaming"
+        modules={ldModules}
+        onModuleClick={onModuleClick}
+      />
       {apModules.length > 0 && (
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">🔮 Astral Projection</h2>
-          <div className="space-y-2">
-            {apModules.map(m => (
-              <ModuleCard key={m.id} module={m} onClick={() => onModuleClick(m.id)} />
-            ))}
-          </div>
-        </div>
+        <TrackSection
+          title="Astral Projection"
+          modules={apModules}
+          onModuleClick={onModuleClick}
+        />
       )}
     </div>
   );
 };
 
-const ModuleCard: React.FC<{ module: ModuleWithProgress; onClick: () => void }> = ({ module, onClick }) => {
-  const progress = module.lesson_count > 0
-    ? (module.lessons_completed / module.lesson_count) * 100
-    : 0;
+const TrackSection: React.FC<{
+  title: string;
+  modules: ModuleWithProgress[];
+  onModuleClick: (id: string) => void;
+}> = ({ title, modules, onModuleClick }) => {
+  const completed = modules.filter(m => m.is_completed).length;
+  const total = modules.length;
 
+  return (
+    <div>
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-lg font-bold text-foreground">{title}</h2>
+        <span className="text-xs text-muted-foreground font-medium">{completed} / {total} MODULES</span>
+      </div>
+      <div className="rounded-2xl bg-[#0d1425] border border-border/20 overflow-hidden divide-y divide-border/10">
+        {modules.map(m => (
+          <ModuleRow key={m.id} module={m} onClick={() => onModuleClick(m.id)} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const ModuleRow: React.FC<{ module: ModuleWithProgress; onClick: () => void }> = ({ module, onClick }) => {
   return (
     <button
       onClick={onClick}
       disabled={!module.is_unlocked}
-      className={`w-full flex items-center gap-3 p-3.5 rounded-xl border transition-colors text-left ${
+      className={`w-full flex items-center gap-3 px-4 py-4 text-left transition-colors ${
         module.is_unlocked
-          ? 'bg-card border-border/50 hover:border-primary/30 hover:bg-card/80'
-          : 'bg-muted/20 border-border/20 opacity-60 cursor-not-allowed'
+          ? 'hover:bg-primary/5'
+          : 'opacity-50 cursor-not-allowed'
       }`}
     >
-      <span className="text-2xl shrink-0">{module.icon || '📘'}</span>
+      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-lg shrink-0">
+        {module.icon || '📘'}
+      </div>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-sm text-foreground truncate">{module.title}</h3>
-          {module.is_completed && <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />}
-        </div>
-        <p className="text-[11px] text-muted-foreground mt-0.5">
-          Tier {module.tier_required} • {module.lesson_count} lessons
+        <h3 className="font-semibold text-sm text-foreground truncate">{module.title}</h3>
+        <p className="text-[11px] text-primary/60 font-medium uppercase tracking-wide mt-0.5">
+          Tier {module.tier_required}
         </p>
-        {module.is_unlocked && module.lessons_completed > 0 && !module.is_completed && (
-          <div className="mt-1.5 flex items-center gap-2">
-            <Progress value={progress} className="h-1.5 flex-1 bg-muted/30" />
-            <span className="text-[10px] text-muted-foreground">
-              {module.lessons_completed}/{module.lesson_count}
-            </span>
-          </div>
-        )}
       </div>
       {module.is_unlocked ? (
-        <ChevronRight size={16} className="text-muted-foreground shrink-0" />
+        <ChevronRight size={18} className="text-muted-foreground shrink-0" />
       ) : (
         <Lock size={14} className="text-muted-foreground shrink-0" />
       )}
