@@ -1,13 +1,11 @@
 
 
-## Plan: Change Dream Text to App's Brand Font
+## Plan: Increase Top Spacing on Home Page Greeting
 
-**What**: Update the dream content text in `DreamDetailContent.tsx` to use the app's brand font (`font-basis` / Basis Grotesque Pro).
+**What**: Add more vertical space above the greeting section to match the reference screenshot, which shows generous top padding before "Good morning / Username".
 
-**Change** in `src/components/dreams/DreamDetailContent.tsx`:
-- Line 142: Add `font-basis` class to the `PaginatedText` className
-- From: `className="text-sm whitespace-pre-wrap"`
-- To: `className="text-sm whitespace-pre-wrap font-basis"`
+**Change** in `src/pages/Home.tsx`:
+- Update the greeting wrapper `div` from `className="pt-4 mb-4"` to `className="pt-12 mb-4"` to add significantly more top padding
 
-**1 file modified**: `src/components/dreams/DreamDetailContent.tsx`
+**1 file modified**: `src/pages/Home.tsx`
 
