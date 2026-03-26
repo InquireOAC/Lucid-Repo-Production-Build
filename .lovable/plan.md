@@ -1,71 +1,36 @@
 
 
-## Plan: Admin Poll Results + Auto Challenge Entry on Dream Save
+## Plan: Redesign Paywall to Selection-Based Layout
 
-### Problem
-1. **Polls**: Admin dashboard shows polls in the announcements list but has no way to see vote results/standings
-2. **Challenges**: There is no mechanism to auto-enter a dream into a challenge when a user tags it with the challenge's `required_tag`. The `challenge_entries` table exists but is never populated.
+**Inspiration**: The reference screenshot shows a single-select plan picker (Yearly/Monthly cards) with one shared "Subscribe" button at the bottom, instead of per-plan subscribe buttons.
 
-### Changes
+### Design
+- Remove per-plan feature lists and individual subscribe buttons
+- Show the feature hero section (icon + title + description) at top
+- Below: two selectable plan cards (radio-style) — user taps to select, highlighted with primary border
+- The more expensive/better-value plan gets a "Best value!" badge
+- One shared "Subscribe" CTA button pinned at the bottom
+- Restore purchases link and terms text below the button
 
-#### 1. Add Poll Results to Admin Announcements List (`src/components/admin/AnnouncementsList.tsx`)
-- For poll-type announcements, add an expandable results section
-- Call the existing `get_poll_results` RPC to fetch vote counts
-- Display horizontal bar chart with option names, vote counts, and percentages
-- Show total votes count
+### Changes in `src/components/paywall/PaywallDialog.tsx`
 
-#### 2. Create DB trigger to auto-enter dreams into active challenges (`migration`)
-- Create a trigger function `auto_enter_challenge()` on `dream_entries` INSERT/UPDATE
-- When a dream is inserted or its tags are updated, check if any tag matches an active challenge's `required_tag`
-- If match found and no existing entry, insert into `challenge_entries`
-- This ensures users automatically participate in challenges by using the hashtag
+**Stripe plans section** (replace lines 198-261):
+- Add `selectedPlan` state (defaults to the premium/best-value plan)
+- Render each product as a selectable card showing: plan name, total price, per-month breakdown
+- Selected card gets `border-primary` ring, unselected gets `border-border/30`
+- Premium plan gets "Best value!" badge (positioned like the screenshot)
+- Remove feature lists from plan cards — keep the hero description as the selling point
+- Move the Subscribe button to a fixed bottom bar outside the scroll area
 
-```sql
-CREATE OR REPLACE FUNCTION public.auto_enter_challenge()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-DECLARE
-  challenge RECORD;
-  tag text;
-BEGIN
-  IF NEW.tags IS NULL OR array_length(NEW.tags, 1) IS NULL THEN
-    RETURN NEW;
-  END IF;
+**Native plans section** (NativePaywallPlans):
+- Same selection pattern: selectable cards + single subscribe button
 
-  FOR challenge IN
-    SELECT id, required_tag FROM community_challenges
-    WHERE status = 'active'
-      AND now() BETWEEN start_date AND end_date
-  LOOP
-    FOREACH tag IN ARRAY NEW.tags
-    LOOP
-      IF lower(trim(tag)) = lower(trim(challenge.required_tag)) 
-         OR lower(trim('#' || tag)) = lower(trim(challenge.required_tag)) THEN
-        INSERT INTO challenge_entries (challenge_id, user_id, dream_id)
-        VALUES (challenge.id, NEW.user_id, NEW.id)
-        ON CONFLICT DO NOTHING;
-      END IF;
-    END LOOP;
-  END LOOP;
-
-  RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER on_dream_check_challenge
-  AFTER INSERT OR UPDATE OF tags ON dream_entries
-  FOR EACH ROW EXECUTE FUNCTION auto_enter_challenge();
-```
-
-#### 3. Add unique constraint to prevent duplicate entries (`migration`)
-- Add a unique constraint on `(challenge_id, dream_id)` so the `ON CONFLICT DO NOTHING` works
+**Bottom bar** (new fixed section):
+- "Subscribe" button, full-width, primary color
+- Terms text below
 
 ### Files
 | File | Action |
 |---|---|
-| `src/components/admin/AnnouncementsList.tsx` | Add expandable poll results for poll-type announcements |
-| Migration SQL | Create `auto_enter_challenge` trigger + unique constraint on `challenge_entries` |
+| `src/components/paywall/PaywallDialog.tsx` | Redesign plan selection UI |
 
