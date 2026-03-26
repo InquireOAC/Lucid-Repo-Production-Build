@@ -178,7 +178,7 @@ const Home = () => {
             </Card>
           ) : (
             <div className="space-y-3">
-              {dreams.slice(0, 20).map((dream: any) => (
+              {dreams.slice(0, 3).map((dream: any) => (
                 <FeedDreamCard
                   key={dream.id}
                   dream={dream}
