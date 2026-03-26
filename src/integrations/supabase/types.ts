@@ -3081,6 +3081,13 @@ export type Database = {
         Returns: undefined
       }
       get_lucid_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_poll_results: {
+        Args: { p_announcement_id: string }
+        Returns: {
+          selected_option: string
+          vote_count: number
+        }[]
+      }
       grant_learning_achievement: {
         Args: { p_achievement_id: string }
         Returns: boolean
