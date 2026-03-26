@@ -72,7 +72,7 @@ const AnnouncementBanner = () => {
               "backdrop-blur-sm",
               "hover:border-primary/30 transition-all duration-300"
             )}
-            onClick={() => setModalOpen(true)}
+            onClick={() => currentAnnouncement.type === 'poll' ? setPollModalOpen(true) : setModalOpen(true)}
           >
             {/* Shimmer effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-pulse" />
