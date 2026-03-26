@@ -75,7 +75,7 @@ const Home = () => {
           </h1>
           
           <div
-            className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
+            className="mt-2 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
             onClick={() => navigate("/journal/new")}
           >
             <div className="flex items-center gap-3">
