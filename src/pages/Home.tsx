@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 
 import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
+import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 import {
   AreaChart,
   Area,
@@ -76,6 +77,10 @@ const Home = () => {
               {profile?.display_name || profile?.username || "Dreamer"}
             </p>
           )}
+
+          <div className="mt-[10px]">
+            <AnnouncementBanner />
+          </div>
           
           <div
             className="mt-2 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
