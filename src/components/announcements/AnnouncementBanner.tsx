@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import PollVotingModal from "./PollVotingModal";
 
 const typeConfig: Record<string, { icon: React.ReactNode; gradient: string; glow: string; label: string; emoji: string }> = {
   announcement: {
