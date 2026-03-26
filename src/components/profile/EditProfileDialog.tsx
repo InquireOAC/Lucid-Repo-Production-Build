@@ -143,10 +143,7 @@ const EditProfileDialog = ({
 
             {/* Scrollable content */}
             <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-              {/* Banner gradient - taller to house avatars */}
-              <div className="h-44 bg-gradient-to-br from-primary/25 via-primary/10 to-background relative" />
-
-              <div className="px-6 -mt-28 pb-28 space-y-8">
+              <div className="px-6 pt-6 pb-6 space-y-8">
                 {/* Avatar Section */}
                 <div className="flex gap-4 justify-center">
                   {/* Symbol Avatar Option */}
