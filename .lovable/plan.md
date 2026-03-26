@@ -1,115 +1,94 @@
 
 
-## Plan: Overhaul Paywall & Feature Gating System
+## Subscription Gating Audit: Issues Found & Fix Plan
 
-Two major workstreams: (1) fix the broken `showSubscriptionPrompt` which currently only logs to console, and (2) redesign all paywall UI to match the app's cosmic aesthetic.
+### Critical Bugs
 
----
+1. **Free trial stored in localStorage — trivially bypassable**
+   - `useFeatureUsage.ts` line 26: `localStorage.getItem(`feature_usage_${user.id}`)` is the sole gatekeeper for free trials
+   - Users can clear localStorage, use incognito, or switch browsers to get unlimited free uses
+   - No server-side record of free trial consumption exists
 
-### Problem Summary
+2. **Stale `hasActiveSubscription` in `canUseFeature`**
+   - Line 165: `if (hasActiveSubscription)` checks the React state, but `checkSubscriptionStatus()` on line 163 is async and updates state — the state won't be updated yet in the same render cycle
+   - This means the first call after subscription activation may still deny access
 
-- **`showSubscriptionPrompt()`** in `src/lib/stripe.ts` does nothing visible — it only calls `console.warn`. Users hitting the paywall see no UI feedback.
-- Free trial tracking uses `localStorage`, meaning users can clear storage or switch devices to bypass gating.
-- Paywall UIs across Analysis, Image Gen, and Chat are inconsistent — some show Lock buttons, some show nothing.
-- The subscription plan cards (Stripe & Native) are functional but generic.
+3. **Chat gating reuses `analysis` feature key**
+   - `useChatFeatureAccess.ts` lines 30/54: `hasUsedFeature('analysis')` and `recordFeatureUsage('analysis')` — chat usage is tracked under the "analysis" bucket
+   - Using one free analysis also blocks free chat, and vice versa — likely unintentional
 
----
+4. **No per-message gating on Chat — free trial gives unlimited messages**
+   - `canUseChat()` only checks if the user has *ever used* the analysis feature. Once they pass the check for message #1, they can send unlimited messages in that session without re-checking
+   - `recordChatUsage()` is called after each message but only marks localStorage — it doesn't actually limit subsequent messages
 
-### 1. Create a Unified Paywall Dialog Component
+5. **Image generation records usage inconsistently**
+   - `useImageGeneration.ts` lines 119-125: If `hasUsedFeature("image")` is false, it calls `markFeatureAsUsed` (localStorage only). If true, it calls `recordFeatureUsage` (database increment). But the database increment only works for subscribed users — free trial usage is never recorded server-side.
 
-**New file: `src/components/paywall/PaywallDialog.tsx`**
+### Design Issues
 
-A full-screen or bottom-sheet dialog that appears whenever a gated feature is triggered without access. Themed to match the cosmic dark aesthetic.
+6. **Dreamer and Mystic tiers have nearly identical feature lists**
+   - Both get: Unlimited Analysis, Dream Video Generation, Voice-to-Text Journaling
+   - Only difference: 10 vs unlimited image generations
+   - There's no reason to pay 3x more ($15.99 vs $4.99) for just more images — the value gap is unclear
 
-- Header: feature-specific icon + title (e.g., "Dream Analysis", "Dream Art", "AI Chat")
-- Benefit list with icons for each feature
-- Two plan cards (Dreamer / Mystic) with subscribe buttons
-- Platform-aware: Stripe checkout on web, RevenueCat on native
-- "Restore Purchases" button on native
-- Legal footer
+7. **"Dream Video Generation" and "Voice-to-Text" listed as paid features but no gating exists**
+   - These features are listed in the paywall but there's no `canUseFeature('video')` or `canUseFeature('voice')` check anywhere in the codebase
+   - Free users can likely access these features without restriction
 
-### 2. Create a Paywall State Manager
+8. **Chat has no subscription-tier differentiation**
+   - Chat is gated as a binary (free trial vs subscribed) but isn't differentiated between Dreamer/Mystic tiers
+   - It's listed nowhere in the paywall feature lists
 
-**New file: `src/components/paywall/usePaywall.ts`**
+9. **Analysis usage counter increments in DB but is never checked**
+   - `dream_analyses_used` increments in `stripe_subscriptions` but `checkCreditsForSubscription` returns `true` for all analysis regardless — the counter is dead code
 
-A hook + React context that provides:
-- `showPaywall(feature: 'analysis' | 'image' | 'chat')` — opens the dialog
-- `isPaywallOpen` state
-- Replaces all `showSubscriptionPrompt()` calls across the codebase
+### Proposed Fixes
 
-### 3. Replace `showSubscriptionPrompt` Everywhere
+#### Phase 1: Fix critical bypass bugs
 
-**Files to update:**
-- `src/lib/stripe.ts` — rewrite `showSubscriptionPrompt` to dispatch a custom event
-- `src/components/DreamAnalysis.tsx` — use paywall dialog instead of Lock button
-- `src/components/dreams/InitialImagePrompt.tsx` — use paywall dialog
-- `src/components/DreamChat.tsx` — use paywall dialog for locked state
-- `src/hooks/useFeatureUsage.ts` — trigger paywall instead of silent prompt
-- `src/hooks/useChatFeatureAccess.ts` — trigger paywall
-- `src/hooks/useImageGeneration.ts` — trigger paywall
+**A. Server-side free trial tracking** (new migration + code changes)
+- Add a `feature_free_trials` table: `(user_id UUID, feature TEXT, used_at TIMESTAMPTZ, PRIMARY KEY(user_id, feature))`
+- Replace all localStorage checks with a Supabase query to this table
+- On first use, insert a row; on subsequent checks, if row exists → trial consumed
+- Files: `useFeatureUsage.ts`, new migration
 
-### 4. Redesign Plan Cards in SubscriptionDialog & Managers
+**B. Fix stale state in `canUseFeature`**
+- Make `checkSubscriptionStatus` return the boolean directly instead of relying on React state
+- File: `useFeatureUsage.ts`
 
-**Files to update:**
-- `src/components/profile/StripeSubscriptionManager.tsx`
-- `src/components/profile/NativeSubscriptionManager.tsx`
-- `src/components/profile/SubscriptionDialog.tsx`
+**C. Give Chat its own feature key**
+- Change `useChatFeatureAccess.ts` to use `'chat'` instead of `'analysis'`
+- Add `'chat'` to the `FeatureType` union
 
-New design for plan cards:
-- Dark flat backgrounds (`bg-[#0d1425]`) consistent with app
-- Mystic card gets a subtle gradient border highlight
-- Large price display with `/mo` suffix
-- Feature list with differentiated icons per feature (not just checkmarks)
-- "Most Popular" badge on Mystic uses primary glow
-- Subscribe buttons: Mystic = solid primary, Dreamer = outline
+#### Phase 2: Fix gating gaps
 
-### 5. Architecture of the Paywall Dialog
+**D. Add per-session message limits for free chat**
+- Free trial: 5 messages per session, then paywall
+- Dreamer: unlimited messages
+- Mystic: unlimited messages
 
-```text
-┌─────────────────────────────────┐
-│  [X]                            │
-│                                 │
-│     ✦  Unlock [Feature Name]    │
-│                                 │
-│  "Your free trial has been      │
-│   used. Subscribe to continue." │
-│                                 │
-│  ┌─── Dreamer ───┐ ┌─ Mystic ─┐│
-│  │  $4.99/mo     │ │ $15.99/mo ││
-│  │  ✓ Analysis   │ │ ✓ All    ││
-│  │  ✓ 10 Images  │ │ ✓ Unlim  ││
-│  │  [Subscribe]  │ │[Subscribe]││
-│  └───────────────┘ └──────────┘│
-│                                 │
-│     Restore Purchases (native)  │
-│     Terms of Service            │
-└─────────────────────────────────┘
-```
+**E. Gate video generation and voice-to-text**
+- Add `canUseFeature('video')` check in video generation flow
+- Add `canUseFeature('voice')` check in voice recorder
+- Or remove them from the paid feature list if they're intentionally free
 
-### 6. Event-Based Trigger System
+#### Phase 3: Tier differentiation (optional, recommended)
 
-Rather than prop-drilling the paywall through every component, use a global event pattern:
-
-```typescript
-// lib/stripe.ts
-export const showSubscriptionPrompt = (featureType) => {
-  window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: featureType } }));
-};
-```
-
-The `PaywallDialog` component listens for this event at the app root level (mounted in `App.tsx` or `MainLayout.tsx`). This means **zero changes** to the existing call sites in hooks — they already call `showSubscriptionPrompt`, which will now actually work.
+**F. Differentiate Dreamer vs Mystic more clearly**
+- Suggestion: Dreamer gets 5 chat messages/day, Mystic gets unlimited
+- Dreamer gets 10 images, Mystic gets unlimited (already done)
+- Dreamer gets basic analysis, Mystic gets "deep analysis" with more sections
+- Or: keep features identical but adjust pricing to be closer ($4.99 / $9.99)
 
 ### Files Changed
 
 | File | Action |
 |------|--------|
-| `src/components/paywall/PaywallDialog.tsx` | **Create** — themed paywall dialog |
-| `src/lib/stripe.ts` | **Edit** — `showSubscriptionPrompt` dispatches custom event |
-| `src/layouts/MainLayout.tsx` | **Edit** — mount PaywallDialog |
-| `src/components/profile/StripeSubscriptionManager.tsx` | **Edit** — redesign plan cards |
-| `src/components/profile/NativeSubscriptionManager.tsx` | **Edit** — redesign plan cards |
-| `src/components/profile/SubscriptionDialog.tsx` | **Edit** — minor styling alignment |
-| `src/components/DreamAnalysis.tsx` | **Edit** — locked state triggers paywall dialog |
-| `src/components/dreams/InitialImagePrompt.tsx` | **Edit** — locked state triggers paywall dialog |
-| `src/components/DreamChat.tsx` | **Edit** — locked state triggers paywall dialog |
+| New migration | Create `feature_free_trials` table with RLS |
+| `src/hooks/useFeatureUsage.ts` | Replace localStorage with Supabase queries; fix async state bug |
+| `src/hooks/useChatFeatureAccess.ts` | Use `'chat'` feature key; add message-count limits |
+| `src/lib/stripe.ts` | Add `'chat'` to feature type; update `checkCreditsForSubscription` |
+| `src/components/DreamChat.tsx` | Enforce per-session message cap for free/Dreamer users |
+| `src/components/paywall/PaywallDialog.tsx` | Add Chat to the feature list display |
+| Voice/Video components | Add gating or remove from paid list |
 
