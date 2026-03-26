@@ -6,7 +6,7 @@ import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAcademyProgress, getTierInfo, getNextTierInfo } from "@/hooks/useAcademyProgress";
+
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { techniques } from "@/components/insights/techniqueData";
 
@@ -16,7 +16,7 @@ import techniqueImgWild from "@/assets/techniques/wild.jpeg";
 import techniqueImgFild from "@/assets/techniques/fild.jpeg";
 import techniqueImgDeild from "@/assets/techniques/deild.jpeg";
 import techniqueImgMeditation from "@/assets/techniques/meditation.jpeg";
-import { Progress } from "@/components/ui/progress";
+
 import { Button } from "@/components/ui/button";
 
 import { Skeleton } from "@/components/ui/skeleton";
@@ -110,8 +110,6 @@ const Home = () => {
         {/* Pinned Techniques */}
         <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
 
-        {/* Dream Academy Card */}
-        <AcademyEntryCard />
 
         {/* Lucid Insights */}
         {stats && <LucidInsightsCard stats={stats} onTap={() => navigate("/lucid-stats")} />}
