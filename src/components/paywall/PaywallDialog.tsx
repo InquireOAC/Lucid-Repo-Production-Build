@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
 import { toast } from "sonner";
-import lucidRepoLogo from "@/assets/LogoForFramer.png";
+import lucidRepoLogo from "@/assets/LogoForFramer-3.png";
 
 const LogoIcon = ({ className }: { className?: string }) => (
   <img src={lucidRepoLogo} alt="" className={className || "h-4 w-4"} />
