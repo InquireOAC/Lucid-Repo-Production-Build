@@ -41,6 +41,9 @@ import {
   ChevronRight,
   Sparkles,
   Pin,
+  Crosshair,
+  Clock,
+  ArrowUpRight,
 } from "lucide-react";
 
 const Home = () => {
