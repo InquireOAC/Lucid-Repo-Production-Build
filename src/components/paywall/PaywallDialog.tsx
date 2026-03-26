@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, ImageIcon, MessageCircle, Brain, Crown, Video, Mic,
+  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic,
   Check, Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -11,12 +11,17 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
 import { toast } from "sonner";
+import lucidRepoLogo from "@/assets/LogoForFramer.png";
+
+const LogoIcon = ({ className }: { className?: string }) => (
+  <img src={lucidRepoLogo} alt="" className={className || "h-4 w-4"} />
+);
 
 type PaywallFeature = "analysis" | "image" | "chat";
 
 const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: string; description: string }> = {
   analysis: {
-    icon: Brain,
+    icon: LogoIcon,
     title: "Dream Analysis",
     description: "AI-powered dream interpretation with symbols, emotions, and subconscious insights.",
   },
@@ -34,13 +39,13 @@ const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: s
 
 const PLAN_FEATURES = {
   dreamer: [
-    { label: "Unlimited Dream Analysis", icon: Brain },
+    { label: "Unlimited Dream Analysis", icon: LogoIcon },
     { label: "10 Dream Art Generations", icon: ImageIcon },
     { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
     { label: "Voice-to-Text Journaling", icon: Mic },
   ],
   mystic: [
-    { label: "Unlimited Dream Analysis", icon: Brain },
+    { label: "Unlimited Dream Analysis", icon: LogoIcon },
     { label: "Unlimited Dream Art", icon: ImageIcon },
     { label: "Unlimited AI Dream Chat", icon: MessageCircle },
     { label: "Dream Video Generation", icon: Video },
