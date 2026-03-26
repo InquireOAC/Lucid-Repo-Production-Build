@@ -187,7 +187,7 @@ const PaywallDialog = () => {
               </div>
 
               {/* Plans */}
-              <div className="px-5 space-y-4">
+              <div className="px-5 space-y-4 overflow-hidden">
                 {isNative ? (
                   <NativePaywallPlans onClose={() => setIsOpen(false)} />
                 ) : loading ? (
