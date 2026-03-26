@@ -1,10 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+export type GatedFeatureType = 'analysis' | 'image' | 'chat' | 'video' | 'voice';
+
 // Check if a user has access to premium features
 export const checkFeatureAccess = async (featureType: 'analysis' | 'image'): Promise<boolean> => {
   try {
-    console.log(`Checking access for feature: ${featureType}`);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return false;
     
@@ -115,8 +116,9 @@ export const incrementFeatureUsage = async (featureType: 'analysis' | 'image'): 
   }
 };
 
-export const showSubscriptionPrompt = (featureType: 'analysis' | 'image' | 'chat') => {
-  window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: featureType } }));
+export const showSubscriptionPrompt = (featureType: GatedFeatureType) => {
+  const mappedFeature = (featureType === 'video' || featureType === 'voice') ? 'analysis' : featureType;
+  window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: mappedFeature } }));
 };
 
 export const hasActiveSubscription = async (): Promise<boolean> => {

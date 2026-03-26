@@ -1,93 +1,92 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { checkFeatureAccess, incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
+import { incrementFeatureUsage, showSubscriptionPrompt } from '@/lib/stripe';
 import { Capacitor } from '@capacitor/core';
 import { revenueCatManager } from '@/utils/revenueCatManager';
 import { useUserRole } from '@/hooks/useUserRole';
 
-type FeatureType = 'analysis' | 'image';
+export type FeatureType = 'analysis' | 'image' | 'chat' | 'video' | 'voice';
 
 export const useFeatureUsage = () => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
-  const [usageState, setUsageState] = useState<Record<FeatureType, boolean>>({
-    analysis: false,
-    image: false
-  });
+  const [trialCache, setTrialCache] = useState<Record<string, boolean>>({});
   const [isChecking, setIsChecking] = useState(false);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<'none' | 'dreamer' | 'mystic'>('none');
 
-  // Load usage state from localStorage on component mount
   useEffect(() => {
     if (user) {
-      const savedUsage = localStorage.getItem(`feature_usage_${user.id}`);
-      if (savedUsage) {
-        setUsageState(JSON.parse(savedUsage));
-      }
-      
-      // Check subscription status
       checkSubscriptionStatus();
+      loadTrialStatus();
     }
   }, [user]);
 
-  const checkSubscriptionStatus = async () => {
+  const loadTrialStatus = async () => {
+    if (!user) return;
     try {
-      if (!user) return;
+      const { data } = await supabase
+        .from('feature_free_trials')
+        .select('feature')
+        .eq('user_id', user.id);
+      
+      const cache: Record<string, boolean> = {};
+      (data || []).forEach(row => { cache[row.feature] = true; });
+      setTrialCache(cache);
+    } catch (error) {
+      console.error('Error loading trial status:', error);
+    }
+  };
 
-      console.log('Checking subscription status for user:', user.id);
+  const checkSubscriptionStatus = useCallback(async (): Promise<{ active: boolean; tier: 'none' | 'dreamer' | 'mystic' }> => {
+    try {
+      if (!user) return { active: false, tier: 'none' };
 
-      // PRIORITY 1: Check Supabase first by user_id - this ensures cross-device consistency
-      const { data: userSubscription } = await supabase
+      // Check Supabase by user_id
+      const { data: userSub } = await supabase
         .from('stripe_subscriptions')
-        .select('status')
+        .select('status, price_id, subscription_id')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
-      if (userSubscription) {
-        console.log('Found active subscription in Supabase for user by user_id');
+      if (userSub) {
+        const tier = determineTier(userSub.price_id, userSub.subscription_id);
         setHasActiveSubscription(true);
-        return;
+        setSubscriptionTier(tier);
+        return { active: true, tier };
       }
 
-      // On native platforms, also check RevenueCat and sync if needed
+      // Native: check RevenueCat
       if (Capacitor.isNativePlatform()) {
         try {
           await revenueCatManager.initialize(user.id);
           const result = await revenueCatManager.getCustomerInfo();
-          const customerInfo = result.customerInfo;
-          const activeEntitlements = customerInfo.entitlements.active;
-          const hasActiveEntitlement = Object.keys(activeEntitlements).length > 0;
-          
-          console.log('RevenueCat active entitlements:', activeEntitlements);
-          if (hasActiveEntitlement) {
-            console.log('Found active RevenueCat subscription, triggering sync...');
-            
-            // Try to sync immediately
+          const activeEntitlements = result.customerInfo.entitlements.active;
+          if (Object.keys(activeEntitlements).length > 0) {
             try {
               const { data: { session } } = await supabase.auth.getSession();
               if (session?.access_token) {
                 await supabase.functions.invoke('sync-revenuecat-subscription', {
-                  body: { customerInfo: customerInfo },
+                  body: { customerInfo: result.customerInfo },
                   headers: { Authorization: `Bearer ${session.access_token}` }
                 });
-                console.log('RevenueCat subscription synced successfully');
               }
             } catch (syncError) {
-              console.error('Failed to sync RevenueCat subscription:', syncError);
+              console.error('Failed to sync RevenueCat:', syncError);
             }
-            
             setHasActiveSubscription(true);
-            return;
+            setSubscriptionTier('mystic'); // RevenueCat defaults
+            return { active: true, tier: 'mystic' };
           }
-        } catch (revenueCatError) {
-          console.error('RevenueCat check failed:', revenueCatError);
+        } catch (e) {
+          console.error('RevenueCat check failed:', e);
         }
       }
 
-      // FALLBACK: Check legacy Stripe customer subscription (web only)
+      // Fallback: legacy Stripe customer
       if (!Capacitor.isNativePlatform()) {
         const { data: customerData } = await supabase
           .from('stripe_customers')
@@ -96,97 +95,79 @@ export const useFeatureUsage = () => {
           .maybeSingle();
 
         if (customerData?.customer_id) {
-          const { data: subscription } = await supabase
+          const { data: sub } = await supabase
             .from('stripe_subscriptions')
-            .select('status')
+            .select('status, price_id, subscription_id')
             .eq('customer_id', customerData.customer_id)
             .eq('status', 'active')
             .maybeSingle();
 
-          if (subscription) {
-            console.log('Found active Stripe subscription');
+          if (sub) {
+            const tier = determineTier(sub.price_id, sub.subscription_id);
             setHasActiveSubscription(true);
-            return;
+            setSubscriptionTier(tier);
+            return { active: true, tier };
           }
         }
       }
 
-      console.log('No active subscription found');
       setHasActiveSubscription(false);
+      setSubscriptionTier('none');
+      return { active: false, tier: 'none' };
     } catch (error) {
-      console.error('Error checking subscription status:', error);
+      console.error('Error checking subscription:', error);
       setHasActiveSubscription(false);
+      setSubscriptionTier('none');
+      return { active: false, tier: 'none' };
     }
+  }, [user]);
+
+  const determineTier = (priceId: string | null, subscriptionId: string | null): 'dreamer' | 'mystic' => {
+    const pid = (priceId || '').toLowerCase();
+    const sid = (subscriptionId || '').toLowerCase();
+    if (pid === 'price_premium' || pid === 'com.lucidrepo.unlimited.monthly' || 
+        pid.includes('unlimited') || pid.includes('premium') || pid.includes('mystic') ||
+        sid.includes('unlimited') || sid.includes('premium')) {
+      return 'mystic';
+    }
+    return 'dreamer';
   };
 
   const hasUsedFeature = (featureType: FeatureType): boolean => {
-    if (!user) return false;
-    
-    // Admins get unlimited access - always return false
-    if (isAdmin) {
-      return false;
-    }
-    
-    return usageState[featureType];
+    if (!user || isAdmin) return false;
+    return !!trialCache[featureType];
   };
 
-  const markFeatureAsUsed = (featureType: FeatureType): void => {
-    if (!user) return;
-    
-    // Admins get unlimited access - don't mark features as used
-    if (isAdmin) {
-      return;
-    }
-    
-    const newUsageState = {
-      ...usageState,
-      [featureType]: true
-    };
-    
-    setUsageState(newUsageState);
-    localStorage.setItem(`feature_usage_${user.id}`, JSON.stringify(newUsageState));
-  };
-
-  // Function to check if user can use the feature (free trial or subscription)
   const canUseFeature = async (featureType: FeatureType): Promise<boolean> => {
     try {
       if (!user) return false;
       setIsChecking(true);
-      
-      // Admins get unlimited access
-      if (isAdmin) {
-        console.log('Admin detected, allowing feature access');
+
+      if (isAdmin) return true;
+
+      // Fresh subscription check — returns directly, no stale state
+      const { active } = await checkSubscriptionStatus();
+      if (active) return true;
+
+      // Check server-side trial status
+      const { data: trialRow } = await supabase
+        .from('feature_free_trials')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('feature', featureType)
+        .maybeSingle();
+
+      if (!trialRow) {
+        // Trial not yet used
         return true;
       }
-      
-      // Check if user has an active subscription
-      await checkSubscriptionStatus();
-      
-      if (hasActiveSubscription) {
-        console.log(`User has active subscription for ${featureType}, allowing access`);
-        return true;
-      }
-      
-      // Check if user has already used their free trial
-      const hasUsed = hasUsedFeature(featureType);
-      
-      if (!hasUsed) {
-        // User hasn't used their free trial yet
-        console.log(`First time using ${featureType} feature, allowing free trial`);
-        return true;
-      }
-      
-      // User has used their free trial and no active subscription
-      console.log(`User has used free trial for ${featureType} and has no subscription`);
-      
-      // On native platforms, don't show Stripe subscription prompt
+
+      // Trial consumed, no subscription
       if (Capacitor.isNativePlatform()) {
-        console.log('Native platform: User needs to subscribe through the app');
-        return false;
+        showSubscriptionPrompt(featureType as any);
       } else {
-        showSubscriptionPrompt(featureType);
+        showSubscriptionPrompt(featureType as any);
       }
-      
       return false;
     } catch (error) {
       console.error('Error checking feature usage:', error);
@@ -196,29 +177,35 @@ export const useFeatureUsage = () => {
     }
   };
 
-  // Function to record usage of a feature
   const recordFeatureUsage = async (featureType: FeatureType): Promise<boolean> => {
     try {
-      if (!user) return false;
-      
-      // Admins get unlimited access - don't record usage
-      if (isAdmin) {
-        console.log('Admin detected, not recording usage');
+      if (!user || isAdmin) return true;
+
+      // Check if trial already consumed
+      const { data: trialRow } = await supabase
+        .from('feature_free_trials')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('feature', featureType)
+        .maybeSingle();
+
+      if (!trialRow) {
+        // First use — record trial server-side
+        const { error } = await supabase
+          .from('feature_free_trials')
+          .insert({ user_id: user.id, feature: featureType });
+        
+        if (error) console.error('Error recording trial:', error);
+        setTrialCache(prev => ({ ...prev, [featureType]: true }));
         return true;
       }
-      
-      // For first-time usage, just mark it locally
-      if (!hasUsedFeature(featureType)) {
-        console.log(`Marking ${featureType} as used locally (free trial)`);
-        markFeatureAsUsed(featureType);
-        return true;
+
+      // Subsequent use — increment DB for subscribed users
+      if (featureType === 'image' || featureType === 'analysis') {
+        const success = await incrementFeatureUsage(featureType);
+        return success;
       }
-      
-      // For subsequent usage, increment in database if they have a subscription
-      console.log(`Recording ${featureType} usage in database for subscribed user`);
-      const success = await incrementFeatureUsage(featureType);
-      console.log(`Database usage increment result for ${featureType}:`, success);
-      return success;
+      return true;
     } catch (error) {
       console.error('Error recording feature usage:', error);
       return false;
@@ -227,10 +214,11 @@ export const useFeatureUsage = () => {
 
   return {
     hasUsedFeature,
-    markFeatureAsUsed,
     canUseFeature,
     recordFeatureUsage,
     isChecking,
-    hasActiveSubscription
+    hasActiveSubscription,
+    subscriptionTier,
+    checkSubscriptionStatus,
   };
 };
