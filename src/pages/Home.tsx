@@ -28,17 +28,16 @@ import {
   YAxis,
   ResponsiveContainer,
 } from "recharts";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import {
   Pencil,
-  
   BookOpen,
-  Brain,
   Heart,
   MessageSquare,
   ChevronRight,
   Sparkles,
   Pin,
-  Crosshair,
+  
   Clock,
   ArrowUpRight,
 } from "lucide-react";
@@ -85,23 +84,6 @@ const Home = () => {
             <Pencil size={16} />
             Record a Dream
           </Button>
-        </div>
-
-        {/* AI Dream Analyst CTA */}
-        <div
-          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
-          onClick={() => navigate("/chat")}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-              <Crosshair size={16} className="text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground text-sm">AI Dream Analyst</h3>
-              <p className="text-xs text-muted-foreground">Interpret your dreams with AI</p>
-            </div>
-            <ArrowUpRight size={16} className="text-primary shrink-0" />
-          </div>
         </div>
 
         {/* Dream Book CTA */}
@@ -302,15 +284,13 @@ const FeedDreamCard = ({
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 mb-1">
-          {dream.profiles?.avatar_url ? (
-            <img
-              src={dream.profiles.avatar_url}
-              className="w-5 h-5 rounded-full"
-              alt=""
-            />
-          ) : (
-            <div className="w-5 h-5 rounded-full bg-primary/20" />
-          )}
+          <SymbolAvatar
+            avatarUrl={dream.profiles?.avatar_url}
+            symbol={dream.profiles?.avatar_symbol}
+            color={dream.profiles?.avatar_color}
+            fallbackLetter={(dream.profiles?.display_name || dream.profiles?.username || "D").charAt(0).toUpperCase()}
+            size={20}
+          />
           <span className="text-xs text-muted-foreground truncate">
             {dream.profiles?.display_name ||
               dream.profiles?.username ||
