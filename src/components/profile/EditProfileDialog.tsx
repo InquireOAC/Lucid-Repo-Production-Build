@@ -1,16 +1,24 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import ProfileAvatar from "./ProfileAvatar";
 import SymbolAvatarPickerDialog from "./SymbolAvatarPickerDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, ArrowLeft, Instagram, Facebook, Globe } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+
+interface SocialLinks {
+  twitter: string;
+  instagram: string;
+  facebook: string;
+  website: string;
+}
 
 interface EditProfileDialogProps {
   isOpen: boolean;
@@ -28,6 +36,9 @@ interface EditProfileDialogProps {
   setAvatarColor: (color: string) => void;
   setAvatarUrl: (url: string | null) => void;
   handleUpdateProfile: () => void;
+  socialLinks?: SocialLinks;
+  setSocialLinks?: (value: SocialLinks) => void;
+  handleUpdateSocialLinks?: () => void;
 }
 
 const EditProfileDialog = ({
@@ -46,16 +57,17 @@ const EditProfileDialog = ({
   setAvatarColor,
   setAvatarUrl,
   handleUpdateProfile,
+  socialLinks,
+  setSocialLinks,
+  handleUpdateSocialLinks,
 }: EditProfileDialogProps) => {
   const { user } = useAuth();
   const [symbolPickerOpen, setSymbolPickerOpen] = useState(false);
   const [dreamAvatarUrl, setDreamAvatarUrl] = useState<string | null>(null);
-  // "symbol" = using the symbol avatar, "dream" = using the dream avatar photo
   const [selectedAvatarType, setSelectedAvatarType] = useState<"symbol" | "dream">(
     avatarUrl ? "dream" : "symbol"
   );
 
-  // Load the user's saved Dream Avatar from dream_characters (first character's photo)
   useEffect(() => {
     if (isOpen && user) {
       supabase
@@ -68,7 +80,6 @@ const EditProfileDialog = ({
         .then(({ data }) => {
           if (data?.photo_url) setDreamAvatarUrl(data.photo_url);
           else {
-            // Fallback to ai_context for backward compat
             supabase
               .from("ai_context")
               .select("photo_url")
@@ -82,7 +93,6 @@ const EditProfileDialog = ({
     }
   }, [isOpen, user]);
 
-  // Sync selectedAvatarType with avatarUrl prop
   useEffect(() => {
     setSelectedAvatarType(avatarUrl ? "dream" : "symbol");
   }, [avatarUrl]);
@@ -104,145 +114,239 @@ const EditProfileDialog = ({
     }
   };
 
-  const currentAvatarUrl = selectedAvatarType === "dream" ? dreamAvatarUrl : null;
+  const handleSave = () => {
+    handleUpdateProfile();
+    if (handleUpdateSocialLinks) handleUpdateSocialLinks();
+    onOpenChange(false);
+  };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-md glass-card border-white/20 max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="gradient-text">Edit Profile</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-5 py-4">
-          {/* Avatar Selector */}
-          <div className="space-y-3">
-            <Label className="text-white/80 text-sm">Profile Picture</Label>
-            <div className="flex gap-4 justify-center">
-              {/* Symbol Avatar Option */}
-              <button
-                type="button"
-                onClick={handleSelectSymbol}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                  selectedAvatarType === "symbol"
-                    ? "border-primary bg-primary/10"
-                    : "border-white/10 hover:border-white/30"
-                )}
-              >
-                <div className="relative">
-                  <ProfileAvatar
-                    avatarSymbol={avatarSymbol}
-                    avatarColor={avatarColor}
-                    avatarUrl={null}
-                    username={username}
-                    isOwnProfile={false}
-                    onEdit={() => {}}
-                  />
-                  {selectedAvatarType === "symbol" && (
-                    <CheckCircle2 className="absolute -top-1 -right-1 h-4 w-4 text-primary fill-background" />
-                  )}
-                </div>
-                <span className="text-xs text-white/70">Symbol</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  onClick={(e) => { e.stopPropagation(); setSymbolPickerOpen(true); }}
-                  className="text-xs text-primary h-6"
-                >
-                  Change
-                </Button>
-              </button>
-
-              {/* Dream Avatar Option */}
-              <button
-                type="button"
-                onClick={handleSelectDreamAvatar}
-                disabled={!dreamAvatarUrl}
-                className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
-                  !dreamAvatarUrl && "opacity-40 cursor-not-allowed",
-                  selectedAvatarType === "dream" && dreamAvatarUrl
-                    ? "border-primary bg-primary/10"
-                    : "border-white/10 hover:border-white/30"
-                )}
-              >
-                <div className="relative">
-                  {dreamAvatarUrl ? (
-                    <>
-                      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-dream-lavender shadow-lg">
-                        <img src={dreamAvatarUrl} alt="Dream Avatar" className="w-full h-full object-cover" />
-                      </div>
-                      {selectedAvatarType === "dream" && (
-                        <CheckCircle2 className="absolute -top-1 -right-1 h-4 w-4 text-primary fill-background" />
-                      )}
-                    </>
-                  ) : (
-                    <div className="w-24 h-24 rounded-full border-4 border-dashed border-white/20 flex items-center justify-center">
-                      <span className="text-white/30 text-xs text-center px-2">No Dream Avatar</span>
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs text-white/70">Dream Avatar</span>
-                {!dreamAvatarUrl && (
-                  <span className="text-[10px] text-muted-foreground text-center">Set one in your Avatar settings</span>
-                )}
-              </button>
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 bg-background flex flex-col"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
+            {/* Header */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border bg-background/95 backdrop-blur-xl">
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-base font-semibold text-foreground">Edit Profile</h1>
+              <div className="w-10" />
             </div>
-          </div>
 
-          <SymbolAvatarPickerDialog
-            isOpen={symbolPickerOpen}
-            onOpenChange={setSymbolPickerOpen}
-            avatarSymbol={avatarSymbol}
-            avatarColor={avatarColor}
-            onSave={handleSymbolSave}
-          />
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+              {/* Banner gradient */}
+              <div className="h-24 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
 
-          <div className="space-y-2">
-            <Label htmlFor="displayName" className="text-white">Display Name</Label>
-            <Input
-              id="displayName"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your display name"
-              className="bg-white/10 border-white/20 text-white placeholder-white/50"
-            />
-          </div>
+              <div className="px-6 -mt-12 pb-28 space-y-8">
+                {/* Avatar Section */}
+                <div className="space-y-4">
+                  <div className="flex gap-5 justify-center">
+                    {/* Symbol Avatar Option */}
+                    <button
+                      type="button"
+                      onClick={handleSelectSymbol}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                        selectedAvatarType === "symbol"
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <div className="relative">
+                        <ProfileAvatar
+                          avatarSymbol={avatarSymbol}
+                          avatarColor={avatarColor}
+                          avatarUrl={null}
+                          username={username}
+                          isOwnProfile={false}
+                          onEdit={() => {}}
+                        />
+                        {selectedAvatarType === "symbol" && (
+                          <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">Symbol</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => { e.stopPropagation(); setSymbolPickerOpen(true); }}
+                        className="text-xs text-primary h-7"
+                      >
+                        Change
+                      </Button>
+                    </button>
 
-          <div className="space-y-2">
-            <Label htmlFor="username" className="text-white">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Your username"
-              className="bg-white/10 border-white/20 text-white placeholder-white/50"
-            />
-          </div>
+                    {/* Dream Avatar Option */}
+                    <button
+                      type="button"
+                      onClick={handleSelectDreamAvatar}
+                      disabled={!dreamAvatarUrl}
+                      className={cn(
+                        "flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all",
+                        !dreamAvatarUrl && "opacity-40 cursor-not-allowed",
+                        selectedAvatarType === "dream" && dreamAvatarUrl
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <div className="relative">
+                        {dreamAvatarUrl ? (
+                          <>
+                            <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-primary/30 shadow-lg">
+                              <img src={dreamAvatarUrl} alt="Dream Avatar" className="w-full h-full object-cover" />
+                            </div>
+                            {selectedAvatarType === "dream" && (
+                              <CheckCircle2 className="absolute -top-1 -right-1 h-5 w-5 text-primary fill-background" />
+                            )}
+                          </>
+                        ) : (
+                          <div className="w-24 h-24 rounded-full border-4 border-dashed border-border flex items-center justify-center">
+                            <span className="text-muted-foreground text-xs text-center px-2">No Dream Avatar</span>
+                          </div>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground">Dream Avatar</span>
+                      {!dreamAvatarUrl && (
+                        <span className="text-[10px] text-muted-foreground text-center">Set in Avatar settings</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="bio" className="text-white">Bio</Label>
-            <Textarea
-              id="bio"
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell others about yourself..."
-              rows={3}
-              className="bg-white/10 border-white/20 text-white placeholder-white/50"
-            />
-          </div>
-        </div>
+                <Separator />
 
-        <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="glass-button">
-            Cancel
-          </Button>
-          <Button onClick={handleUpdateProfile} className="glass-button">
-            Save Changes
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+                {/* Personal Info */}
+                <div className="space-y-5">
+                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Personal Info</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="displayName" className="text-foreground text-sm">Display Name</Label>
+                    <Input
+                      id="displayName"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      placeholder="Your display name"
+                      className="bg-muted/50 border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="username" className="text-foreground text-sm">Username</Label>
+                    <Input
+                      id="username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="Your username"
+                      className="bg-muted/50 border-border"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="bio" className="text-foreground text-sm">Bio</Label>
+                    <Textarea
+                      id="bio"
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      placeholder="Tell others about yourself..."
+                      rows={3}
+                      className="bg-muted/50 border-border"
+                    />
+                  </div>
+                </div>
+
+                {/* Social Links - merged inline */}
+                {socialLinks && setSocialLinks && (
+                  <>
+                    <Separator />
+                    <div className="space-y-5">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Social Links</h3>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="twitter" className="flex items-center gap-2 text-foreground text-sm">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            X (Twitter)
+                          </Label>
+                          <Input
+                            id="twitter"
+                            value={socialLinks.twitter}
+                            onChange={(e) => setSocialLinks({...socialLinks, twitter: e.target.value})}
+                            placeholder="username"
+                            className="bg-muted/50 border-border"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="instagram" className="flex items-center gap-2 text-foreground text-sm">
+                            <Instagram size={14} className="text-pink-500" />
+                            Instagram
+                          </Label>
+                          <Input
+                            id="instagram"
+                            value={socialLinks.instagram}
+                            onChange={(e) => setSocialLinks({...socialLinks, instagram: e.target.value})}
+                            placeholder="username"
+                            className="bg-muted/50 border-border"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="facebook" className="flex items-center gap-2 text-foreground text-sm">
+                            <Facebook size={14} className="text-blue-600" />
+                            Facebook
+                          </Label>
+                          <Input
+                            id="facebook"
+                            value={socialLinks.facebook}
+                            onChange={(e) => setSocialLinks({...socialLinks, facebook: e.target.value})}
+                            placeholder="username"
+                            className="bg-muted/50 border-border"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="website" className="flex items-center gap-2 text-foreground text-sm">
+                            <Globe size={14} />
+                            Website
+                          </Label>
+                          <Input
+                            id="website"
+                            value={socialLinks.website}
+                            onChange={(e) => setSocialLinks({...socialLinks, website: e.target.value})}
+                            placeholder="https://yourwebsite.com"
+                            className="bg-muted/50 border-border"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Sticky save bar */}
+            <div className="flex-shrink-0 border-t border-border bg-background/95 backdrop-blur-xl px-6 py-4" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1rem)" }}>
+              <Button onClick={handleSave} className="w-full h-12 text-base font-semibold">
+                Save Changes
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <SymbolAvatarPickerDialog
+        isOpen={symbolPickerOpen}
+        onOpenChange={setSymbolPickerOpen}
+        avatarSymbol={avatarSymbol}
+        avatarColor={avatarColor}
+        onSave={handleSymbolSave}
+      />
+    </>
   );
 };
 
