@@ -73,9 +73,7 @@ const Home = () => {
               ? `Welcome back, ${profile?.display_name || profile?.username || "Dreamer"}`
               : "Sign in to get started"}
           </h1>
-          <p className="text-muted-foreground text-xs mb-3">
-            What did you dream last night?
-          </p>
+          <p className="text-muted-foreground text-xs mb-3">&nbsp;</p>
           <div
             className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
             onClick={() => navigate("/journal/new")}
