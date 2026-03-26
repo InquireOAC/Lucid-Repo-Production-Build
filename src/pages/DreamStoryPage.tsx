@@ -84,9 +84,9 @@ const DreamStoryPage: React.FC = () => {
         return;
       }
 
-      // Only increment view count if not the owner
+      // Only increment view count if not the owner (atomic increment)
       if (!user || user.id !== data.user_id) {
-        await supabase.from("dream_entries").update({ view_count: (data.view_count || 0) + 1 }).eq("id", dreamId);
+        await supabase.rpc("increment_view_count", { p_dream_id: dreamId });
       }
 
       const { count: likeCount } = await supabase

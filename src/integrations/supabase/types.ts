@@ -3111,6 +3111,7 @@ export type Database = {
         Args: { credit_type: string; user_id_param: string }
         Returns: undefined
       }
+      increment_view_count: { Args: { p_dream_id: string }; Returns: undefined }
       reset_subscription_usage: { Args: never; Returns: undefined }
       update_learning_streak_and_xp: {
         Args: { p_user_id: string; p_xp_to_add: number }
