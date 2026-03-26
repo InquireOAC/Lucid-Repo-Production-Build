@@ -79,7 +79,10 @@ const SettingsDialog = ({
             <div className="px-6 py-6 space-y-4">
               <Button
               className="w-full justify-center gap-2 h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40 text-secondary-foreground"
-              onClick={() => setShowSubscription(true)}>
+              onClick={() => {
+                onOpenChange(false);
+                window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }));
+              }}>
 
                 <Crown className="h-5 w-5" />
                 Upgrade to Pro
