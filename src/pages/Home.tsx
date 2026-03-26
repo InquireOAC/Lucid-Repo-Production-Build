@@ -111,7 +111,7 @@ const Home = () => {
                 <h3 className="font-semibold text-foreground text-sm">Dream Book</h3>
                 <p className="text-xs text-muted-foreground">Your personal dream gallery</p>
               </div>
-              <ArrowUpRight size={16} className="text-primary shrink-0" />
+              <ArrowUpRight size={16} className="text-foreground shrink-0" />
             </div>
           </div>
         </div>
