@@ -89,9 +89,24 @@ const Home = () => {
               <ArrowUpRight size={16} className="text-primary shrink-0" />
             </div>
           </div>
-        </div>
 
-        {/* Dream Book CTA */}
+          {/* Dream Book CTA */}
+          <div
+            className="mt-3 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
+            onClick={() => navigate("/dream-book")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                <BookOpen size={16} className="text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-foreground text-sm">Dream Book</h3>
+                <p className="text-xs text-muted-foreground">Your personal dream gallery</p>
+              </div>
+              <ArrowUpRight size={16} className="text-primary shrink-0" />
+            </div>
+          </div>
+        </div>
         <div
           className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
           onClick={() => navigate("/dream-book")}
