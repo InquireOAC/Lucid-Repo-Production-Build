@@ -1,65 +1,71 @@
 
 
-## Plan: Make Polls, Announcements, and Challenges Fully Operational
+## Plan: Admin Poll Results + Auto Challenge Entry on Dream Save
 
 ### Problem
-1. **Polls**: Tapping a poll announcement shows the same generic detail modal as regular announcements -- no voting UI, no results display
-2. **Poll results**: No way to see vote counts/percentages after voting
-3. The `poll_responses` table exists but is never used in frontend code
-
-The announcement and challenge admin systems (composing, toggling, deleting, managing entries) are already functional. The main gap is the poll voting experience.
+1. **Polls**: Admin dashboard shows polls in the announcements list but has no way to see vote results/standings
+2. **Challenges**: There is no mechanism to auto-enter a dream into a challenge when a user tags it with the challenge's `required_tag`. The `challenge_entries` table exists but is never populated.
 
 ### Changes
 
-#### 1. New component: `PollVotingModal` (`src/components/announcements/PollVotingModal.tsx`)
-- Full-screen dialog that opens when a poll-type announcement is tapped
-- Shows the poll question (title) prominently
-- Lists poll options as tappable cards (from `metadata.options`)
-- On tap: insert into `poll_responses` table, then show results
-- After voting (or if already voted): show results view with animated horizontal bar chart showing each option's vote count and percentage
-- Uses a new `usePollVotes` hook to fetch/submit votes
-- "Dismiss" button at bottom to close and dismiss the announcement
+#### 1. Add Poll Results to Admin Announcements List (`src/components/admin/AnnouncementsList.tsx`)
+- For poll-type announcements, add an expandable results section
+- Call the existing `get_poll_results` RPC to fetch vote counts
+- Display horizontal bar chart with option names, vote counts, and percentages
+- Show total votes count
 
-#### 2. New hook: `src/hooks/usePollVotes.ts`
-- `fetchMyVote(announcementId)` -- check if user already voted
-- `fetchResults(announcementId)` -- query all responses for this poll (needs an RLS policy update -- see below)
-- `submitVote(announcementId, option)` -- insert into `poll_responses`
+#### 2. Create DB trigger to auto-enter dreams into active challenges (`migration`)
+- Create a trigger function `auto_enter_challenge()` on `dream_entries` INSERT/UPDATE
+- When a dream is inserted or its tags are updated, check if any tag matches an active challenge's `required_tag`
+- If match found and no existing entry, insert into `challenge_entries`
+- This ensures users automatically participate in challenges by using the hashtag
 
-#### 3. Database migration: Allow all authenticated users to see poll response counts
-- Currently only admins and the voter can see `poll_responses`
-- Add a SELECT policy: all authenticated users can view poll responses (needed for showing aggregated results)
-- Alternative: create a security-definer function `get_poll_results(announcement_id)` that returns aggregated counts without exposing individual rows
-
-I'll use the **security-definer function** approach to avoid exposing individual votes:
 ```sql
-CREATE OR REPLACE FUNCTION public.get_poll_results(p_announcement_id uuid)
-RETURNS TABLE(selected_option text, vote_count bigint)
-LANGUAGE sql STABLE SECURITY DEFINER
+CREATE OR REPLACE FUNCTION public.auto_enter_challenge()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
 SET search_path = public
 AS $$
-  SELECT selected_option, count(*) as vote_count
-  FROM poll_responses
-  WHERE announcement_id = p_announcement_id
-  GROUP BY selected_option;
+DECLARE
+  challenge RECORD;
+  tag text;
+BEGIN
+  IF NEW.tags IS NULL OR array_length(NEW.tags, 1) IS NULL THEN
+    RETURN NEW;
+  END IF;
+
+  FOR challenge IN
+    SELECT id, required_tag FROM community_challenges
+    WHERE status = 'active'
+      AND now() BETWEEN start_date AND end_date
+  LOOP
+    FOREACH tag IN ARRAY NEW.tags
+    LOOP
+      IF lower(trim(tag)) = lower(trim(challenge.required_tag)) 
+         OR lower(trim('#' || tag)) = lower(trim(challenge.required_tag)) THEN
+        INSERT INTO challenge_entries (challenge_id, user_id, dream_id)
+        VALUES (challenge.id, NEW.user_id, NEW.id)
+        ON CONFLICT DO NOTHING;
+      END IF;
+    END LOOP;
+  END LOOP;
+
+  RETURN NEW;
+END;
 $$;
+
+CREATE TRIGGER on_dream_check_challenge
+  AFTER INSERT OR UPDATE OF tags ON dream_entries
+  FOR EACH ROW EXECUTE FUNCTION auto_enter_challenge();
 ```
 
-#### 4. Update `AnnouncementBanner.tsx`
-- When `currentAnnouncement.type === 'poll'`, open the new `PollVotingModal` instead of the generic detail dialog
+#### 3. Add unique constraint to prevent duplicate entries (`migration`)
+- Add a unique constraint on `(challenge_id, dream_id)` so the `ON CONFLICT DO NOTHING` works
 
 ### Files
 | File | Action |
 |---|---|
-| `src/components/announcements/PollVotingModal.tsx` | Create -- voting UI + results display |
-| `src/hooks/usePollVotes.ts` | Create -- vote submission, fetch user vote, fetch results via RPC |
-| `src/components/announcements/AnnouncementBanner.tsx` | Modify -- route poll taps to PollVotingModal |
-| Migration SQL | Add `get_poll_results` RPC function |
-
-### UI Design for PollVotingModal
-- Dark glass card matching app aesthetic
-- Poll question as header with 📊 emoji
-- Options as rounded cards with radio-style selection
-- "Vote" button after selecting
-- Results view: horizontal bars with percentages, total vote count, checkmark on user's selection
-- Smooth transitions between vote and results states using framer-motion
+| `src/components/admin/AnnouncementsList.tsx` | Add expandable poll results for poll-type announcements |
+| Migration SQL | Create `auto_enter_challenge` trigger + unique constraint on `challenge_entries` |
 
