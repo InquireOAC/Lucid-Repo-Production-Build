@@ -143,8 +143,6 @@ export const useImageGeneration = ({
     dreamId,
     isAdmin,
     canUseFeature,
-    markFeatureAsUsed,
-    hasUsedFeature,
     recordFeatureUsage,
     onImageGenerated,
     onSubscriptionRefresh,
