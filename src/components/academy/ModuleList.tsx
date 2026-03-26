@@ -1,6 +1,6 @@
 import React from 'react';
 import { ModuleWithProgress } from '@/hooks/useAcademyModules';
-import { ChevronRight, Lock } from 'lucide-react';
+import { ChevronRight, Lock, BookOpen } from 'lucide-react';
 
 interface ModuleListProps {
   modules: ModuleWithProgress[];
@@ -63,8 +63,8 @@ const ModuleRow: React.FC<{ module: ModuleWithProgress; onClick: () => void }> =
           : 'opacity-50 cursor-not-allowed'
       }`}
     >
-      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-lg shrink-0">
-        {module.icon || '📘'}
+      <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+        <BookOpen size={18} className="text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <h3 className="font-semibold text-sm text-foreground truncate">{module.title}</h3>

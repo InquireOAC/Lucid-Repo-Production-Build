@@ -3,11 +3,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const TIER_THRESHOLDS = [
-  { tier: 1, name: 'Sleeper', xp: 0, icon: '😴' },
-  { tier: 2, name: 'Dreamer', xp: 500, icon: '💭' },
-  { tier: 3, name: 'Lucid Explorer', xp: 1500, icon: '🔭' },
-  { tier: 4, name: 'Oneironaut', xp: 4000, icon: '🧑‍🚀' },
-  { tier: 5, name: 'Astral Architect', xp: 10000, icon: '🏗️' },
+  { tier: 1, name: 'Sleeper', xp: 0, icon: 'moon' },
+  { tier: 2, name: 'Dreamer', xp: 500, icon: 'cloud' },
+  { tier: 3, name: 'Lucid Explorer', xp: 1500, icon: 'telescope' },
+  { tier: 4, name: 'Oneironaut', xp: 4000, icon: 'rocket' },
+  { tier: 5, name: 'Astral Architect', xp: 10000, icon: 'building' },
 ];
 
 export function getTierInfo(tier: number) {
