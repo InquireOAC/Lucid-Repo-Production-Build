@@ -127,9 +127,9 @@ const PaywallDialog = () => {
   const FeatureIcon = featureConfig.icon;
 
   const sortedProducts = [...products].sort((a, b) => {
-    const aP = a.name.toLowerCase().includes("mystic") || a.name.toLowerCase().includes("premium");
-    const bP = b.name.toLowerCase().includes("mystic") || b.name.toLowerCase().includes("premium");
-    return aP === bP ? 0 : aP ? 1 : -1;
+    const priceA = parseFloat(a.price.replace(/[^0-9.]/g, '')) || 0;
+    const priceB = parseFloat(b.price.replace(/[^0-9.]/g, '')) || 0;
+    return priceA - priceB; // cheaper (Dreamer) first
   });
 
   return (
@@ -190,10 +190,11 @@ const PaywallDialog = () => {
                     <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
                   </div>
                 ) : (
-                  sortedProducts.map((product) => {
-                    const isPremium =
-                      product.name.toLowerCase().includes("mystic") ||
-                      product.name.toLowerCase().includes("premium");
+                  sortedProducts.map((product, index) => {
+                    // With price-sorted products, the last (most expensive) is premium
+                    const isPremium = sortedProducts.length > 1
+                      ? index === sortedProducts.length - 1
+                      : product.id === "price_premium";
                     const planFeatures = isPremium ? PLAN_FEATURES.mystic : PLAN_FEATURES.dreamer;
 
                     return (
