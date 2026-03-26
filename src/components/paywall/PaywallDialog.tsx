@@ -200,7 +200,7 @@ const PaywallDialog = () => {
               {/* Feature list */}
               <div className="px-6 pb-4">
                 <ul className="space-y-2.5">
-                  {PLAN_FEATURES.map((f, i) => (
+                  {activeFeatures.map((f, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-foreground/90">
                       <Check className="h-4 w-4 text-primary flex-shrink-0" />
                       <span>{f.label}</span>
