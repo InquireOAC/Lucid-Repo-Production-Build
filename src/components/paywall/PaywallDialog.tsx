@@ -37,14 +37,22 @@ const FEATURE_CONFIG: Record<PaywallFeature, { icon: React.ElementType; title: s
   },
 };
 
-const PLAN_FEATURES = [
-  { label: "Unlimited Dream Analysis", icon: Infinity },
-  { label: "AI Dream Art Generation", icon: ImageIcon },
-  { label: "AI Dream Chat", icon: MessageCircle },
-  { label: "Dream Video Generation", icon: Video },
-  { label: "Voice-to-Text Journaling", icon: Mic },
-  { label: "Priority Support", icon: Crown },
-];
+const PLAN_FEATURES: Record<string, { label: string; icon: React.ElementType }[]> = {
+  dreamer: [
+    { label: "Unlimited Dream Analysis", icon: Infinity },
+    { label: "10 Dream Art Generations", icon: ImageIcon },
+    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
+    { label: "Voice-to-Text Journaling", icon: Mic },
+  ],
+  mystic: [
+    { label: "Unlimited Dream Analysis", icon: Infinity },
+    { label: "Unlimited Dream Art", icon: ImageIcon },
+    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Video },
+    { label: "Voice-to-Text Journaling", icon: Mic },
+    { label: "Priority Support", icon: Crown },
+  ],
+};
 
 const PaywallDialog = () => {
   const { user } = useAuth();
