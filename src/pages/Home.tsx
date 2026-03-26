@@ -345,8 +345,8 @@ const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinned
   if (pinnedIndices.length === 0) {
     return (
       <div>
-        <h2 className="text-sm font-medium text-primary uppercase tracking-wider mb-3 flex items-center gap-2">
-          <Pin size={14} className="text-primary" />
+        <h2 className="text-sm font-medium uppercase tracking-wider mb-3 flex items-center gap-2 text-secondary-foreground">
+          <Pin size={14} className="text-secondary-foreground" />
           Pinned Technique
         </h2>
         <div className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 text-center">
