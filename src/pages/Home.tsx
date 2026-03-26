@@ -148,8 +148,8 @@ const Home = () => {
               ))}
             </div>
           ) : dreams.length === 0 ? (
-            <Card className="glass-card border-primary/10">
-              <CardContent className="p-6 text-center">
+            <div className="rounded-2xl bg-[#0d1425] border border-primary/10">
+              <div className="p-6 text-center">
                 <p className="text-muted-foreground text-sm">
                   No dreams from people you follow yet.
                 </p>
@@ -160,8 +160,8 @@ const Home = () => {
                 >
                   Discover dreamers to follow →
                 </Button>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : (
             <div className="space-y-3">
               {dreams.slice(0, 3).map((dream: any) => (
