@@ -30,7 +30,7 @@ import {
 } from "recharts";
 import {
   Pencil,
-  Flame,
+  
   BookOpen,
   Brain,
   Heart,
@@ -85,38 +85,38 @@ const Home = () => {
           </Button>
         </div>
 
-        {/* Stats Cards — stacked */}
-        {stats && <StatsCards stats={stats} />}
-
         {/* AI Dream Analyst CTA */}
         <div
-          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-5 cursor-pointer hover:border-primary/25 transition-colors"
+          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
           onClick={() => navigate("/chat")}
         >
-          <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-full bg-primary/15 flex items-center justify-center">
-              <Crosshair size={20} className="text-primary" />
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <Crosshair size={16} className="text-primary" />
             </div>
-            <h3 className="font-semibold text-foreground text-lg">AI Dream Analyst</h3>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground text-sm">AI Dream Analyst</h3>
+              <p className="text-xs text-muted-foreground">Interpret your dreams with AI</p>
+            </div>
+            <ArrowUpRight size={16} className="text-primary shrink-0" />
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-            Uncover the hidden patterns of your subconscious with our quantum-powered dream interpretation engine.
-          </p>
-          <button className="flex items-center gap-1.5 text-primary text-sm font-medium">
-            Start Interpretation <ArrowUpRight size={16} />
-          </button>
         </div>
 
         {/* Dream Book CTA */}
         <div
-          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-6 cursor-pointer hover:border-primary/25 transition-colors text-center"
+          className="rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
           onClick={() => navigate("/dream-book")}
         >
-          <BookOpen size={36} className="text-primary mx-auto mb-3" />
-          <h3 className="font-semibold text-foreground text-lg mb-1">Dream Book</h3>
-          <p className="text-sm text-muted-foreground">
-            Browse your personal gallery of subconscious adventures.
-          </p>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <BookOpen size={16} className="text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-foreground text-sm">Dream Book</h3>
+              <p className="text-xs text-muted-foreground">Your personal dream gallery</p>
+            </div>
+            <ArrowUpRight size={16} className="text-primary shrink-0" />
+          </div>
         </div>
 
         {/* Pinned Techniques */}
@@ -189,60 +189,6 @@ const Home = () => {
 };
 
 /* ===== Sub-components ===== */
-
-interface StatsCardsProps {
-  stats: {
-    current_recall_streak: number;
-    total_lucid_dreams: number;
-    total_entries: number;
-  };
-}
-
-const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => (
-  <div className="space-y-2">
-    <StatRow
-      icon={<Flame size={20} className="text-orange-400" />}
-      value={stats.current_recall_streak}
-      unit="Days"
-      label="Day Streak"
-    />
-    <StatRow
-      icon={<Sparkles size={20} className="text-primary" />}
-      value={stats.total_lucid_dreams}
-      unit="Dreams"
-      label="Lucid State"
-    />
-    <StatRow
-      icon={<BookOpen size={20} className="text-emerald-400" />}
-      value={stats.total_entries}
-      unit="Total"
-      label="Library"
-    />
-  </div>
-);
-
-const StatRow = ({
-  icon,
-  value,
-  unit,
-  label,
-}: {
-  icon: React.ReactNode;
-  value: number;
-  unit: string;
-  label: string;
-}) => (
-  <div className="flex items-center justify-between rounded-2xl bg-[#0d1425] border border-border/20 px-5 py-4">
-    <div className="flex items-center gap-4">
-      {icon}
-      <div>
-        <span className="text-3xl font-bold text-foreground leading-none">{value}</span>
-        <span className="text-sm text-muted-foreground ml-2 uppercase">{unit}</span>
-      </div>
-    </div>
-    <span className="text-xs font-medium text-primary uppercase tracking-wider">{label}</span>
-  </div>
-);
 
 interface LucidInsightsProps {
   stats: {
