@@ -158,6 +158,14 @@ const AnnouncementBanner = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {currentAnnouncement.type === 'poll' && (
+        <PollVotingModal
+          open={pollModalOpen}
+          onOpenChange={setPollModalOpen}
+          announcement={currentAnnouncement}
+          onDismiss={() => dismissAnnouncement(currentAnnouncement.id)}
+        />
+      )}
     </>
   );
 };
