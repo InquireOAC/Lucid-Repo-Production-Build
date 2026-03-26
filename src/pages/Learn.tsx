@@ -91,7 +91,7 @@ const Learn = () => {
   return (
     <PageTransition className="min-h-screen bg-background pt-safe-top px-4 pt-12 pb-24">
       <div className="max-w-2xl mx-auto space-y-5">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-2xl font-bold text-foreground text-center my-[18px]">
           <GraduationCap size={24} className="text-primary" />
           Dream Academy
         </h1>
