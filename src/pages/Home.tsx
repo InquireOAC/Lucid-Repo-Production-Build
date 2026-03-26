@@ -30,7 +30,7 @@ import {
 } from "recharts";
 import {
   Pencil,
-  Flame,
+  
   BookOpen,
   Brain,
   Heart,
