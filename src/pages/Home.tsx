@@ -198,7 +198,7 @@ const Home = () => {
 
 /* ===== Sub-components ===== */
 
-interface StatsCardProps {
+interface StatsCardsProps {
   stats: {
     current_recall_streak: number;
     total_lucid_dreams: number;
@@ -206,51 +206,49 @@ interface StatsCardProps {
   };
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ stats }) => (
-  <Card className="glass-card border-primary/10 overflow-hidden">
-    <CardContent className="p-4">
-      <div className="grid grid-cols-3 divide-x divide-border/30">
-        <StatColumn
-          icon={<Flame size={18} className="text-orange-400" />}
-          accentColor="bg-orange-400"
-          value={stats.current_recall_streak}
-          label="Day Streak"
-        />
-        <StatColumn
-          icon={<Brain size={18} className="text-primary" />}
-          accentColor="bg-primary"
-          value={stats.total_lucid_dreams}
-          label="Lucid Dreams"
-        />
-        <StatColumn
-          icon={<BookOpen size={18} className="text-emerald-400" />}
-          accentColor="bg-emerald-400"
-          value={stats.total_entries}
-          label="Total Dreams"
-        />
-      </div>
-    </CardContent>
-  </Card>
+const StatsCards: React.FC<StatsCardsProps> = ({ stats }) => (
+  <div className="space-y-2">
+    <StatRow
+      icon={<Flame size={20} className="text-orange-400" />}
+      value={stats.current_recall_streak}
+      unit="Days"
+      label="Day Streak"
+    />
+    <StatRow
+      icon={<Sparkles size={20} className="text-primary" />}
+      value={stats.total_lucid_dreams}
+      unit="Dreams"
+      label="Lucid State"
+    />
+    <StatRow
+      icon={<BookOpen size={20} className="text-emerald-400" />}
+      value={stats.total_entries}
+      unit="Total"
+      label="Library"
+    />
+  </div>
 );
 
-const StatColumn = ({
+const StatRow = ({
   icon,
-  accentColor,
   value,
+  unit,
   label,
 }: {
   icon: React.ReactNode;
-  accentColor: string;
   value: number;
+  unit: string;
   label: string;
 }) => (
-  <div className="flex flex-col items-center gap-1.5 px-2 relative">
-    <div className={`absolute top-0 left-1/2 -translate-x-1/2 -translate-y-2 w-8 h-0.5 rounded-full ${accentColor} opacity-60`} />
-    {icon}
-    <span className="text-2xl font-bold text-foreground leading-none">{value}</span>
-    <span className="text-[10px] text-muted-foreground uppercase tracking-wide text-center leading-tight">
-      {label}
-    </span>
+  <div className="flex items-center justify-between rounded-2xl bg-[#0d1425] border border-border/20 px-5 py-4">
+    <div className="flex items-center gap-4">
+      {icon}
+      <div>
+        <span className="text-3xl font-bold text-foreground leading-none">{value}</span>
+        <span className="text-sm text-muted-foreground ml-2 uppercase">{unit}</span>
+      </div>
+    </div>
+    <span className="text-xs font-medium text-primary uppercase tracking-wider">{label}</span>
   </div>
 );
 
