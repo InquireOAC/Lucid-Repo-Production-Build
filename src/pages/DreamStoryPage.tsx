@@ -396,7 +396,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
             <div className="space-y-8">
               {sectionImages.map((sec, i) => (
                 <div key={i}>
-                  <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-serif">
+                  <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
                     {sec.text}
                   </p>
                   {sec.image_url && (
@@ -419,7 +419,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
               ))}
             </div>
           ) : (
-            <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-serif">
+            <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
               {dream.content}
             </p>
           )}
