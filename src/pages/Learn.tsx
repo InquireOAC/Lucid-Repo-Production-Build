@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { GraduationCap } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcademyProgress } from '@/hooks/useAcademyProgress';
 import { useAcademyModules, ModuleWithProgress } from '@/hooks/useAcademyModules';
@@ -90,7 +91,10 @@ const Learn = () => {
   return (
     <PageTransition className="min-h-screen bg-background pt-safe-top px-4 pt-12 pb-24">
       <div className="max-w-2xl mx-auto space-y-5">
-        <h1 className="text-2xl font-bold text-foreground">🎓 Dream Academy</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <GraduationCap size={24} className="text-primary" />
+          Dream Academy
+        </h1>
 
         <AcademyHeroCard
           totalXP={progress?.total_xp || 0}

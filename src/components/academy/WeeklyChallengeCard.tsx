@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { Hand } from 'lucide-react';
 
 export const WeeklyChallengeCard: React.FC = () => {
   const { user } = useAuth();
@@ -60,7 +61,9 @@ export const WeeklyChallengeCard: React.FC = () => {
       <h2 className="text-lg font-bold text-foreground">Weekly Challenge</h2>
       <div className="rounded-2xl bg-[#0d1425] border border-primary/15 p-5 space-y-4">
         <div className="flex items-start justify-between">
-          <span className="text-3xl">✋</span>
+          <div className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+            <Hand size={20} className="text-primary" />
+          </div>
           <span className="text-xs font-semibold text-primary bg-primary/10 rounded-full px-3 py-1">
             +{challenge.xp_reward} XP REWARD
           </span>
@@ -79,7 +82,7 @@ export const WeeklyChallengeCard: React.FC = () => {
           disabled={!!accepted}
           onClick={() => acceptChallenge.mutate()}
         >
-          {accepted ? 'Challenge Accepted ✓' : 'Accept Challenge'}
+          {accepted ? 'Challenge Accepted' : 'Accept Challenge'}
         </Button>
       </div>
     </div>
