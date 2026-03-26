@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 
 const Home = () => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { dreams, isLoading: feedLoading } = useFeedPublicDreams(user);
   const { stats } = useLucidStats();
