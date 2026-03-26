@@ -1,36 +1,31 @@
 
 
-## Plan: Redesign Paywall to Selection-Based Layout
+## Plan: Fix Feature List Not Switching Between Plans
 
-**Inspiration**: The reference screenshot shows a single-select plan picker (Yearly/Monthly cards) with one shared "Subscribe" button at the bottom, instead of per-plan subscribe buttons.
+### Root Cause
+The tier detection logic on line 148-150 checks if the product name includes "mystic" or if the ID equals "price_premium". Real Stripe products have auto-generated IDs (like `price_1Abc...`) and may have different casing/naming. When neither condition matches, **both** plans fall through to the "dreamer" tier.
 
-### Design
-- Remove per-plan feature lists and individual subscribe buttons
-- Show the feature hero section (icon + title + description) at top
-- Below: two selectable plan cards (radio-style) — user taps to select, highlighted with primary border
-- The more expensive/better-value plan gets a "Best value!" badge
-- One shared "Subscribe" CTA button pinned at the bottom
-- Restore purchases link and terms text below the button
+### Fix
+In `src/components/paywall/PaywallDialog.tsx`, replace the name/ID-based tier detection with **price-based detection**: the most expensive product is "mystic" tier, the cheaper one is "dreamer" tier. This is reliable regardless of Stripe product naming.
 
-### Changes in `src/components/paywall/PaywallDialog.tsx`
+**Change** (lines 147-151):
+```tsx
+// Before
+const selectedProduct = products.find(p => p.id === selectedPlan);
+const selectedTierKey = selectedProduct
+  ? (selectedProduct.name.toLowerCase().includes("mystic") || selectedProduct.id === "price_premium" ? "mystic" : "dreamer")
+  : "mystic";
 
-**Stripe plans section** (replace lines 198-261):
-- Add `selectedPlan` state (defaults to the premium/best-value plan)
-- Render each product as a selectable card showing: plan name, total price, per-month breakdown
-- Selected card gets `border-primary` ring, unselected gets `border-border/30`
-- Premium plan gets "Best value!" badge (positioned like the screenshot)
-- Remove feature lists from plan cards — keep the hero description as the selling point
-- Move the Subscribe button to a fixed bottom bar outside the scroll area
-
-**Native plans section** (NativePaywallPlans):
-- Same selection pattern: selectable cards + single subscribe button
-
-**Bottom bar** (new fixed section):
-- "Subscribe" button, full-width, primary color
-- Terms text below
+// After
+const selectedProduct = products.find(p => p.id === selectedPlan);
+const maxPrice = Math.max(...products.map(p => parsePrice(p.price)));
+const selectedTierKey = selectedProduct
+  ? (parsePrice(selectedProduct.price) >= maxPrice ? "mystic" : "dreamer")
+  : "mystic";
+```
 
 ### Files
 | File | Action |
 |---|---|
-| `src/components/paywall/PaywallDialog.tsx` | Redesign plan selection UI |
+| `src/components/paywall/PaywallDialog.tsx` | Fix tier detection to use price comparison instead of name/ID matching |
 
