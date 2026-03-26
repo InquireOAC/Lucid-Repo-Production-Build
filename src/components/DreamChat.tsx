@@ -41,10 +41,13 @@ const DreamChat = () => {
   const {
     canUseChat,
     recordChatUsage,
+    resetSessionCount,
     isChecking,
     isAppCreator,
     hasActiveSubscription,
-    hasUsedFeature
+    hasUsedFeature,
+    sessionMessageCount,
+    freeTrialMessageLimit,
   } = useChatFeatureAccess();
 
   const [messages, setMessages] = useState<Message[]>([]);
