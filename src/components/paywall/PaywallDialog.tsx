@@ -144,6 +144,12 @@ const PaywallDialog = () => {
 
   const sortedProducts = [...products].sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
 
+  const selectedProduct = products.find(p => p.id === selectedPlan);
+  const selectedTierKey = selectedProduct
+    ? (selectedProduct.name.toLowerCase().includes("mystic") || selectedProduct.id === "price_premium" ? "mystic" : "dreamer")
+    : "mystic";
+  const activeFeatures = PLAN_FEATURES[selectedTierKey];
+
   return (
     <AnimatePresence>
       {isOpen && (
