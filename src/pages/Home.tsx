@@ -439,14 +439,6 @@ const FALLING_ASLEEP_CARDS: { idx: number; image: string }[] = [
   { idx: 0, image: techniqueImgRealityChecks },
 ];
 
-function getFlatDifficultyBg(difficulty: string) {
-  switch (difficulty) {
-    case "Beginner": return "bg-emerald-950/80 border-emerald-800/30";
-    case "Intermediate": return "bg-amber-950/80 border-amber-800/30";
-    case "Advanced": return "bg-blue-950/80 border-blue-800/30";
-    default: return "bg-card/80 border-border/30";
-  }
-}
 
 const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinnedIndices }) => {
   const navigate = useNavigate();
