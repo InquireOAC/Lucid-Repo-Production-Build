@@ -19,10 +19,15 @@ export const useFeatureUsage = () => {
 
   useEffect(() => {
     if (user) {
-      checkSubscriptionStatus();
+      if (isAdmin) {
+        setHasActiveSubscription(true);
+        setSubscriptionTier('mystic');
+      } else {
+        checkSubscriptionStatus();
+      }
       loadTrialStatus();
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   const loadTrialStatus = async () => {
     if (!user) return;
