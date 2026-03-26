@@ -25,7 +25,7 @@ export const useImageGeneration = ({
 }: UseImageGenerationProps) => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
-  const { hasUsedFeature, markFeatureAsUsed, canUseFeature, recordFeatureUsage } = useFeatureUsage();
+  const { hasUsedFeature, canUseFeature, recordFeatureUsage } = useFeatureUsage();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [isGenerating, setIsGenerating] = useState(false);
