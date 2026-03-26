@@ -46,6 +46,35 @@ const LucidStats: React.FC = () => {
     );
   }
 
+  if (!hasActiveSubscription) {
+    return (
+      <PageTransition className="min-h-screen pt-safe-top">
+        <div className="px-4 md:px-8 py-20 max-w-6xl mx-auto text-center">
+          <div className="glass-card rounded-2xl p-8 md:p-12 max-w-md mx-auto space-y-5">
+            <div className="w-16 h-16 mx-auto rounded-full bg-primary/15 flex items-center justify-center">
+              <Crown className="h-8 w-8 text-primary" />
+            </div>
+            <h2 className="text-xl font-bold text-foreground">Premium Feature</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Unlock detailed lucid dreaming analytics, technique tracking, AI coaching insights, and achievement badges with a subscription.
+            </p>
+            <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <Lock className="h-3.5 w-3.5" />
+              <span>Available on Dreamer & Mystic plans</span>
+            </div>
+            <Button
+              onClick={() => window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }))}
+              className="mt-2 w-full"
+            >
+              <Crown className="h-4 w-4 mr-2" />
+              Upgrade to Unlock
+            </Button>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
+
   if (isLoading) {
     return (
       <PageTransition className="min-h-screen pt-safe-top">
