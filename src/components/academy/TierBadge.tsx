@@ -1,7 +1,7 @@
 import React from 'react';
-import { Moon, Cloud, Telescope, Rocket, Building } from 'lucide-react';
+import { Moon, Cloud, Telescope, Rocket, Building, LucideIcon } from 'lucide-react';
 
-const TIER_ICONS: Record<string, React.FC<{ size?: number; className?: string }>> = {
+const TIER_ICONS: Record<string, LucideIcon> = {
   moon: Moon,
   cloud: Cloud,
   telescope: Telescope,

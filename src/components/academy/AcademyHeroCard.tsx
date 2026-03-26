@@ -1,9 +1,9 @@
 import React from 'react';
 import { getTierInfo, getNextTierInfo } from '@/hooks/useAcademyProgress';
 import { Progress } from '@/components/ui/progress';
-import { Moon, Cloud, Telescope, Rocket, Building } from 'lucide-react';
+import { Moon, Cloud, Telescope, Rocket, Building, LucideIcon } from 'lucide-react';
 
-const TIER_ICON_MAP: Record<string, React.FC<{ size?: number; className?: string }>> = {
+const TIER_ICON_MAP: Record<string, LucideIcon> = {
   moon: Moon,
   cloud: Cloud,
   telescope: Telescope,
