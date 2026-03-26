@@ -144,25 +144,8 @@ const Home = () => {
         {/* Pinned Techniques */}
         <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
 
-        {/* While Falling Asleep */}
-        <FallingAsleepSection />
-
         {/* Dream Academy Card */}
         <AcademyEntryCard />
-
-        {/* Today's Repo Activity */}
-        {todayCount != null && todayCount > 0 && (
-          <button
-            onClick={() => navigate("/lucid-repo")}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-primary/10 border border-primary/15 hover:bg-primary/15 transition-colors"
-          >
-            <span className="text-sm">🌙</span>
-            <span className="text-xs font-medium text-primary">
-              {todayCount} dream{todayCount !== 1 ? "s" : ""} shared to the Repo today
-            </span>
-            <ChevronRight size={14} className="text-primary/60" />
-          </button>
-        )}
 
         {/* Lucid Insights */}
         {stats && <LucidInsightsCard stats={stats} onTap={() => navigate("/lucid-stats")} />}
@@ -205,6 +188,23 @@ const Home = () => {
             </div>
           )}
         </div>
+
+        {/* Today's Repo Activity */}
+        {todayCount != null && todayCount > 0 && (
+          <button
+            onClick={() => navigate("/lucid-repo")}
+            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-primary/10 border border-primary/15 hover:bg-primary/15 transition-colors"
+          >
+            <span className="text-sm">🌙</span>
+            <span className="text-xs font-medium text-primary">
+              {todayCount} dream{todayCount !== 1 ? "s" : ""} shared to the Repo today
+            </span>
+            <ChevronRight size={14} className="text-primary/60" />
+          </button>
+        )}
+
+        {/* While Falling Asleep */}
+        <FallingAsleepSection />
       </div>
     </PageTransition>
   );
