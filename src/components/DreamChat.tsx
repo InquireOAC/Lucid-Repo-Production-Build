@@ -147,6 +147,7 @@ const DreamChat = () => {
     setCurrentSession(null);
     setIsReadOnly(false);
     setViewMode('chat');
+    resetSessionCount();
   };
 
   const createNewSession = async () => {
@@ -257,15 +258,18 @@ const DreamChat = () => {
       // Record usage after successful chat interaction
       await recordChatUsage();
 
-      // Show appropriate success message for non-subscribers
-      if (!isAppCreator && !hasActiveSubscription && !hasUsedFeature('analysis')) {
-        toast.success("Free trial used! Subscribe to continue using AI Dream Chat.", {
-          duration: 5000,
-          action: {
-            label: "Subscribe",
-            onClick: () => window.location.href = '/profile?tab=subscription'
-          }
-        });
+      // Show message count for free trial users
+      if (!isAppCreator && !hasActiveSubscription) {
+        const remaining = freeTrialMessageLimit - sessionMessageCount - 1;
+        if (remaining > 0 && remaining <= 3) {
+          toast.info(`${remaining} free message${remaining === 1 ? '' : 's'} remaining`, {
+            duration: 3000,
+            action: {
+              label: "Upgrade",
+              onClick: () => showSubscriptionPrompt('chat')
+            }
+          });
+        }
       }
 
       // Reload sessions to update order
