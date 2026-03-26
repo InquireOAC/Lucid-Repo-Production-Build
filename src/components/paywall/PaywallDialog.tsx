@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic,
+  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic, Infinity,
   Check, Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
