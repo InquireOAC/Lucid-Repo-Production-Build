@@ -94,7 +94,7 @@ const Home = () => {
                 <h3 className="font-semibold text-foreground text-sm">Record a Dream</h3>
                 <p className="text-xs text-muted-foreground">What did you dream last night?</p>
               </div>
-              <ArrowUpRight size={16} className="text-primary shrink-0" />
+              <ArrowUpRight size={16} className="text-foreground shrink-0" />
             </div>
           </div>
 
