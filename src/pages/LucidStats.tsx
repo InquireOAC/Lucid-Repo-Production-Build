@@ -4,6 +4,7 @@ import PullToRefresh from "@/components/ui/PullToRefresh";
 import { useLucidStats } from "@/hooks/useLucidStats";
 import { useLucidAchievements } from "@/hooks/useLucidAchievements";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import StatsHeroCard from "@/components/lucid-stats/StatsHeroCard";
 import LucidFrequencyCard from "@/components/lucid-stats/LucidFrequencyCard";
 import RecallStrengthCard from "@/components/lucid-stats/RecallStrengthCard";
@@ -13,7 +14,7 @@ import LucidityTrendCard from "@/components/lucid-stats/LucidityTrendCard";
 import AICoachCard from "@/components/lucid-stats/AICoachCard";
 import AchievementsCard from "@/components/lucid-stats/AchievementsCard";
 import LoadingSkeletonStats from "@/components/lucid-stats/LoadingSkeletonStats";
-import { Sparkles, Moon } from "lucide-react";
+import { Sparkles, Moon, Crown, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -26,6 +27,7 @@ const SectionDivider = () => (
 const LucidStats: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { hasActiveSubscription } = useFeatureUsage();
   const { stats, isLoading, error, refetch, timeRange, setTimeRange } = useLucidStats();
   useLucidAchievements(stats);
 
