@@ -29,6 +29,7 @@ export interface Notification {
 }
 
 const STORAGE_KEY = "lucid_repo_read_notifications";
+const READ_ALL_BEFORE_KEY = "lucid_repo_read_all_before";
 
 function getReadIds(): Set<string> {
   try {
@@ -40,6 +41,14 @@ function getReadIds(): Set<string> {
 function saveReadIds(ids: Set<string>) {
   const arr = [...ids].slice(-200);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function getReadAllTimestamp(): string | null {
+  return localStorage.getItem(READ_ALL_BEFORE_KEY);
+}
+
+function saveReadAllTimestamp(ts: string) {
+  localStorage.setItem(READ_ALL_BEFORE_KEY, ts);
 }
 
 interface NotificationStore {
