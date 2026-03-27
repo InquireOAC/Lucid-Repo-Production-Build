@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,7 +37,17 @@ const NewDream = () => {
     generatedImage: "",
     imagePrompt: "",
     lucid: false,
+    technique_used: "",
   });
+
+  const TECHNIQUES = [
+    { id: "MILD", label: "MILD" },
+    { id: "WILD", label: "WILD" },
+    { id: "WBTB", label: "WBTB" },
+    { id: "Reality Checks", label: "Reality Checks" },
+    { id: "Meditation", label: "Meditation" },
+    { id: "Supplements", label: "Supplements" },
+  ];
 
   const [inputMode, setInputMode] = useState<"text" | "voice">("text");
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
@@ -94,6 +104,7 @@ const NewDream = () => {
         generatedImage: formData.generatedImage,
         imagePrompt: formData.imagePrompt,
         audioUrl: uploadedAudioUrl || undefined,
+        technique_used: formData.technique_used || undefined,
       });
       navigate("/");
     } catch (error) {
@@ -244,6 +255,31 @@ const NewDream = () => {
                 onClick={() => handleTagSelect(tag.id)}
               >
                 {tag.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+
+        {/* Technique selector */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
+            <Zap className="h-3.5 w-3.5" />
+            Technique Used
+          </Label>
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            {TECHNIQUES.map((tech) => (
+              <Badge
+                key={tech.id}
+                variant={formData.technique_used === tech.id ? "aurora" : "outline"}
+                className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
+                onClick={() =>
+                  setFormData((p) => ({
+                    ...p,
+                    technique_used: p.technique_used === tech.id ? "" : tech.id,
+                  }))
+                }
+              >
+                {tech.label}
               </Badge>
             ))}
           </div>
