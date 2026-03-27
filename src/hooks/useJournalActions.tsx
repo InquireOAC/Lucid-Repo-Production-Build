@@ -27,6 +27,8 @@ export const useJournalActions = () => {
     generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
+    technique_used?: string;
+    lucidity_level?: number;
   }): Promise<void> => {
     setIsSubmitting(true);
     if (!user) {
@@ -77,6 +79,8 @@ export const useJournalActions = () => {
         image_dataurl: finalImageUrl,
         imagePrompt: dreamData.imagePrompt || null,
         audio_url: dreamData.audioUrl || null,
+        technique_used: dreamData.technique_used || null,
+        lucidity_level: dreamData.lucidity_level || null,
       };
 
       console.log("Saving dream to database with final image URL:", finalImageUrl);
