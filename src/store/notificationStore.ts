@@ -121,7 +121,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
         user: users?.find(u => u.id === activity.user_id),
         dream: dreams?.find((d: any) => d.id === activity.dream_id),
         comment_text: commentMap[`${activity.user_id}_${activity.dream_id}`],
-        read: readIds.has(activity.id),
+        read: readIds.has(activity.id) || (readAllBefore != null && activity.created_at != null && new Date(activity.created_at) <= new Date(readAllBefore)),
       }));
 
       const unread = enriched.filter(n => !n.read).length;
