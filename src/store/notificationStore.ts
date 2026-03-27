@@ -153,6 +153,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     const readIds = getReadIds();
     get().notifications.forEach(n => readIds.add(n.id));
     saveReadIds(readIds);
+    saveReadAllTimestamp(new Date().toISOString());
     set(state => ({
       notifications: state.notifications.map(n => ({ ...n, read: true })),
       unreadCount: 0,
