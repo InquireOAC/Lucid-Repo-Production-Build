@@ -1,26 +1,31 @@
 
 
-## Plan: Ensure Notification Count Resets Properly After Mark All Read
+## Plan: Add Technique Selector to New Dream Page
 
 ### Problem
-After pressing "Mark all as read", the unread count should go to 0 and stay at 0 until a genuinely new notification arrives (at which point it should show 1). There's a potential race condition: the realtime subscription in `useNotifications` calls `fetchNotifications` on every INSERT to `activities`. If a new activity is inserted right around the time `markAllAsRead` runs, the refetch could re-read stale localStorage state or the save might not have completed.
+The dedicated New Dream page (`/journal/new` via `NewDream.tsx`) doesn't have a technique selector, so `technique_used` is never saved when using that page. The `DreamEntryForm` (used in the dialog flow) already has one.
 
-### Root Cause Analysis
-The `markAllAsRead` function saves current notification IDs to localStorage and sets `unreadCount: 0`. When `fetchNotifications` is triggered by realtime, it reads localStorage to determine which IDs are read. This should work, but:
-1. The `saveReadIds` function caps at 200 entries — if there are more, older IDs get evicted and could appear "unread" again on refetch
-2. There's no timestamp-based approach — we track individual IDs rather than saying "everything before this time is read"
+### Changes
 
-### Fix
-Add a `readAllBefore` timestamp to localStorage alongside the ID set. When `markAllAsRead` is called, store the current timestamp. During `fetchNotifications`, any notification with `created_at` before that timestamp is automatically marked as read, regardless of whether its ID is in the set. This is more reliable than tracking 200 individual IDs.
+**`src/pages/NewDream.tsx`**:
+1. Add `technique_used` field to `formData` state (default `""`)
+2. Add a technique selector UI in the tags/metadata section — a horizontally scrollable row of selectable badges (matching the existing tag pill style), with options: MILD, WILD, WBTB, Reality Checks, Meditation, Supplements
+3. Pass `technique_used` through to `handleAddDream` — but since `handleAddDream` in `useJournalActions` doesn't accept `technique_used` yet, we need to update the pipeline
 
-### Changes in `src/store/notificationStore.ts`
-1. Add `getReadAllTimestamp()` / `saveReadAllTimestamp()` helpers using a separate localStorage key
-2. In `markAllAsRead`: save `new Date().toISOString()` as the "read all before" timestamp
-3. In `fetchNotifications` enrichment: mark a notification as read if its `created_at` is before the saved timestamp OR its ID is in the read set
-4. Keep the existing ID-based tracking for individual `markAsRead` calls on newer notifications
+**`src/hooks/useJournalActions.tsx`**:
+1. Extend the `handleAddDream` parameter type to include `technique_used?: string` and `lucidity_level?: number`
+2. Pass these fields through to `addDreamToDb` so they're saved to the database
+
+**`src/hooks/useDreamDbActions.tsx`**:
+1. Add `technique_used` and `lucidity_level` to the `addDreamToDb` insert object (already in the Pick type via DreamEntry, just needs to be included in the actual insert payload)
+
+### UI Design
+Below the Tags section, add a "Technique" label with horizontally scrollable badge pills (same style as tags). Tapping one selects it (highlighted), tapping again deselects. Only one can be selected at a time.
 
 ### Files
 | File | Action |
 |---|---|
-| `src/store/notificationStore.ts` | Add timestamp-based "read all" tracking alongside existing ID tracking |
+| `src/pages/NewDream.tsx` | Add technique_used state + selector UI + pass to submit |
+| `src/hooks/useJournalActions.tsx` | Accept technique_used in handleAddDream params |
+| `src/hooks/useDreamDbActions.tsx` | Include technique_used in DB insert |
 
