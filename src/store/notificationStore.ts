@@ -115,6 +115,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
       const dreams = dreamsResult?.data || [];
       const readIds = getReadIds();
+      const readAllBefore = getReadAllTimestamp();
 
       const enriched: Notification[] = activities.map(activity => ({
         ...activity,
