@@ -25,7 +25,7 @@ const JournalHeader = ({ onAddDream }: JournalHeaderProps) => {
         <div className="flex items-center gap-2">
           <Calendar size={16} className="text-primary" />
           <span className="text-sm text-muted-foreground font-medium">
-            {format(new Date(), "EEE, MMM d")}
+            {format(new Date(), "EEEE, MMMM d, yyyy")}
           </span>
         </div>
         <Button 
