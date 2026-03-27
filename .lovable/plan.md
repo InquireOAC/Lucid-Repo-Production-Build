@@ -1,26 +1,26 @@
 
 
-## Plan: Fix Likes Table Mismatch
+## Plan: Ensure Notification Count Resets Properly After Mark All Read
 
-### Root Cause
-There are two like hooks using **different database tables**:
-- `useDreamLikes` (used on `DreamStoryPage`) reads/writes from the `likes` table
-- `useLikes` (used on Lucid Repo list views) and `useProfileDreams` (profile "Likes" tab) both use the `dream_likes` table
+### Problem
+After pressing "Mark all as read", the unread count should go to 0 and stay at 0 until a genuinely new notification arrives (at which point it should show 1). There's a potential race condition: the realtime subscription in `useNotifications` calls `fetchNotifications` on every INSERT to `activities`. If a new activity is inserted right around the time `markAllAsRead` runs, the refetch could re-read stale localStorage state or the save might not have completed.
 
-When a user taps the heart on a dream story page, the like goes into `likes` but the profile reads from `dream_likes` — so it never appears.
+### Root Cause Analysis
+The `markAllAsRead` function saves current notification IDs to localStorage and sets `unreadCount: 0`. When `fetchNotifications` is triggered by realtime, it reads localStorage to determine which IDs are read. This should work, but:
+1. The `saveReadIds` function caps at 200 entries — if there are more, older IDs get evicted and could appear "unread" again on refetch
+2. There's no timestamp-based approach — we track individual IDs rather than saying "everything before this time is read"
 
 ### Fix
-Update `src/hooks/useDreamLikes.tsx` to use the `dream_likes` table instead of `likes`, matching the rest of the codebase.
+Add a `readAllBefore` timestamp to localStorage alongside the ID set. When `markAllAsRead` is called, store the current timestamp. During `fetchNotifications`, any notification with `created_at` before that timestamp is automatically marked as read, regardless of whether its ID is in the set. This is more reliable than tracking 200 individual IDs.
 
-**Changes in `useDreamLikes.tsx`**:
-- Line 13: Change `.from("likes")` to `.from("dream_likes")`
-- Line 24: Change `.from("likes")` to `.from("dream_likes")`
-- Line 30: Change `.from("likes")` to `.from("dream_likes")`
-
-Also update the like count sync: after toggling, refetch the actual count from `dream_likes` and update `dream_entries.like_count` (same pattern as `useLikes` does) so counts stay consistent.
+### Changes in `src/store/notificationStore.ts`
+1. Add `getReadAllTimestamp()` / `saveReadAllTimestamp()` helpers using a separate localStorage key
+2. In `markAllAsRead`: save `new Date().toISOString()` as the "read all before" timestamp
+3. In `fetchNotifications` enrichment: mark a notification as read if its `created_at` is before the saved timestamp OR its ID is in the read set
+4. Keep the existing ID-based tracking for individual `markAsRead` calls on newer notifications
 
 ### Files
 | File | Action |
 |---|---|
-| `src/hooks/useDreamLikes.tsx` | Change all `likes` table references to `dream_likes`, add like_count sync |
+| `src/store/notificationStore.ts` | Add timestamp-based "read all" tracking alongside existing ID tracking |
 
