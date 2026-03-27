@@ -72,10 +72,18 @@ const Home = () => {
           <h1 className="text-3xl font-bold text-foreground leading-tight">
             {user ? "Welcome back," : "Sign in to get started"}
           </h1>
-          {user && (
+          {user ? (
             <p className="text-2xl font-semibold text-primary mt-1">
               {profile?.display_name || profile?.username || "Dreamer"}
             </p>
+          ) : (
+            <Button
+              onClick={() => navigate("/auth")}
+              className="mt-3 w-full"
+              variant="luminous"
+            >
+              Sign In
+            </Button>
           )}
 
           <div className="mt-[10px]">
