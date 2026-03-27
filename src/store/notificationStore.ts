@@ -29,6 +29,7 @@ export interface Notification {
 }
 
 const STORAGE_KEY = "lucid_repo_read_notifications";
+const READ_ALL_BEFORE_KEY = "lucid_repo_read_all_before";
 
 function getReadIds(): Set<string> {
   try {
@@ -40,6 +41,14 @@ function getReadIds(): Set<string> {
 function saveReadIds(ids: Set<string>) {
   const arr = [...ids].slice(-200);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+}
+
+function getReadAllTimestamp(): string | null {
+  return localStorage.getItem(READ_ALL_BEFORE_KEY);
+}
+
+function saveReadAllTimestamp(ts: string) {
+  localStorage.setItem(READ_ALL_BEFORE_KEY, ts);
 }
 
 interface NotificationStore {
@@ -106,13 +115,14 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
 
       const dreams = dreamsResult?.data || [];
       const readIds = getReadIds();
+      const readAllBefore = getReadAllTimestamp();
 
       const enriched: Notification[] = activities.map(activity => ({
         ...activity,
         user: users?.find(u => u.id === activity.user_id),
         dream: dreams?.find((d: any) => d.id === activity.dream_id),
         comment_text: commentMap[`${activity.user_id}_${activity.dream_id}`],
-        read: readIds.has(activity.id),
+        read: readIds.has(activity.id) || (readAllBefore != null && activity.created_at != null && new Date(activity.created_at) <= new Date(readAllBefore)),
       }));
 
       const unread = enriched.filter(n => !n.read).length;
@@ -143,6 +153,7 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
     const readIds = getReadIds();
     get().notifications.forEach(n => readIds.add(n.id));
     saveReadIds(readIds);
+    saveReadAllTimestamp(new Date().toISOString());
     set(state => ({
       notifications: state.notifications.map(n => ({ ...n, read: true })),
       unreadCount: 0,
