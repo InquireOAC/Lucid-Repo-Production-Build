@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Capacitor } from '@capacitor/core';
-import { Purchases } from '@revenuecat/purchases-capacitor';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { revenueCatManager } from '@/utils/revenueCatManager';
 
 export const DebugSubscriptionInfo = () => {
   const { user } = useAuth();
@@ -20,13 +20,12 @@ export const DebugSubscriptionInfo = () => {
 
     setIsLoading(true);
     try {
-      // Initialize with current user
-      await Purchases.configure({
-        apiKey: 'appl_QNsyVEgaltTbxopyYGyhXeGOUQk',
-        appUserID: user?.id || undefined
-      });
+      // Use the already-initialized SDK instance instead of re-configuring with hardcoded key
+      if (!revenueCatManager.isInitialized()) {
+        await revenueCatManager.initialize(user?.id);
+      }
 
-      const result = await Purchases.getCustomerInfo();
+      const result = await revenueCatManager.getCustomerInfo();
       const customerInfo = result.customerInfo;
 
       // Also check Supabase for this user
@@ -52,7 +51,7 @@ export const DebugSubscriptionInfo = () => {
           email: user?.email
         }
       });
-    } catch (error) {
+    } catch (error: any) {
       setDebugInfo({ error: error.message });
     } finally {
       setIsLoading(false);
@@ -86,7 +85,7 @@ export const DebugSubscriptionInfo = () => {
             <div className="text-xs">
               <strong>Debug Information:</strong>
             </div>
-            <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-96">
+            <pre className="text-xs bg-muted p-2 rounded overflow-auto max-h-96">
               {JSON.stringify(debugInfo, null, 2)}
             </pre>
           </div>

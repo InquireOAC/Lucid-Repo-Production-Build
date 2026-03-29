@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,8 +12,32 @@ serve(async (req) => {
   }
 
   try {
+    // Verify JWT
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!,
+      { global: { headers: { Authorization: authHeader } } }
+    )
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data, error: authError } = await supabase.auth.getClaims(token)
+    if (authError || !data?.claims) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     // Parse platform from request body
-    let platform = 'ios'; // default to iOS for backward compatibility
+    let platform = 'ios';
     try {
       const body = await req.json();
       if (body?.platform) {
@@ -22,7 +47,6 @@ serve(async (req) => {
       // No body or invalid JSON — default to iOS
     }
 
-    // Return the correct API key based on platform
     const secretName = platform === 'android' ? 'REVENUECAT_ANDROID_API_KEY' : 'REVENUECAT_API_KEY';
     const revenueCatApiKey = Deno.env.get(secretName);
 
@@ -34,7 +58,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Returning RevenueCat key for platform: ${platform}`);
+    console.log(`Returning RevenueCat key for platform: ${platform}, user: ${data.claims.sub}`);
 
     return new Response(
       JSON.stringify({ apiKey: revenueCatApiKey }),
