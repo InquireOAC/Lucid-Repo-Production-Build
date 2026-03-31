@@ -1,21 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { staggerItemVariants } from "@/components/ui/StaggerContainer";
 import type { SyncAlert } from "@/hooks/useDreamConnections";
 import { formatDistanceToNow } from "date-fns";
-import { supabase } from "@/integrations/supabase/client";
-import SymbolAvatar from "@/components/profile/SymbolAvatar";
-
-interface DreamerProfile {
-  id: string;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-  avatar_symbol: string | null;
-  avatar_color: string | null;
-}
-
-const MAX_AVATARS = 4;
 
 const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
   const [profiles, setProfiles] = useState<DreamerProfile[]>([]);
