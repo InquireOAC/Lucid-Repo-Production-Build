@@ -293,17 +293,25 @@ const PaywallDialog = () => {
 };
 
 /** Native (iOS/Android) plan cards using RevenueCat */
-const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
+const NativePaywallPlans = ({ onClose, onTierChange }: { onClose: () => void; onTierChange?: (tier: string) => void }) => {
   const { products, isLoading, purchaseSubscription, restorePurchases } = useNativeSubscription();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     if (products.length > 0 && !selectedPlan) {
-      // Default to first (usually premium)
-      setSelectedPlan(products[0]?.id);
+      // Default to premium (price_premium)
+      const premium = products.find(p => p.id === 'price_premium');
+      setSelectedPlan(premium?.id || products[0]?.id);
     }
   }, [products, selectedPlan]);
+
+  // Notify parent of tier changes
+  useEffect(() => {
+    if (selectedPlan && onTierChange) {
+      onTierChange(selectedPlan === 'price_premium' ? 'mystic' : 'dreamer');
+    }
+  }, [selectedPlan, onTierChange]);
 
   if (isLoading) {
     return (
@@ -328,11 +336,18 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
     setSubscribing(false);
   };
 
+  // Sort: premium first
+  const sorted = [...products].sort((a, b) => {
+    if (a.id === 'price_premium') return -1;
+    if (b.id === 'price_premium') return 1;
+    return 0;
+  });
+
   return (
     <div className="space-y-3">
-      {products.map((product, index) => {
+      {sorted.map((product) => {
         const isSelected = selectedPlan === product.id;
-        const isBestValue = index === 0 && products.length > 1;
+        const isPremium = product.id === 'price_premium';
 
         return (
           <button
@@ -342,7 +357,7 @@ const NativePaywallPlans = ({ onClose }: { onClose: () => void }) => {
               isSelected ? "border-primary bg-primary/5" : "border-border/30 bg-card/30"
             }`}
           >
-            {isBestValue && (
+            {isPremium && (
               <span className="absolute -top-2.5 right-4 text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2.5 py-0.5 rounded-full">
                 Best value
               </span>
