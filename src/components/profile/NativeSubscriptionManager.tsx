@@ -8,12 +8,13 @@ const PLAN_FEATURES = {
   basic: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "10 Dream Art Generations", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
+    { label: "Voice-to-Text Journaling", icon: Sparkles },
   ],
   premium: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "Unlimited Dream Art", icon: ImageIcon },
+    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
     { label: "Dream Video Generation", icon: Sparkles },
     { label: "Voice-to-Text Journaling", icon: MessageCircle },
     { label: "Priority Support", icon: Crown },

@@ -216,7 +216,7 @@ const PaywallDialog = () => {
               {/* Plan selection */}
               <div className="px-5 pb-8">
                 {isNative ? (
-                  <NativePaywallPlans onClose={() => setIsOpen(false)} />
+                  <NativePaywallPlans onClose={() => setIsOpen(false)} onTierChange={setNativeTierKey} />
                 ) : loading ? (
                   <div className="flex justify-center py-14">
                     <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
