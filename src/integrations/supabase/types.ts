@@ -3061,6 +3061,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_alerts_safe: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          dreamer_count: number | null
+          emoji: string | null
+          id: string | null
+          is_trending: boolean | null
+          theme: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          dreamer_count?: number | null
+          emoji?: string | null
+          id?: string | null
+          is_trending?: boolean | null
+          theme?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          dreamer_count?: number | null
+          emoji?: string | null
+          id?: string | null
+          is_trending?: boolean | null
+          theme?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_subscription_credits: {
