@@ -5,12 +5,6 @@ import type { SyncAlert } from "@/hooks/useDreamConnections";
 import { formatDistanceToNow } from "date-fns";
 
 const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
-  const [profiles, setProfiles] = useState<DreamerProfile[]>([]);
-
-  // dreamer_ids removed for privacy - show count only
-
-  const remaining = Math.max(0, alert.dreamer_count - MAX_AVATARS);
-
   return (
     <motion.div
       variants={staggerItemVariants}
@@ -28,7 +22,7 @@ const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
           <div className="flex items-center gap-2">
             <p className="text-base font-bold text-foreground">Synchronicity Detected</p>
             {alert.is_trending && (
-              <span className="px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 text-[10px] font-bold uppercase tracking-wider">
+              <span className="px-2 py-0.5 rounded-full bg-destructive/15 text-destructive text-[10px] font-bold uppercase tracking-wider">
                 Live
               </span>
             )}
@@ -39,22 +33,7 @@ const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
 
       <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/30">
         <div className="flex items-center gap-1.5">
-          {profiles.map((p) => (
-            <SymbolAvatar
-              key={p.id}
-              symbol={p.avatar_symbol}
-              color={p.avatar_color}
-              avatarUrl={p.avatar_url}
-              fallbackLetter={p.display_name?.[0] || p.username?.[0] || "U"}
-              size={28}
-            />
-          ))}
-          {remaining > 0 && (
-            <span className="w-7 h-7 rounded-full bg-muted border border-border flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-              +{remaining}
-            </span>
-          )}
-          <span className="text-xs font-medium text-primary ml-1.5">{alert.dreamer_count} dreamers</span>
+          <span className="text-xs font-medium text-primary">{alert.dreamer_count} dreamers</span>
         </div>
         <span className="text-xs text-muted-foreground">
           {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
