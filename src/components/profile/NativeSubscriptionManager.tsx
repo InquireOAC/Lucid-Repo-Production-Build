@@ -64,7 +64,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
         ) : (
           <div className="grid gap-3">
             {products.map((product) => {
-              const isPremium = product.name.toLowerCase().includes("premium") || product.name.toLowerCase().includes("unlimited");
+              const isPremium = product.id === 'price_premium';
               const planFeatures = isPremium ? PLAN_FEATURES.premium : PLAN_FEATURES.basic;
               return (
                 <div
