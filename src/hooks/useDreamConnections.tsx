@@ -105,7 +105,7 @@ export function useDreamConnections() {
   const fetchSyncAlerts = async () => {
     const last48h = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     const { data } = await supabase
-      .from("sync_alerts")
+      .from("sync_alerts_safe" as any)
       .select("*")
       .gte("created_at", last48h)
       .order("created_at", { ascending: false })

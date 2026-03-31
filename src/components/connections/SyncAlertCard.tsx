@@ -20,17 +20,7 @@ const MAX_AVATARS = 4;
 const SyncAlertCard: React.FC<{ alert: SyncAlert }> = ({ alert }) => {
   const [profiles, setProfiles] = useState<DreamerProfile[]>([]);
 
-  useEffect(() => {
-    if (!alert.dreamer_ids?.length) return;
-    const ids = alert.dreamer_ids.slice(0, MAX_AVATARS);
-    supabase
-      .from("public_profiles")
-      .select("id, username, display_name, avatar_url, avatar_symbol, avatar_color")
-      .in("id", ids)
-      .then(({ data }) => {
-        if (data) setProfiles(data as DreamerProfile[]);
-      });
-  }, [alert.dreamer_ids]);
+  // dreamer_ids removed for privacy - show count only
 
   const remaining = Math.max(0, alert.dreamer_count - MAX_AVATARS);
 
