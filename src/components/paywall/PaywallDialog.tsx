@@ -147,9 +147,11 @@ const PaywallDialog = () => {
 
   const selectedProduct = products.find(p => p.id === selectedPlan);
   const maxPrice = Math.max(...products.map(p => parsePrice(p.price)));
-  const selectedTierKey = selectedProduct
-    ? (parsePrice(selectedProduct.price) >= maxPrice ? "mystic" : "dreamer")
-    : "mystic";
+  const selectedTierKey = isNative
+    ? nativeTierKey
+    : selectedProduct
+      ? (parsePrice(selectedProduct.price) >= maxPrice ? "mystic" : "dreamer")
+      : "mystic";
   const activeFeatures = PLAN_FEATURES[selectedTierKey];
 
   return (
