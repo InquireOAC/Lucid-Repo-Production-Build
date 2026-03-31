@@ -62,6 +62,7 @@ const PaywallDialog = () => {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [nativeTierKey, setNativeTierKey] = useState<string>("mystic");
 
   const isNative = Capacitor.isNativePlatform();
 
