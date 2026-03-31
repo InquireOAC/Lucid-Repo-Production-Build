@@ -8,12 +8,13 @@ const PLAN_FEATURES = {
   basic: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "10 Dream Art Generations", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
+    { label: "Voice-to-Text Journaling", icon: Sparkles },
   ],
   premium: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "Unlimited Dream Art", icon: ImageIcon },
+    { label: "Unlimited AI Dream Chat", icon: MessageCircle },
     { label: "Dream Video Generation", icon: Sparkles },
     { label: "Voice-to-Text Journaling", icon: MessageCircle },
     { label: "Priority Support", icon: Crown },
@@ -63,7 +64,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
         ) : (
           <div className="grid gap-3">
             {products.map((product) => {
-              const isPremium = product.name.toLowerCase().includes("premium") || product.name.toLowerCase().includes("unlimited");
+              const isPremium = product.id === 'price_premium';
               const planFeatures = isPremium ? PLAN_FEATURES.premium : PLAN_FEATURES.basic;
               return (
                 <div

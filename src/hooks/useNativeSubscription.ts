@@ -130,9 +130,8 @@ export const useNativeSubscription = () => {
           features = [
             'Unlimited Dream Analysis',
             '10 Dream Art Generations',
-            'Dream Video Generation',
-            'Voice-to-Text Journaling',
-            'Priority Support'
+            'AI Dream Chat (5 msgs/day)',
+            'Voice-to-Text Journaling'
           ];
         }
 
