@@ -36,7 +36,6 @@ export interface SyncAlert {
   emoji: string;
   description: string;
   dreamer_count: number;
-  dreamer_ids: string[];
   is_trending: boolean;
   created_at: string;
 }
