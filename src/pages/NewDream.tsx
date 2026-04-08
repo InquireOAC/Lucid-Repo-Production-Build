@@ -15,6 +15,8 @@ import { useAudioUpload } from "@/hooks/useAudioUpload";
 import DreamAnalysis from "@/components/DreamAnalysis";
 import DreamImageGenerator from "@/components/DreamImageGenerator";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { DreamDataPlugin } from "@/plugins/DreamDataPlugin";
 
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -106,6 +108,17 @@ const NewDream = () => {
         audioUrl: uploadedAudioUrl || undefined,
         technique_used: formData.technique_used || undefined,
       });
+
+      // Sync the latest dream to the iOS WidgetKit extension via App Groups.
+      // Fire-and-forget — a widget sync failure must never block navigation.
+      if (Capacitor.getPlatform() === 'ios') {
+        DreamDataPlugin.saveLatestDream({
+          title: formData.title,
+          preview: formData.content.slice(0, 120),
+          date: format(new Date(), "MMM d"),
+        }).catch(() => {/* widget sync is best-effort */});
+      }
+
       navigate("/");
     } catch (error) {
       console.error("Submit error:", error);

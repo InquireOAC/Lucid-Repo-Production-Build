@@ -21,9 +21,23 @@ end
 
 target 'App' do
   capacitor_pods
-  # Add your Pods here
+  # RevenueCat core SDK (transitive via RevenuecatPurchasesCapacitor, but
+  # declared explicitly so NativePaywallPlugin.swift can import RevenueCat)
+  pod 'RevenueCat', '~> 4.0'
+end
+
+# The DreamWidget extension only needs WidgetKit — no Capacitor pods
+target 'DreamWidget' do
+  # No external pods needed — WidgetKit is a system framework
 end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Ensure the widget extension target can also build with the same
+      # Swift version as the main app
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+    end
+  end
 end

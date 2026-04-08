@@ -12,6 +12,7 @@ import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
 import { toast } from "sonner";
 import lucidRepoLogo from "@/assets/LogoForFramer-3.png";
+import { NativePaywallPlugin } from "@/plugins/NativePaywallPlugin";
 
 const LogoIcon = ({ className }: { className?: string }) => (
   <img src={lucidRepoLogo} alt="" className={className || "h-4 w-4"} />
@@ -120,9 +121,23 @@ const PaywallDialog = () => {
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
-    const handler = (e: Event) => {
+    const handler = async (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      setFeature(detail?.feature || "analysis");
+      const f: PaywallFeature = detail?.feature || "analysis";
+
+      // On native iOS: try the native SwiftUI paywall first.
+      // If it returns 'unsupported' (RevenueCat not ready / iOS 14) fall
+      // through to the React sheet below.
+      if (Capacitor.getPlatform() === 'ios') {
+        try {
+          const { result } = await NativePaywallPlugin.presentPaywall({ feature: f });
+          if (result !== 'unsupported') return; // native handled it
+        } catch {
+          // Plugin not compiled in (web dev) — fall through
+        }
+      }
+
+      setFeature(f);
       setIsOpen(true);
     };
     window.addEventListener("show-paywall", handler);
