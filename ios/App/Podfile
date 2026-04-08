@@ -26,10 +26,6 @@ target 'App' do
   pod 'RevenueCat', '~> 4.0'
 end
 
-# The DreamWidget extension only needs WidgetKit — no Capacitor pods
-target 'DreamWidget' do
-  # No external pods needed — WidgetKit is a system framework
-end
 
 post_install do |installer|
   assertDeploymentTarget(installer)
