@@ -74,6 +74,52 @@ const Particles = React.memo(() => {
 Particles.displayName = "Particles";
 
 /* ------------------------------------------------------------------ */
+/*  Shooting Stars                                                     */
+/* ------------------------------------------------------------------ */
+
+const SHOOTING_STAR_COUNT = 12;
+
+const ShootingStars = React.memo(() => {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: SHOOTING_STAR_COUNT }, (_, i) => ({
+        id: i,
+        top: `${Math.random() * 60}%`,
+        left: `${Math.random() * 70}%`,
+        width: Math.random() * 60 + 40,
+        delay: Math.random() * 12,
+        duration: Math.random() * 1.5 + 0.8,
+        angle: Math.random() * 20 + 15,
+        opacity: Math.random() * 0.5 + 0.4,
+      })),
+    []
+  );
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((s) => (
+        <div
+          key={s.id}
+          className="absolute"
+          style={{
+            top: s.top,
+            left: s.left,
+            width: s.width,
+            height: 1.5,
+            background: "linear-gradient(90deg, hsla(220, 90%, 90%, 0.9), transparent)",
+            borderRadius: 2,
+            transform: `rotate(${s.angle}deg)`,
+            opacity: s.opacity,
+            animation: `onb-shoot ${s.duration}s ${s.delay}s ease-in infinite`,
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+ShootingStars.displayName = "ShootingStars";
+
+/* ------------------------------------------------------------------ */
 /*  Pulsing Glow Ring                                                  */
 /* ------------------------------------------------------------------ */
 
@@ -234,7 +280,7 @@ const screens: ScreenData[] = [
   {
     title: "",
     subtitle: "",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 60% 12%) 0%, hsl(225 70% 5%) 50%, #030810 100%)",
+    gradient: "radial-gradient(ellipse at 50% 30%, hsl(240 50% 14%) 0%, hsl(230 60% 7%) 45%, hsl(220 70% 3%) 100%)",
     renderVisual: () => (
       <div className="flex flex-col items-center gap-6">
         {/* Logo with glow */}
@@ -295,6 +341,7 @@ const screens: ScreenData[] = [
         {/* Tagline */}
         <motion.p
           className="text-sm text-muted-foreground max-w-xs leading-relaxed text-center"
+          style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 2.0, duration: 0.8 }}
@@ -306,8 +353,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "Capture Every Dream",
-    subtitle: "Record your dreams the moment you wake. Voice, text, or sketch — never lose a dream again.",
-    gradient: "radial-gradient(ellipse at 50% 30%, hsl(215 55% 10%) 0%, hsl(220 70% 4%) 60%, #030810 100%)",
+    subtitle: "Every dream is a message from your deeper self. Capture it the moment your eyes open — before it dissolves into morning.",
+    gradient: "radial-gradient(ellipse at 30% 50%, hsl(210 60% 12%) 0%, hsl(215 70% 5%) 50%, hsl(220 75% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <OrbitalRing />
@@ -319,8 +366,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "AI-Powered Insights",
-    subtitle: "Unlock hidden patterns. Our AI reveals the symbols, emotions, and meanings within your dreams.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(225 50% 11%) 0%, hsl(220 65% 4%) 60%, #030810 100%)",
+    subtitle: "Beneath every dream lies a constellation of symbols. Our AI reads the patterns your waking mind cannot see.",
+    gradient: "radial-gradient(ellipse at 70% 30%, hsl(255 55% 13%) 0%, hsl(240 65% 5%) 55%, hsl(230 70% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <ConstellationDots />
@@ -335,8 +382,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "See Your Dreams Come Alive",
-    subtitle: "Transform your dreams into stunning AI-generated artwork and cinematic videos. Watch your subconscious unfold before your eyes.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(230 55% 12%) 0%, hsl(222 60% 5%) 55%, #030810 100%)",
+    subtitle: "Your subconscious paints in impossible colors. Watch your inner visions take shape as living art and cinematic memory.",
+    gradient: "radial-gradient(ellipse at 50% 60%, hsl(200 50% 12%) 0%, hsl(220 60% 6%) 45%, hsl(240 65% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 200, height: 200 }}>
         <GlowRing size={180} color="hsl(260, 60%, 60%)" />
@@ -350,8 +397,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "Join the Dream Community",
-    subtitle: "Share dreams, discover connections, and explore the collective unconscious with dreamers worldwide.",
-    gradient: "radial-gradient(ellipse at 50% 50%, hsl(218 50% 10%) 0%, hsl(222 65% 4%) 60%, #030810 100%)",
+    subtitle: "You are never alone in the dark. Share what the night reveals and discover the dreams you hold in common with strangers.",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(185 45% 11%) 0%, hsl(200 55% 5%) 50%, hsl(220 65% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 240, height: 240 }}>
         <Ripples />
@@ -363,8 +410,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "Your Journey Begins",
-    subtitle: "Step through the gateway. Thousands of dreamers are already inside.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(225 55% 13%) 0%, hsl(220 60% 5%) 50%, #030810 100%)",
+    subtitle: "The threshold is before you. Step through — thousands of dreamers are already on the other side.",
+    gradient: "radial-gradient(ellipse at 50% 35%, hsl(260 55% 14%) 0%, hsl(245 60% 6%) 50%, hsl(230 65% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center">
         <Portal />
@@ -374,8 +421,8 @@ const screens: ScreenData[] = [
   },
   {
     title: "Terms & Privacy",
-    subtitle: "Before you enter, please review and agree to our terms.",
-    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 50% 10%) 0%, hsl(222 60% 4%) 50%, #030810 100%)",
+    subtitle: "Before you cross the threshold, read and accept these terms. Your privacy is sacred here.",
+    gradient: "radial-gradient(ellipse at 50% 40%, hsl(220 50% 11%) 0%, hsl(222 60% 5%) 50%, hsl(220 65% 3%) 100%)",
     renderVisual: () => (
       <div className="relative flex items-center justify-center" style={{ width: 160, height: 160 }}>
         <GlowRing size={140} color="hsl(230, 60%, 60%)" />
@@ -465,6 +512,18 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
     >
       {/* Particles */}
       <Particles />
+      <ShootingStars />
+
+      {/* Misty fog depth layer */}
+      <div
+        className="absolute inset-0 pointer-events-none z-[1]"
+        style={{
+          background: `
+            radial-gradient(ellipse 90% 40% at 50% 100%, hsla(220, 60%, 15%, 0.55) 0%, transparent 70%),
+            radial-gradient(ellipse 70% 30% at 50% 0%, hsla(220, 50%, 10%, 0.40) 0%, transparent 60%)
+          `,
+        }}
+      />
 
       {/* Skip */}
       {!isLastScreen && (
@@ -499,10 +558,10 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               {screen.renderVisual()}
             </motion.div>
 
-            {/* Title */}
+            {/* Title — serif for the dream journal feel */}
             {screen.title && (
               <motion.h1
-                className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight"
+                className="text-2xl sm:text-3xl font-serif font-semibold text-foreground tracking-wide leading-snug"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25, duration: 0.5 }}
@@ -592,12 +651,15 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
           <Button
             onClick={handleStart}
             disabled={!termsAccepted}
-            className="w-64 h-14 text-base font-semibold rounded-full relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
+            className="w-72 h-16 text-base font-semibold rounded-full relative overflow-hidden disabled:opacity-40 disabled:cursor-not-allowed"
             style={{
-              background: termsAccepted ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)",
+              background: termsAccepted
+                ? "linear-gradient(135deg, hsl(var(--primary)), hsl(263 60% 55%))"
+                : "hsl(var(--primary) / 0.3)",
               boxShadow: termsAccepted
-                ? "0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.2)"
+                ? undefined
                 : "none",
+              animation: termsAccepted ? "onb-border-glow 2.5s ease-in-out infinite" : undefined,
             }}
           >
             <span className="relative z-10">Enter the Dream Realm</span>
@@ -605,7 +667,7 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
-                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.8), hsl(var(--primary)))",
+                  background: "linear-gradient(135deg, hsl(var(--primary) / 0.3), hsl(263 60% 55% / 0.2))",
                   animation: "onb-pulse-ring 2s ease-in-out infinite",
                 }}
               />
@@ -614,8 +676,11 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         ) : (
           <Button
             onClick={handleNext}
-            variant="outline"
-            className="w-64 h-14 text-base font-semibold rounded-full border-primary/30 bg-primary/10 hover:bg-primary/20 text-foreground"
+            className="w-64 h-14 text-base font-semibold rounded-full text-foreground border border-primary/40"
+            style={{
+              background: "linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.08))",
+              animation: "onb-next-glow 3s ease-in-out infinite",
+            }}
           >
             Next
           </Button>
@@ -655,6 +720,18 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
         @keyframes onb-twinkle {
           0%, 100% { opacity: 0.3; transform: scale(0.8); }
           50% { opacity: 1; transform: scale(1.2); }
+        }
+        @keyframes onb-shoot {
+          0% { transform: rotate(var(--angle, 20deg)) translateX(0) scaleX(1); opacity: 1; }
+          100% { transform: rotate(var(--angle, 20deg)) translateX(220px) scaleX(3); opacity: 0; }
+        }
+        @keyframes onb-border-glow {
+          0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.5), 0 0 40px hsl(var(--primary) / 0.25), 0 4px 30px hsl(263 60% 55% / 0.3); }
+          50% { box-shadow: 0 0 35px hsl(var(--primary) / 0.8), 0 0 70px hsl(var(--primary) / 0.4), 0 4px 50px hsl(263 60% 55% / 0.5); }
+        }
+        @keyframes onb-next-glow {
+          0%, 100% { box-shadow: 0 0 12px hsl(var(--primary) / 0.35), 0 4px 20px hsl(var(--primary) / 0.15); }
+          50% { box-shadow: 0 0 24px hsl(var(--primary) / 0.6), 0 4px 32px hsl(var(--primary) / 0.3); }
         }
       `}</style>
     </div>

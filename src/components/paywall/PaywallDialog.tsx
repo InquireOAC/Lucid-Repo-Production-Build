@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic, Infinity,
-  Check, Loader2, RotateCcw, X
+  Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +53,59 @@ const PLAN_FEATURES: Record<string, { label: string; icon: React.ElementType }[]
     { label: "Priority Support", icon: Crown },
   ],
 };
+
+/* ------------------------------------------------------------------ */
+/*  Paywall Particles                                                  */
+/* ------------------------------------------------------------------ */
+
+const PaywallParticles = React.memo(() => {
+  const stars = useMemo(
+    () =>
+      Array.from({ length: 30 }, (_, i) => {
+        const isBright = Math.random() > 0.65;
+        return {
+          id: i,
+          left: `${Math.random() * 100}%`,
+          top: `${Math.random() * 100}%`,
+          size: isBright ? Math.random() * 2.5 + 1.5 : Math.random() * 1.5 + 0.5,
+          delay: Math.random() * 8,
+          duration: Math.random() * 3 + 2,
+          color: Math.random() > 0.5
+            ? `hsla(220, 90%, 78%, ${isBright ? 0.8 : 0.35})`
+            : `hsla(0, 0%, 100%, ${isBright ? 0.7 : 0.25})`,
+          twinkle: isBright,
+        };
+      }),
+    []
+  );
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {stars.map((s) => (
+        <div
+          key={s.id}
+          className="absolute rounded-full"
+          style={{
+            left: s.left,
+            top: s.top,
+            width: s.size,
+            height: s.size,
+            backgroundColor: s.color,
+            boxShadow: s.twinkle ? `0 0 ${s.size * 3}px ${s.color}` : undefined,
+            animation: s.twinkle
+              ? `pw-twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`
+              : `pw-float ${s.duration + 4}s ${s.delay}s ease-in-out infinite alternate`,
+          }}
+        />
+      ))}
+    </div>
+  );
+});
+PaywallParticles.displayName = "PaywallParticles";
+
+/* ------------------------------------------------------------------ */
+/*  PaywallDialog                                                      */
+/* ------------------------------------------------------------------ */
 
 const PaywallDialog = () => {
   const { user } = useAuth();
@@ -172,30 +225,93 @@ const PaywallDialog = () => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed inset-0 z-[61] flex flex-col bg-background pt-safe-top pb-safe-bottom overflow-x-hidden"
+            className="fixed inset-0 z-[61] flex flex-col pt-safe-top pb-safe-bottom overflow-x-hidden relative"
+            style={{
+              background: "radial-gradient(ellipse at 50% 0%, hsl(235 55% 12%) 0%, hsl(225 60% 6%) 45%, hsl(220 15% 5%) 100%)",
+            }}
           >
+            {/* Particle background */}
+            <PaywallParticles />
+
             {/* Header */}
-            <div className="flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-border/50">
+            <div
+              className="flex-shrink-0 flex items-center justify-between px-4 h-14 relative z-10"
+              style={{ borderBottom: "1px solid hsl(217 91% 60% / 0.18)" }}
+            >
               <div className="w-10" />
-              <h1 className="text-base font-semibold text-foreground">Upgrade</h1>
+              <h1
+                className="text-base text-foreground/90 tracking-wide"
+                style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+              >
+                Unlock the Dream
+              </h1>
               <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
             {/* Scrollable content */}
-            <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="flex-1 overflow-y-auto relative z-10" style={{ WebkitOverflowScrolling: "touch" }}>
               {/* Hero */}
               <div className="relative px-6 pt-10 pb-6 text-center">
                 <div className="absolute inset-0 bg-gradient-to-b from-primary/8 to-transparent pointer-events-none" />
                 <div className="relative">
-                  <div className="inline-flex items-center justify-center w-36 h-36 rounded-2xl mb-2">
-                    <FeatureIcon className="h-20 w-20" />
+                  {/* Cosmic moon orb with feature icon */}
+                  <div
+                    className="relative flex items-center justify-center mx-auto mb-4"
+                    style={{ width: 140, height: 140 }}
+                  >
+                    {/* Outer pulsing glow */}
+                    <div
+                      className="absolute inset-0 rounded-full"
+                      style={{
+                        background: "radial-gradient(circle, hsl(217 91% 60% / 0.2) 0%, transparent 70%)",
+                        animation: "pw-pulse-ring 3s ease-in-out infinite",
+                      }}
+                    />
+                    {/* Rotating orbit ring */}
+                    <div
+                      className="absolute rounded-full border border-primary/20"
+                      style={{
+                        width: 110,
+                        height: 110,
+                        animation: "pw-orbit 10s linear infinite",
+                      }}
+                    >
+                      <div
+                        className="absolute w-1.5 h-1.5 rounded-full bg-primary/60"
+                        style={{ top: -3, left: "50%", marginLeft: -3 }}
+                      />
+                    </div>
+                    {/* Moon orb */}
+                    <div
+                      className="absolute rounded-full"
+                      style={{
+                        width: 76,
+                        height: 76,
+                        background: "radial-gradient(circle at 35% 35%, hsl(220 80% 82%), hsl(240 60% 42%) 55%, hsl(250 50% 18%))",
+                        boxShadow: "0 0 30px hsl(217 91% 60% / 0.4), inset 0 0 20px hsl(250 60% 20% / 0.5)",
+                      }}
+                    />
+                    {/* Feature icon */}
+                    <div className="relative z-10">
+                      <FeatureIcon
+                        className="h-9 w-9"
+                        style={{ filter: "drop-shadow(0 0 8px hsl(217 91% 80% / 0.7))" }}
+                      />
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
+
+                  <h2
+                    className="text-2xl font-semibold text-foreground mb-2"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
                     Unlock {featureConfig.title}
                   </h2>
-                  <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                  <p
+                    className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed"
+                    style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+                  >
                     {featureConfig.description}
                   </p>
                 </div>
@@ -203,10 +319,16 @@ const PaywallDialog = () => {
 
               {/* Feature list */}
               <div className="px-6 pb-4">
+                <p
+                  className="text-xs text-muted-foreground mb-3 tracking-wide"
+                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+                >
+                  Everything included
+                </p>
                 <ul className="space-y-2.5">
                   {activeFeatures.map((f, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-foreground/90">
-                      <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                      <Sparkles className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                       <span>{f.label}</span>
                     </li>
                   ))}
@@ -215,6 +337,13 @@ const PaywallDialog = () => {
 
               {/* Plan selection */}
               <div className="px-5 pb-8">
+                <p
+                  className="text-center text-xs text-muted-foreground mb-4 tracking-wide"
+                  style={{ fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}
+                >
+                  Choose your path through the dreamscape
+                </p>
+
                 {isNative ? (
                   <NativePaywallPlans onClose={() => setIsOpen(false)} onTierChange={setNativeTierKey} />
                 ) : loading ? (
@@ -225,7 +354,7 @@ const PaywallDialog = () => {
                   <div className="space-y-3">
                     {sortedProducts.map((product, index) => {
                       const isSelected = selectedPlan === product.id;
-                      const isBestValue = index === 0 && sortedProducts.length > 1;
+                      const isPremiumCard = index === 0 && sortedProducts.length > 1;
                       const priceNum = parsePrice(product.price);
                       const priceDisplay = `$${priceNum.toFixed(2)}`;
 
@@ -233,28 +362,59 @@ const PaywallDialog = () => {
                         <button
                           key={product.id}
                           onClick={() => setSelectedPlan(product.id)}
-                          className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
-                            isSelected
-                              ? "border-primary bg-primary/5"
-                              : "border-border/30 bg-card/30"
-                          }`}
+                          className="relative w-full rounded-2xl p-4 text-left transition-all backdrop-blur-sm"
+                          style={{
+                            border: isSelected
+                              ? isPremiumCard
+                                ? "1px solid hsla(45, 90%, 60%, 0.6)"
+                                : "1px solid hsl(217 91% 60% / 0.6)"
+                              : "1px solid hsla(255, 255%, 255%, 0.1)",
+                            background: isSelected
+                              ? isPremiumCard
+                                ? "hsla(45, 60%, 15%, 0.35)"
+                                : "hsl(217 91% 60% / 0.1)"
+                              : "hsla(255, 255%, 255%, 0.04)",
+                            boxShadow: isSelected
+                              ? isPremiumCard
+                                ? "0 0 20px hsla(45, 90%, 60%, 0.2), inset 0 0 20px hsla(45, 90%, 60%, 0.05)"
+                                : "0 0 16px hsl(217 91% 60% / 0.2), inset 0 0 16px hsl(217 91% 60% / 0.05)"
+                              : undefined,
+                          }}
                         >
-                          {isBestValue && (
-                            <span className="absolute -top-2.5 right-4 text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2.5 py-0.5 rounded-full">
-                              Best value
+                          {isPremiumCard && (
+                            <span
+                              className="absolute -top-3 right-4 text-[10px] font-bold uppercase tracking-wider text-amber-900 px-3 py-0.5 rounded-full"
+                              style={{ background: "linear-gradient(135deg, hsl(45 90% 65%), hsl(35 90% 55%))" }}
+                            >
+                              Best Value
                             </span>
                           )}
                           <div className="flex items-center justify-between">
                             <div>
-                              <h3 className="font-semibold text-foreground text-base">{product.name}</h3>
+                              <h3
+                                className="font-semibold text-foreground text-base"
+                                style={isPremiumCard ? { fontFamily: "'Playfair Display', serif" } : undefined}
+                              >
+                                {product.name}
+                              </h3>
                               <p className="text-muted-foreground text-sm mt-0.5">
                                 {priceDisplay}/month
                               </p>
                             </div>
-                            <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                              isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
-                            }`}>
-                              {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+                            <div
+                              className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
+                              style={{
+                                borderColor: isSelected
+                                  ? isPremiumCard ? "hsl(45 90% 60%)" : "hsl(var(--primary))"
+                                  : "hsl(var(--muted-foreground) / 0.4)",
+                                backgroundColor: isSelected
+                                  ? isPremiumCard ? "hsl(45 90% 60%)" : "hsl(var(--primary))"
+                                  : "transparent",
+                              }}
+                            >
+                              {isSelected && (
+                                <div className="w-2 h-2 rounded-full bg-background" />
+                              )}
                             </div>
                           </div>
                         </button>
@@ -267,13 +427,20 @@ const PaywallDialog = () => {
 
             {/* Fixed bottom bar */}
             {!isNative && !loading && products.length > 0 && (
-              <div className="flex-shrink-0 px-5 pb-6 pt-3 border-t border-border/30 bg-background">
+              <div
+                className="flex-shrink-0 px-5 pb-6 pt-3 relative z-10"
+                style={{ borderTop: "1px solid hsl(217 91% 60% / 0.12)" }}
+              >
                 <Button
-                  className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground"
+                  className="w-full h-12 text-base font-semibold text-primary-foreground"
+                  style={{
+                    background: "linear-gradient(135deg, hsl(var(--primary)), hsl(263 60% 55%))",
+                    boxShadow: "0 0 20px hsl(var(--primary) / 0.4), 0 4px 24px hsl(var(--primary) / 0.2)",
+                  }}
                   onClick={handleSubscribe}
                   disabled={subscribing || !selectedPlan}
                 >
-                  {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Subscribe"}
+                  {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Begin Your Journey"}
                 </Button>
                 <p className="text-[11px] text-muted-foreground/60 text-center mt-3 leading-relaxed">
                   Auto-renews unless canceled 24hrs before period end.{" "}
@@ -288,12 +455,36 @@ const PaywallDialog = () => {
                 </p>
               </div>
             )}
+
+            {/* Paywall keyframes */}
+            <style>{`
+              @keyframes pw-twinkle {
+                0%, 100% { opacity: 0.3; transform: scale(0.8); }
+                50% { opacity: 1; transform: scale(1.2); }
+              }
+              @keyframes pw-float {
+                0% { transform: translateY(0) scale(1); opacity: 0.4; }
+                100% { transform: translateY(-30px) scale(1.3); opacity: 0.1; }
+              }
+              @keyframes pw-pulse-ring {
+                0%, 100% { transform: scale(1); opacity: 0.6; }
+                50% { transform: scale(1.15); opacity: 1; }
+              }
+              @keyframes pw-orbit {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
           </motion.div>
         </>
       )}
     </AnimatePresence>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/*  Native (iOS/Android) plan cards using RevenueCat                  */
+/* ------------------------------------------------------------------ */
 
 /** Native (iOS/Android) plan cards using RevenueCat */
 const NativePaywallPlans = ({ onClose, onTierChange }: { onClose: () => void; onTierChange?: (tier: string) => void }) => {
@@ -348,32 +539,66 @@ const NativePaywallPlans = ({ onClose, onTierChange }: { onClose: () => void; on
 
   return (
     <div className="space-y-3">
-      {sorted.map((product) => {
+      {sorted.map((product, index) => {
         const isSelected = selectedPlan === product.id;
         const isPremium = product.id === 'price_premium';
+        const isPremiumCard = index === 0 && sorted.length > 1;
 
         return (
           <button
             key={product.id}
             onClick={() => setSelectedPlan(product.id)}
-            className={`relative w-full rounded-xl border-2 p-4 text-left transition-all ${
-              isSelected ? "border-primary bg-primary/5" : "border-border/30 bg-card/30"
-            }`}
+            className="relative w-full rounded-2xl p-4 text-left transition-all backdrop-blur-sm"
+            style={{
+              border: isSelected
+                ? isPremium
+                  ? "1px solid hsla(45, 90%, 60%, 0.6)"
+                  : "1px solid hsl(217 91% 60% / 0.6)"
+                : "1px solid hsla(255, 255%, 255%, 0.1)",
+              background: isSelected
+                ? isPremium
+                  ? "hsla(45, 60%, 15%, 0.35)"
+                  : "hsl(217 91% 60% / 0.1)"
+                : "hsla(255, 255%, 255%, 0.04)",
+              boxShadow: isSelected
+                ? isPremium
+                  ? "0 0 20px hsla(45, 90%, 60%, 0.2), inset 0 0 20px hsla(45, 90%, 60%, 0.05)"
+                  : "0 0 16px hsl(217 91% 60% / 0.2), inset 0 0 16px hsl(217 91% 60% / 0.05)"
+                : undefined,
+            }}
           >
             {isPremium && (
-              <span className="absolute -top-2.5 right-4 text-[10px] font-bold uppercase tracking-wider text-primary-foreground bg-primary px-2.5 py-0.5 rounded-full">
-                Best value
+              <span
+                className="absolute -top-3 right-4 text-[10px] font-bold uppercase tracking-wider text-amber-900 px-3 py-0.5 rounded-full"
+                style={{ background: "linear-gradient(135deg, hsl(45 90% 65%), hsl(35 90% 55%))" }}
+              >
+                Best Value
               </span>
             )}
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-foreground text-base">{product.name}</h3>
+                <h3
+                  className="font-semibold text-foreground text-base"
+                  style={isPremium ? { fontFamily: "'Playfair Display', serif" } : undefined}
+                >
+                  {product.name}
+                </h3>
                 <p className="text-muted-foreground text-sm mt-0.5">{product.price}/month</p>
               </div>
-              <div className={`h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
-              }`}>
-                {isSelected && <Check className="h-3 w-3 text-primary-foreground" />}
+              <div
+                className="h-5 w-5 rounded-full border-2 flex items-center justify-center transition-colors flex-shrink-0"
+                style={{
+                  borderColor: isSelected
+                    ? isPremium ? "hsl(45 90% 60%)" : "hsl(var(--primary))"
+                    : "hsl(var(--muted-foreground) / 0.4)",
+                  backgroundColor: isSelected
+                    ? isPremium ? "hsl(45 90% 60%)" : "hsl(var(--primary))"
+                    : "transparent",
+                }}
+              >
+                {isSelected && (
+                  <div className="w-2 h-2 rounded-full bg-background" />
+                )}
               </div>
             </div>
           </button>
@@ -381,11 +606,15 @@ const NativePaywallPlans = ({ onClose, onTierChange }: { onClose: () => void; on
       })}
 
       <Button
-        className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 text-primary-foreground mt-4"
+        className="w-full h-12 text-base font-semibold text-primary-foreground mt-4"
+        style={{
+          background: "linear-gradient(135deg, hsl(var(--primary)), hsl(263 60% 55%))",
+          boxShadow: "0 0 20px hsl(var(--primary) / 0.4), 0 4px 24px hsl(var(--primary) / 0.2)",
+        }}
         onClick={handleSubscribe}
         disabled={subscribing || !selectedPlan}
       >
-        {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Subscribe"}
+        {subscribing ? <Loader2 className="h-5 w-5 animate-spin" /> : "Begin Your Journey"}
       </Button>
 
       <Button
