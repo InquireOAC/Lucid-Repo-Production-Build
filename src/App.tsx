@@ -9,22 +9,59 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './layouts/MainLayout';
 import LoadingScreen from './components/profile/LoadingScreen';
 
-const Index = lazy(() => import('./pages/Index'));
-const Journal = lazy(() => import('./pages/Journal'));
-const NewDream = lazy(() => import('./pages/NewDream'));
-const EditDream = lazy(() => import('./pages/EditDream'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Auth = lazy(() => import('./pages/Auth'));
-const LucidRepoContainer = lazy(() => import('./pages/LucidRepo'));
-const Chat = lazy(() => import('./pages/Chat'));
-const Notifications = lazy(() => import('./pages/Notifications'));
-const Insights = lazy(() => import('./pages/Insights'));
-const LucidStats = lazy(() => import('./pages/LucidStats'));
-const TechniqueDetailPage = lazy(() => import('./components/insights/TechniqueDetailPage'));
-const DreamStoryPage = lazy(() => import('./pages/DreamStoryPage'));
-const DreamBook = lazy(() => import('./pages/DreamBook'));
-const NotFound = lazy(() => import('./pages/NotFound'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+// Retry dynamic imports once after a hard reload to recover from stale chunk
+// references that occur after a new deploy invalidates previous asset hashes.
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>
+) {
+  return lazy(async () => {
+    const key = 'lovable:chunk-reload';
+    try {
+      return await factory();
+    } catch (err: any) {
+      const msg = String(err?.message || err);
+      const isChunkErr =
+        msg.includes('Importing a module script failed') ||
+        msg.includes('Failed to fetch dynamically imported module') ||
+        msg.includes('error loading dynamically imported module');
+      if (isChunkErr && typeof window !== 'undefined') {
+        const alreadyReloaded = sessionStorage.getItem(key);
+        if (!alreadyReloaded) {
+          sessionStorage.setItem(key, '1');
+          window.location.reload();
+          // Return a never-resolving promise so Suspense keeps the fallback
+          // visible until the reload completes.
+          return new Promise(() => {}) as any;
+        }
+      }
+      throw err;
+    }
+  });
+}
+
+const Index = lazyWithRetry(() => import('./pages/Index'));
+const Journal = lazyWithRetry(() => import('./pages/Journal'));
+const NewDream = lazyWithRetry(() => import('./pages/NewDream'));
+const EditDream = lazyWithRetry(() => import('./pages/EditDream'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Auth = lazyWithRetry(() => import('./pages/Auth'));
+const LucidRepoContainer = lazyWithRetry(() => import('./pages/LucidRepo'));
+const Chat = lazyWithRetry(() => import('./pages/Chat'));
+const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
+const Insights = lazyWithRetry(() => import('./pages/Insights'));
+const LucidStats = lazyWithRetry(() => import('./pages/LucidStats'));
+const TechniqueDetailPage = lazyWithRetry(() => import('./components/insights/TechniqueDetailPage'));
+const DreamStoryPage = lazyWithRetry(() => import('./pages/DreamStoryPage'));
+const DreamBook = lazyWithRetry(() => import('./pages/DreamBook'));
+const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
+const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
+
+// Clear the reload guard on successful boot so future stale chunks can retry.
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    sessionStorage.removeItem('lovable:chunk-reload');
+  });
+}
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
