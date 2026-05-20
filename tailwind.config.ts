@@ -236,6 +236,18 @@ export default {
     				'50%': {
     					backgroundPosition: '100% 50%'
     				}
+    			},
+    			'logo-breathe': {
+    				'0%, 100%': { opacity: '0.75', transform: 'scale(0.97)' },
+    				'50%': { opacity: '1', transform: 'scale(1.03)' }
+    			},
+    			'logo-shimmer': {
+    				'0%': { backgroundPosition: '-150% 0' },
+    				'100%': { backgroundPosition: '250% 0' }
+    			},
+    			'logo-glow': {
+    				'0%, 100%': { opacity: '0.35', transform: 'scale(1.4)' },
+    				'50%': { opacity: '0.75', transform: 'scale(1.6)' }
     			}
     		},
     		animation: {
@@ -249,7 +261,10 @@ export default {
     			'page-reveal': 'page-reveal 0.5s ease-out forwards',
     			'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
     			'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-    			'gradient-shift': 'gradient-shift 6s ease-in-out infinite'
+    			'gradient-shift': 'gradient-shift 6s ease-in-out infinite',
+    			'logo-breathe': 'logo-breathe 2.4s ease-in-out infinite',
+    			'logo-shimmer': 'logo-shimmer 2.6s ease-in-out infinite',
+    			'logo-glow': 'logo-glow 2.4s ease-in-out infinite'
     		},
     		backgroundImage: {
     			'cosmic-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
