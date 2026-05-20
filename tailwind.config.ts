@@ -47,6 +47,7 @@ export default {
     				'serif'
     			],
     			mono: [
+    				'JetBrains Mono',
     				'Fira Code',
     				'ui-monospace',
     				'SFMono-Regular',
