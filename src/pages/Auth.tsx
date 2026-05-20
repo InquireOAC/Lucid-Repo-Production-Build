@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
-import lucidRepoLogo from "@/assets/lucid-logo.png";
+import lucidEngineLogo from "@/assets/lucid-logo.png";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
@@ -192,15 +192,36 @@ const Auth = () => {
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
         {/* ── SECTION 1: Header ── */}
         <motion.div
-          className="text-center mb-10 mt-12"
+          className="text-center mb-10 mt-10 relative"
           initial="hidden"
           animate="visible"
           custom={0}
           variants={fadeUp}
         >
-          <img src={lucidRepoLogo} alt="Lucid Repo" className="w-64 h-auto mx-auto mb-4" />
-          <p className="text-sm" style={{ color: C.muted }}>
-            Join thousands sharing their nightly adventures.
+          {/* Logo halo */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-[340px] h-[220px] pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 65%)`,
+              filter: "blur(40px)",
+            }}
+          />
+          <motion.img
+            src={lucidEngineLogo}
+            alt="Lucid Engine"
+            className="w-72 h-auto mx-auto mb-5 relative"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <p
+            className="text-[11px] uppercase tracking-[0.3em] font-medium relative"
+            style={{ color: C.primary, opacity: 0.85 }}
+          >
+            Engineer your dreams
+          </p>
+          <p className="text-sm mt-2 relative" style={{ color: C.muted }}>
+            Master the lucid state.
           </p>
         </motion.div>
 
