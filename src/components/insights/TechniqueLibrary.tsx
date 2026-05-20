@@ -10,7 +10,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 12 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 const TechniqueLibrary: React.FC = () => {
