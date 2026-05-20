@@ -234,11 +234,12 @@ const Auth = () => {
           variants={fadeUp}
         >
           <div
-            className="w-full rounded-2xl p-6"
+            className="w-full rounded-2xl p-7 relative"
             style={{
-              background: C.surface,
+              background: "rgba(13,20,37,0.55)",
               border: `1px solid ${C.surfaceBorder}`,
-              backdropFilter: "blur(12px)",
+              backdropFilter: "blur(18px)",
+              boxShadow: `0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)`,
             }}
           >
             {/* Tab switcher */}
@@ -378,17 +379,19 @@ const Auth = () => {
                   </motion.div>
                 )}
 
-                {/* Submit */}
+            {/* Submit */}
                 <motion.button
                   type="submit"
-                  className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-2"
+                  className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-3 tracking-wide"
                   style={{
-                    background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
+                    background: `linear-gradient(135deg, ${C.primary} 0%, #6366F1 100%)`,
                     color: "#fff",
                     border: "none",
-                    boxShadow: `0 4px 20px ${C.primaryGlow}`,
+                    boxShadow: `0 8px 28px ${C.primaryGlow}, inset 0 1px 0 rgba(255,255,255,0.18)`,
                   }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ y: -1, boxShadow: `0 12px 36px ${C.primaryGlow}, inset 0 1px 0 rgba(255,255,255,0.22)` }}
+                  transition={{ duration: 0.2 }}
                   disabled={isLoading}
                 >
                   {isLoading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
