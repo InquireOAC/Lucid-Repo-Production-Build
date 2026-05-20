@@ -10,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 import { techniques } from "@/components/insights/techniqueData";
 
-import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpeg";
-import techniqueImgSsild from "@/assets/techniques/ssild.jpeg";
-import techniqueImgWild from "@/assets/techniques/wild.jpeg";
-import techniqueImgFild from "@/assets/techniques/fild.jpeg";
-import techniqueImgDeild from "@/assets/techniques/deild.jpeg";
-import techniqueImgMeditation from "@/assets/techniques/meditation.jpeg";
+import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpg";
+import techniqueImgSsild from "@/assets/techniques/ssild.jpg";
+import techniqueImgWild from "@/assets/techniques/wild.jpg";
+import techniqueImgFild from "@/assets/techniques/fild.jpg";
+import techniqueImgDeild from "@/assets/techniques/deild.jpg";
+import techniqueImgMeditation from "@/assets/techniques/meditation.jpg";
 
 import { Button } from "@/components/ui/button";
 
