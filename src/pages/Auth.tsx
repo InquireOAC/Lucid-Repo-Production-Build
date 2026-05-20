@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
-import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
+import lucidRepoLogo from "@/assets/lucid-logo.png";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
