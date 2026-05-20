@@ -1,29 +1,30 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { setupOAuthDeepLinkListener } from '@/utils/oauthDeepLink';
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import Index from './pages/Index';
-import Journal from './pages/Journal';
-import NewDream from './pages/NewDream';
-import EditDream from './pages/EditDream';
-import Profile from './pages/Profile';
-import Auth from './pages/Auth';
-import LucidRepoContainer from './pages/LucidRepo';
-import Chat from './pages/Chat';
-
-import Notifications from './pages/Notifications';
-import Insights from './pages/Insights';
-import LucidStats from './pages/LucidStats';
-import TechniqueDetailPage from './components/insights/TechniqueDetailPage';
-import DreamStoryPage from './pages/DreamStoryPage';
-import DreamBook from './pages/DreamBook';
-import NotFound from './pages/NotFound';
-import AdminDashboard from './pages/AdminDashboard';
 import MainLayout from './layouts/MainLayout';
+import LoadingScreen from './components/profile/LoadingScreen';
+
+const Index = lazy(() => import('./pages/Index'));
+const Journal = lazy(() => import('./pages/Journal'));
+const NewDream = lazy(() => import('./pages/NewDream'));
+const EditDream = lazy(() => import('./pages/EditDream'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Auth = lazy(() => import('./pages/Auth'));
+const LucidRepoContainer = lazy(() => import('./pages/LucidRepo'));
+const Chat = lazy(() => import('./pages/Chat'));
+const Notifications = lazy(() => import('./pages/Notifications'));
+const Insights = lazy(() => import('./pages/Insights'));
+const LucidStats = lazy(() => import('./pages/LucidStats'));
+const TechniqueDetailPage = lazy(() => import('./components/insights/TechniqueDetailPage'));
+const DreamStoryPage = lazy(() => import('./pages/DreamStoryPage'));
+const DreamBook = lazy(() => import('./pages/DreamBook'));
+const NotFound = lazy(() => import('./pages/NotFound'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
@@ -49,6 +50,7 @@ function AppContent() {
 
   return (
     <BrowserRouter>
+      <Suspense fallback={<LoadingScreen />}>
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Index />} />
@@ -73,6 +75,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

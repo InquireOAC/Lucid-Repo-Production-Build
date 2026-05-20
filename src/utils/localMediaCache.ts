@@ -75,19 +75,28 @@ export async function deleteCachedMedia(key: string): Promise<void> {
   }
 }
 
+const inflight = new Map<string, Promise<void>>();
+
 export async function cacheMediaFromUrl(key: string, url: string): Promise<void> {
   if (!url || url.startsWith('blob:')) return;
-  const already = await hasCachedMedia(key);
-  if (already) return;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-    const blob = await response.blob();
-    await cacheMedia(key, blob);
-    console.log(`[MediaCache] Cached ${key} (${(blob.size / 1024).toFixed(0)} KB)`);
-  } catch (err) {
-    console.warn(`[MediaCache] Failed to cache ${key}:`, err);
-  }
+  const existing = inflight.get(key);
+  if (existing) return existing;
+  const task = (async () => {
+    try {
+      if (await hasCachedMedia(key)) return;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
+      const blob = await response.blob();
+      await cacheMedia(key, blob);
+      console.log(`[MediaCache] Cached ${key} (${(blob.size / 1024).toFixed(0)} KB)`);
+    } catch (err) {
+      console.warn(`[MediaCache] Failed to cache ${key}:`, err);
+    } finally {
+      inflight.delete(key);
+    }
+  })();
+  inflight.set(key, task);
+  return task;
 }
 
 export function mediaCacheKey(dreamId: string, type: 'image' | 'video'): string {
