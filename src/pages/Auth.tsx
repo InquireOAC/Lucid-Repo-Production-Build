@@ -200,7 +200,7 @@ const Auth = () => {
         >
           {/* Logo halo */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 -top-6 w-[340px] h-[220px] pointer-events-none"
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-[260px] h-[180px] pointer-events-none"
             style={{
               background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 65%)`,
               filter: "blur(40px)",
@@ -209,7 +209,7 @@ const Auth = () => {
           <motion.img
             src={lucidEngineLogo}
             alt="Lucid Engine"
-            className="w-72 h-auto mx-auto mb-5 relative"
+            className="w-48 h-auto mx-auto mb-5 relative"
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
