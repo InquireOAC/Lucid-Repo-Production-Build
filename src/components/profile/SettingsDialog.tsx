@@ -190,16 +190,6 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Legal</h4>
-              </div>
-
-              <div className="space-y-2">
-                <h4 className="font-medium text-sm text-muted-foreground">Ecosystem</h4>
-                <LucidSuiteCard />
-              </div>
-
-              <Separator />
-
-              <div className="space-y-2">
                 <Button variant="ghost" className="w-full justify-start" onClick={() => handleExternalLink('https://www.lucidrepo.com/privacy-policy-1')}>
                   <FileText className="h-4 w-4 mr-2" />
                   Privacy Policy
@@ -208,6 +198,13 @@ const SettingsDialog = ({
                   <Scale className="h-4 w-4 mr-2" />
                   Terms of Service
                 </Button>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Ecosystem</h4>
+                <LucidSuiteCard />
               </div>
 
               <Separator />
