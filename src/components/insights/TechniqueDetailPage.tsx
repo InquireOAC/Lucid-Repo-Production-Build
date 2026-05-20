@@ -5,15 +5,19 @@ import { ArrowLeft, Pin, PinOff, Sparkles, Check } from "lucide-react";
 import { techniques } from "./techniqueData";
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 
-import realityChecksImg from "@/assets/techniques/reality-checks.jpeg";
-import wildImg from "@/assets/techniques/wild.jpeg";
-import ssildImg from "@/assets/techniques/ssild.jpeg";
-import fildImg from "@/assets/techniques/fild.jpeg";
-import deildImg from "@/assets/techniques/deild.jpeg";
-import meditationImg from "@/assets/techniques/meditation.jpeg";
+import realityChecksImg from "@/assets/techniques/reality-checks.jpg";
+import mildImg from "@/assets/techniques/mild.jpg";
+import wbtbImg from "@/assets/techniques/wbtb.jpg";
+import wildImg from "@/assets/techniques/wild.jpg";
+import ssildImg from "@/assets/techniques/ssild.jpg";
+import fildImg from "@/assets/techniques/fild.jpg";
+import deildImg from "@/assets/techniques/deild.jpg";
+import meditationImg from "@/assets/techniques/meditation.jpg";
 
 const TECHNIQUE_IMAGES: Record<number, string> = {
   0: realityChecksImg,
+  1: mildImg,
+  2: wbtbImg,
   3: wildImg,
   4: ssildImg,
   5: fildImg,
