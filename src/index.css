@@ -186,6 +186,20 @@
   }
 }
 
+/* =========================================================
+   Lucid Studios shared surface utilities
+   Mirrors Lucid Engine's .bg-glass / .text-ink layer so
+   components can be lifted between the two apps.
+   ========================================================= */
+@layer components {
+  .bg-glass            { background-color: hsl(var(--glass-surface)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .bg-glass-strong     { background-color: hsl(var(--glass-strong)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .border-glass        { border-color: hsl(var(--glass-border)); }
+  .text-ink            { color: hsl(var(--foreground)); }
+  .text-ink-soft       { color: hsl(var(--ink-soft)); }
+  .text-ink-faint      { color: hsl(var(--ink-faint)); }
+}
+
 /* Safe area utilities for iOS devices */
 .pt-safe-top {
   padding-top: env(safe-area-inset-top);
