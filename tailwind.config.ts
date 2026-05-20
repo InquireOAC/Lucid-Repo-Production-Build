@@ -47,6 +47,7 @@ export default {
     				'serif'
     			],
     			mono: [
+    				'JetBrains Mono',
     				'Fira Code',
     				'ui-monospace',
     				'SFMono-Regular',
@@ -258,8 +259,8 @@ export default {
     			'oniri-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
     			'oniri-card': 'linear-gradient(135deg, hsl(217, 91%, 60% / 0.02) 0%, hsl(263, 60%, 55% / 0.01) 100%)',
     			'luminous-gradient': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 50%, hsl(217, 91%, 60%) 100%)',
-    			'gradient-primary': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 100%)',
-    			'gradient-radial': 'radial-gradient(circle at 50% 0%, hsl(217, 91%, 60% / 0.15) 0%, transparent 70%)'
+    			'gradient-primary': 'var(--gradient-primary)',
+    			'gradient-radial': 'var(--gradient-radial)'
     		},
     		boxShadow: {
     			'2xs': 'var(--shadow-2xs)',

@@ -18,6 +18,7 @@ import ColorSchemeDialog from "./ColorSchemeDialog";
 
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import DreamGalleryDialog from "./DreamGalleryDialog";
+import LucidSuiteCard from "./LucidSuiteCard";
 import { Crown } from "lucide-react";
 
 interface SettingsDialogProps {
@@ -197,6 +198,13 @@ const SettingsDialog = ({
                   <Scale className="h-4 w-4 mr-2" />
                   Terms of Service
                 </Button>
+              </div>
+
+              <Separator />
+
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Ecosystem</h4>
+                <LucidSuiteCard />
               </div>
 
               <Separator />
