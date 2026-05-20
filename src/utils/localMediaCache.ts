@@ -93,3 +93,7 @@ export async function cacheMediaFromUrl(key: string, url: string): Promise<void>
 export function mediaCacheKey(dreamId: string, type: 'image' | 'video'): string {
   return `${dreamId}-${type}`;
 }
+
+// In-flight de-duplication: avoid caching the same key multiple times in parallel.
+const inflight = new Map<string, Promise<void>>();
+const original = cacheMediaFromUrl;

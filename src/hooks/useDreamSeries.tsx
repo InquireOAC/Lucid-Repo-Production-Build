@@ -233,7 +233,7 @@ export function usePublicSeries() {
       try {
         const { data, error } = await supabase
           .from("dream_series")
-          .select("*, profiles:user_id(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+          .select("*, profiles!dream_series_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
           .eq("is_public", true)
           .order("updated_at", { ascending: false })
           .limit(20);
