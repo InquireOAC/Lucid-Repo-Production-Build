@@ -55,6 +55,7 @@ const DreamStoryPage = lazyWithRetry(() => import('./pages/DreamStoryPage'));
 const DreamBook = lazyWithRetry(() => import('./pages/DreamBook'));
 const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
+const OnboardingPreview = lazyWithRetry(() => import('./pages/OnboardingPreview'));
 
 // Clear the reload guard on successful boot so future stale chunks can retry.
 if (typeof window !== 'undefined') {
@@ -89,6 +90,7 @@ function AppContent() {
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>
       <Routes>
+        <Route path="/onboarding" element={<OnboardingPreview />} />
         <Route path="/" element={<MainLayout />}>
           <Route index element={<Index />} />
           <Route path="journal" element={<Journal />} />
