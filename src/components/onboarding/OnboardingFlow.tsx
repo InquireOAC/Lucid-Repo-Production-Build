@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -17,95 +17,6 @@ interface OnboardingFlowProps {
 }
 
 const CHAPTERS = ["Awakening", "Capture", "Insight", "Community", "Threshold"];
-
-/* ----------------------------- Ambient sky ----------------------------- */
-
-const STAR_COUNT = 80;
-const SHOOT_COUNT = 10;
-
-const Particles = React.memo(() => {
-  const stars = useMemo(
-    () =>
-      Array.from({ length: STAR_COUNT }, (_, i) => {
-        const bright = Math.random() > 0.7;
-        const blue = Math.random() > 0.5;
-        return {
-          id: i,
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          size: bright ? Math.random() * 3 + 2 : Math.random() * 2 + 0.5,
-          delay: Math.random() * 8,
-          duration: Math.random() * 3 + 2,
-          color: blue
-            ? `hsla(220, 90%, 78%, ${bright ? 0.9 : 0.4})`
-            : `hsla(0, 0%, 100%, ${bright ? 0.8 : 0.3})`,
-          twinkle: bright,
-        };
-      }),
-    []
-  );
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {stars.map((s) => (
-        <div
-          key={s.id}
-          className="absolute rounded-full"
-          style={{
-            left: s.left,
-            top: s.top,
-            width: s.size,
-            height: s.size,
-            backgroundColor: s.color,
-            boxShadow: s.twinkle ? `0 0 ${s.size * 3}px ${s.color}` : undefined,
-            animation: s.twinkle
-              ? `onb-twinkle ${s.duration}s ${s.delay}s ease-in-out infinite`
-              : `onb-float ${s.duration + 4}s ${s.delay}s ease-in-out infinite alternate`,
-          }}
-        />
-      ))}
-    </div>
-  );
-});
-Particles.displayName = "Particles";
-
-const ShootingStars = React.memo(() => {
-  const stars = useMemo(
-    () =>
-      Array.from({ length: SHOOT_COUNT }, (_, i) => ({
-        id: i,
-        top: `${Math.random() * 60}%`,
-        left: `${Math.random() * 70}%`,
-        width: Math.random() * 60 + 40,
-        delay: Math.random() * 12,
-        duration: Math.random() * 1.5 + 0.8,
-        angle: Math.random() * 20 + 15,
-        opacity: Math.random() * 0.5 + 0.4,
-      })),
-    []
-  );
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {stars.map((s) => (
-        <div
-          key={s.id}
-          className="absolute"
-          style={{
-            top: s.top,
-            left: s.left,
-            width: s.width,
-            height: 1.5,
-            background: "linear-gradient(90deg, hsla(220, 90%, 90%, 0.9), transparent)",
-            borderRadius: 2,
-            transform: `rotate(${s.angle}deg)`,
-            opacity: s.opacity,
-            animation: `onb-shoot ${s.duration}s ${s.delay}s ease-in infinite`,
-          }}
-        />
-      ))}
-    </div>
-  );
-});
-ShootingStars.displayName = "ShootingStars";
 
 /* ----------------------------- Orchestrator ---------------------------- */
 
@@ -211,9 +122,6 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      <Particles />
-      <ShootingStars />
-
       {/* Film grain */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.018] z-[5] mix-blend-overlay"
