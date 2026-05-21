@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen, CreditCard } from "lucide-react";
+import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen, CreditCard, Eye } from "lucide-react";
 import ExploreContentManager from "@/components/admin/ExploreContentManager";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminStats } from "@/hooks/useAdminStats";
@@ -93,7 +93,14 @@ const AdminDashboard = () => {
             <h1 className="text-sm font-semibold">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Command Center</p>
           </div>
-          <div className="w-10" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/onboarding")}
+            title="Preview onboarding"
+          >
+            <Eye className="h-5 w-5" />
+          </Button>
         </div>
         <div className="h-[2px] bg-gradient-to-r from-primary via-secondary to-primary" />
       </div>
