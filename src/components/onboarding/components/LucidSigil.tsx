@@ -1,4 +1,4 @@
-import logoImage from "@/assets/LogoForFramer.png";
+import logoImage from "@/assets/lucid-logo.png";
 
 interface LucidSigilProps {
   size?: "sm" | "md" | "lg";
@@ -7,9 +7,9 @@ interface LucidSigilProps {
 }
 
 const sizeMap = {
-  sm: "w-16 h-16",
-  md: "w-24 h-24",
-  lg: "w-32 h-32",
+  sm: "w-12 h-12",
+  md: "w-20 h-20",
+  lg: "w-28 h-28",
 };
 
 const LucidSigil = ({ size = "md", animate = "breathe", className = "" }: LucidSigilProps) => {
