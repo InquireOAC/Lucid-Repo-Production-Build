@@ -32,7 +32,7 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
         navigate(`/lucid-repo/${dream.id}?from=${encodeURIComponent(currentPath)}`);
       }}
     >
-      <div className="aspect-[16/10] md:aspect-[21/9] relative">
+      <div className="aspect-[16/9] md:aspect-[21/9] relative">
         {imageUrl ? (
           <img
             src={imageUrl}
@@ -46,12 +46,12 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
         )}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
         {/* Content */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8 z-20">
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-20">
           <div className="flex items-center gap-1 mb-2">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-white text-black uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-primary text-primary-foreground uppercase tracking-wider">
               Featured
             </span>
             {dream.lucid && (
@@ -61,10 +61,10 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
             )}
           </div>
 
-          <h2 className="text-2xl md:text-4xl font-extrabold text-white mb-1.5 line-clamp-2 leading-tight tracking-tight">
+          <h2 className="text-xl font-bold text-white mb-1.5 line-clamp-2 leading-tight">
             {dream.title}
           </h2>
-          <p className="text-sm md:text-base text-white/70 line-clamp-2 mb-3">
+          <p className="text-sm text-white/70 line-clamp-2 mb-3">
             {dream.content}
           </p>
 
