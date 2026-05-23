@@ -19,7 +19,7 @@ function clampDuration(d: unknown): SeedanceDuration {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const body = await req.json().catch(() => ({}));
-  const { dreamId, beatIndex, motionPrompt, duration } = body;
+  const { dreamId, beatIndex, motionPrompt, duration, referenceImages } = body;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -53,6 +53,9 @@ Deno.serve(async (req) => {
       ? motionPrompt
       : beat.prompt;
     const clipDuration = clampDuration(duration);
+    const refs = Array.isArray(referenceImages)
+      ? (referenceImages as unknown[]).filter((u): u is string => typeof u === "string" && u.length > 0)
+      : [];
 
     const { videoUrl } = await falSeedanceImageToVideo(
       {
@@ -61,6 +64,7 @@ Deno.serve(async (req) => {
         aspectRatio: "9:16",
         duration: clipDuration,
         resolution: "720p",
+        referenceImages: refs,
       },
       {
         supabaseUrl,

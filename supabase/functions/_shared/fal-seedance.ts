@@ -1,25 +1,38 @@
 // FAL Seedance image-to-video adapter.
+//
 // Submits to the FAL queue API, polls until complete, downloads the resulting
 // MP4 and re-uploads to the dream-videos bucket.
 //
-// Model id is configurable via the FAL_SEEDANCE_MODEL env var so we can move
-// between Seedance v1 pro and v2 without redeploying. Defaults to v2 pro.
+// When `referenceImages` are supplied the call automatically routes to the
+// omni-reference endpoint and passes them via `reference_images` so the model
+// can lock identity (character / wardrobe / palette) across clips. Without
+// references it stays on plain image-to-video.
+//
+// Endpoints are env-configurable so we can move between i2v and omni without
+// redeploying:
+//   FAL_SEEDANCE_MODEL       -> default fal-ai/seedance-2/image-to-video
+//   FAL_SEEDANCE_OMNI_MODEL  -> default fal-ai/seedance-2/omni-reference
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const DEFAULT_SEEDANCE_MODEL = "fal-ai/seedance-2/image-to-video";
+const DEFAULT_SEEDANCE_I2V_MODEL = "fal-ai/seedance-2/image-to-video";
+const DEFAULT_SEEDANCE_OMNI_MODEL = "fal-ai/seedance-2/omni-reference";
 const QUEUE_BASE = "https://queue.fal.run";
+const MAX_REFERENCES = 4; // omni-reference cap; extras get dropped
 
 export type SeedanceDuration = 5 | 10 | 15;
 
 export interface SeedanceOptions {
   prompt: string;
-  imageUrl: string; // start frame / character reference
+  imageUrl: string; // start frame
   endImageUrl?: string;
   aspectRatio?: string; // default "9:16"
   duration?: SeedanceDuration; // default 5
   resolution?: "480p" | "720p" | "1080p"; // default "720p"
-  /** Optional model override (e.g. for fallback to v1 pro) */
+  /** Explicit model override (e.g. to force a different FAL slug for one call). */
   model?: string;
+  /** Identity anchors for omni-reference mode. Non-empty array routes the
+   *  call to the omni endpoint and injects `reference_images`. */
+  referenceImages?: string[];
 }
 
 export interface SeedancePersistOptions {
@@ -29,8 +42,12 @@ export interface SeedancePersistOptions {
   path: string; // full object path including filename
 }
 
-function resolveModel(override?: string): string {
-  return override || Deno.env.get("FAL_SEEDANCE_MODEL") || DEFAULT_SEEDANCE_MODEL;
+function resolveI2VModel(override?: string): string {
+  return override || Deno.env.get("FAL_SEEDANCE_MODEL") || DEFAULT_SEEDANCE_I2V_MODEL;
+}
+
+function resolveOmniModel(override?: string): string {
+  return override || Deno.env.get("FAL_SEEDANCE_OMNI_MODEL") || DEFAULT_SEEDANCE_OMNI_MODEL;
 }
 
 async function falFetch(url: string, init: RequestInit, apiKey: string) {
@@ -49,7 +66,14 @@ export async function falSeedanceImageToVideo(
   const apiKey = Deno.env.get("FAL_API_KEY");
   if (!apiKey) throw new Error("FAL_API_KEY not configured");
 
-  const model = resolveModel(options.model);
+  const refs = (options.referenceImages || []).filter((u) => typeof u === "string" && u.length > 0);
+  const useOmni = refs.length > 0;
+  const model = options.model
+    ? options.model
+    : useOmni
+      ? resolveOmniModel()
+      : resolveI2VModel();
+
   const duration: SeedanceDuration = (options.duration ?? 5) as SeedanceDuration;
 
   const payload: Record<string, unknown> = {
@@ -60,8 +84,13 @@ export async function falSeedanceImageToVideo(
     resolution: options.resolution || "720p",
   };
   if (options.endImageUrl) payload.end_image_url = options.endImageUrl;
+  if (useOmni) {
+    payload.reference_images = refs.slice(0, MAX_REFERENCES);
+  }
 
-  console.log(`[fal-seedance] submit model=${model} aspect=${payload.aspect_ratio} duration=${payload.duration}s`);
+  console.log(
+    `[fal-seedance] submit model=${model} aspect=${payload.aspect_ratio} duration=${payload.duration}s refs=${useOmni ? (payload.reference_images as string[]).length : 0}`,
+  );
 
   const submit = await falFetch(`${QUEUE_BASE}/${model}`, {
     method: "POST",

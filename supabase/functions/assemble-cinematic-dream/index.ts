@@ -9,6 +9,7 @@
 //      ElevenLabs narration for each segment.
 //   5. Return all segments so the client-side assembler can stitch the final clip.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getUserAvatarReference } from "../_shared/avatar-reference.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -119,12 +120,19 @@ Deno.serve(async (req) => {
     if (!frame1?.frameUrl) throw new Error("Segment 1 frame failed");
 
     // Step 3: videos (15s each) + narrations, all in parallel.
+    // Both segments route through Seedance 2 omni-reference so the avatar
+    // identity is locked through the motion (not just baked into the start
+    // frame). Segment 2 additionally references segment 1's key frame for
+    // wardrobe / palette / environment handoff.
+    const avatarUrl = await getUserAvatarReference(supabaseUrl, serviceKey, user.id);
     const motion0 = `${segments[0].motion_script} ${styleBlock}`.trim();
-    const motion1 = `${segments[1].motion_script} ${styleBlock} Maintain the exact character, wardrobe and color grade from the start frame.`.trim();
+    const motion1 = `${segments[1].motion_script} ${styleBlock} Maintain the exact character, wardrobe, lighting and color grade from the supplied references.`.trim();
+    const refs0 = [avatarUrl].filter((u): u is string => !!u);
+    const refs1 = [avatarUrl, frame0Url].filter((u): u is string => !!u);
 
     await Promise.all([
-      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15 }, authHeader),
-      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 1, motionPrompt: motion1, duration: 15 }, authHeader),
+      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15, referenceImages: refs0 }, authHeader),
+      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 1, motionPrompt: motion1, duration: 15, referenceImages: refs1 }, authHeader),
       invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 0, voiceId }, authHeader),
       invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 1, voiceId }, authHeader),
     ]);
