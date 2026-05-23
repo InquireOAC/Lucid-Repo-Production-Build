@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Lock, RefreshCw, Sparkles } from "lucide-react";
+import { Loader2, Lock, RefreshCw, Brain } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -104,7 +104,7 @@ const DreamAnalysis = ({
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         <div className="relative text-center space-y-4 py-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 mb-2">
-            <Sparkles className="h-6 w-6 text-primary" />
+            <Brain className="h-6 w-6 text-primary" />
           </div>
           <p className="text-sm text-muted-foreground max-w-xs mx-auto">
             {disabled
@@ -119,7 +119,7 @@ const DreamAnalysis = ({
               variant="aurora"
               className="gap-2"
             >
-              <Sparkles className="h-4 w-4" />
+              <Brain className="h-4 w-4" />
               Analyze Dream
             </Button>
           )}
@@ -143,7 +143,7 @@ const DreamAnalysis = ({
       {/* Header with regenerate */}
       <div className="flex items-center justify-between px-6 pt-5 pb-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
+          <Brain className="h-4 w-4 text-primary" />
           <span className="text-sm font-medium text-foreground">Dream Analysis</span>
         </div>
         {!disabled && isFeatureEnabled && !isGenerating && analysis && (
@@ -164,7 +164,7 @@ const DreamAnalysis = ({
         {isGenerating ? (
           <div className="flex flex-col items-center justify-center py-10 space-y-3">
             <div className="relative">
-              <Sparkles className="h-10 w-10 text-primary opacity-20" />
+              <Brain className="h-10 w-10 text-primary opacity-20" />
               <Loader2 className="h-10 w-10 animate-spin text-primary absolute inset-0" />
             </div>
             <p className="text-sm text-muted-foreground">

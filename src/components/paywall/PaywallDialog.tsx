@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
-  Sparkles, ImageIcon, MessageCircle, Crown, Video, Mic, Infinity,
+  Check, ImageIcon, MessageCircle, Crown, Video, Mic, Infinity,
   Loader2, RotateCcw, X
 } from "lucide-react";
 import { Capacitor } from "@capacitor/core";
@@ -343,7 +343,7 @@ const PaywallDialog = () => {
                 <ul className="space-y-2.5">
                   {activeFeatures.map((f, i) => (
                     <li key={i} className="flex items-center gap-3 text-sm text-foreground/90">
-                      <Sparkles className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />
                       <span>{f.label}</span>
                     </li>
                   ))}

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowLeft, Pin, PinOff, Sparkles, Check } from "lucide-react";
+import { ArrowLeft, Pin, PinOff, BookOpen, Check } from "lucide-react";
 import { techniques } from "./techniqueData";
 import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
 
@@ -206,7 +206,7 @@ const TechniqueDetailPage: React.FC = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <BookOpen className="w-3.5 h-3.5 text-primary" />
             <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-ink-faint">
               Overview
             </span>

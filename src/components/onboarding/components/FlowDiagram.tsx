@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Moon, Sparkles, Brain, Eye, Archive } from "lucide-react";
+import { Moon, Star, Brain, Eye, Archive } from "lucide-react";
 
 const steps = [
   { icon: Moon, title: "Dream Input", description: "Capture it the moment you wake" },
-  { icon: Sparkles, title: "Symbol Analysis", description: "Surface the hidden language" },
+  { icon: Star, title: "Symbol Analysis", description: "Surface the hidden language" },
   { icon: Brain, title: "Pattern Recognition", description: "Find the threads across nights" },
   { icon: Eye, title: "AI Interpretation", description: "Decode what your mind is saying" },
   { icon: Archive, title: "Personal Archive", description: "Build your dream repository" },

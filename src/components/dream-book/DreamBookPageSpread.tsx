@@ -1,7 +1,7 @@
 import React from "react";
 import { DreamEntry } from "@/types/dream";
 import { format } from "date-fns";
-import { Moon, Sparkles, Film } from "lucide-react";
+import { Moon, Film } from "lucide-react";
 
 interface SceneData {
   section: number;
@@ -88,7 +88,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
 
             <div className="flex items-center justify-center gap-2 mb-3">
               <div className="h-px w-12 bg-primary/30" />
-              <Sparkles className="w-3 h-3 text-primary/50" />
+              <Moon className="w-3 h-3 text-primary/50" />
               <div className="h-px w-12 bg-primary/30" />
             </div>
 
@@ -99,7 +99,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
             <div className="flex items-center justify-center gap-3 mb-3">
               {dream.lucid && (
                 <span className="flex items-center gap-1 text-[10px] font-semibold text-primary" style={{ textShadow: '0 0 8px hsl(var(--primary) / 0.4)' }}>
-                  <Sparkles className="w-3 h-3" /> Lucid
+                  <Moon className="w-3 h-3" /> Lucid
                 </span>
               )}
               {validScenes.length > 0 && (
@@ -137,7 +137,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
           {dream.mood && <span>· {dream.mood}</span>}
           {dream.lucid && (
             <span className="flex items-center gap-0.5 text-primary">
-              <Sparkles className="w-3 h-3" /> Lucid
+              <Moon className="w-3 h-3" /> Lucid
             </span>
           )}
         </div>
@@ -221,7 +221,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
 
           <div className="flex items-center justify-center gap-1.5 my-1.5">
             <div className="h-px w-8 bg-white/30" />
-            <Sparkles className="w-2.5 h-2.5 text-primary/60" />
+            <Moon className="w-2.5 h-2.5 text-primary/60" />
             <div className="h-px w-8 bg-white/30" />
           </div>
 
@@ -232,7 +232,7 @@ const DreamBookPageSpread = ({ dream, mode, scene, isTitlePage }: DreamBookPageS
           <div className="flex items-center justify-center gap-2 mt-1">
             {dream.lucid && (
               <span className="flex items-center gap-0.5 text-[9px] font-semibold text-primary" style={{ textShadow: '0 0 6px hsl(var(--primary) / 0.4)' }}>
-                <Sparkles className="w-2.5 h-2.5" /> Lucid
+                <Moon className="w-2.5 h-2.5" /> Lucid
               </span>
             )}
             {validScenes.length > 0 && (

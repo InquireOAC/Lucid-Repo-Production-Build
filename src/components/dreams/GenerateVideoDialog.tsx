@@ -6,7 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Video, Loader2, Sparkles, Wand2, X, Film } from "lucide-react";
+import { Video, Loader2, Wand2, X, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
@@ -198,7 +198,7 @@ export const GenerateVideoDialog = ({
                   className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm border-0"
                 >
                   {cinematic.stage === "idle" || cinematic.stage === "done" || cinematic.stage === "error" ? (
-                    <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /><span>Generate Cinematic Dream</span></div>
+                    <div className="flex items-center gap-2"><Film className="h-4 w-4" /><span>Generate Cinematic Dream</span></div>
                   ) : (
                     <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /><span>Working…</span></div>
                   )}
@@ -263,7 +263,7 @@ export const GenerateVideoDialog = ({
               {isGenerating ? (
                 <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /><span>Generating...</span></div>
               ) : (
-                <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /><span>Generate Video</span></div>
+                <div className="flex items-center gap-2"><Video className="h-4 w-4" /><span>Generate Video</span></div>
               )}
             </Button>
 

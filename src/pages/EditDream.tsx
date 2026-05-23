@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, ChevronDown, Film, Loader2 } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Brain, ImageIcon, ChevronDown, Film, Loader2, RefreshCw } from "lucide-react";
 import SectionImagesManager from "@/components/dreams/SectionImagesManager";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -337,7 +337,7 @@ const EditDream = () => {
                 animate={{ rotate: analysisOpen ? 10 : 0 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Brain className="h-4 w-4 text-primary" />
               </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">AI Analysis</p>
@@ -480,7 +480,7 @@ const EditDream = () => {
 
                       {!hasSceneImages && !sceneGen.isGenerating && (
                         <div className="p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
-                          <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
+                          <ImageIcon className="h-5 w-5 mx-auto text-primary mb-2" />
                           <p className="text-sm font-medium mb-1">Generate Story Images</p>
                           <p className="text-xs text-muted-foreground mb-3">
                             AI will split your dream into scenes and create cinematic images for each (uses 2-4 image credits)
@@ -513,7 +513,7 @@ const EditDream = () => {
                           onClick={sceneGen.generateSectionImages}
                           className="w-full gap-2"
                         >
-                          <Sparkles className="h-3.5 w-3.5" />
+                          <RefreshCw className="h-3.5 w-3.5" />
                           Regenerate All Scenes
                         </Button>
                       )}

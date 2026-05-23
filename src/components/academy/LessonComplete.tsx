@@ -1,7 +1,7 @@
 import React from 'react';
 import { AcademyLesson } from '@/hooks/useAcademyLesson';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, XCircle, Sparkles } from 'lucide-react';
+import { CheckCircle2, XCircle, Star } from 'lucide-react';
 
 interface LessonCompleteProps {
   lesson: AcademyLesson;
@@ -40,7 +40,7 @@ export const LessonComplete: React.FC<LessonCompleteProps> = ({
           {xpResult && xpResult.finalAmount > 0 && (
             <div className="rounded-xl bg-primary/10 border border-primary/20 p-4 w-full max-w-xs text-center space-y-1">
               <div className="flex items-center justify-center gap-1.5">
-                <Sparkles size={16} className="text-primary" />
+                <Star size={16} className="text-primary" />
                 <span className="text-lg font-bold text-primary">+{xpResult.finalAmount} XP</span>
               </div>
               {xpResult.multiplier > 1 && (

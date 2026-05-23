@@ -13,7 +13,7 @@ import LucidityTrendCard from "@/components/lucid-stats/LucidityTrendCard";
 import AICoachCard from "@/components/lucid-stats/AICoachCard";
 import AchievementsCard from "@/components/lucid-stats/AchievementsCard";
 import LoadingSkeletonStats from "@/components/lucid-stats/LoadingSkeletonStats";
-import { Sparkles, Moon } from "lucide-react";
+import { Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
@@ -34,7 +34,7 @@ const LucidStats: React.FC = () => {
       <PageTransition className="min-h-screen pt-safe-top">
         <div className="px-4 md:px-8 py-20 max-w-6xl mx-auto text-center">
           <div className="glass-card rounded-2xl p-8 md:p-12 max-w-md mx-auto space-y-4">
-            <Sparkles className="h-10 w-10 mx-auto text-primary" />
+            <Moon className="h-10 w-10 mx-auto text-primary" />
             <h2 className="text-xl font-bold text-foreground">Sign in to view your stats</h2>
             <p className="text-sm text-muted-foreground">Track your lucid dreaming progress with detailed analytics.</p>
             <Button onClick={() => navigate("/auth")} className="mt-2">Sign In</Button>

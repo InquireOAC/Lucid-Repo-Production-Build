@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Sparkles, ImageIcon, Headphones, ChevronDown, Zap } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Brain, ImageIcon, Headphones, ChevronDown, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,7 +319,7 @@ const NewDream = () => {
                 animate={{ rotate: analysisOpen ? 10 : 0 }}
                 transition={{ type: "spring", stiffness: 300 }}
               >
-                <Sparkles className="h-4 w-4 text-primary" />
+                <Brain className="h-4 w-4 text-primary" />
               </motion.div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground">AI Analysis</p>

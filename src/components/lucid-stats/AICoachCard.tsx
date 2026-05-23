@@ -1,5 +1,5 @@
 import React from "react";
-import { Sparkles } from "lucide-react";
+import { Brain } from "lucide-react";
 import type { LucidStatsData } from "@/hooks/useLucidStats";
 
 interface Props {
@@ -12,7 +12,7 @@ const AICoachCard: React.FC<Props> = ({ stats }) => {
   return (
     <div className="rounded-2xl px-5 py-6 space-y-3 bg-gradient-to-br from-primary/12 via-accent/8 to-transparent border border-primary/10">
       <div className="flex items-center gap-2">
-        <Sparkles className="h-4 w-4 text-primary" />
+        <Brain className="h-4 w-4 text-primary" />
         <h2 className="text-base font-semibold text-foreground">AI Dream Coach</h2>
       </div>
 

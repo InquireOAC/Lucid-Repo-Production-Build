@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Loader2, Sparkles, X, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
+import { Upload, Loader2, Wand2, X, ArrowLeft, Plus, Pencil, Trash2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -632,7 +632,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                         {isGenerating ? (
                           <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</>
                         ) : (
-                          <><Sparkles className="mr-2 h-4 w-4" />{generatedAvatarUrl ? 'Regenerate Character' : 'Generate Character'}</>
+                          <><Wand2 className="mr-2 h-4 w-4" />{generatedAvatarUrl ? 'Regenerate Character' : 'Generate Character'}</>
                         )}
                       </Button>
                     )}

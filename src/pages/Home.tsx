@@ -36,7 +36,7 @@ import {
   Heart,
   MessageSquare,
   ChevronRight,
-  Sparkles,
+  Moon,
   Pin,
   
   Clock,
@@ -223,7 +223,7 @@ const LucidInsightsCard: React.FC<LucidInsightsProps> = ({ stats, onTap }) => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Sparkles size={16} className="text-primary" />
+          <Moon size={16} className="text-primary" />
           <h2 className="text-sm font-semibold text-foreground">Lucid Insights</h2>
         </div>
         <ChevronRight size={16} className="text-muted-foreground" />

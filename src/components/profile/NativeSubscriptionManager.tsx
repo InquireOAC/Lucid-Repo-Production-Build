@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, RotateCcw, AlertCircle, Sparkles, Check, Crown, Brain, ImageIcon, MessageCircle } from "lucide-react";
+import { Loader2, RotateCcw, AlertCircle, Check, Crown, Brain, ImageIcon, MessageCircle, Mic, Film } from "lucide-react";
 import { useNativeSubscription } from "@/hooks/useNativeSubscription";
 import { Capacitor } from "@capacitor/core";
 
@@ -9,14 +9,14 @@ const PLAN_FEATURES = {
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "10 Dream Art Generations", icon: ImageIcon },
     { label: "AI Dream Chat (5 msgs/day)", icon: MessageCircle },
-    { label: "Voice-to-Text Journaling", icon: Sparkles },
+    { label: "Voice-to-Text Journaling", icon: Mic },
   ],
   premium: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "Unlimited Dream Art", icon: ImageIcon },
     { label: "Unlimited AI Dream Chat", icon: MessageCircle },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Film },
+    { label: "Voice-to-Text Journaling", icon: Mic },
     { label: "Priority Support", icon: Crown },
   ],
 };
@@ -79,7 +79,7 @@ const NativeSubscriptionManager = ({ currentPlan }: NativeSubscriptionManagerPro
                   <div className="relative space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
+                        {isPremium && <Crown className="h-4 w-4 text-primary" />}
                         <h4 className="font-semibold text-foreground">{product.name}</h4>
                       </div>
                       {isPremium && (

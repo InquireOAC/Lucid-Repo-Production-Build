@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, CreditCard, AlertCircle, Sparkles, Crown, Brain, ImageIcon, MessageCircle, Check } from "lucide-react";
+import { Loader2, CreditCard, AlertCircle, Crown, Brain, ImageIcon, MessageCircle, Check, Mic, Film } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { normalizeProduct, Product } from "@/utils/subscriptionProductUtils";
@@ -20,14 +20,14 @@ const PLAN_FEATURES = {
   dreamer: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "10 Dream Art Generations", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Film },
+    { label: "Voice-to-Text Journaling", icon: Mic },
   ],
   mystic: [
     { label: "Unlimited Dream Analysis", icon: Brain },
     { label: "Unlimited Dream Art", icon: ImageIcon },
-    { label: "Dream Video Generation", icon: Sparkles },
-    { label: "Voice-to-Text Journaling", icon: MessageCircle },
+    { label: "Dream Video Generation", icon: Film },
+    { label: "Voice-to-Text Journaling", icon: Mic },
     { label: "Priority Support", icon: Crown },
   ],
 };
@@ -200,7 +200,7 @@ const PlanCard = ({ product, isPremium, planFeatures, onSubscribe, loading }: Pl
       <div className="relative space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            {isPremium && <Sparkles className="h-4 w-4 text-primary" />}
+            {isPremium && <Crown className="h-4 w-4 text-primary" />}
             <h4 className="font-semibold text-foreground">{product.name}</h4>
           </div>
           {isPremium && (
