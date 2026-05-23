@@ -34,11 +34,11 @@ Rules:
 - Include up to 10 items per category
 - Only include symbols that appear in at least 1 dream
 - Be specific but not overly granular (e.g. "Water/Ocean" not "Pacific Ocean wave #3")`;
-const response = await fetch(endpoint, {
-      method: "POST",
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: systemPrompt }] },
@@ -135,8 +135,8 @@ const response = await fetch(endpoint, {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Vertex AI error:", response.status, errorText);
-      throw new Error(`Vertex AI error: ${response.status}`);
+      console.error("AI gateway error:", response.status, errorText);
+      throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();

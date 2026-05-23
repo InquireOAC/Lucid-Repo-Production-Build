@@ -33,11 +33,11 @@ serve(async (req) => {
     }
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
-const response = await fetch(endpoint, {
-      method: "POST",
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         systemInstruction: {
@@ -87,7 +87,7 @@ const response = await fetch(endpoint, {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Vertex AI error:", response.status, errorText);
+      console.error("AI gateway error:", response.status, errorText);
 
       if (response.status === 429) {
         return new Response(
@@ -96,7 +96,7 @@ const response = await fetch(endpoint, {
         );
       }
 
-      throw new Error(`Vertex AI returned ${response.status}`);
+      throw new Error(`Lovable AI returned ${response.status}`);
     }
 
     const data = await response.json();

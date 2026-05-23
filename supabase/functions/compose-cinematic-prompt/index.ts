@@ -89,11 +89,11 @@ TONE: Surreal but grounded — dreamlike realism. The impossible rendered as if 
 
 Output ONLY the cinematic description — no explanations of your reasoning`
 
-    console.log(`Composing cinematic prompt via Vertex AI, style: ${styleName}`)
-const response = await fetch(endpoint, {
+    console.log(`Composing cinematic prompt via Lovable AI, style: ${styleName}`)
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -104,16 +104,16 @@ const response = await fetch(endpoint, {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Vertex AI error:', response.status, errorText)
+      console.error('AI gateway error:', response.status, errorText)
       if (response.status === 429) throw new Error('Rate limit exceeded. Please try again in a moment.')
-      throw new Error(`Vertex AI error: ${response.status}`)
+      throw new Error(`AI gateway error: ${response.status}`)
     }
 
     const result = await response.json()
-    const cinematicPrompt = result.candidates?.[0]?.content?.parts?.[0]?.text
+    const cinematicPrompt = result.choices?.[0]?.message?.content
 
     if (!cinematicPrompt) {
-      console.error('No content in Vertex AI response:', JSON.stringify(result))
+      console.error('No content in Lovable AI response:', JSON.stringify(result))
       throw new Error('No cinematic prompt generated')
     }
 
