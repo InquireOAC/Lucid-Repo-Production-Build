@@ -6,52 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-async function getGoogleAccessToken(saKey: any): Promise<string> {
-  const header = { alg: "RS256", typ: "JWT" };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iss: saKey.client_email,
-    scope: "https://www.googleapis.com/auth/cloud-platform",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
-  };
-  const encode = (obj: any) => {
-    const json = JSON.stringify(obj);
-    const b64 = btoa(json);
-    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  };
-  const headerB64 = encode(header);
-  const payloadB64 = encode(payload);
-  const unsignedToken = `${headerB64}.${payloadB64}`;
-  const pemContents = saKey.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
-  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8", binaryKey,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false, ["sign"]
-  );
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5", cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  );
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const jwt = `${unsignedToken}.${sigB64}`;
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) {
-    throw new Error(`Failed to get Google access token: ${JSON.stringify(tokenData)}`);
-  }
-  return tokenData.access_token;
-}
 
 const VALID_TASKS = ['analyze_dream', 'generate_image_prompt', 'create_image_prompt']
 const MAX_CONTENT_LENGTH = 5000
@@ -141,44 +95,37 @@ TONE RULES:
 - Express genuine curiosity and respect for the dreamer's inner world
 - Each section should be 2-4 sentences — substantive but not exhausting`
 
-    console.log(`Generating ${task} using Vertex AI gemini-2.5-flash`)
-
-    const saKeyRaw = Deno.env.get('GOOGLE_VERTEX_SA_KEY')
-    const projectId = Deno.env.get('GOOGLE_CLOUD_PROJECT_ID')
-    if (!saKeyRaw || !projectId) {
-      throw new Error('Google Cloud credentials not configured')
-    }
-    const saKey = JSON.parse(saKeyRaw)
-    const accessToken = await getGoogleAccessToken(saKey)
-
-    const model = 'gemini-2.5-flash'
-    const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`
-
-    const response = await fetch(endpoint, {
+    console.log(`Generating ${task} using Lovable AI gemini-2.5-flash`)
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: dreamContent }] }],
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: dreamContent },
+        ],
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Vertex AI error:', response.status, errorText)
+      console.error('AI gateway error:', response.status, errorText)
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again in a moment.')
       }
-      throw new Error(`Vertex AI error: ${response.status}`)
+      throw new Error(`AI gateway error: ${response.status}`)
     }
 
     const result = await response.json()
-    const analysis = result.candidates?.[0]?.content?.parts?.[0]?.text
+    const analysis = result.choices?.[0]?.message?.content
     if (!analysis) {
-      console.error('No content in Vertex AI response:', JSON.stringify(result))
+      console.error('No content in Lovable AI response:', JSON.stringify(result))
       throw new Error('No analysis generated')
     }
 
