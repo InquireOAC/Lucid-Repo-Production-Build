@@ -1077,6 +1077,93 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_cinematic_beats: {
+        Row: {
+          beat_index: number
+          created_at: string
+          dream_id: string
+          end_time: number
+          error_message: string | null
+          frame_url: string | null
+          id: string
+          narration_text: string | null
+          narration_url: string | null
+          prompt: string
+          start_time: number
+          status: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          beat_index: number
+          created_at?: string
+          dream_id: string
+          end_time?: number
+          error_message?: string | null
+          frame_url?: string | null
+          id?: string
+          narration_text?: string | null
+          narration_url?: string | null
+          prompt: string
+          start_time?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          beat_index?: number
+          created_at?: string
+          dream_id?: string
+          end_time?: number
+          error_message?: string | null
+          frame_url?: string | null
+          id?: string
+          narration_text?: string | null
+          narration_url?: string | null
+          prompt?: string
+          start_time?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      dream_cinematic_specs: {
+        Row: {
+          created_at: string
+          dream_id: string
+          final_video_url: string | null
+          id: string
+          spec_json: Json
+          total_duration: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream_id: string
+          final_video_url?: string | null
+          id?: string
+          spec_json: Json
+          total_duration?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dream_id?: string
+          final_video_url?: string | null
+          id?: string
+          spec_json?: Json
+          total_duration?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dream_clusters: {
         Row: {
           created_at: string

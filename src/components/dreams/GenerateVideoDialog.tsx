@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { toast } from "sonner";
+import { useDreamCinematic } from "@/hooks/useDreamCinematic";
 
 interface GenerateVideoDialogProps {
   open: boolean;
@@ -36,6 +37,9 @@ export const GenerateVideoDialog = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCraftingPrompt, setIsCraftingPrompt] = useState(false);
   const [progress, setProgress] = useState(0);
+  const cinematicEnabled = (import.meta as any).env?.VITE_USE_FAL_CINEMATIC === "true";
+  const [mode, setMode] = useState<"veo" | "cinematic">("veo");
+  const cinematic = useDreamCinematic(dreamId);
 
   useEffect(() => {
     if (!open) return;
@@ -145,6 +149,49 @@ export const GenerateVideoDialog = ({
           </div>
 
           <div className="p-5 space-y-4">
+            {cinematicEnabled && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                <button
+                  onClick={() => setMode("veo")}
+                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "veo" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
+                >Animate frame</button>
+                <button
+                  onClick={() => setMode("cinematic")}
+                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "cinematic" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
+                >Cinematic Dream · beta</button>
+              </div>
+            )}
+
+            {mode === "cinematic" ? (
+              <div className="space-y-3">
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Generates a ~30s narrated multi-shot video from your dream text, anchored on your avatar for character consistency.
+                </p>
+                {cinematic.stage !== "idle" && (
+                  <div className="space-y-2">
+                    <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${cinematic.progress}%` }} />
+                    </div>
+                    <p className="text-xs text-white/40 capitalize">{cinematic.stage.replace("_", " ")}…</p>
+                  </div>
+                )}
+                <Button
+                  onClick={() => cinematic.run()}
+                  disabled={cinematic.stage !== "idle" && cinematic.stage !== "done" && cinematic.stage !== "error"}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm border-0"
+                >
+                  {cinematic.stage === "idle" || cinematic.stage === "done" || cinematic.stage === "error" ? (
+                    <div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /><span>Generate Cinematic Dream</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /><span>Working…</span></div>
+                  )}
+                </Button>
+                <p className="text-[10px] text-white/20 text-center">
+                  Need a longer film? Continue in Lucid Engine.
+                </p>
+              </div>
+            ) : (
+            <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-white/40 uppercase tracking-wider">Animation Directive</label>
@@ -205,6 +252,8 @@ export const GenerateVideoDialog = ({
 
             {!isGenerating && (
               <p className="text-[10px] text-white/20 text-center">Powered by Veo 3.0 · ~1-2 min generation time</p>
+            )}
+            </>
             )}
           </div>
         </div>
