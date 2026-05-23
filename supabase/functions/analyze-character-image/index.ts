@@ -88,32 +88,20 @@ DISTINCTIVE FEATURES:
 
 Format as a single continuous paragraph that could be injected into an image generation prompt. Do NOT use headers or bullet points in the output. Write it as flowing descriptive text.`
 
-    // Fetch photo and convert to base64
-    const imgRes = await fetch(photoUrl)
-    if (!imgRes.ok) throw new Error('Failed to fetch photo')
-    const buffer = await imgRes.arrayBuffer()
-    const bytes = new Uint8Array(buffer)
-    let binary = ''
-    const chunkSize = 8192
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize)
-      binary += String.fromCharCode(...chunk)
-    }
-    const base64 = btoa(binary)
-    const mimeType = imgRes.headers.get('content-type') || 'image/jpeg'
-const response = await fetch(endpoint, {
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
+        model: 'google/gemini-2.5-flash',
+        messages: [
           {
             role: 'user',
-            parts: [
-              { text: analysisPrompt },
-              { inlineData: { mimeType, data: base64 } },
+            content: [
+              { type: 'text', text: analysisPrompt },
+              { type: 'image_url', image_url: { url: photoUrl } },
             ],
           },
         ],
@@ -122,12 +110,12 @@ const response = await fetch(endpoint, {
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Vertex AI error:', response.status, errorText)
+      console.error('AI gateway error:', response.status, errorText)
       throw new Error(`AI analysis failed: ${response.status}`)
     }
 
     const data = await response.json()
-    const fingerprint = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    const fingerprint = data.choices?.[0]?.message?.content || ''
 
     if (!fingerprint) throw new Error('No fingerprint generated')
 

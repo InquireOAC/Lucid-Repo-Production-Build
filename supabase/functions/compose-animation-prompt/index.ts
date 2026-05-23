@@ -32,53 +32,40 @@ Your directive must:
 
 Output ONLY the animation directive. No preamble, no explanation. 1-2 sentences, max 80 words.`;
 
-    const userParts: any[] = [];
-
+    const userContent: any[] = [];
     if (imageUrl) {
-      // Fetch image and convert to inlineData
-      const imgRes = await fetch(imageUrl);
-      if (imgRes.ok) {
-        const buffer = await imgRes.arrayBuffer();
-        const bytes = new Uint8Array(buffer);
-        let binary = '';
-        const chunkSize = 8192;
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-          const chunk = bytes.subarray(i, i + chunkSize);
-          binary += String.fromCharCode(...chunk);
-        }
-        const base64 = btoa(binary);
-        const mimeType = imgRes.headers.get("content-type") || "image/png";
-        userParts.push({
-          inlineData: { mimeType, data: base64 },
-        });
-      }
+      userContent.push({ type: 'image_url', image_url: { url: imageUrl } });
     }
-
-    userParts.push({
+    userContent.push({
+      type: 'text',
       text: dreamContent
         ? `Dream narrative: ${dreamContent}`
-        : "Analyze the image and create a subtle 4-second animation directive.",
+        : 'Analyze the image and create a subtle 4-second animation directive.',
     });
-const response = await fetch(endpoint, {
-      method: "POST",
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: "user", parts: userParts }],
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userContent },
+        ],
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Vertex AI error:", response.status, errText);
-      throw new Error(`Vertex AI error: ${response.status}`);
+      console.error('AI gateway error:', response.status, errText);
+      throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const prompt = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    const prompt = data.choices?.[0]?.message?.content?.trim() || '';
 
     return new Response(JSON.stringify({ prompt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
