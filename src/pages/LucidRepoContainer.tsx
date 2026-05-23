@@ -3,20 +3,22 @@ import React, { useState, useMemo } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import AuthDialog from "@/components/repos/AuthDialog";
-import DiscoveryHero from "@/components/repos/DiscoveryHero";
-import DiscoveryRow from "@/components/repos/DiscoveryRow";
-import DiscoveryDreamCard from "@/components/repos/DiscoveryDreamCard";
 import StoryListCard from "@/components/repos/StoryListCard";
 import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
 import SeriesDetailPage from "@/components/series/SeriesDetailPage";
-import MasonryDreamGrid from "@/components/repos/MasonryDreamGrid";
 import DreamStoryPage from "@/pages/DreamStoryPage";
+import HeroPoster from "@/components/repos/netflix/HeroPoster";
+import PosterRail from "@/components/repos/netflix/PosterRail";
+import PosterCard from "@/components/repos/netflix/PosterCard";
+import TopTenCard from "@/components/repos/netflix/TopTenCard";
+import ContinueReadingCard from "@/components/repos/netflix/ContinueReadingCard";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
 import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
 import { useReadingHistory } from "@/hooks/useReadingHistory";
-import { ArrowLeft, Moon, Search, BookOpen, Clock } from "lucide-react";
+import { useDreamList } from "@/hooks/useDreamList";
+import { ArrowLeft, Moon, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
@@ -41,11 +43,13 @@ const LucidRepoDiscovery = () => {
   const [searchParams] = useSearchParams();
   const expandedSectionKey = searchParams.get("section");
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
   const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
   const { series: publicSeries } = usePublicSeries();
-  const { recentIds } = useReadingHistory();
+  const { recentIds, history } = useReadingHistory();
+  const { has: inList, toggle: toggleList, ids: myListIds } = useDreamList();
 
   const {
     featured,
@@ -150,8 +154,51 @@ const LucidRepoDiscovery = () => {
 
   const showLoading = isLoading || tagsLoading;
 
-  // Build queue IDs for continuous reading
+  // Build queue IDs
   const trendingIds = trending.map(d => d.id);
+
+  // Deterministic daily hero
+  const heroDream = useMemo(() => {
+    if (!trending.length && !featured) return featured || null;
+    const pool = [featured, ...trending].filter(Boolean) as DreamEntry[];
+    if (!pool.length) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) hash = (hash * 31 + today.charCodeAt(i)) | 0;
+    return pool[Math.abs(hash) % pool.length];
+  }, [featured, trending]);
+
+  const topTen = useMemo(() => {
+    const scored = [...uniqueDreams]
+      .map(d => ({
+        d,
+        score: (d.like_count || 0) * 3 + (d.comment_count || 0) * 2 + (d.view_count || 0),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(x => x.d);
+    return scored;
+  }, [uniqueDreams]);
+
+  const continueReading = useMemo(
+    () => recentIds.map(id => uniqueDreams.find(d => d.id === id)).filter(Boolean) as DreamEntry[],
+    [recentIds, uniqueDreams]
+  );
+
+  const myListDreams = useMemo(
+    () => myListIds.map(id => uniqueDreams.find(d => d.id === id)).filter(Boolean) as DreamEntry[],
+    [myListIds, uniqueDreams]
+  );
+
+  const lastReadDream = continueReading[0];
+  const becauseYouRead = useMemo(() => {
+    if (!lastReadDream) return [];
+    const tags = (lastReadDream.tags || []).map(t => t.toLowerCase());
+    if (!tags.length) return [];
+    return uniqueDreams
+      .filter(d => d.id !== lastReadDream.id && d.tags?.some(t => tags.includes(t.toLowerCase())))
+      .slice(0, 12);
+  }, [lastReadDream, uniqueDreams]);
 
   // Derive expanded section from URL param
   const expandedSection = useMemo(() => {
@@ -206,62 +253,67 @@ const LucidRepoDiscovery = () => {
 
   return (
     <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 md:px-8 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
-      {/* Desktop page header */}
-      <div className="hidden md:flex items-center justify-between pt-6 mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Lucid Repo</h1>
-          <p className="text-sm text-muted-foreground mt-1">Explore shared dreams from the community</p>
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 pb-2 bg-background/80 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+            Lucid<span className="text-primary">Repo</span>
+          </h1>
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => setSearchOpen(v => !v)}
+            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40"
+          >
+            {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+          </button>
         </div>
-      </div>
 
-      {/* Search */}
-      <div className="pt-3 md:pt-0 mb-4">
-        <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
-          <div className="relative max-w-full md:max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60" />
+        {searchOpen && (
+          <div className="mb-2">
             <Input
-              aria-label="Search dreams"
+              autoFocus
               type="text"
-              className="pl-9 pr-4 h-10 w-full rounded-xl text-sm bg-muted/20 border-border/30 placeholder:text-muted-foreground/50 focus:border-primary/40 focus:bg-muted/30 transition-colors"
-              placeholder="Search dreams, stories, dreamers..."
+              aria-label="Search dreams"
+              className="h-10 rounded-xl text-sm bg-muted/30 border-border/30"
+              placeholder="Search dreams, dreamers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </form>
-      </div>
+        )}
 
-      {/* Category Filter Chips */}
-      <div className="flex overflow-x-auto gap-2 mb-5 pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-        {FILTER_CATEGORIES.map(cat => (
-          <button
-            key={cat}
-            type="button"
-            onClick={() => setActiveFilter(cat)}
-            className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm transition-all ${
-              activeFilter === cat
-                ? "bg-primary text-primary-foreground font-semibold shadow-sm"
-                : "bg-muted/30 text-muted-foreground hover:bg-muted/50 font-medium"
-            }`}
-          >
-            {cat}
-          </button>
-        ))}
+        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+          {FILTER_CATEGORIES.map(cat => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setActiveFilter(cat)}
+              className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                activeFilter === cat
+                  ? "bg-foreground text-background border-foreground font-semibold"
+                  : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {showLoading ? (
-        <div className="space-y-6">
-          <Skeleton className="w-full aspect-[16/9] md:aspect-[21/9] rounded-2xl" />
-          <div className="space-y-3">
+        <div className="space-y-6 mt-4">
+          <Skeleton className="w-full aspect-[3/4] md:aspect-[21/9] rounded-2xl" />
+          <div className="flex gap-2 overflow-hidden">
             {[1, 2, 3, 4].map(i => (
-              <Skeleton key={i} className="h-28 w-full rounded-xl" />
+              <Skeleton key={i} className="flex-shrink-0 w-[130px] aspect-[2/3] rounded-md" />
             ))}
           </div>
         </div>
       ) : activeFilter !== "All" ? (
         <>
           {/* Sort toggle */}
-          <div className="flex justify-end mb-3">
+          <div className="flex justify-end mb-3 mt-4">
             <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
               {(["popular", "new"] as const).map(mode => (
                 <button
@@ -307,129 +359,92 @@ const LucidRepoDiscovery = () => {
         </div>
       ) : (
         <>
-          {/* Featured Hero — taller with Start Reading CTA */}
-          {featured && !searchQuery && (
-            <DiscoveryHero
-              dream={featured}
-              onOpenDream={handleOpenDream}
-              onLike={handleDreamLikeFromCard}
-              onUserClick={handleNavigateToProfile}
+          {/* Hero */}
+          {heroDream && !searchQuery && (
+            <HeroPoster
+              dream={heroDream}
+              inList={inList(heroDream.id)}
+              onToggleList={toggleList}
             />
           )}
 
-          {/* Continue Reading — from reading history */}
-          {recentIds.length > 0 && !searchQuery && (() => {
-            const continueReading = uniqueDreams.filter(d => recentIds.includes(d.id));
-            if (continueReading.length === 0) return null;
-            return (
-              <DiscoveryRow title="📚 Continue Reading">
-                {continueReading.map(dream => (
-                  <DiscoveryDreamCard
-                    key={dream.id}
-                    dream={dream}
-                    onOpenDream={handleOpenDream}
-                    onLike={handleDreamLikeFromCard}
-                    onUserClick={handleNavigateToProfile}
-                  />
-                ))}
-              </DiscoveryRow>
-            );
-          })()}
-
-          {/* From People You Follow — horizontal cards */}
-          {user && filterDreams(following).length > 0 && (
-            <DiscoveryRow title="📖 From People You Follow" onSeeAll={() => navigateToSection('following')}>
-              {filterDreams(following).map(dream => (
-                <DiscoveryDreamCard
-                  key={dream.id}
-                  dream={dream}
-                  onOpenDream={handleOpenDream}
-                  onLike={handleDreamLikeFromCard}
-                  onUserClick={handleNavigateToProfile}
-                />
+          {/* Top 10 Today */}
+          {topTen.length > 0 && !searchQuery && (
+            <PosterRail title="Top 10 Dreams Today">
+              {topTen.map((d, i) => (
+                <TopTenCard key={d.id} dream={d} rank={i + 1} />
               ))}
-            </DiscoveryRow>
+            </PosterRail>
           )}
 
-          {/* Trending Stories — vertical list */}
+          {/* Continue Reading */}
+          {continueReading.length > 0 && !searchQuery && (
+            <PosterRail title="Continue Reading">
+              {continueReading.map(d => (
+                <ContinueReadingCard key={d.id} dream={d} />
+              ))}
+            </PosterRail>
+          )}
+
+          {/* My List */}
+          {myListDreams.length > 0 && !searchQuery && (
+            <PosterRail title="My List">
+              {myListDreams.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* From People You Follow */}
+          {user && filterDreams(following).length > 0 && (
+            <PosterRail title="From Dreamers You Follow" onSeeAll={() => navigateToSection("following")}>
+              {filterDreams(following).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* Recommended */}
           {filterDreams(trending).length > 0 && (
-            <section className="mb-6">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-base font-bold text-foreground">🔥 Trending Stories</h2>
-                <button
-                  onClick={() => navigateToSection('trending')}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  See all
-                </button>
-              </div>
-              <div className="space-y-2">
-                {filterDreams(trending).slice(0, 6).map(dream => (
-                  <StoryListCard
-                    key={dream.id}
-                    dream={dream}
-                    onLike={handleDreamLikeFromCard}
-                    onUserClick={handleNavigateToProfile}
-                    queueIds={trendingIds}
-                  />
-                ))}
-              </div>
-            </section>
+            <PosterRail title="Recommended for You" onSeeAll={() => navigateToSection("trending")}>
+              {filterDreams(trending).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
           )}
 
-          {/* New Releases — vertical list */}
-          {filterDreams(newReleases).length > 0 && (
-            <section className="mb-6">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-base font-bold text-foreground">✨ New Releases</h2>
-                <button
-                  onClick={() => navigateToSection('new')}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                >
-                  See all
-                </button>
-              </div>
-              <div className="space-y-2">
-                {filterDreams(newReleases).slice(0, 5).map(dream => (
-                  <StoryListCard
-                    key={dream.id}
-                    dream={dream}
-                    onLike={handleDreamLikeFromCard}
-                    onUserClick={handleNavigateToProfile}
-                    queueIds={newReleases.map(d => d.id)}
-                  />
-                ))}
-              </div>
-            </section>
+          {/* Because you read ... */}
+          {becauseYouRead.length > 0 && !searchQuery && lastReadDream && (
+            <PosterRail title={`Because you read "${lastReadDream.title}"`}>
+              {becauseYouRead.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
           )}
+
+          {/* New Releases */}
+          {filterDreams(newReleases).length > 0 && (
+            <PosterRail title="Recently Added" onSeeAll={() => navigateToSection("new")}>
+              {filterDreams(newReleases).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* Dream-type rows */}
+          {!searchQuery && tagSections.map(section => (
+            <PosterRail
+              key={section.tag}
+              title={`${section.tag} Dreams`}
+              onSeeAll={() => navigateToSection(`tag-${section.tag.toLowerCase()}`)}
+            >
+              {section.dreams.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          ))}
 
           {/* Dream Series */}
           {!searchQuery && publicSeries.length > 0 && (
-            <DiscoveryRow title="📚 Dream Series">
-              {publicSeries.map(s => (
-                <DiscoverySeriesCard
-                  key={s.id}
-                  series={s}
-                  onClick={setSelectedSeries}
-                />
-              ))}
-            </DiscoveryRow>
+            <section className="mb-6 -mx-4 sm:-mx-6 md:mx-0">
+              <h2 className="text-base md:text-lg font-bold text-foreground mb-2 px-4 sm:px-6 md:px-0">
+                Dream Series
+              </h2>
+              <div className="flex overflow-x-auto gap-2 px-4 sm:px-6 md:px-0 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+                {publicSeries.map(s => (
+                  <DiscoverySeriesCard key={s.id} series={s} onClick={setSelectedSeries} />
+                ))}
+              </div>
+            </section>
           )}
-
-          {/* Tag sections — horizontal cards */}
-          {!searchQuery && tagSections.map(section => (
-            <DiscoveryRow key={section.tag} title={`${section.tag} Dreams`} onSeeAll={() => navigateToSection(`tag-${section.tag.toLowerCase()}`)}>
-              {section.dreams.map(dream => (
-                <DiscoveryDreamCard
-                  key={dream.id}
-                  dream={dream}
-                  onOpenDream={handleOpenDream}
-                  onLike={handleDreamLikeFromCard}
-                  onUserClick={handleNavigateToProfile}
-                />
-              ))}
-            </DiscoveryRow>
-          ))}
         </>
       )}
 
