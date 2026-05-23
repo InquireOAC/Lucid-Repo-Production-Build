@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Headphones } from "lucide-react";
+import { Headphones, Moon } from "lucide-react";
 
 interface Props {
   dream: DreamEntry;
@@ -27,7 +27,7 @@ const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
           <img src={imageUrl} alt={dream.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-            <span className="text-3xl">🌙</span>
+            <Moon className="h-8 w-8 text-foreground/40" />
           </div>
         )}
         {dream.lucid && (
