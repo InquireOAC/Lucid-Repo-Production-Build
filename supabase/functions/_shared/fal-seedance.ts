@@ -15,7 +15,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const DEFAULT_SEEDANCE_I2V_MODEL = "fal-ai/seedance-2/image-to-video";
-const DEFAULT_SEEDANCE_OMNI_MODEL = "fal-ai/seedance-2/omni-reference";
+const DEFAULT_SEEDANCE_OMNI_MODEL = "fal-ai/seedance-2/reference-to-video";
 const QUEUE_BASE = "https://queue.fal.run";
 const MAX_REFERENCES = 4; // omni-reference cap; extras get dropped
 
