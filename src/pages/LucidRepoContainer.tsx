@@ -12,6 +12,7 @@ import PosterRail from "@/components/repos/netflix/PosterRail";
 import PosterCard from "@/components/repos/netflix/PosterCard";
 import TopTenCard from "@/components/repos/netflix/TopTenCard";
 import ContinueReadingCard from "@/components/repos/netflix/ContinueReadingCard";
+import CategoryHeroCard from "@/components/repos/netflix/CategoryHeroCard";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
 import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
 import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
@@ -338,14 +339,13 @@ const LucidRepoDiscovery = () => {
               <p className="text-muted-foreground">Try a different category</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div>
               {categoryDreams.map(dream => (
-                <StoryListCard
+                <CategoryHeroCard
                   key={dream.id}
                   dream={dream}
-                  onLike={handleDreamLikeFromCard}
-                  onUserClick={handleNavigateToProfile}
-                  queueIds={categoryDreams.map(d => d.id)}
+                  inList={inList(dream.id)}
+                  onToggleList={toggleList}
                 />
               ))}
             </div>
