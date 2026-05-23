@@ -40,48 +40,37 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        systemInstruction: {
-          parts: [{ text: `You are a narrative analyst. Split the given dream story into 2-4 logical narrative sections. Each section should represent a distinct scene, shift in setting, or emotional turning point.` }],
-        },
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `Split this dream narrative into 2-4 sections. Each section should be a meaningful story beat.\n\nDream text:\n${content}` }],
-          },
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: `You are a narrative analyst. Split the given dream story into 2-4 logical narrative sections. Each section should represent a distinct scene, shift in setting, or emotional turning point.` },
+          { role: 'user', content: `Split this dream narrative into 2-4 sections. Each section should be a meaningful story beat.\n\nDream text:\n${content}` },
         ],
         tools: [
           {
-            functionDeclarations: [
-              {
-                name: "return_sections",
-                description: "Return the dream split into narrative sections",
-                parameters: {
-                  type: "OBJECT",
-                  properties: {
-                    sections: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          section: { type: "NUMBER" },
-                          text: { type: "STRING" },
-                        },
-                        required: ["section", "text"],
-                      },
+            type: 'function',
+            function: {
+              name: 'return_sections',
+              description: 'Return the dream split into narrative sections',
+              parameters: {
+                type: 'object',
+                properties: {
+                  sections: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: { section: { type: 'number' }, text: { type: 'string' } },
+                      required: ['section', 'text'],
+                      additionalProperties: false,
                     },
                   },
-                  required: ["sections"],
                 },
+                required: ['sections'],
+                additionalProperties: false,
               },
-            ],
+            },
           },
         ],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: "ANY",
-            allowedFunctionNames: ["return_sections"],
-          },
-        },
+        tool_choice: { type: 'function', function: { name: 'return_sections' } },
       }),
     });
 
@@ -100,13 +89,12 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
     }
 
     const data = await response.json();
-    const functionCall = data.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-
-    if (!functionCall) {
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) {
       throw new Error("No function call in response");
     }
-
-    const sections = functionCall.args?.sections;
+    const parsed = JSON.parse(toolCall.function.arguments);
+    const sections = parsed?.sections;
 
     if (!Array.isArray(sections) || sections.length < 2) {
       throw new Error("Invalid sections response");

@@ -41,95 +41,34 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [
-          { role: "user", parts: [{ text: `Here are ${dreams.length} dreams to analyze:\n\n${dreamTexts}` }] },
+        model: 'google/gemini-2.5-flash',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `Here are ${dreams.length} dreams to analyze:\n\n${dreamTexts}` },
         ],
+        temperature: 0.3,
         tools: [
           {
-            functionDeclarations: [
-              {
-                name: "return_symbols",
-                description: "Return the extracted dream symbols organized by category",
-                parameters: {
-                  type: "OBJECT",
-                  properties: {
-                    people: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          name: { type: "STRING" },
-                          count: { type: "NUMBER" },
-                          description: { type: "STRING" },
-                        },
-                        required: ["name", "count", "description"],
-                      },
-                    },
-                    places: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          name: { type: "STRING" },
-                          count: { type: "NUMBER" },
-                          description: { type: "STRING" },
-                        },
-                        required: ["name", "count", "description"],
-                      },
-                    },
-                    objects: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          name: { type: "STRING" },
-                          count: { type: "NUMBER" },
-                          description: { type: "STRING" },
-                        },
-                        required: ["name", "count", "description"],
-                      },
-                    },
-                    themes: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          name: { type: "STRING" },
-                          count: { type: "NUMBER" },
-                          description: { type: "STRING" },
-                        },
-                        required: ["name", "count", "description"],
-                      },
-                    },
-                    emotions: {
-                      type: "ARRAY",
-                      items: {
-                        type: "OBJECT",
-                        properties: {
-                          name: { type: "STRING" },
-                          count: { type: "NUMBER" },
-                          description: { type: "STRING" },
-                        },
-                        required: ["name", "count", "description"],
-                      },
-                    },
-                  },
-                  required: ["people", "places", "objects", "themes", "emotions"],
+            type: 'function',
+            function: {
+              name: 'return_symbols',
+              description: 'Return the extracted dream symbols organized by category',
+              parameters: {
+                type: 'object',
+                properties: {
+                  people: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, count: { type: 'number' }, description: { type: 'string' } }, required: ['name','count','description'], additionalProperties: false } },
+                  places: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, count: { type: 'number' }, description: { type: 'string' } }, required: ['name','count','description'], additionalProperties: false } },
+                  objects: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, count: { type: 'number' }, description: { type: 'string' } }, required: ['name','count','description'], additionalProperties: false } },
+                  themes: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, count: { type: 'number' }, description: { type: 'string' } }, required: ['name','count','description'], additionalProperties: false } },
+                  emotions: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, count: { type: 'number' }, description: { type: 'string' } }, required: ['name','count','description'], additionalProperties: false } },
                 },
+                required: ['people','places','objects','themes','emotions'],
+                additionalProperties: false,
               },
-            ],
+            },
           },
         ],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: "ANY",
-            allowedFunctionNames: ["return_symbols"],
-          },
-        },
-        generationConfig: {
-          temperature: 0.3,
-        },
+        tool_choice: { type: 'function', function: { name: 'return_symbols' } },
       }),
     });
 
@@ -140,13 +79,11 @@ const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions
     }
 
     const data = await response.json();
-    const functionCall = data.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-
-    if (!functionCall) {
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
+    if (!toolCall?.function?.arguments) {
       throw new Error("No function call in response");
     }
-
-    const symbols = functionCall.args;
+    const symbols = JSON.parse(toolCall.function.arguments);
 
     return new Response(
       JSON.stringify({ symbols, dream_count: dreams.length }),
