@@ -46,6 +46,7 @@ export interface DreamEntry {
     prompt?: string;
     video_url?: string;
   }>;
+  dream_character_ids?: string[];
 }
 
 export interface DreamTag {

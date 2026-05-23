@@ -1255,6 +1255,7 @@ export type Database = {
           content: string
           created_at: string
           date: string
+          dream_character_ids: string[]
           dream_date: string | null
           dream_symbols: string[] | null
           favorite_therapy_mode: string | null
@@ -1288,6 +1289,7 @@ export type Database = {
           content: string
           created_at?: string
           date?: string
+          dream_character_ids?: string[]
           dream_date?: string | null
           dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null
@@ -1321,6 +1323,7 @@ export type Database = {
           content?: string
           created_at?: string
           date?: string
+          dream_character_ids?: string[]
           dream_date?: string | null
           dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null

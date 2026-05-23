@@ -53,7 +53,8 @@ export const useJournalEntries = () => {
             audio_url: dream.audio_url,
             audioUrl: dream.audio_url,
             video_url: dream.video_url,
-            section_images: dream.section_images || []
+            section_images: dream.section_images || [],
+            dream_character_ids: dream.dream_character_ids || [],
           };
         });
         

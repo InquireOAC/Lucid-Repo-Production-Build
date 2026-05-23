@@ -2,12 +2,31 @@
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamDbActions } from "./useDreamDbActions";
 import { useDreamImageManager } from "./useDreamImageManager";
 import { uploadDreamImage } from "@/utils/imageUtils";
 import { cacheMediaFromUrl, deleteCachedMedia, mediaCacheKey } from "@/utils/localMediaCache";
+
+/**
+ * Fire-and-forget side-character name extraction. Runs server-side and
+ * silently links any detected people to the dream. Short content skips.
+ */
+function extractCharactersInBackground(dreamId: string, content: string) {
+  if (!dreamId || (content || "").trim().length < 30) return;
+  supabase.functions
+    .invoke("extract-dream-characters", { body: { dreamId } })
+    .then(({ data, error }) => {
+      if (error) { console.error("Character extraction failed:", error); return; }
+      const newCount = (data?.characters || []).filter((c: any) => c.isNew).length;
+      if (newCount > 0) {
+        toast.success(`Detected ${newCount} side character${newCount > 1 ? "s" : ""}`);
+      }
+    })
+    .catch((err) => console.error("Character extraction failed:", err));
+}
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -107,6 +126,8 @@ export const useJournalActions = () => {
       }
 
       toast.success("Dream saved successfully!");
+      // Auto-detect named people in the dream. Fire-and-forget.
+      extractCharactersInBackground(newDreamForStore.id, newDreamForStore.content || "");
     } catch (error) {
       console.error("Error adding dream:", error);
       toast.error("Failed to save dream.");
@@ -261,6 +282,8 @@ export const useJournalActions = () => {
       console.log("[Dream Edit] Persisting updates:", updates);
 
       await handleUpdateDreamInternal(dreamId, updates);
+      // Auto-detect named people in the updated content. Fire-and-forget.
+      extractCharactersInBackground(dreamId, dreamData.content || "");
     } catch (error) {
       console.error("Error editing dream:", error);
       toast.error("Failed to update dream.");
