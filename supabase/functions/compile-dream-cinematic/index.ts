@@ -42,6 +42,7 @@ interface RawSegment {
   key_frame_prompt?: string;
   motion_script?: string;
   narration?: string;
+  characters?: string[];
 }
 
 function normaliseSegments(raw: unknown): RawSegment[] {
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
 
     const { data: dream } = await supabase
       .from("dream_entries")
-      .select("id, title, content, mood, tags")
+      .select("id, title, content, mood, tags, dream_character_ids")
       .eq("id", dreamId)
       .eq("user_id", user.id)
       .single();
@@ -86,14 +87,28 @@ Deno.serve(async (req) => {
       throw new Error("Dream is too short to compile into a cinematic — add more detail to the story first.");
     }
 
+    // Hand the model the user's named side characters so it can attribute
+    // each segment to specific people.
+    const linkedCharacterIds = (dream.dream_character_ids as string[] | null) || [];
+    let sideCharacterNames: string[] = [];
+    if (linkedCharacterIds.length > 0) {
+      const { data: chars } = await supabase
+        .from("dream_characters")
+        .select("name")
+        .eq("user_id", user.id)
+        .in("id", linkedCharacterIds);
+      sideCharacterNames = (chars || []).map((c) => c.name).filter((n): n is string => !!n);
+    }
+
     const userMessage = [
       dream.title && `Title: ${dream.title}`,
       dream.mood && `Mood: ${dream.mood}`,
       dream.tags?.length ? `Tags: ${dream.tags.join(", ")}` : "",
+      sideCharacterNames.length ? `Known named side characters (only attribute these names if the segment actually involves them): ${sideCharacterNames.join(", ")}` : "",
       "Dream content:",
       dream.content,
       "",
-      "Compile this into exactly 2 segments totaling 30 seconds (15s each).",
+      "Compile this into exactly 2 segments totaling 30 seconds (15s each). For each segment, emit a `characters` array listing the names of any side characters from the known list above who appear in that specific segment — empty array if none.",
     ].filter(Boolean).join("\n");
 
     console.log(`[compile-dream-cinematic] dream=${dreamId} content_len=${dream.content.length}`);
@@ -146,6 +161,11 @@ Deno.serve(async (req) => {
                       key_frame_prompt: { type: "string" },
                       motion_script: { type: "string" },
                       narration: { type: "string" },
+                      characters: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "Names of side characters who appear in this 15s segment.",
+                      },
                     },
                   },
                 },
@@ -223,14 +243,29 @@ Deno.serve(async (req) => {
     // Backfill required fields with empty-string defaults so downstream
     // generators don't choke on undefined.
     const ensureStr = (v: unknown) => (typeof v === "string" ? v : "");
-    segments = segments.map((s) => ({
-      index: s.index,
-      start: s.start,
-      end: s.end,
-      key_frame_prompt: ensureStr(s.key_frame_prompt),
-      motion_script: ensureStr(s.motion_script) || ensureStr(s.key_frame_prompt),
-      narration: ensureStr(s.narration),
-    }));
+    const knownNamesLower = new Set(sideCharacterNames.map((n) => n.toLowerCase()));
+    segments = segments.map((s) => {
+      const rawChars = Array.isArray(s.characters) ? s.characters : [];
+      // Filter to known names only and drop dupes (case-insensitive).
+      const seen = new Set<string>();
+      const characters: string[] = [];
+      for (const n of rawChars) {
+        if (typeof n !== "string") continue;
+        const key = n.trim().toLowerCase();
+        if (!key || seen.has(key) || !knownNamesLower.has(key)) continue;
+        seen.add(key);
+        characters.push(n.trim());
+      }
+      return {
+        index: s.index,
+        start: s.start,
+        end: s.end,
+        key_frame_prompt: ensureStr(s.key_frame_prompt),
+        motion_script: ensureStr(s.motion_script) || ensureStr(s.key_frame_prompt),
+        narration: ensureStr(s.narration),
+        characters,
+      };
+    });
 
     spec.segments = segments;
     spec.locks = spec.locks || {};

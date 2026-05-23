@@ -16,7 +16,7 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const body = await req.json().catch(() => ({}));
-  const { dreamId, beatIndex, framePrompt, prevFrameUrl } = body;
+  const { dreamId, beatIndex, framePrompt, prevFrameUrl, extraRefUrls } = body;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -48,10 +48,16 @@ Deno.serve(async (req) => {
     const avatarUrl = await getUserAvatarReference(supabaseUrl, serviceKey, user.id);
 
     // Reference image stack: avatar first (anchors identity), then optional
-    // previous-segment frame (anchors wardrobe, palette, environment).
+    // previous-segment frame (anchors wardrobe, palette, environment), then
+    // any side characters who appear in this segment (so they're rendered
+    // with their own consistent likeness, not generic stand-ins).
     const refUrls: string[] = [];
     if (avatarUrl) refUrls.push(avatarUrl);
     if (prevFrameUrl) refUrls.push(prevFrameUrl);
+    const sideChars = Array.isArray(extraRefUrls)
+      ? (extraRefUrls as unknown[]).filter((u): u is string => typeof u === "string" && u.length > 0)
+      : [];
+    refUrls.push(...sideChars);
 
     // Use the orchestrator-provided framePrompt when available; fall back to
     // the row's stored prompt (legacy / single-call invocations).
@@ -62,6 +68,7 @@ Deno.serve(async (req) => {
     const refClause = [
       avatarUrl ? "Match the character likeness from the first reference image exactly." : null,
       prevFrameUrl ? "Carry the wardrobe, color palette, lighting and environment forward from the supplied previous-frame reference." : null,
+      sideChars.length > 0 ? `${sideChars.length} additional named side-character reference image${sideChars.length > 1 ? "s are" : " is"} supplied — render each one with their own distinct likeness as another person present in this scene.` : null,
     ].filter(Boolean).join(" ");
 
     const renderPrompt = [

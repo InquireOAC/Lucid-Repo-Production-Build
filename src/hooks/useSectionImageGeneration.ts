@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
 import { getUserAIContext } from "@/utils/aiContextUtils";
+import { pickCharactersForText } from "@/utils/characterMatching";
 
 interface SectionImage {
   section: number;
@@ -44,6 +45,26 @@ export function useSectionImageGeneration(
         }
       } catch (err) {
         console.warn("Could not fetch AI context for section images:", err);
+      }
+
+      // Load side characters linked to this dream. They'll be filtered
+      // per-section by name match against each section's text.
+      let linkedCharacters: Array<{ id: string; name: string | null; photo_url: string | null }> = [];
+      if (dream.id && dream.user_id) {
+        const { data: dreamRow } = await supabase
+          .from("dream_entries")
+          .select("dream_character_ids")
+          .eq("id", dream.id)
+          .eq("user_id", dream.user_id)
+          .maybeSingle();
+        const linkedIds = (dreamRow?.dream_character_ids as string[] | null) || [];
+        if (linkedIds.length > 0) {
+          const { data: chars } = await supabase
+            .from("dream_characters")
+            .select("id, name, photo_url")
+            .in("id", linkedIds);
+          linkedCharacters = chars || [];
+        }
       }
 
       // Step 1: Split dream into sections
@@ -88,6 +109,13 @@ export function useSectionImageGeneration(
             continue;
           }
 
+          // Pick the side characters whose names actually appear in THIS
+          // section's text — those are the only ones whose photos we attach.
+          const matchedSideChars = pickCharactersForText(linkedCharacters, sec.text);
+          const extraReferenceImageUrls = matchedSideChars
+            .map((c) => c.photo_url)
+            .filter((u): u is string => !!u);
+
           // Generate image — pass character data if available
           const { data: imgData, error: imgError } = await supabase.functions.invoke(
             "generate-dream-image",
@@ -99,6 +127,7 @@ export function useSectionImageGeneration(
                 ...(characterData.referenceImageUrl && { referenceImageUrl: characterData.referenceImageUrl }),
                 ...(characterData.outfitImageUrl && { outfitImageUrl: characterData.outfitImageUrl }),
                 ...(characterData.accessoryImageUrl && { accessoryImageUrl: characterData.accessoryImageUrl }),
+                ...(extraReferenceImageUrls.length > 0 && { extraReferenceImageUrls }),
               },
             }
           );

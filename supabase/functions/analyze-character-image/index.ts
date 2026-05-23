@@ -26,8 +26,12 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { photoUrl } = await req.json()
+    const { photoUrl, target, characterId } = await req.json()
     if (!photoUrl) throw new Error('Missing photoUrl')
+    const writeTarget: "ai_context" | "dream_character" = target === "dream_character" ? "dream_character" : "ai_context"
+    if (writeTarget === "dream_character" && !characterId) {
+      throw new Error("characterId is required when target=dream_character")
+    }
 
     console.log(`Analyzing character image for user ${user.id}`)
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -121,14 +125,25 @@ Format as a single continuous paragraph that could be injected into an image gen
 
     console.log(`Visual fingerprint generated, length: ${fingerprint.length}`)
 
-    const { error: updateError } = await supabase
-      .from('ai_context')
-      .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
-      .eq('user_id', user.id)
-
-    if (updateError) {
-      console.error('Error saving fingerprint:', updateError)
-      throw new Error('Failed to save visual fingerprint')
+    if (writeTarget === "dream_character") {
+      const { error: updateError } = await supabase
+        .from('dream_characters')
+        .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
+        .eq('id', characterId)
+        .eq('user_id', user.id)
+      if (updateError) {
+        console.error('Error saving fingerprint to dream_characters:', updateError)
+        throw new Error('Failed to save visual fingerprint to dream_characters')
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from('ai_context')
+        .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+      if (updateError) {
+        console.error('Error saving fingerprint:', updateError)
+        throw new Error('Failed to save visual fingerprint')
+      }
     }
 
     return new Response(

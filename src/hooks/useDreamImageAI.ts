@@ -60,14 +60,16 @@ export function useDreamImageAI() {
     return cinematicPrompt;
   }, []);
 
-  const generateDreamImageFromAI = useCallback(async (prompt: string, referenceImageUrl?: string, imageStyle?: string) => {
-    const body: Record<string, string> = { prompt };
-    if (referenceImageUrl) {
-      body.referenceImageUrl = referenceImageUrl;
-    }
-    if (imageStyle) {
-      body.imageStyle = imageStyle;
-    }
+  const generateDreamImageFromAI = useCallback(async (
+    prompt: string,
+    referenceImageUrl?: string,
+    imageStyle?: string,
+    extraReferenceImageUrls?: string[],
+  ) => {
+    const body: Record<string, unknown> = { prompt };
+    if (referenceImageUrl) body.referenceImageUrl = referenceImageUrl;
+    if (imageStyle) body.imageStyle = imageStyle;
+    if (extraReferenceImageUrls?.length) body.extraReferenceImageUrls = extraReferenceImageUrls;
     const result = await supabase.functions.invoke("generate-dream-image", { body });
     if (result.error || !result.data) {
       throw new Error(result.error?.message || "Failed to generate image");

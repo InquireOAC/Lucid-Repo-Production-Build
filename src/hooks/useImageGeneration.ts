@@ -7,6 +7,7 @@ import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { showSubscriptionPrompt } from "@/lib/stripe";
 import { useDreamImageAI } from "./useDreamImageAI";
 import { useUserRole } from "@/hooks/useUserRole";
+import { pickCharactersForText } from "@/utils/characterMatching";
 
 interface UseImageGenerationProps {
   dreamContent: string;
@@ -104,9 +105,38 @@ export const useImageGeneration = ({
         }
       }
 
+      // 2.5 Look up side characters linked to this dream and pick the ones
+      // whose names actually appear in the dream content. Their photos go
+      // into the renderer as extra references so they show up consistently.
+      let extraReferenceImageUrls: string[] = [];
+      if (dreamId && dreamId !== "preview" && user.id) {
+        const { data: dreamRow } = await supabase
+          .from("dream_entries")
+          .select("dream_character_ids")
+          .eq("id", dreamId)
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const linkedIds = (dreamRow?.dream_character_ids as string[] | null) || [];
+        if (linkedIds.length > 0) {
+          const { data: linkedChars } = await supabase
+            .from("dream_characters")
+            .select("id, name, photo_url")
+            .in("id", linkedIds);
+          const matched = pickCharactersForText(linkedChars || [], dreamContent);
+          // Exclude the user's own avatar character (selected one) if it's in
+          // the matched list — it's already passed as the primary reference.
+          extraReferenceImageUrls = matched
+            .filter((c) => c.id !== selectedCharacterId && c.photo_url)
+            .map((c) => c.photo_url as string);
+          if (extraReferenceImageUrls.length > 0) {
+            console.log(`Attaching ${extraReferenceImageUrls.length} side-character reference(s) to image gen`);
+          }
+        }
+      }
+
       // 3. Generate image from prompt via edge function
       console.log("Step 2: Generating image from AI...");
-      const openaiUrl = await generateDreamImageFromAI(generatedPromptText, referenceImageUrl, imageStyle);
+      const openaiUrl = await generateDreamImageFromAI(generatedPromptText, referenceImageUrl, imageStyle, extraReferenceImageUrls);
       if (!openaiUrl) throw new Error("No image URL was returned from AI generation");
       console.log("AI image generated:", openaiUrl);
 

@@ -29,12 +29,16 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { prompt, referenceImageUrl, imageStyle, outfitImageUrl, accessoryImageUrl } = await req.json()
+    const { prompt, referenceImageUrl, imageStyle, outfitImageUrl, accessoryImageUrl, extraReferenceImageUrls } = await req.json()
 
     if (!prompt || typeof prompt !== 'string') throw new Error('Invalid prompt')
     if (prompt.length > MAX_PROMPT_LENGTH) throw new Error(`Prompt too long. Maximum ${MAX_PROMPT_LENGTH} characters allowed.`)
 
-    console.log(`Generating image via FAL nano-banana-2 for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, hasOutfit: ${!!outfitImageUrl}, hasAccessory: ${!!accessoryImageUrl}, style: ${imageStyle}`)
+    const extraRefs: string[] = Array.isArray(extraReferenceImageUrls)
+      ? extraReferenceImageUrls.filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
+      : []
+
+    console.log(`Generating image via FAL nano-banana-2 for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, hasOutfit: ${!!outfitImageUrl}, hasAccessory: ${!!accessoryImageUrl}, extraRefs: ${extraRefs.length}, style: ${imageStyle}`)
 
     const refLabels: string[] = []
     const refUrls: string[] = []
@@ -50,6 +54,12 @@ serve(async (req) => {
       refLabels.push('Accessory reference: include the supplied accessories on the character.')
       refUrls.push(accessoryImageUrl)
     }
+    if (extraRefs.length > 0) {
+      refLabels.push('Additional character references: each supplied image after the primary references depicts another named person who appears in this scene. Render each one with their own distinct likeness — do not blend or merge them with the primary character.')
+      refUrls.push(...extraRefs)
+    }
+    // nano-banana-2 edit mode caps at 14 references.
+    const cappedRefs = refUrls.slice(0, 14)
 
     // The compiler upstream already produced a clean, focused scene prompt.
     // We add ONLY two short framing/safeguard lines so the renderer gets a tight signal.
@@ -65,7 +75,7 @@ serve(async (req) => {
         numImages: 1,
         aspectRatio: '9:16',
         resolution: '1K',
-        imageUrls: refUrls,
+        imageUrls: cappedRefs,
         outputFormat: 'png',
       },
       {

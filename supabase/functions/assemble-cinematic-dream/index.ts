@@ -100,21 +100,53 @@ Deno.serve(async (req) => {
     if (segments.length !== 2) throw new Error("Spec must contain exactly 2 segments");
     const styleBlock = buildStyleBlock(spec.spec_json);
 
-    // Step 1: frame 0 — anchored on user avatar.
+    // Resolve per-segment side-character names -> photo URLs. The compiler
+    // emits a `characters` array on each segment listing the named people
+    // who appear in that 15s window; we look up their dream_characters
+    // rows and grab the photos to use as additional renderer references.
+    const allNames = new Set<string>();
+    for (const s of segments) {
+      for (const n of (s.characters || []) as string[]) {
+        if (typeof n === "string" && n.trim()) allNames.add(n.toLowerCase());
+      }
+    }
+    let charByName = new Map<string, { id: string; name: string; photo_url: string | null }>();
+    if (allNames.size > 0) {
+      const { data: charRows } = await supabase
+        .from("dream_characters")
+        .select("id, name, photo_url")
+        .eq("user_id", user.id);
+      for (const c of charRows || []) {
+        if (c.name) charByName.set(c.name.toLowerCase(), c as any);
+      }
+    }
+    const charsFor = (seg: any): string[] => {
+      const out: string[] = [];
+      for (const n of (seg.characters || []) as string[]) {
+        const row = charByName.get((n || "").toLowerCase());
+        if (row?.photo_url) out.push(row.photo_url);
+      }
+      return out;
+    };
+    const seg0Chars = charsFor(segments[0]);
+    const seg1Chars = charsFor(segments[1]);
+
+    // Step 1: frame 0 — anchored on user avatar + side characters appearing in segment 0.
     const frame0Prompt = `${segments[0].key_frame_prompt} ${styleBlock}`.trim();
     const frame0 = await invokeChild(
       "generate-cinematic-beat-frame",
-      { dreamId, beatIndex: 0, framePrompt: frame0Prompt },
+      { dreamId, beatIndex: 0, framePrompt: frame0Prompt, extraRefUrls: seg0Chars },
       authHeader,
     );
     const frame0Url: string | undefined = frame0?.frameUrl;
     if (!frame0Url) throw new Error("Segment 0 frame failed");
 
-    // Step 2: frame 1 — anchored on user avatar AND segment-0's frame for continuity.
+    // Step 2: frame 1 — anchored on user avatar AND segment-0's frame for continuity
+    // AND any side characters appearing in segment 1.
     const frame1Prompt = `${segments[1].key_frame_prompt} ${styleBlock} Carry the character, wardrobe, lighting and color palette forward exactly from the previous reference image.`.trim();
     const frame1 = await invokeChild(
       "generate-cinematic-beat-frame",
-      { dreamId, beatIndex: 1, framePrompt: frame1Prompt, prevFrameUrl: frame0Url },
+      { dreamId, beatIndex: 1, framePrompt: frame1Prompt, prevFrameUrl: frame0Url, extraRefUrls: seg1Chars },
       authHeader,
     );
     if (!frame1?.frameUrl) throw new Error("Segment 1 frame failed");
@@ -123,12 +155,13 @@ Deno.serve(async (req) => {
     // Both segments route through Seedance 2 omni-reference so the avatar
     // identity is locked through the motion (not just baked into the start
     // frame). Segment 2 additionally references segment 1's key frame for
-    // wardrobe / palette / environment handoff.
+    // wardrobe / palette / environment handoff. Side-character photos are
+    // appended only for the segments where those characters appear.
     const avatarUrl = await getUserAvatarReference(supabaseUrl, serviceKey, user.id);
     const motion0 = `${segments[0].motion_script} ${styleBlock}`.trim();
     const motion1 = `${segments[1].motion_script} ${styleBlock} Maintain the exact character, wardrobe, lighting and color grade from the supplied references.`.trim();
-    const refs0 = [avatarUrl].filter((u): u is string => !!u);
-    const refs1 = [avatarUrl, frame0Url].filter((u): u is string => !!u);
+    const refs0 = [avatarUrl, ...seg0Chars].filter((u): u is string => !!u);
+    const refs1 = [avatarUrl, frame0Url, ...seg1Chars].filter((u): u is string => !!u);
 
     await Promise.all([
       invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15, referenceImages: refs0 }, authHeader),
