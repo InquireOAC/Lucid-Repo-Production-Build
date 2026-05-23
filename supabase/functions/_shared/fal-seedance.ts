@@ -6,7 +6,7 @@
 // between Seedance v1 pro and v2 without redeploying. Defaults to v2 pro.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const DEFAULT_SEEDANCE_MODEL = "fal-ai/bytedance/seedance/v2/pro/image-to-video";
+const DEFAULT_SEEDANCE_MODEL = "fal-ai/seedance-2/image-to-video";
 const QUEUE_BASE = "https://queue.fal.run";
 
 export type SeedanceDuration = 5 | 10 | 15;
