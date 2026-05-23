@@ -236,14 +236,13 @@ const LucidRepoDiscovery = () => {
             <p className="text-muted-foreground">No dreams in this section</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div>
             {expandedSection.dreams.map(dream => (
-              <StoryListCard
+              <CategoryHeroCard
                 key={dream.id}
                 dream={dream}
-                onLike={handleDreamLikeFromCard}
-                onUserClick={handleNavigateToProfile}
-                queueIds={expandedSection.dreams.map(d => d.id)}
+                inList={inList(dream.id)}
+                onToggleList={toggleList}
               />
             ))}
           </div>
