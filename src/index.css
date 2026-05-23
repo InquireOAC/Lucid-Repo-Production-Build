@@ -1062,3 +1062,8 @@
     opacity: 1;
   }
 }
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
