@@ -8,8 +8,8 @@ interface Props {
 }
 
 const PosterRail: React.FC<Props> = ({ title, onSeeAll, children }) => (
-  <section className="mb-6 -mx-4 sm:-mx-6 md:mx-0">
-    <div className="flex items-center justify-between mb-2 px-4 sm:px-6 md:px-0">
+  <section className="mb-6">
+    <div className="flex items-center justify-between mb-2">
       <h2 className="text-base md:text-lg font-bold text-foreground">{title}</h2>
       {onSeeAll && (
         <button
@@ -20,7 +20,7 @@ const PosterRail: React.FC<Props> = ({ title, onSeeAll, children }) => (
         </button>
       )}
     </div>
-    <div className="flex overflow-x-auto gap-2 px-4 sm:px-6 md:px-0 pb-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+    <div className="flex overflow-x-auto gap-2 pb-1 snap-x snap-mandatory scrollbar-hide" style={{ scrollbarWidth: "none" }}>
       {children}
     </div>
   </section>

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Heart, Eye, MessageCircle, BookOpen } from "lucide-react";
+import { Heart, Eye, MessageCircle, BookOpen, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
@@ -41,7 +41,7 @@ const StoryListCard: React.FC<StoryListCardProps> = ({ dream, onLike, onUserClic
           <img src={imageUrl} alt={dream.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-            <span className="text-2xl">🌙</span>
+            <Moon className="h-7 w-7 text-foreground/40" />
           </div>
         )}
       </div>

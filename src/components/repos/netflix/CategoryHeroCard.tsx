@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Play, Plus, Check, VolumeX } from "lucide-react";
+import { Play, Plus, Check, VolumeX, Moon } from "lucide-react";
 import { DreamEntry } from "@/types/dream";
 import { useInViewAutoplay } from "@/hooks/useInViewAutoplay";
 
@@ -77,8 +77,8 @@ const CategoryHeroCard: React.FC<Props> = ({ dream, inList, onToggleList }) => {
         ) : hasSingle ? (
           <img src={images[0]} alt={dream.title} loading="lazy" className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center text-6xl">
-            🌙
+          <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center">
+            <Moon className="h-16 w-16 text-foreground/40" />
           </div>
         )}
 

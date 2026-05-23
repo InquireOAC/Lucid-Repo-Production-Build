@@ -84,7 +84,7 @@ const MasonryDreamCard = ({
           {dream.lucid && (
             <div className="absolute top-2 left-2">
               <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-aurora-violet/90 text-white">
-                ✦ Lucid
+                Lucid
               </span>
             </div>
           )}

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Play, Plus, Check, Info } from "lucide-react";
+import { Play, Plus, Check, Info, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -30,7 +30,7 @@ const HeroPoster: React.FC<Props> = ({ dream, inList, onToggleList }) => {
           <img src={imageUrl} alt={dream.title} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/40 to-accent/40 flex items-center justify-center">
-            <span className="text-7xl">🌙</span>
+            <Moon className="h-20 w-20 text-white/60" />
           </div>
         )}
         {/* Top fade for status bar */}

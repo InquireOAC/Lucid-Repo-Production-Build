@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Heart, Eye, Headphones } from "lucide-react";
+import { Heart, Eye, Headphones, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
@@ -43,7 +43,7 @@ const DiscoveryDreamCard: React.FC<DiscoveryDreamCardProps> = ({
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20 relative z-0">
-            <span className="text-3xl">🌙</span>
+            <Moon className="h-8 w-8 text-foreground/40" />
           </div>
         )}
         

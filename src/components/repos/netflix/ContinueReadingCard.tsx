@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Play, Info } from "lucide-react";
+import { Play, Info, Moon } from "lucide-react";
 
 interface Props {
   dream: DreamEntry;
@@ -28,7 +28,7 @@ const ContinueReadingCard: React.FC<Props> = ({ dream, progress = 0.4 }) => {
           <img src={imageUrl} alt={dream.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-            <span className="text-2xl">🌙</span>
+            <Moon className="h-7 w-7 text-foreground/40" />
           </div>
         )}
         <div className="absolute inset-0 bg-black/30 group-hover:bg-black/20 transition-colors flex items-center justify-center">

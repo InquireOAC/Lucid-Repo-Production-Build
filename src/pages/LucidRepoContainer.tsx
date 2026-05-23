@@ -205,9 +205,9 @@ const LucidRepoDiscovery = () => {
   const expandedSection = useMemo(() => {
     if (!expandedSectionKey) return null;
     const sectionMap: Record<string, { title: string; dreams: DreamEntry[] }> = {
-      following: { title: "📖 From People You Follow", dreams: filterDreams(following) },
-      trending: { title: "🔥 Trending Stories", dreams: filterDreams(trending) },
-      new: { title: "✨ New Releases", dreams: filterDreams(newReleases) },
+      following: { title: "From People You Follow", dreams: filterDreams(following) },
+      trending: { title: "Trending Stories", dreams: filterDreams(trending) },
+      new: { title: "New Releases", dreams: filterDreams(newReleases) },
     };
     // Check tag sections
     for (const section of tagSections) {
@@ -433,11 +433,11 @@ const LucidRepoDiscovery = () => {
 
           {/* Dream Series */}
           {!searchQuery && publicSeries.length > 0 && (
-            <section className="mb-6 -mx-4 sm:-mx-6 md:mx-0">
-              <h2 className="text-base md:text-lg font-bold text-foreground mb-2 px-4 sm:px-6 md:px-0">
+            <section className="mb-6">
+              <h2 className="text-base md:text-lg font-bold text-foreground mb-2">
                 Dream Series
               </h2>
-              <div className="flex overflow-x-auto gap-2 px-4 sm:px-6 md:px-0 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              <div className="flex overflow-x-auto gap-2 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
                 {publicSeries.map(s => (
                   <DiscoverySeriesCard key={s.id} series={s} onClick={setSelectedSeries} />
                 ))}

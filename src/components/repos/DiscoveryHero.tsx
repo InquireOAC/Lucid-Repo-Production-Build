@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Heart, MessageCircle, Eye } from "lucide-react";
+import { Heart, MessageCircle, Eye, Moon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 
@@ -41,7 +41,7 @@ const DiscoveryHero: React.FC<DiscoveryHeroProps> = ({
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center relative z-0">
-            <span className="text-6xl">🌙</span>
+            <Moon className="h-16 w-16 text-white/60" />
           </div>
         )}
 
