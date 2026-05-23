@@ -6,34 +6,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function getGoogleAccessToken(saKey: any): Promise<string> {
-  const header = { alg: "RS256", typ: "JWT" };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iss: saKey.client_email,
-    scope: "https://www.googleapis.com/auth/cloud-platform",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now, exp: now + 3600,
-  };
-  const encode = (obj: any) => {
-    const b64 = btoa(JSON.stringify(obj));
-    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  };
-  const unsignedToken = `${encode(header)}.${encode(payload)}`;
-  const pemContents = saKey.private_key.replace(/-----BEGIN PRIVATE KEY-----/, "").replace(/-----END PRIVATE KEY-----/, "").replace(/\n/g, "");
-  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
-  const cryptoKey = await crypto.subtle.importKey("pkcs8", binaryKey, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
-  const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", cryptoKey, new TextEncoder().encode(unsignedToken));
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  const jwt = `${unsignedToken}.${sigB64}`;
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) throw new Error(`Failed to get Google access token: ${JSON.stringify(tokenData)}`);
-  return tokenData.access_token;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -41,13 +13,9 @@ serve(async (req) => {
   }
 
   try {
-    const saKeyRaw = Deno.env.get("GOOGLE_VERTEX_SA_KEY");
-    const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID");
-    if (!saKeyRaw || !projectId) throw new Error("Google Cloud credentials not configured");
-    const saKey = JSON.parse(saKeyRaw);
-    const accessToken = await getGoogleAccessToken(saKey);
-
-    const { dreamContent, imageUrl } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+const { dreamContent, imageUrl } = await req.json();
     if (!dreamContent && !imageUrl) {
       throw new Error("dreamContent or imageUrl is required");
     }
@@ -91,11 +59,7 @@ Output ONLY the animation directive. No preamble, no explanation. 1-2 sentences,
         ? `Dream narrative: ${dreamContent}`
         : "Analyze the image and create a subtle 4-second animation directive.",
     });
-
-    const model = "gemini-2.5-flash";
-    const endpoint = `https://us-central1-aiplatform.googleapis.com/v1/projects/${projectId}/locations/us-central1/publishers/google/models/${model}:generateContent`;
-
-    const response = await fetch(endpoint, {
+const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`,
