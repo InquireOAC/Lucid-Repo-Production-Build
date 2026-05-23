@@ -90,58 +90,52 @@ Stats:
 - Top dream symbols: ${JSON.stringify(stats.top_symbols?.slice(0, 5))}`;
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
-const aiResponse = await fetch(endpoint, {
-      method: "POST",
+    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        model: 'google/gemini-2.5-flash',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.7,
+        max_tokens: 300,
         tools: [
           {
-            functionDeclarations: [
-              {
-                name: "return_insight",
-                description: "Return the personalized dream coaching insight",
-                parameters: {
-                  type: "OBJECT",
-                  properties: {
-                    summary: { type: "STRING", description: "One sentence summarizing their current dream practice status." },
-                    recommendation: { type: "STRING", description: "One actionable tip or recommendation." },
-                    motivation: { type: "STRING", description: "One short motivational message." },
-                  },
-                  required: ["summary", "recommendation", "motivation"],
+            type: 'function',
+            function: {
+              name: 'return_insight',
+              description: 'Return the personalized dream coaching insight',
+              parameters: {
+                type: 'object',
+                properties: {
+                  summary: { type: 'string', description: 'One sentence summarizing their current dream practice status.' },
+                  recommendation: { type: 'string', description: 'One actionable tip or recommendation.' },
+                  motivation: { type: 'string', description: 'One short motivational message.' },
                 },
+                required: ['summary', 'recommendation', 'motivation'],
+                additionalProperties: false,
               },
-            ],
+            },
           },
         ],
-        toolConfig: {
-          functionCallingConfig: {
-            mode: "ANY",
-            allowedFunctionNames: ["return_insight"],
-          },
-        },
-        generationConfig: {
-          temperature: 0.7,
-          maxOutputTokens: 300,
-        },
+        tool_choice: { type: 'function', function: { name: 'return_insight' } },
       }),
     });
 
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
-      console.error("Vertex AI error:", aiResponse.status, errText);
-      throw new Error(`Vertex AI error: ${aiResponse.status}`);
+      console.error('AI gateway error:', aiResponse.status, errText);
+      throw new Error(`AI gateway error: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const functionCall = aiData.candidates?.[0]?.content?.parts?.[0]?.functionCall;
-
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
     let parsed: { summary: string; recommendation: string; motivation: string };
-    if (functionCall?.args) {
-      parsed = functionCall.args;
+    if (toolCall?.function?.arguments) {
+      try { parsed = JSON.parse(toolCall.function.arguments); }
+      catch { parsed = { summary: '', recommendation: '', motivation: '' }; }
     } else {
       parsed = {
         summary: "Your dream practice is progressing well.",
