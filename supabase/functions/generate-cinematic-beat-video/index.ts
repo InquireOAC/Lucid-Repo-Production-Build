@@ -1,16 +1,25 @@
-// Turns a beat's key frame into a 5-second Seedance video clip.
+// Turns a segment's key frame into a Seedance video clip.
+// Defaults to 15s for the 2-segment cinematic dream flow; falls back to 5s
+// if no duration is provided (legacy single-beat callers).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { falSeedanceImageToVideo } from "../_shared/fal-seedance.ts";
+import { falSeedanceImageToVideo, type SeedanceDuration } from "../_shared/fal-seedance.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+function clampDuration(d: unknown): SeedanceDuration {
+  const v = typeof d === "number" ? d : parseInt(String(d ?? 5), 10);
+  if (v >= 15) return 15;
+  if (v >= 10) return 10;
+  return 5;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   const body = await req.json().catch(() => ({}));
-  const { dreamId, beatIndex } = body;
+  const { dreamId, beatIndex, motionPrompt, duration } = body;
 
   try {
     const authHeader = req.headers.get("Authorization");
@@ -40,19 +49,24 @@ Deno.serve(async (req) => {
       .update({ status: "video_generating", error_message: null })
       .eq("id", beat.id);
 
+    const seedancePrompt = (motionPrompt && typeof motionPrompt === "string" && motionPrompt.length > 0)
+      ? motionPrompt
+      : beat.prompt;
+    const clipDuration = clampDuration(duration);
+
     const { videoUrl } = await falSeedanceImageToVideo(
       {
-        prompt: beat.prompt,
+        prompt: seedancePrompt,
         imageUrl: beat.frame_url,
         aspectRatio: "9:16",
-        duration: 5,
+        duration: clipDuration,
         resolution: "720p",
       },
       {
         supabaseUrl,
         serviceRoleKey: serviceKey,
         bucket: "dream-videos",
-        path: `${user.id}/cinematic/${dreamId}/beat-${beatIndex}-${Date.now()}.mp4`,
+        path: `${user.id}/cinematic/${dreamId}/seg-${beatIndex}-${Date.now()}.mp4`,
       },
     );
 

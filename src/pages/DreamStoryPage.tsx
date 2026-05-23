@@ -392,7 +392,11 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
       {/* Story Content */}
       <div className="px-4">
         <div className="border-t border-border/30 pt-6">
-          {sectionImages.length > 0 ? (
+          {/* When the dream has a final cinematic video, that hero video takes
+              center stage and per-scene images are hidden (still stored in the
+              DB, just not rendered). Text-only story body keeps the writing
+              readable underneath the cinematic. */}
+          {sectionImages.length > 0 && !dream.video_url ? (
             <div className="space-y-8">
               {sectionImages.map((sec, i) => (
                 <div key={i}>
@@ -418,6 +422,10 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
                 </div>
               ))}
             </div>
+          ) : sectionImages.length > 0 && dream.video_url ? (
+            <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
+              {sectionImages.map((sec) => sec.text).join("\n\n")}
+            </p>
           ) : (
             <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
               {dream.content}
@@ -425,8 +433,9 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           )}
         </div>
 
-        {/* Generate section images button (owner only) */}
-        {isOwner && sectionImages.filter(s => s.image_url).length === 0 && (
+        {/* Generate section images button (owner only, hidden when a final
+            cinematic already exists — the cinematic supersedes scene images). */}
+        {isOwner && !dream.video_url && sectionImages.filter(s => s.image_url).length === 0 && (
           <div className="mt-8 p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
             <Sparkles className="h-5 w-5 mx-auto text-primary mb-2" />
             <p className="text-sm font-medium mb-1">Generate Story Images</p>

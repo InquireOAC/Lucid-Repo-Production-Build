@@ -5,14 +5,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
 
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
   }
 
   try {
-    // Auth check
     const authHeader = req.headers.get('Authorization');
     if (!authHeader?.startsWith('Bearer ')) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -30,67 +28,40 @@ serve(async (req) => {
     }
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
-const styleName = imageStyle || 'surreal'
+    const styleName = imageStyle || 'surreal'
 
-    const systemPrompt = `You are a CINEMATIC MOMENT DIRECTOR — a fusion of Emmanuel Lubezki's immersive long takes, Roger Deakins' handheld intimacy, and Terrence Malick's raw naturalism. You receive a raw SCENE BRIEF describing a dream, and you must transform it into a HYPER-CINEMATIC, IN-THE-MOMENT frame — a single still ripped from mid-action during a film, NOT a poster, NOT a posed composition.
+    // Single, focused compiler prompt. Output goes directly to FAL nano-banana-2,
+    // which prefers concrete, scene-grounded language over stacked meta-directives.
+    const systemPrompt = `You are the cinematic prompt compiler for an AI image renderer (nano-banana-2). You receive a SCENE BRIEF describing a dream and produce ONE clean, renderable image prompt.
 
-CORE MANDATE — Every image must feel like it was CAPTURED, not composed:
+WRITE THE OUTPUT AS A SINGLE DESCRIPTIVE PARAGRAPH, 110-150 WORDS, that names — in this order — subject, action, setting, lighting, atmosphere, color palette, lens/framing. No headers, no bullet points, no labels, no preamble.
 
-1. MID-ACTION, NOT POSED — This is the most critical rule:
-   - Show a SPECIFIC MOMENT IN PROGRESS — the subject is mid-reach, mid-turn, mid-fall, mid-step, mid-gesture
-   - The body is in an asymmetric, transient pose — weight shifting, limbs extended, torso twisted
-   - Motion blur on extremities, hair caught mid-swing, fabric mid-billow, particles mid-scatter
-   - The environment REACTS to the moment: wind displaces objects, water ripples from contact, light shifts from movement, dust rises from footsteps
-   - Think: the split-second before impact, the moment of letting go, the instant of turning to look, hands reaching into light
+WHAT TO INCLUDE
+- Subject and clear action: who is in frame and what they are doing in this exact moment.
+- Setting: architecture or landscape, time of day, weather.
+- Lighting: one dominant source plus how it shapes the subject (rim, soft wrap, hard shadows).
+- Atmosphere: dust, mist, particles, rain — pick at most two and place them spatially.
+- Color story: 2 primary hues plus 1 accent, named concretely (e.g. "deep teal and bruised violet, accented by amber lamp glow").
+- Lens / framing: focal length feel (35mm / 50mm / 85mm), shot size (medium / wide / over-the-shoulder), and depth of field.
+- Style language: weave the requested style "${styleName}" into the description naturally — not as an appendix.
 
-2. DYNAMIC CAMERA — Shot like a real cinematographer, not a photographer:
-   - CAMERA ANGLES: Low angle looking up, over-the-shoulder, first-person POV, Dutch tilt, extreme close-up with wide background, tracking shot frozen mid-pan
-   - LENS: 35mm or 50mm feel — slight barrel distortion at edges, natural perspective compression
-   - HANDHELD PRESENCE: Subtle camera tilt, slightly off-level horizon, the feeling of a human holding the camera
-   - IMPERFECT FRAMING: Subject partially cropped at frame edge, foreground element cutting into view, perspective distortion from proximity
-   - FILM STILL AESTHETIC: Grain, natural color science, realistic lens behavior — NOT digital illustration, NOT concept art
+ANATOMY + RENDERING SAFEGUARDS (always include, phrased naturally inside the paragraph)
+- Hands fully visible with five clean fingers each, natural finger spacing, no extra digits.
+- Eyes symmetrical, both visible if facing camera, natural pupils — no warped or doubled eyes.
+- Clothing folds consistent, no fused or detached fabric, no melting seams.
+- One head, one body, accurate limb count, limbs attached at natural joints.
+- Sharp main subject; any blur is intentional motion blur or shallow-DOF background.
 
-3. COMPOSITION — Break every "perfect" rule:
-   - Subject placed at extreme thirds or edges, NEVER dead center
-   - Asymmetric balance — heavy visual weight on one side
-   - Leading lines that are interrupted or broken
-   - Foreground obstruction: shoot THROUGH something (foliage, architecture, debris, light shafts, rain)
-   - The frame should feel like the camera operator barely caught the moment
+HARD CONSTRAINTS
+- ${hasCharacterReference ? 'A character reference image WILL be supplied. Describe the character only by pose, body language and position in the frame. Do NOT describe their face, hair color, skin tone or specific facial features — the reference handles identity.' : 'No character reference is supplied. Describe character appearance naturally if the scene calls for one.'}
+- No text, no signs, no UI, no watermarks in the image.
+- Vertical 9:16 framing is enforced by the renderer — do not waste words restating it.
+- One coherent moment only. No collages, no split screens, no multiple panels.
 
-4. DEPTH & ATMOSPHERE — Three planes minimum:
-   - FOREGROUND: Textural elements with shallow depth-of-field blur — particles, vegetation, architectural fragments, floating dream debris, the subject's own hand or shoulder
-   - MIDGROUND: The action zone with sharp or rack-focus clarity
-   - BACKGROUND: Vast, atmospheric, slightly hazed — establishing the dream world's scale
-   - VOLUMETRIC LIGHTING: God rays cutting diagonally, not centered. Light that has DIRECTION and SOURCE — not ambient glow
-   - ATMOSPHERIC HAZE: Dust motes, fog wisps, humidity, smoke — the air itself is visible and moving
-
-5. MOTION CUES — Every element must suggest the world is IN MOTION:
-   - Wind: hair, fabric, leaves, papers, particles all moving in a consistent direction
-   - Gravity: things falling, floating, settling, rising
-   - Energy: light flickering, shadows shifting, reflections rippling
-   - Scale interaction: the subject's movement affects the environment — footprints forming, surfaces reacting, air displacement visible
-
-6. ART STYLE INTEGRATION: The requested style is "${styleName}". Weave this style into the DNA of the scene — it should feel like the NATIVE visual language of this dream world, but always maintain the raw, captured-moment aesthetic. Even fantastical styles must feel like a documentary camera caught them happening.
-
-${hasCharacterReference ? 'CHARACTER STAGING NOTE: A character reference photo will be provided to the renderer. Describe the character IN ACTION — their body language tells the story of THIS EXACT MOMENT. They are reaching, turning, reacting, moving. Describe their position relative to the camera and environment dynamically. Do NOT describe specific facial features — the reference handles identity. The character should feel like they were caught mid-motion by a documentary filmmaker.' : ''}
-
-CRITICAL ANTI-PATTERNS — NEVER produce these:
-- Centered character posing or symmetrical compositions
-- Characters standing still, facing the camera, or posed heroically
-- "Epic poster" framing with the subject perfectly composed against a backdrop
-- Static environments with no motion, wind, or particle activity
-- Digital art illustration aesthetic — this must feel like a FILM STILL
-- Even lighting from all directions — light must have clear direction and shadow
-
-OUTPUT FORMAT:
-Write a single flowing paragraph of 250-350 words. No headers, no bullet points, no labels, no preamble. Just the cinematic description. Every sentence should convey MOTION and MOMENT.
-
-TONE: Surreal but grounded — dreamlike realism. The impossible rendered as if a camera was there to witness it.
-
-Output ONLY the cinematic description — no explanations of your reasoning`
+OUTPUT ONLY THE PARAGRAPH. NO EXPLANATION.`
 
     console.log(`Composing cinematic prompt via Lovable AI, style: ${styleName}`)
-const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,

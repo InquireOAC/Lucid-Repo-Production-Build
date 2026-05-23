@@ -1,6 +1,13 @@
-// Orchestrator: runs frame → video → narration for every beat in parallel,
-// waits for completion, and returns the full beat list so the client can
-// assemble the final cinematic clip.
+// Orchestrator for the 2-segment cinematic dream pipeline.
+//
+// Sequence:
+//   1. Read the spec from dream_cinematic_specs.
+//   2. Generate segment-0 key frame (anchored on the user's avatar).
+//   3. Generate segment-1 key frame, passing segment-0's frame as a continuity
+//      reference so the renderer carries character + wardrobe + palette forward.
+//   4. In parallel: generate the 15s Seedance video for each segment, and the
+//      ElevenLabs narration for each segment.
+//   5. Return all segments so the client-side assembler can stitch the final clip.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -22,6 +29,20 @@ async function invokeChild(name: string, body: any, authHeader: string) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data?.error || `${name} failed (${res.status})`);
   return data;
+}
+
+function buildStyleBlock(spec: any): string {
+  const locks = spec?.locks || {};
+  const style = spec?.style || {};
+  const parts = [
+    locks.character ? `Character: ${locks.character}.` : null,
+    locks.wardrobe ? `Wardrobe: ${locks.wardrobe}.` : null,
+    locks.environment ? `Environment: ${locks.environment}.` : null,
+    style.palette ? `Color palette: ${style.palette}.` : null,
+    style.lighting ? `Lighting: ${style.lighting}.` : null,
+    style.style_language ? `Visual style: ${style.style_language}.` : null,
+  ].filter(Boolean);
+  return parts.join(" ");
 }
 
 Deno.serve(async (req) => {
@@ -66,24 +87,47 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: beats } = await supabase
-      .from("dream_cinematic_beats")
-      .select("beat_index")
+    const { data: spec } = await supabase
+      .from("dream_cinematic_specs")
+      .select("spec_json")
       .eq("dream_id", dreamId)
       .eq("user_id", user.id)
-      .order("beat_index");
-    if (!beats?.length) throw new Error("No beats found — compile the spec first");
+      .single();
+    if (!spec?.spec_json) throw new Error("No cinematic spec — compile first");
 
-    // Step 1: frames in parallel
-    await Promise.all(beats.map((b: any) =>
-      invokeChild("generate-cinematic-beat-frame", { dreamId, beatIndex: b.beat_index }, authHeader)
-    ));
+    const segments = (spec.spec_json.segments || []).slice().sort((a: any, b: any) => a.index - b.index);
+    if (segments.length !== 2) throw new Error("Spec must contain exactly 2 segments");
+    const styleBlock = buildStyleBlock(spec.spec_json);
 
-    // Step 2: videos + narration in parallel for each beat
-    await Promise.all(beats.flatMap((b: any) => [
-      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: b.beat_index }, authHeader),
-      invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: b.beat_index, voiceId }, authHeader),
-    ]));
+    // Step 1: frame 0 — anchored on user avatar.
+    const frame0Prompt = `${segments[0].key_frame_prompt} ${styleBlock}`.trim();
+    const frame0 = await invokeChild(
+      "generate-cinematic-beat-frame",
+      { dreamId, beatIndex: 0, framePrompt: frame0Prompt },
+      authHeader,
+    );
+    const frame0Url: string | undefined = frame0?.frameUrl;
+    if (!frame0Url) throw new Error("Segment 0 frame failed");
+
+    // Step 2: frame 1 — anchored on user avatar AND segment-0's frame for continuity.
+    const frame1Prompt = `${segments[1].key_frame_prompt} ${styleBlock} Carry the character, wardrobe, lighting and color palette forward exactly from the previous reference image.`.trim();
+    const frame1 = await invokeChild(
+      "generate-cinematic-beat-frame",
+      { dreamId, beatIndex: 1, framePrompt: frame1Prompt, prevFrameUrl: frame0Url },
+      authHeader,
+    );
+    if (!frame1?.frameUrl) throw new Error("Segment 1 frame failed");
+
+    // Step 3: videos (15s each) + narrations, all in parallel.
+    const motion0 = `${segments[0].motion_script} ${styleBlock}`.trim();
+    const motion1 = `${segments[1].motion_script} ${styleBlock} Maintain the exact character, wardrobe and color grade from the start frame.`.trim();
+
+    await Promise.all([
+      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15 }, authHeader),
+      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 1, motionPrompt: motion1, duration: 15 }, authHeader),
+      invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 0, voiceId }, authHeader),
+      invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 1, voiceId }, authHeader),
+    ]);
 
     const { data: completed } = await supabase
       .from("dream_cinematic_beats")

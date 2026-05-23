@@ -1,5 +1,7 @@
-// Compiles a dream into a 4–5 beat cinematic spec capped at 30s.
-// Uses Lovable AI Gateway (Gemini) with strict tool-call schema.
+// Compiles a dream into a 2-segment, 30-second cinematic spec.
+// Each segment is one 15s Seedance clip. Global "locks" (character, wardrobe,
+// environment, palette, lighting, style language) are emitted once so both
+// segments stay visually consistent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -8,21 +10,31 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-const SYSTEM = `You are a cinematic shot-list planner for Lucid Repo dream visualizations.
-You produce a beat-synced SHOT SEQUENCE that fits inside a single short video clip (max 30 seconds total).
+const SYSTEM = `You are the cinematic director for Lucid Repo dream films.
 
-Each beat is a discrete cut with its own framing, lens, action, sensory atmosphere, and narration line.
-Maintain character likeness and dream location continuity across beats. The character reference image will be supplied externally — do NOT describe wardrobe details.
+You compile a dream into a 30-SECOND short structured as EXACTLY TWO 15-SECOND SEGMENTS. Each segment is ONE continuous handheld camera shot — no internal cuts. Aspect ratio is always vertical 9:16.
 
-- Plan exactly 4 to 5 beats.
-- Beats must be tightly timed, gap-free, and add up to the target total duration.
-- Each beat is ~5–7 seconds.
-- Aspect ratio is always vertical 9:16 portrait.
-- Narration text should be ONE short sentence per beat (max ~14 words), drawn naturally from the dream content, written as if a calm voice is narrating a dream.
-- Framing values: Wide, Medium-wide, Medium, Medium close-up, Close-up, POV.
-- Lens values: 24mm lens, 35mm lens, 50mm lens, 85mm lens, anamorphic.
+EMIT GLOBAL CONSISTENCY ANCHORS (used to lock the look across both segments):
+- subject: one sentence overall premise of the film.
+- locks.character: how the character looks in body/build/pose language. Do NOT describe specific facial features — likeness comes from a reference image that will be supplied externally.
+- locks.wardrobe: the outfit they wear; carried verbatim across both segments.
+- locks.environment: the dream location(s), materials, time of day, weather, key props.
+- style.palette: 2-3 dominant colors plus one accent.
+- style.lighting: dominant light language (rim, low-key, golden-hour, neon, volumetric god rays, etc.).
+- style.style_language: cinematography style (e.g. "anamorphic 35mm film grain, naturalistic color science").
 
-Always output valid JSON via the provided tool. Never reply in plain text.`;
+THEN EMIT EXACTLY 2 SEGMENTS:
+- segment.index 0 covers seconds 0-15. segment.index 1 covers seconds 15-30.
+- key_frame_prompt: 60-90 words describing the OPENING FRAME of this 15s shot. Concrete subject + action + setting + light + lens. Honor every lock and style anchor verbatim. No facial details.
+- motion_script: 40-70 words. ONE continuous camera move (slow push-in, dolly-around, handheld follow, rising crane). Describe character action + environmental motion (wind, particles, light shifts). No scene changes inside the segment.
+- narration: ONE sentence, max ~35 words. Read it aloud at calm dream-narration pace and it must finish inside the 15 seconds. Pull it naturally from the dream content — not a summary of the camera.
+
+HARD CONTINUITY RULES:
+- Segment 1's last beat must visually hand off into segment 0's opening frame: same character, same wardrobe, same lighting, same palette, same environment family.
+- The story moves FORWARD between segments — a turn, a step deeper, a reveal — never a teleport to an unrelated place.
+- Both key_frame_prompts must restate the character, wardrobe and lighting language so each frame can stand alone for the renderer.
+
+OUTPUT VIA THE PROVIDED TOOL ONLY. JSON ONLY. NO PLAIN TEXT REPLY.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -36,9 +48,10 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-    const { dreamId, totalDuration: rawDuration } = await req.json();
+    const { dreamId } = await req.json();
     if (!dreamId) throw new Error("dreamId required");
-    const totalDuration = Math.min(30, Math.max(15, Number(rawDuration) || 30));
+    // Two 15-second segments — always 30 seconds total.
+    const totalDuration = 30;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -65,7 +78,7 @@ Deno.serve(async (req) => {
       "Dream content:",
       dream.content,
       "",
-      `Total duration: ${totalDuration}s. Plan 4–5 beats covering the full duration without gaps.`,
+      "Compile this into exactly 2 segments totaling 30 seconds (15s each).",
     ].filter(Boolean).join("\n");
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -81,44 +94,51 @@ Deno.serve(async (req) => {
           type: "function",
           function: {
             name: "emit_cinematic_spec",
-            description: "Return a structured cinematic spec for this dream.",
+            description: "Return a 2-segment, 30-second cinematic spec for this dream.",
             parameters: {
               type: "object",
               properties: {
-                subject: { type: "string", description: "One-sentence overall subject/scene description." },
-                cinematography: {
+                subject: { type: "string" },
+                locks: {
                   type: "object",
                   properties: {
-                    format: { type: "string" },
-                    look: { type: "string" },
-                    cameraBody: { type: "string" },
-                    lens: { type: "string" },
-                    lighting: { type: "string" },
-                    atmosphere: { type: "array", items: { type: "string" } },
+                    character: { type: "string" },
+                    wardrobe: { type: "string" },
+                    environment: { type: "string" },
                   },
-                  required: ["format", "look", "cameraBody", "lens", "lighting", "atmosphere"],
+                  required: ["character", "wardrobe", "environment"],
                   additionalProperties: false,
                 },
-                beats: {
+                style: {
+                  type: "object",
+                  properties: {
+                    palette: { type: "string" },
+                    lighting: { type: "string" },
+                    style_language: { type: "string" },
+                  },
+                  required: ["palette", "lighting", "style_language"],
+                  additionalProperties: false,
+                },
+                segments: {
                   type: "array",
+                  minItems: 2,
+                  maxItems: 2,
                   items: {
                     type: "object",
                     properties: {
+                      index: { type: "integer", enum: [0, 1] },
                       start: { type: "number" },
                       end: { type: "number" },
-                      framing: { type: "string" },
-                      lens: { type: "string" },
-                      text: { type: "string", description: "Action only — what physically happens in this beat." },
-                      narration: { type: "string", description: "One short narration sentence (max ~14 words)." },
-                      sfx: { type: "string", description: "Per-beat SFX cue chain." },
+                      key_frame_prompt: { type: "string" },
+                      motion_script: { type: "string" },
+                      narration: { type: "string" },
                     },
-                    required: ["start", "end", "framing", "lens", "text", "narration", "sfx"],
+                    required: ["index", "start", "end", "key_frame_prompt", "motion_script", "narration"],
                     additionalProperties: false,
                   },
                 },
-                sound: { type: "string" },
               },
-              required: ["subject", "cinematography", "beats", "sound"],
+              required: ["subject", "locks", "style", "segments"],
               additionalProperties: false,
             },
           },
@@ -141,10 +161,13 @@ Deno.serve(async (req) => {
     if (!argsRaw) throw new Error("Model returned no structured spec");
     const spec = JSON.parse(argsRaw);
 
-    // Clamp beats to 5
-    if (Array.isArray(spec.beats) && spec.beats.length > 5) {
-      spec.beats = spec.beats.slice(0, 5);
+    // Hard-enforce exactly 2 segments at fixed time windows.
+    if (!Array.isArray(spec.segments) || spec.segments.length !== 2) {
+      throw new Error("Compiler did not return exactly 2 segments");
     }
+    spec.segments.sort((a: any, b: any) => (a.index ?? 0) - (b.index ?? 0));
+    spec.segments[0].start = 0; spec.segments[0].end = 15;
+    spec.segments[1].start = 15; spec.segments[1].end = 30;
 
     // Upsert spec
     await supabase.from("dream_cinematic_specs")
@@ -155,21 +178,25 @@ Deno.serve(async (req) => {
         total_duration: totalDuration,
       }, { onConflict: "dream_id" });
 
-    // Reset beats: delete + reinsert pending rows
+    // Reset segment rows: delete + reinsert pending rows.
+    // Reuses the dream_cinematic_beats table — beat_index 0 = segment 1, beat_index 1 = segment 2.
+    // The row's `prompt` column stores the per-segment MOTION script (used by the video generator).
+    // The opening-frame prompt and global locks live in spec_json and are passed via the
+    // orchestrator to the frame generator at render time.
     await supabase.from("dream_cinematic_beats").delete().eq("dream_id", dreamId);
-    const beatRows = spec.beats.map((b: any, i: number) => ({
+    const beatRows = spec.segments.map((s: any) => ({
       dream_id: dreamId,
       user_id: user.id,
-      beat_index: i,
-      start_time: b.start,
-      end_time: b.end,
-      prompt: `${spec.subject}. ${b.text} ${b.framing}, ${b.lens}. ${spec.cinematography?.lighting || ""}`.trim(),
-      narration_text: b.narration,
+      beat_index: s.index,
+      start_time: s.start,
+      end_time: s.end,
+      prompt: s.motion_script,
+      narration_text: s.narration,
       status: "pending",
     }));
-    if (beatRows.length) await supabase.from("dream_cinematic_beats").insert(beatRows);
+    await supabase.from("dream_cinematic_beats").insert(beatRows);
 
-    return new Response(JSON.stringify({ spec, beatCount: beatRows.length }), {
+    return new Response(JSON.stringify({ spec, segmentCount: beatRows.length }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

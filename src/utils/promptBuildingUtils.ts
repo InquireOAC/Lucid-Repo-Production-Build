@@ -1,53 +1,38 @@
 import { dreamContainsCharacters } from "./characterDetectionUtils";
 
 /**
- * Build personalized prompt with visual fingerprint + character integration directives.
- * Style composition is now handled by the cinematic director thinking layer,
- * so this function only handles character identity and integration.
+ * Append character identity signal to a compiled cinematic scene prompt.
+ * Identity only — composition / lighting / world rules come from the cinematic
+ * compiler upstream, so we deliberately do NOT restate them here.
  */
-export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, imageStyle?: string): string => {
+export const buildPersonalizedPrompt = (basePrompt: string, aiContext: any, _imageStyle?: string): string => {
   if (!aiContext) return basePrompt;
 
   const hasFingerprint = !!aiContext.visual_fingerprint;
   const hasPhoto = !!aiContext.photo_url;
+  const clothing = aiContext.clothing_style ? `Wearing ${aiContext.clothing_style} style clothing adapted to this dream world.` : null;
 
   if (hasPhoto && hasFingerprint) {
-    return `${basePrompt}.
-
-CHARACTER IDENTITY MATCHING (HIGHEST PRIORITY):
-- FACE: Exact same facial structure, eye shape, nose, lips, jawline as reference
-- SKIN: Precise tone and texture matching reference exactly
-- HAIR: Exact color, texture, style, length as reference
-- BODY: Same build and proportions as reference
-
-VISUAL FINGERPRINT OF THE DREAMER:
-${aiContext.visual_fingerprint}
-
-${aiContext.clothing_style ? `CLOTHING: The character wears ${aiContext.clothing_style} style clothing, adapted to the dream world's aesthetic.` : ''}
-
-HERO COMPOSITION (MANDATORY):
-The character is the STAR of this frame — the emotional center of a grand cinematic tableau.
-- Place them at a compositionally POWERFUL position: rule of thirds power points, golden ratio, or dramatic center
-- The environment must FRAME them: leading lines, architectural convergence, light shafts, all drawing the eye to their presence
-- Scale contrast: they should feel both intimately human and significant against vast, awe-inspiring surroundings
-- Their pose and body language must tell the story of THIS moment — heroic, contemplative, awestruck, or intimate
-
-WORLD INTEGRATION:
-The character is a NATIVE INHABITANT of this dream world. Same lighting, same atmosphere, same physics. They cast real shadows, are wrapped in the same volumetric effects, and exist at the correct atmospheric depth. One unified composition — never composited.`;
+    return [
+      basePrompt,
+      'Character identity: match the supplied reference image exactly — facial structure, eye shape, nose, lips, jawline, skin tone and texture, hair color and style, build and proportions.',
+      `Visual fingerprint of the dreamer: ${aiContext.visual_fingerprint}`,
+      clothing,
+      'Render the character as a native inhabitant of this scene with the same lighting, shadows and atmosphere as the environment.',
+    ].filter(Boolean).join(' ');
   }
 
   if (hasPhoto) {
-    return `${basePrompt}.
-
-CHARACTER IDENTITY REFERENCE: The provided reference image shows the DREAMER — the STAR and protagonist of this cinematic frame. Replicate their exact facial features, hair, skin tone, and body proportions precisely.${aiContext.clothing_style ? ` They wear ${aiContext.clothing_style} style clothing adapted to the dream world.` : ''}
-
-HERO COMPOSITION: Compose them as the emotional anchor of a grand tableau — at a position of maximum visual power, framed by the environment's leading lines and light. The world exists to stage their moment.
-
-WORLD INTEGRATION: Render as a native inhabitant of this dream world. Same spectacular lighting, same atmospheric effects, same physics — one unified composition, never composited.`;
+    return [
+      basePrompt,
+      'Character identity: match the supplied reference image exactly — face, hair, skin and body proportions.',
+      clothing,
+      'Render the character as a native inhabitant of this scene with the same lighting and atmosphere as the environment.',
+    ].filter(Boolean).join(' ');
   }
 
   if (aiContext.clothing_style) {
-    return `${basePrompt}. Featuring a person wearing ${aiContext.clothing_style} style clothing, rendered as a unified part of the scene environment.`;
+    return `${basePrompt} ${clothing}`;
   }
 
   return basePrompt;
@@ -57,11 +42,11 @@ WORLD INTEGRATION: Render as a native inhabitant of this dream world. Same spect
  * Clean prompt for non-personalized generation while preserving natural characters.
  * Style composition is handled by the cinematic director, so no style appending here.
  */
-export const cleanPromptForNonPersonalized = (prompt: string, dreamContent: string, imageStyle?: string): string => {
+export const cleanPromptForNonPersonalized = (prompt: string, dreamContent: string, _imageStyle?: string): string => {
   const hasCharacters = dreamContainsCharacters(dreamContent);
-  
+
   let cleanedPrompt = prompt;
-  
+
   if (!hasCharacters) {
     cleanedPrompt = prompt
       .replace(/\bi\s+am\s+/gi, 'the scene shows ')

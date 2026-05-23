@@ -1,18 +1,25 @@
-// FAL Seedance 2.0 image-to-video adapter.
-// Uses the FAL queue API: submits a request, polls until completed, downloads
-// the resulting MP4 and re-uploads to the dream-videos bucket.
+// FAL Seedance image-to-video adapter.
+// Submits to the FAL queue API, polls until complete, downloads the resulting
+// MP4 and re-uploads to the dream-videos bucket.
+//
+// Model id is configurable via the FAL_SEEDANCE_MODEL env var so we can move
+// between Seedance v1 pro and v2 without redeploying. Defaults to v2 pro.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const SEEDANCE_MODEL = "fal-ai/bytedance/seedance/v1/pro/image-to-video";
+const DEFAULT_SEEDANCE_MODEL = "fal-ai/bytedance/seedance/v2/pro/image-to-video";
 const QUEUE_BASE = "https://queue.fal.run";
+
+export type SeedanceDuration = 5 | 10 | 15;
 
 export interface SeedanceOptions {
   prompt: string;
   imageUrl: string; // start frame / character reference
   endImageUrl?: string;
   aspectRatio?: string; // default "9:16"
-  duration?: 5 | 10; // default 5
+  duration?: SeedanceDuration; // default 5
   resolution?: "480p" | "720p" | "1080p"; // default "720p"
+  /** Optional model override (e.g. for fallback to v1 pro) */
+  model?: string;
 }
 
 export interface SeedancePersistOptions {
@@ -20,6 +27,10 @@ export interface SeedancePersistOptions {
   serviceRoleKey: string;
   bucket: string;
   path: string; // full object path including filename
+}
+
+function resolveModel(override?: string): string {
+  return override || Deno.env.get("FAL_SEEDANCE_MODEL") || DEFAULT_SEEDANCE_MODEL;
 }
 
 async function falFetch(url: string, init: RequestInit, apiKey: string) {
@@ -38,18 +49,21 @@ export async function falSeedanceImageToVideo(
   const apiKey = Deno.env.get("FAL_API_KEY");
   if (!apiKey) throw new Error("FAL_API_KEY not configured");
 
+  const model = resolveModel(options.model);
+  const duration: SeedanceDuration = (options.duration ?? 5) as SeedanceDuration;
+
   const payload: Record<string, unknown> = {
     prompt: options.prompt,
     image_url: options.imageUrl,
     aspect_ratio: options.aspectRatio || "9:16",
-    duration: options.duration ?? 5,
+    duration,
     resolution: options.resolution || "720p",
   };
   if (options.endImageUrl) payload.end_image_url = options.endImageUrl;
 
-  console.log(`[fal-seedance] submit: aspect=${payload.aspect_ratio} duration=${payload.duration}s`);
+  console.log(`[fal-seedance] submit model=${model} aspect=${payload.aspect_ratio} duration=${payload.duration}s`);
 
-  const submit = await falFetch(`${QUEUE_BASE}/${SEEDANCE_MODEL}`, {
+  const submit = await falFetch(`${QUEUE_BASE}/${model}`, {
     method: "POST",
     body: JSON.stringify(payload),
   }, apiKey);
@@ -61,10 +75,10 @@ export async function falSeedanceImageToVideo(
   const requestId = submitBody?.request_id;
   if (!requestId) throw new Error("Seedance returned no request_id");
 
-  // Poll for completion. Seedance typically takes 30–90s.
-  const statusUrl = `${QUEUE_BASE}/${SEEDANCE_MODEL}/requests/${requestId}/status`;
-  const resultUrl = `${QUEUE_BASE}/${SEEDANCE_MODEL}/requests/${requestId}`;
-  const maxAttempts = 60; // ~5 min at 5s
+  // Poll for completion. 15s clips take ~90–180s.
+  const statusUrl = `${QUEUE_BASE}/${model}/requests/${requestId}/status`;
+  const resultUrl = `${QUEUE_BASE}/${model}/requests/${requestId}`;
+  const maxAttempts = 90; // ~7.5 min at 5s
   let videoHostedUrl: string | null = null;
   for (let i = 0; i < maxAttempts; i += 1) {
     await new Promise((r) => setTimeout(r, 5000));

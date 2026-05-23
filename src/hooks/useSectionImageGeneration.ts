@@ -69,10 +69,17 @@ export function useSectionImageGeneration(
         const sec = sections[i];
 
         try {
-          // Generate cinematic prompt
+          // Generate cinematic prompt. Tell the compiler whether a character
+          // reference image will be supplied so it skips facial-feature
+          // descriptions that would conflict with the photo reference.
           const { data: promptData, error: promptError } = await supabase.functions.invoke(
             "compose-cinematic-prompt",
-            { body: { sceneBrief: `Dream Title: ${dream.title}\n\nScene: ${sec.text}` } }
+            {
+              body: {
+                sceneBrief: `Dream Title: ${dream.title}\n\nScene: ${sec.text}`,
+                hasCharacterReference: !!characterData.referenceImageUrl,
+              },
+            }
           );
 
           if (promptError || !promptData?.cinematicPrompt) {

@@ -36,40 +36,27 @@ serve(async (req) => {
 
     console.log(`Generating image via FAL nano-banana-2 for user ${user.id}, prompt length: ${prompt.length}, hasReference: ${!!referenceImageUrl}, hasOutfit: ${!!outfitImageUrl}, hasAccessory: ${!!accessoryImageUrl}, style: ${imageStyle}`)
 
-    // === CINEMATIC RENDERING DIRECTIVE — prepended to the user's prompt ===
-    const directive = `[CINEMATIC RENDERING DIRECTIVE — READ THIS FIRST]
-
-MANDATORY OUTPUT FORMAT: Generate this image in PORTRAIT orientation with a 9:16 aspect ratio (e.g., 1024x1820 or similar vertical dimensions). The frame MUST be taller than it is wide. This is non-negotiable.
-
-You are rendering a SINGLE FRAME from the most visually stunning film ever made — a $200 million cinematic masterpiece directed by Steven Spielberg, shot by Roger Deakins. This is not an illustration. This is not a composite. This is a REAL FRAME from an alternate-reality film shot on IMAX with supernatural production design.
-
-GRAND CINEMATIC QUALITY MANDATE:
-- Every frame must evoke AWE — breathtaking scale, dramatic depth, spectacular lighting
-- Compose with DEPTH: distinct foreground elements (slightly soft), sharp midground action, vast atmospheric background
-- Light must be SPECTACULAR: volumetric god rays, rim lighting that separates subjects like halos, dramatic color temperature contrasts between warm and cool zones
-- The environment must feel INFINITE — extending far beyond the frame edges with atmospheric perspective and haze
-- Use dramatic camera angles: low angles for power, wide lenses for scale, shallow depth of field for intimacy within grandeur`
-
     const refLabels: string[] = []
     const refUrls: string[] = []
     if (referenceImageUrl) {
-      refLabels.push('[CHARACTER_IDENTITY_REFERENCE — Cast this exact person as the protagonist. Preserve face, hair, skin, body proportions.]')
+      refLabels.push('Character reference: match the supplied person exactly — face, hair, skin tone, and body proportions.')
       refUrls.push(referenceImageUrl)
     }
     if (outfitImageUrl) {
-      refLabels.push('[OUTFIT_REFERENCE — Dress the character in this exact outfit.]')
+      refLabels.push('Outfit reference: dress the character in the supplied outfit, adapted to the scene materials.')
       refUrls.push(outfitImageUrl)
     }
     if (accessoryImageUrl) {
-      refLabels.push('[ACCESSORY_REFERENCE — Add these exact accessories to the character.]')
+      refLabels.push('Accessory reference: include the supplied accessories on the character.')
       refUrls.push(accessoryImageUrl)
     }
 
+    // The compiler upstream already produced a clean, focused scene prompt.
+    // We add ONLY two short framing/safeguard lines so the renderer gets a tight signal.
     const fullPrompt = [
-      directive,
-      refLabels.join('\n'),
-      `Now render the following cinematic dream scene in a 9:16 vertical / portrait frame:\n${prompt}`,
-      `[FINAL MANDATORY REMINDER] The output image MUST be in PORTRAIT / VERTICAL orientation (9:16 aspect ratio — taller than wide).`,
+      refLabels.length ? refLabels.join(' ') : null,
+      prompt,
+      'Render in vertical 9:16 portrait orientation, photographic cinematic quality, clean anatomy with five fingers per hand and natural symmetric eyes, no text or watermarks.',
     ].filter(Boolean).join('\n\n')
 
     const { imageUrls } = await falNanoBanana2(

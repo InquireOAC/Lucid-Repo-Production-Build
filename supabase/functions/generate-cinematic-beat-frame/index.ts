@@ -1,5 +1,9 @@
-// Generates a 9:16 key frame for one cinematic beat using FAL nano-banana-2,
-// anchored on the user's avatar reference for character consistency.
+// Generates a 9:16 key frame for one cinematic segment using FAL nano-banana-2.
+//
+// References (in order, up to 14 supported by nano-banana-2 edit mode):
+//   1. The user's avatar (character likeness)
+//   2. Optional prevFrameUrl — the previous segment's key frame, used to lock
+//      wardrobe, palette and environment continuity into segment 1.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { falNanoBanana2 } from "../_shared/fal-nano-banana.ts";
 import { getUserAvatarReference } from "../_shared/avatar-reference.ts";
@@ -11,11 +15,12 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const body = await req.json().catch(() => ({}));
+  const { dreamId, beatIndex, framePrompt, prevFrameUrl } = body;
+
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("Auth required");
-
-    const { dreamId, beatIndex } = await req.json();
     if (!dreamId || beatIndex === undefined) throw new Error("dreamId and beatIndex required");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -42,20 +47,43 @@ Deno.serve(async (req) => {
 
     const avatarUrl = await getUserAvatarReference(supabaseUrl, serviceKey, user.id);
 
+    // Reference image stack: avatar first (anchors identity), then optional
+    // previous-segment frame (anchors wardrobe, palette, environment).
+    const refUrls: string[] = [];
+    if (avatarUrl) refUrls.push(avatarUrl);
+    if (prevFrameUrl) refUrls.push(prevFrameUrl);
+
+    // Use the orchestrator-provided framePrompt when available; fall back to
+    // the row's stored prompt (legacy / single-call invocations).
+    const basePrompt = (framePrompt && typeof framePrompt === "string" && framePrompt.length > 0)
+      ? framePrompt
+      : beat.prompt;
+
+    const refClause = [
+      avatarUrl ? "Match the character likeness from the first reference image exactly." : null,
+      prevFrameUrl ? "Carry the wardrobe, color palette, lighting and environment forward from the supplied previous-frame reference." : null,
+    ].filter(Boolean).join(" ");
+
+    const renderPrompt = [
+      basePrompt,
+      refClause,
+      "Vertical 9:16 portrait framing, cinematic photographic quality, clean anatomy with five fingers per hand and natural symmetric eyes, no text or watermarks.",
+    ].filter(Boolean).join(" ");
+
     const { imageUrls } = await falNanoBanana2(
       {
-        prompt: beat.prompt + (avatarUrl ? " — keep the character likeness consistent with the reference image." : ""),
+        prompt: renderPrompt,
         numImages: 1,
         aspectRatio: "9:16",
         resolution: "1K",
-        imageUrls: avatarUrl ? [avatarUrl] : [],
+        imageUrls: refUrls,
         outputFormat: "jpeg",
       },
       {
         supabaseUrl,
         serviceRoleKey: serviceKey,
         bucket: "dream-images",
-        pathPrefix: `${user.id}/cinematic/${dreamId}/beat-${beatIndex}`,
+        pathPrefix: `${user.id}/cinematic/${dreamId}/seg-${beatIndex}`,
       },
     );
 
@@ -70,7 +98,6 @@ Deno.serve(async (req) => {
   } catch (e: any) {
     console.error("[generate-cinematic-beat-frame] error", e);
     try {
-      const { dreamId, beatIndex } = await req.json().catch(() => ({}));
       if (dreamId !== undefined && beatIndex !== undefined) {
         const supabase = createClient(
           Deno.env.get("SUPABASE_URL")!,
