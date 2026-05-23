@@ -37,9 +37,22 @@ export const GenerateVideoDialog = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCraftingPrompt, setIsCraftingPrompt] = useState(false);
   const [progress, setProgress] = useState(0);
-  const cinematicEnabled = (import.meta as any).env?.VITE_USE_FAL_CINEMATIC === "true";
-  const [mode, setMode] = useState<"veo" | "cinematic">("veo");
+  // Cinematic mode is the full 30-second dream-film flow and only makes sense
+  // when the dialog targets the whole dream. Per-section invocations pass
+  // skipDreamUpdate, in which case we hide the cinematic tab entirely and
+  // render only the legacy frame-animation UI.
+  const allowCinematic = !skipDreamUpdate;
+  const [mode, setMode] = useState<"veo" | "cinematic">(allowCinematic ? "cinematic" : "veo");
   const cinematic = useDreamCinematic(dreamId);
+
+  // Auto-close the dialog once the cinematic flow finishes so the user sees
+  // the success toast and the dream's hero updates without manual dismissal.
+  useEffect(() => {
+    if (cinematic.stage !== "done" || !cinematic.videoUrl) return;
+    onVideoGenerated?.(cinematic.videoUrl);
+    const t = setTimeout(() => onOpenChange(false), 600);
+    return () => clearTimeout(t);
+  }, [cinematic.stage, cinematic.videoUrl]);
 
   useEffect(() => {
     if (!open) return;
@@ -144,21 +157,25 @@ export const GenerateVideoDialog = ({
                 </div>
                 <h2 className="text-lg font-semibold text-white tracking-tight">Dream Cinema</h2>
               </div>
-              <p className="text-xs text-white/50 pl-[38px]">AI-powered animation from your dream image</p>
+              <p className="text-xs text-white/50 pl-[38px]">
+                {allowCinematic && mode === "cinematic"
+                  ? "30-second narrated dream film, voiced by ElevenLabs"
+                  : "AI animation from your dream image"}
+              </p>
             </div>
           </div>
 
           <div className="p-5 space-y-4">
-            {cinematicEnabled && (
+            {allowCinematic && (
               <div className="flex items-center gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
-                <button
-                  onClick={() => setMode("veo")}
-                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "veo" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
-                >Animate frame</button>
                 <button
                   onClick={() => setMode("cinematic")}
                   className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "cinematic" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
                 >Cinematic Dream · beta</button>
+                <button
+                  onClick={() => setMode("veo")}
+                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "veo" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
+                >Animate frame</button>
               </div>
             )}
 
@@ -251,7 +268,7 @@ export const GenerateVideoDialog = ({
             </Button>
 
             {!isGenerating && (
-              <p className="text-[10px] text-white/20 text-center">Powered by Veo 3.0 · ~1-2 min generation time</p>
+              <p className="text-[10px] text-white/20 text-center">Powered by Seedance 2 · ~1–2 min generation time</p>
             )}
             </>
             )}
