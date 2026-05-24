@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Brain, ImageIcon, ChevronDown, Film, Loader2, RefreshCw, Users, Plus } from "lucide-react";
+import { ArrowLeft, Mic, FileText, Save, Tag, Brain, ImageIcon, ChevronDown, Film, Loader2, RefreshCw } from "lucide-react";
 import SectionImagesManager from "@/components/dreams/SectionImagesManager";
-import CharacterCreatorDialog from "@/components/dreams/CharacterCreatorDialog";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,15 +55,9 @@ const EditDream = () => {
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [imageOpen, setImageOpen] = useState(false);
   const [scenesOpen, setScenesOpen] = useState(false);
-  const [charactersOpen, setCharactersOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | undefined>(undefined);
   const [sectionImages, setSectionImages] = useState<any[]>([]);
-  const [sideCharacters, setSideCharacters] = useState<Array<{
-    id: string; name: string | null; photo_url: string | null;
-  }>>([]);
-  const [characterDialog, setCharacterDialog] = useState<{ open: boolean; characterId: string | null; initialName?: string }>({ open: false, characterId: null });
-  const [isExtractingCharacters, setIsExtractingCharacters] = useState(false);
 
   const hasSceneImages = sectionImages.some(s => s.image_url);
 
@@ -108,31 +101,6 @@ const EditDream = () => {
     if (dream.generatedImage || dream.image_url) setImageOpen(true);
     setLoaded(true);
   }, [dreamId, entries, loaded]);
-
-  const refreshSideCharacters = React.useCallback(async () => {
-    if (!dreamId || !user?.id) return;
-    const { data: dreamRow } = await supabase
-      .from("dream_entries")
-      .select("dream_character_ids")
-      .eq("id", dreamId)
-      .eq("user_id", user.id)
-      .maybeSingle();
-    const ids = (dreamRow?.dream_character_ids as string[] | null) || [];
-    if (!ids.length) {
-      setSideCharacters([]);
-      return;
-    }
-    const { data: chars } = await supabase
-      .from("dream_characters")
-      .select("id, name, photo_url")
-      .eq("user_id", user.id)
-      .in("id", ids);
-    // Preserve the order from dream_character_ids so newly added chips appear last.
-    const byId = new Map((chars || []).map((c) => [c.id, c]));
-    setSideCharacters(ids.map((id) => byId.get(id)).filter(Boolean) as any);
-  }, [dreamId, user?.id]);
-
-  useEffect(() => { refreshSideCharacters(); }, [refreshSideCharacters]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
