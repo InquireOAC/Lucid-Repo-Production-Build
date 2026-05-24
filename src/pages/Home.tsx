@@ -4,18 +4,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
 import { useDreamStore } from "@/store/dreamStore";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
+import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useChallenges } from "@/hooks/useChallenges";
+import { techniques } from "@/components/insights/techniqueData";
+
+import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpg";
+import techniqueImgSsild from "@/assets/techniques/ssild.jpg";
+import techniqueImgWild from "@/assets/techniques/wild.jpg";
+import techniqueImgFild from "@/assets/techniques/fild.jpg";
+import techniqueImgDeild from "@/assets/techniques/deild.jpg";
+import techniqueImgMeditation from "@/assets/techniques/meditation.jpg";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
-import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 import FAB from "@/components/ui/FAB";
-
-import JournalHeroPoster from "@/components/journal/JournalHeroPoster";
+import HomeHeroCarousel from "@/components/home/HomeHeroCarousel";
 import JournalPosterCard from "@/components/journal/JournalPosterCard";
 import PosterRail from "@/components/repos/netflix/PosterRail";
 import PosterCard from "@/components/repos/netflix/PosterCard";
-import HeroPoster from "@/components/repos/netflix/HeroPoster";
 
 import { DreamEntry } from "@/types/dream";
 import { Film, Plus, Moon } from "lucide-react";
@@ -23,51 +30,56 @@ import { Film, Plus, Moon } from "lucide-react";
 const hasPoster = (d: DreamEntry) =>
   !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
 
+const TECHNIQUE_CARDS: { idx: number; image: string }[] = [
+  { idx: 3, image: techniqueImgWild },
+  { idx: 4, image: techniqueImgSsild },
+  { idx: 5, image: techniqueImgFild },
+  { idx: 6, image: techniqueImgDeild },
+  { idx: 7, image: techniqueImgMeditation },
+  { idx: 0, image: techniqueImgRealityChecks },
+];
+
 const Home = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { dreams: feedDreams, isLoading: feedLoading } = useFeedPublicDreams(user);
+  const { announcements } = useAnnouncements();
+  const { challenges } = useChallenges();
 
-  // Pull from store first (instant), fall back to a sync if empty.
   const { entries } = useDreamStore();
-  useJournalEntries(); // triggers a background sync when user is present
+  useJournalEntries();
 
   const myDreams = entries as DreamEntry[];
 
   const heroDream = useMemo(() => {
     if (!myDreams.length) return null;
-    const withVideo = myDreams.find((d) => !!d.video_url && hasPoster(d));
-    if (withVideo) return withVideo;
-    const withMedia = myDreams.find(hasPoster);
-    return withMedia || myDreams[0];
+    // Most recent dream that has video or any image → ideal carousel anchor
+    return (
+      myDreams.find((d) => !!d.video_url) ||
+      myDreams.find(hasPoster) ||
+      myDreams[0]
+    );
   }, [myDreams]);
 
   const continueCreating = useMemo(
     () => myDreams.filter((d) => !d.video_url).slice(0, 10),
     [myDreams],
   );
-  const cinematicDreams = useMemo(
-    () => myDreams.filter((d) => !!d.video_url).slice(0, 10),
-    [myDreams],
-  );
 
-  // Stats strip (compact, text-only)
   const stats = useMemo(() => {
-    const now = new Date();
-    const weekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
     const weekCount = myDreams.filter(
       (d) => new Date(d.created_at || d.date).getTime() >= weekAgo,
     ).length;
     const cinematicCount = myDreams.filter((d) => !!d.video_url).length;
     const sceneCount = myDreams.reduce(
-      (sum, d) =>
-        sum + (d.section_images?.filter((s) => !!s.image_url).length || 0),
+      (sum, d) => sum + (d.section_images?.filter((s) => !!s.image_url).length || 0),
       0,
     );
     return { weekCount, cinematicCount, sceneCount };
   }, [myDreams]);
 
-  // Signed-out: keep a simple welcome hero
+  // Signed-out welcome
   if (!user) {
     return (
       <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
@@ -99,7 +111,8 @@ const Home = () => {
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
       <div className="max-w-2xl mx-auto px-4 md:px-8 pb-10">
-        {/* Soft greeting strip (no big text hero — the visual hero is the dream) */}
+
+        {/* Greeting strip */}
         <div className="pt-6 mb-3 flex items-baseline justify-between">
           <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
             Tonight's Dreamscape
@@ -109,20 +122,20 @@ const Home = () => {
           </p>
         </div>
 
-        <div className="mb-4">
-          <AnnouncementBanner />
-        </div>
-
-        {/* Cinematic hero — featured personal dream */}
-        {heroDream ? (
-          <JournalHeroPoster dream={heroDream} label="Featured" />
+        {/* ── Swipeable hero carousel ─────────────────────────────── */}
+        {myDreams.length > 0 ? (
+          <HomeHeroCarousel
+            heroDream={heroDream}
+            challenges={challenges}
+            announcements={announcements}
+          />
         ) : (
           <EmptyHero onCreate={() => navigate("/journal/new")} />
         )}
 
         {/* Stats strip */}
         {myDreams.length > 0 && (
-          <div className="mb-6 -mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+          <div className="mb-6 -mt-2 flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground">
             {stats.weekCount > 0 && (
               <span>
                 <span className="text-foreground font-semibold">{stats.weekCount}</span>{" "}
@@ -150,41 +163,20 @@ const Home = () => {
           </div>
         )}
 
-        {/* Continue Creating */}
+        {/* ── Continue Creating ────────────────────────────────────── */}
         {continueCreating.length > 0 && (
-          <PosterRail
-            title="Continue Creating"
-            onSeeAll={() => navigate("/journal")}
-          >
+          <PosterRail title="Continue Creating" onSeeAll={() => navigate("/journal")}>
             {continueCreating.map((d) => (
               <JournalPosterCard key={d.id} dream={d} />
             ))}
           </PosterRail>
         )}
 
-        {/* Your Cinematic Dreams */}
-        {cinematicDreams.length > 0 && (
-          <PosterRail
-            title="Your Cinematics"
-            onSeeAll={() => navigate("/journal")}
-          >
-            {cinematicDreams.map((d) => (
-              <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
-            ))}
-          </PosterRail>
-        )}
-
-        {/* Featured Dreamscapes (community / public feed) */}
-        <PosterRail
-          title="Featured Dreamscapes"
-          onSeeAll={() => navigate("/lucid-repo")}
-        >
+        {/* ── Featured Dreamscapes (community feed) ───────────────── */}
+        <PosterRail title="Featured Dreamscapes" onSeeAll={() => navigate("/lucid-repo")}>
           {feedLoading ? (
             [0, 1, 2, 3, 4].map((i) => (
-              <Skeleton
-                key={i}
-                className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md"
-              />
+              <Skeleton key={i} className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md" />
             ))
           ) : feedDreams.length > 0 ? (
             feedDreams.slice(0, 10).map((d: any) => (
@@ -202,9 +194,49 @@ const Home = () => {
             </button>
           )}
         </PosterRail>
+
+        {/* ── Lucid Techniques grid ────────────────────────────────── */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base md:text-lg font-bold text-foreground">Lucid Techniques</h2>
+            <button
+              onClick={() => navigate("/insights")}
+              className="flex items-center gap-0.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              See all <span className="ml-0.5">›</span>
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {TECHNIQUE_CARDS.map(({ idx, image }) => {
+              const t = techniques[idx];
+              if (!t) return null;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => navigate(`/insights/technique/${idx}`)}
+                  className="cursor-pointer relative rounded-xl overflow-hidden aspect-square group text-left"
+                >
+                  <img
+                    src={image}
+                    alt={t.name}
+                    className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <h3 className="font-semibold text-white text-sm leading-tight drop-shadow-md">
+                      {t.acronym || t.name}
+                    </h3>
+                    <p className="text-[10px] text-white/70 mt-0.5">{t.difficulty}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
       </div>
 
-      {/* FAB */}
       <FAB label="New Dream" to="/journal/new" />
     </PageTransition>
   );
