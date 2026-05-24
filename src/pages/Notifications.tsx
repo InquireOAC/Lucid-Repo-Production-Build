@@ -2,6 +2,7 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCard from "@/components/notifications/NotificationCard";
+import BroadcastsSection from "@/components/notifications/BroadcastsSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, CheckCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,9 @@ const Notifications = () => {
             </Button>
           )}
         </div>
+
+        {/* Broadcasts (platform-wide announcements, events, challenges) */}
+        <BroadcastsSection />
 
         {/* Loading State */}
         {loading && (

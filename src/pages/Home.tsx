@@ -6,6 +6,7 @@ import { useDreamStore } from "@/store/dreamStore";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useChallenges } from "@/hooks/useChallenges";
+import { useEvents } from "@/hooks/useEvents";
 import { techniques } from "@/components/insights/techniqueData";
 
 import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpg";
@@ -45,6 +46,7 @@ const Home = () => {
   const { dreams: feedDreams, isLoading: feedLoading } = useFeedPublicDreams(user);
   const { announcements } = useAnnouncements();
   const { challenges } = useChallenges();
+  const { events } = useEvents();
 
   const { entries } = useDreamStore();
   useJournalEntries();
@@ -126,6 +128,7 @@ const Home = () => {
         {myDreams.length > 0 ? (
           <HomeHeroCarousel
             heroDream={heroDream}
+            events={events}
             challenges={challenges}
             announcements={announcements}
           />

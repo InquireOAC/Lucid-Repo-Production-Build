@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Megaphone, Bell, PartyPopper, AlertTriangle, ExternalLink, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
+import { useEngagement } from "@/hooks/useEngagement";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,8 +42,15 @@ const typeConfig: Record<string, { icon: React.ReactNode; gradient: string; glow
 
 const AnnouncementBanner = () => {
   const { currentAnnouncement, dismissAnnouncement } = useAnnouncements();
+  const { recordEngagement } = useEngagement();
   const [modalOpen, setModalOpen] = useState(false);
   const [pollModalOpen, setPollModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (currentAnnouncement?.id) {
+      recordEngagement("announcement", currentAnnouncement.id, "view");
+    }
+  }, [currentAnnouncement?.id, recordEngagement]);
 
   if (!currentAnnouncement) return null;
 
@@ -50,7 +58,15 @@ const AnnouncementBanner = () => {
 
   const handleDismiss = () => {
     setModalOpen(false);
+    recordEngagement("announcement", currentAnnouncement.id, "dismiss");
     dismissAnnouncement(currentAnnouncement.id);
+  };
+
+  const handleLinkClick = () => {
+    if (currentAnnouncement.link_url) {
+      recordEngagement("announcement", currentAnnouncement.id, "click", { url: currentAnnouncement.link_url });
+      window.open(currentAnnouncement.link_url, "_blank", "noopener,noreferrer");
+    }
   };
 
   return (
@@ -78,9 +94,18 @@ const AnnouncementBanner = () => {
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent animate-pulse" />
 
             <div className="relative flex items-center gap-3 px-4 py-3">
-              <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
-                <span className="text-sm">{config.emoji}</span>
-              </div>
+              {currentAnnouncement.image_url ? (
+                <img
+                  src={currentAnnouncement.image_url}
+                  alt=""
+                  className="w-10 h-10 rounded-md object-cover shrink-0"
+                  loading="lazy"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
+                  <span className="text-sm">{config.emoji}</span>
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-primary/70 mb-0.5">
                   {config.label}
@@ -140,10 +165,10 @@ const AnnouncementBanner = () => {
                   variant="outline"
                   size="sm"
                   className="w-full gap-2 border-primary/20 hover:bg-primary/10 hover:border-primary/30"
-                  onClick={() => window.open(currentAnnouncement.link_url!, '_blank', 'noopener,noreferrer')}
+                  onClick={handleLinkClick}
                 >
                   <ExternalLink className="h-4 w-4 text-primary" />
-                  <span className="text-primary">Learn more</span>
+                  <span className="text-primary">{currentAnnouncement.cta_label || "Learn more"}</span>
                 </Button>
               )}
 

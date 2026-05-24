@@ -1,21 +1,29 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, formatDistanceToNow } from "date-fns";
-import { Play, ChevronRight, Moon, Megaphone, Trophy, Bell, Zap } from "lucide-react";
+import {
+  Play, ChevronRight, Moon, Megaphone, Trophy, Bell, Zap,
+  CalendarDays, MapPin, Check,
+} from "lucide-react";
 import { DreamEntry } from "@/types/dream";
 import { Challenge } from "@/hooks/useChallenges";
 import { Announcement } from "@/hooks/useAnnouncements";
+import { CommunityEvent } from "@/hooks/useEvents";
+import { useEngagement } from "@/hooks/useEngagement";
+import { useEventRsvp } from "@/hooks/useEventRsvp";
 import { cn } from "@/lib/utils";
 
 // ─── types ───────────────────────────────────────────────────────────────────
 
 type Slide =
   | { type: "dream"; dream: DreamEntry }
+  | { type: "event"; event: CommunityEvent }
   | { type: "challenge"; challenge: Challenge }
   | { type: "announcement"; announcement: Announcement };
 
 interface Props {
   heroDream: DreamEntry | null;
+  events?: CommunityEvent[];
   challenges: Challenge[];
   announcements: Announcement[];
 }
@@ -54,19 +62,13 @@ const ANNOUNCE_ACCENT: Record<string, string> = {
 
 // ─── slide renderers ──────────────────────────────────────────────────────────
 
-const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => void }> = ({
-  dream,
-  onNavigate,
-}) => {
+const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => void }> = ({ dream, onNavigate }) => {
   const imageUrl = pickPoster(dream);
   const hasVideo = !!dream.video_url;
   const tag = dream.mood || dream.tags?.[0] || (dream.lucid ? "Lucid" : "Dream");
   const ago = (() => {
-    try {
-      return formatDistanceToNow(new Date(dream.created_at || dream.date), { addSuffix: true });
-    } catch {
-      return "";
-    }
+    try { return formatDistanceToNow(new Date(dream.created_at || dream.date), { addSuffix: true }); }
+    catch { return ""; }
   })();
 
   return (
@@ -118,9 +120,7 @@ const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => voi
             onClick={(e) => { e.stopPropagation(); onNavigate(`/journal/edit/${dream.id}`); }}
             className={cn(
               "flex items-center gap-1 px-4 py-2 rounded-full font-semibold text-sm transition-colors",
-              hasVideo
-                ? "bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm"
-                : "bg-white text-black hover:bg-white/90",
+              hasVideo ? "bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm" : "bg-white text-black hover:bg-white/90",
             )}
           >
             Open <ChevronRight className="h-4 w-4" />
@@ -131,26 +131,21 @@ const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => voi
   );
 };
 
-const ChallengeSlide: React.FC<{ challenge: Challenge; onNavigate: (url: string) => void }> = ({
-  challenge,
-  onNavigate,
-}) => {
-  const dateRange = (() => {
-    try {
-      return `${format(new Date(challenge.start_date), "MMM d")} – ${format(new Date(challenge.end_date), "MMM d, yyyy")}`;
-    } catch {
-      return "";
-    }
+const EventSlide: React.FC<{
+  event: CommunityEvent;
+  onClickLink: (url: string) => void;
+}> = ({ event, onClickLink }) => {
+  const { rsvp, setStatus } = useEventRsvp(event.id);
+  const dateLabel = (() => {
+    try { return format(new Date(event.starts_at), "EEE MMM d · h:mm a"); }
+    catch { return ""; }
   })();
+  const going = rsvp === "going";
 
   return (
     <>
-      {challenge.banner_image_url ? (
-        <img
-          src={challenge.banner_image_url}
-          alt={challenge.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+      {event.banner_image_url ? (
+        <img src={event.banner_image_url} alt={event.title} className="absolute inset-0 w-full h-full object-cover" />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-violet-950 via-purple-900 to-indigo-900">
           <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full bg-violet-500/20 blur-3xl" />
@@ -164,7 +159,79 @@ const ChallengeSlide: React.FC<{ challenge: Challenge; onNavigate: (url: string)
       <div className="absolute inset-x-0 bottom-10 px-5 z-10">
         <div className="flex items-center gap-2 mb-2">
           <span className="flex items-center gap-1 px-2 py-0.5 rounded border bg-violet-500/20 text-violet-300 border-violet-500/30 text-[9px] font-semibold uppercase tracking-wider">
-            <Zap className="h-2.5 w-2.5" /> Challenge
+            <CalendarDays className="h-2.5 w-2.5" /> Event
+          </span>
+          {dateLabel && <span className="text-white/70 text-[11px]">{dateLabel}</span>}
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 mb-1 drop-shadow-md">
+          {event.title}
+        </h1>
+        {event.location && (
+          <div className="flex items-center gap-1 text-white/70 text-[11px] mb-3">
+            <MapPin className="h-3 w-3" /> {event.location}
+          </div>
+        )}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onMouseUp={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              setStatus(going ? null : "going");
+            }}
+            className={cn(
+              "flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-sm transition-colors",
+              going
+                ? "bg-white/15 text-white border border-white/30 backdrop-blur-sm"
+                : "bg-white text-black hover:bg-white/90",
+            )}
+          >
+            {going ? <><Check className="h-4 w-4" /> Going</> : "RSVP"}
+          </button>
+          {event.link_url && (
+            <button
+              type="button"
+              onMouseUp={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onClickLink(event.link_url!); }}
+              className="flex items-center gap-1 px-4 py-2 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm font-semibold text-sm transition-colors"
+            >
+              {event.cta_label || "Details"} <ChevronRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const ChallengeSlide: React.FC<{
+  challenge: Challenge;
+  onClickLink: (url: string) => void;
+}> = ({ challenge, onClickLink }) => {
+  const dateRange = (() => {
+    try {
+      return `${format(new Date(challenge.start_date), "MMM d")} – ${format(new Date(challenge.end_date), "MMM d, yyyy")}`;
+    } catch { return ""; }
+  })();
+
+  return (
+    <>
+      {challenge.banner_image_url ? (
+        <img src={challenge.banner_image_url} alt={challenge.title} className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-amber-950 via-orange-900 to-yellow-800">
+          <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full bg-amber-500/20 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-orange-500/20 blur-3xl" />
+        </div>
+      )}
+
+      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
+
+      <div className="absolute inset-x-0 bottom-10 px-5 z-10">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded border bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] font-semibold uppercase tracking-wider">
+            <Trophy className="h-2.5 w-2.5" /> Challenge
           </span>
           {dateRange && <span className="text-white/60 text-[11px]">{dateRange}</span>}
         </div>
@@ -178,10 +245,10 @@ const ChallengeSlide: React.FC<{ challenge: Challenge; onNavigate: (url: string)
           <button
             type="button"
             onMouseUp={(e) => e.stopPropagation()}
-            onClick={(e) => { e.stopPropagation(); onNavigate("/lucid-repo"); }}
+            onClick={(e) => { e.stopPropagation(); onClickLink("/lucid-repo"); }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm font-semibold text-sm transition-colors"
           >
-            Tag {challenge.required_tag} to enter <ChevronRight className="h-4 w-4" />
+            {challenge.cta_label || `Tag ${challenge.required_tag} to enter`} <ChevronRight className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -189,17 +256,24 @@ const ChallengeSlide: React.FC<{ challenge: Challenge; onNavigate: (url: string)
   );
 };
 
-const AnnouncementSlide: React.FC<{ announcement: Announcement }> = ({ announcement }) => {
+const AnnouncementSlide: React.FC<{
+  announcement: Announcement;
+  onClickLink: (url: string) => void;
+}> = ({ announcement, onClickLink }) => {
   const Icon = ANNOUNCE_ICON[announcement.type] || Megaphone;
   const gradient = ANNOUNCE_GRADIENT[announcement.type] || ANNOUNCE_GRADIENT.announcement;
   const accent = ANNOUNCE_ACCENT[announcement.type] || ANNOUNCE_ACCENT.announcement;
 
   return (
     <>
-      <div className={cn("absolute inset-0 bg-gradient-to-br", gradient)}>
-        <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
-      </div>
+      {announcement.image_url ? (
+        <img src={announcement.image_url} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className={cn("absolute inset-0 bg-gradient-to-br", gradient)}>
+          <div className="absolute -top-20 -right-10 w-80 h-80 rounded-full bg-white/5 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-white/5 blur-3xl" />
+        </div>
+      )}
 
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/60 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
@@ -218,16 +292,14 @@ const AnnouncementSlide: React.FC<{ announcement: Announcement }> = ({ announcem
           <p className="text-sm text-white/75 line-clamp-3 mb-3">{announcement.content}</p>
         )}
         {announcement.link_url && (
-          <a
-            href={announcement.link_url}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
             onMouseUp={(e) => e.stopPropagation()}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onClickLink(announcement.link_url!); }}
             className="inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm font-semibold text-sm transition-colors"
           >
-            Learn More <ChevronRight className="h-4 w-4" />
-          </a>
+            {announcement.cta_label || "Learn More"} <ChevronRight className="h-4 w-4" />
+          </button>
         )}
       </div>
     </>
@@ -236,14 +308,27 @@ const AnnouncementSlide: React.FC<{ announcement: Announcement }> = ({ announcem
 
 // ─── main carousel ────────────────────────────────────────────────────────────
 
-const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcements }) => {
+const HomeHeroCarousel: React.FC<Props> = ({
+  heroDream,
+  events = [],
+  challenges,
+  announcements,
+}) => {
   const navigate = useNavigate();
+  const { recordEngagement } = useEngagement();
 
   const slides: Slide[] = useMemo(() => {
     const s: Slide[] = [];
     if (heroDream) s.push({ type: "dream", dream: heroDream });
 
     const now = new Date();
+
+    for (const ev of events) {
+      if (ev.status !== "published") continue;
+      if (new Date(ev.ends_at) < now) continue;
+      s.push({ type: "event", event: ev });
+    }
+
     for (const c of challenges) {
       if (c.status !== "active") continue;
       if (new Date(c.end_date) < now) continue;
@@ -255,7 +340,7 @@ const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcement
     }
 
     return s;
-  }, [heroDream, challenges, announcements]);
+  }, [heroDream, events, challenges, announcements]);
 
   const [index, setIndex] = useState(0);
   const touchStartX = useRef<number | null>(null);
@@ -279,6 +364,15 @@ const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcement
     resetAuto();
     return () => { if (autoRef.current) clearInterval(autoRef.current); };
   }, [slides.length]);
+
+  // Fire `view` engagement whenever a non-dream slide becomes active
+  useEffect(() => {
+    const slide = slides[safeIndex];
+    if (!slide) return;
+    if (slide.type === "event") recordEngagement("event", slide.event.id, "view");
+    else if (slide.type === "challenge") recordEngagement("challenge", slide.challenge.id, "view");
+    else if (slide.type === "announcement") recordEngagement("announcement", slide.announcement.id, "view");
+  }, [safeIndex, slides, recordEngagement]);
 
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -314,6 +408,23 @@ const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcement
     resetAuto();
   };
 
+  // Click-through: external URL opens new tab, internal route goes via React Router
+  const handleClickLink = (slide: Slide) => (url: string) => {
+    if (isDragging.current) return;
+    if (slide.type === "announcement") {
+      recordEngagement("announcement", slide.announcement.id, "click", { url });
+    } else if (slide.type === "challenge") {
+      recordEngagement("challenge", slide.challenge.id, "click", { url });
+    } else if (slide.type === "event") {
+      recordEngagement("event", slide.event.id, "click", { url });
+    }
+    if (url.startsWith("http")) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      navigate(url);
+    }
+  };
+
   if (slides.length === 0) return null;
 
   const slide = slides[safeIndex];
@@ -334,14 +445,14 @@ const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcement
             onNavigate={(url) => { if (!isDragging.current) navigate(url); }}
           />
         )}
+        {slide.type === "event" && (
+          <EventSlide event={slide.event} onClickLink={handleClickLink(slide)} />
+        )}
         {slide.type === "challenge" && (
-          <ChallengeSlide
-            challenge={slide.challenge}
-            onNavigate={(url) => { if (!isDragging.current) navigate(url); }}
-          />
+          <ChallengeSlide challenge={slide.challenge} onClickLink={handleClickLink(slide)} />
         )}
         {slide.type === "announcement" && (
-          <AnnouncementSlide announcement={slide.announcement} />
+          <AnnouncementSlide announcement={slide.announcement} onClickLink={handleClickLink(slide)} />
         )}
       </div>
 
@@ -356,9 +467,7 @@ const HomeHeroCarousel: React.FC<Props> = ({ heroDream, challenges, announcement
               onMouseUp={(e) => { e.stopPropagation(); goto(i); resetAuto(); }}
               className={cn(
                 "rounded-full transition-all duration-300 pointer-events-auto",
-                i === safeIndex
-                  ? "w-5 h-1.5 bg-white"
-                  : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60",
+                i === safeIndex ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60",
               )}
               aria-label={`Go to slide ${i + 1}`}
             />

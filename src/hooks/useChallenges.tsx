@@ -15,6 +15,9 @@ export interface Challenge {
   banner_image_url: string | null;
   created_at: string;
   entry_count?: number;
+  tags?: string[];
+  notify_users?: boolean;
+  cta_label?: string | null;
 }
 
 export interface ChallengeEntry {
@@ -75,6 +78,10 @@ export const useChallenges = () => {
     end_date: string;
     prize_description?: string;
     status?: string;
+    banner_image_url?: string | null;
+    tags?: string[];
+    cta_label?: string | null;
+    notify_users?: boolean;
   }) => {
     if (!user) return null;
     const { data, error } = await supabase
@@ -83,7 +90,7 @@ export const useChallenges = () => {
         ...challenge,
         created_by: user.id,
         status: challenge.status || 'draft',
-      })
+      } as any)
       .select()
       .single();
 
@@ -91,6 +98,38 @@ export const useChallenges = () => {
       await fetchChallenges();
     }
     return { data, error };
+  };
+
+  const updateChallenge = async (
+    id: string,
+    patch: Partial<{
+      title: string;
+      description: string;
+      required_tag: string;
+      start_date: string;
+      end_date: string;
+      prize_description: string | null;
+      status: string;
+      banner_image_url: string | null;
+      tags: string[];
+      cta_label: string | null;
+      notify_users: boolean;
+    }>,
+  ) => {
+    const { data, error } = await supabase
+      .from('community_challenges')
+      .update(patch as any)
+      .eq('id', id)
+      .select()
+      .single();
+    if (!error) await fetchChallenges();
+    return { data, error };
+  };
+
+  const deleteChallenge = async (id: string) => {
+    const { error } = await supabase.from('community_challenges').delete().eq('id', id);
+    if (!error) await fetchChallenges();
+    return { error };
   };
 
   const updateChallengeStatus = async (id: string, status: string) => {
@@ -133,6 +172,8 @@ export const useChallenges = () => {
     challenges,
     isLoading,
     createChallenge,
+    updateChallenge,
+    deleteChallenge,
     updateChallengeStatus,
     fetchEntries,
     refetch: fetchChallenges,

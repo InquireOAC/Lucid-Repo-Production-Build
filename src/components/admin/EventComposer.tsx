@@ -5,17 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Trophy, Save, Send, X } from "lucide-react";
+import { CalendarDays, Save, Send, X } from "lucide-react";
 import { toast } from "sonner";
-import { useChallenges, type Challenge } from "@/hooks/useChallenges";
+import { useEvents, type CommunityEvent } from "@/hooks/useEvents";
 import AdminBannerUpload from "./AdminBannerUpload";
 
-const toLocalDateValue = (iso: string | null | undefined): string => {
+const toLocalInputValue = (iso: string | null | undefined): string => {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 };
 
 const tagsToString = (tags: string[] | null | undefined) =>
@@ -26,23 +26,23 @@ const stringToTags = (s: string): string[] =>
 
 interface Props {
   onCreated?: () => void;
-  editing?: Challenge | null;
+  editing?: CommunityEvent | null;
   onCancelEdit?: () => void;
 }
 
-const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }) => {
-  const { createChallenge, updateChallenge } = useChallenges();
+const EventComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }) => {
+  const { createEvent, updateEvent } = useEvents({ adminView: true });
   const isEdit = !!editing?.id;
 
   const [title, setTitle] = useState(editing?.title || "");
   const [description, setDescription] = useState(editing?.description || "");
-  const [requiredTag, setRequiredTag] = useState(editing?.required_tag || "");
-  const [startDate, setStartDate] = useState(toLocalDateValue(editing?.start_date));
-  const [endDate, setEndDate] = useState(toLocalDateValue(editing?.end_date));
-  const [prize, setPrize] = useState(editing?.prize_description || "");
   const [bannerUrl, setBannerUrl] = useState<string | null>(editing?.banner_image_url || null);
-  const [tagsStr, setTagsStr] = useState(tagsToString(editing?.tags));
+  const [location, setLocation] = useState(editing?.location || "");
+  const [linkUrl, setLinkUrl] = useState(editing?.link_url || "");
   const [ctaLabel, setCtaLabel] = useState(editing?.cta_label || "");
+  const [startsAt, setStartsAt] = useState(toLocalInputValue(editing?.starts_at));
+  const [endsAt, setEndsAt] = useState(toLocalInputValue(editing?.ends_at));
+  const [tagsStr, setTagsStr] = useState(tagsToString(editing?.tags));
   const [notifyUsers, setNotifyUsers] = useState(editing?.notify_users ?? true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -50,60 +50,64 @@ const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }
     if (editing) {
       setTitle(editing.title || "");
       setDescription(editing.description || "");
-      setRequiredTag(editing.required_tag || "");
-      setStartDate(toLocalDateValue(editing.start_date));
-      setEndDate(toLocalDateValue(editing.end_date));
-      setPrize(editing.prize_description || "");
       setBannerUrl(editing.banner_image_url || null);
-      setTagsStr(tagsToString(editing.tags));
+      setLocation(editing.location || "");
+      setLinkUrl(editing.link_url || "");
       setCtaLabel(editing.cta_label || "");
+      setStartsAt(toLocalInputValue(editing.starts_at));
+      setEndsAt(toLocalInputValue(editing.ends_at));
+      setTagsStr(tagsToString(editing.tags));
       setNotifyUsers(editing.notify_users ?? true);
     }
   }, [editing]);
 
   const resetForm = () => {
-    setTitle(""); setDescription(""); setRequiredTag(""); setStartDate(""); setEndDate("");
-    setPrize(""); setBannerUrl(null); setTagsStr(""); setCtaLabel("");
-    setNotifyUsers(true);
+    setTitle(""); setDescription(""); setBannerUrl(null); setLocation("");
+    setLinkUrl(""); setCtaLabel(""); setStartsAt(""); setEndsAt("");
+    setTagsStr(""); setNotifyUsers(true);
   };
 
-  const submit = async (status: "draft" | "active") => {
-    if (!title.trim() || !requiredTag.trim() || !startDate || !endDate) {
-      toast.error("Title, tag, start and end dates are required");
+  const submit = async (status: "draft" | "published") => {
+    if (!title.trim() || !startsAt || !endsAt) {
+      toast.error("Title and start/end times are required");
+      return;
+    }
+    if (new Date(endsAt) <= new Date(startsAt)) {
+      toast.error("End time must be after start time");
       return;
     }
     setSubmitting(true);
-    const tag = requiredTag.startsWith("#") ? requiredTag : `#${requiredTag}`;
     const payload = {
       title: title.trim(),
-      description: description.trim(),
-      required_tag: tag,
-      start_date: new Date(startDate).toISOString(),
-      end_date: new Date(endDate).toISOString(),
-      prize_description: prize.trim() || null,
+      description: description.trim() || null,
       banner_image_url: bannerUrl,
-      tags: stringToTags(tagsStr),
+      location: location.trim() || null,
+      link_url: linkUrl.trim() || null,
       cta_label: ctaLabel.trim() || null,
+      starts_at: new Date(startsAt).toISOString(),
+      ends_at: new Date(endsAt).toISOString(),
+      tags: stringToTags(tagsStr),
       notify_users: notifyUsers,
       status,
     };
 
     let result;
     if (isEdit && editing?.id) {
-      result = await updateChallenge(editing.id, payload);
+      result = await updateEvent(editing.id, payload);
     } else {
-      result = await createChallenge(payload as any);
+      result = await createEvent(payload);
     }
     setSubmitting(false);
 
     if (result?.error) {
-      toast.error(`Failed to ${isEdit ? "update" : "create"} challenge`);
+      console.error(result.error);
+      toast.error(`Failed to ${isEdit ? "update" : "create"} event`);
     } else {
       toast.success(
         isEdit
-          ? "Challenge updated"
-          : status === "active"
-          ? "Challenge published"
+          ? "Event updated"
+          : status === "published"
+          ? "Event published"
           : "Draft saved",
       );
       if (!isEdit) resetForm();
@@ -116,8 +120,8 @@ const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold">{isEdit ? "Edit Challenge" : "New Challenge"}</h3>
+            <CalendarDays className="h-4 w-4 text-primary" />
+            <h3 className="text-sm font-semibold">{isEdit ? "Edit Event" : "New Event"}</h3>
           </div>
           {isEdit && onCancelEdit && (
             <Button variant="ghost" size="sm" onClick={onCancelEdit} className="h-7 px-2">
@@ -126,44 +130,44 @@ const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }
           )}
         </div>
 
-        <AdminBannerUpload value={bannerUrl} onChange={setBannerUrl} kind="challenge" aspect="wide" />
+        <AdminBannerUpload value={bannerUrl} onChange={setBannerUrl} kind="event" aspect="wide" />
 
         <div className="space-y-2">
           <div>
             <Label className="text-xs">Title</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Dream Challenge Name" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Event name" />
           </div>
           <div>
             <Label className="text-xs">Description</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe the challenge..." rows={2} />
+            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} placeholder="What's happening?" />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Required Tag</Label>
-              <Input value={requiredTag} onChange={(e) => setRequiredTag(e.target.value)} placeholder="#Dreamer" />
+              <Label className="text-xs">Starts at</Label>
+              <Input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} />
             </div>
             <div>
-              <Label className="text-xs">Prize (optional)</Label>
-              <Input value={prize} onChange={(e) => setPrize(e.target.value)} placeholder="Featured on homepage" />
+              <Label className="text-xs">Ends at</Label>
+              <Input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <Label className="text-xs">Start Date</Label>
-              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+              <Label className="text-xs">Location</Label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Online · Discord · …" />
             </div>
             <div>
-              <Label className="text-xs">End Date</Label>
-              <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+              <Label className="text-xs">Link URL (optional)</Label>
+              <Input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} placeholder="https://..." />
             </div>
-          </div>
-          <div>
-            <Label className="text-xs">Categories / tags (comma-separated)</Label>
-            <Input value={tagsStr} onChange={(e) => setTagsStr(e.target.value)} placeholder="weekly, beginner" />
           </div>
           <div>
             <Label className="text-xs">CTA label (optional)</Label>
-            <Input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} placeholder="Join Challenge" />
+            <Input value={ctaLabel} onChange={(e) => setCtaLabel(e.target.value)} placeholder="Join Event" />
+          </div>
+          <div>
+            <Label className="text-xs">Tags (comma-separated)</Label>
+            <Input value={tagsStr} onChange={(e) => setTagsStr(e.target.value)} placeholder="workshop, lucid, live" />
           </div>
         </div>
 
@@ -180,7 +184,7 @@ const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }
             <Save className="h-4 w-4 mr-2" />
             Save Draft
           </Button>
-          <Button type="button" disabled={submitting} onClick={() => submit("active")} className="flex-1">
+          <Button type="button" disabled={submitting} onClick={() => submit("published")} className="flex-1">
             <Send className="h-4 w-4 mr-2" />
             {isEdit ? "Update & Publish" : "Publish & Notify"}
           </Button>
@@ -190,4 +194,4 @@ const ChallengeComposer: React.FC<Props> = ({ onCreated, editing, onCancelEdit }
   );
 };
 
-export default ChallengeComposer;
+export default EventComposer;
