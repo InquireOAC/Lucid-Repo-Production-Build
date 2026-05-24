@@ -1,446 +1,241 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
-
-import { useLucidStats } from "@/hooks/useLucidStats";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-
-import { usePinnedTechniques } from "@/hooks/usePinnedTechniques";
-import { techniques } from "@/components/insights/techniqueData";
-
-import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpg";
-import techniqueImgSsild from "@/assets/techniques/ssild.jpg";
-import techniqueImgWild from "@/assets/techniques/wild.jpg";
-import techniqueImgFild from "@/assets/techniques/fild.jpg";
-import techniqueImgDeild from "@/assets/techniques/deild.jpg";
-import techniqueImgMeditation from "@/assets/techniques/meditation.jpg";
+import { useDreamStore } from "@/store/dreamStore";
+import { useJournalEntries } from "@/hooks/useJournalEntries";
 
 import { Button } from "@/components/ui/button";
-
 import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-} from "recharts";
-import SymbolAvatar from "@/components/profile/SymbolAvatar";
-import {
-  Pencil,
-  BookOpen,
-  Heart,
-  MessageSquare,
-  ChevronRight,
-  Moon,
-  Pin,
-  
-  Clock,
-  ArrowUpRight,
-} from "lucide-react";
+import FAB from "@/components/ui/FAB";
+
+import JournalHeroPoster from "@/components/journal/JournalHeroPoster";
+import JournalPosterCard from "@/components/journal/JournalPosterCard";
+import PosterRail from "@/components/repos/netflix/PosterRail";
+import PosterCard from "@/components/repos/netflix/PosterCard";
+import HeroPoster from "@/components/repos/netflix/HeroPoster";
+
+import { DreamEntry } from "@/types/dream";
+import { Film, Plus, Moon } from "lucide-react";
+
+const hasPoster = (d: DreamEntry) =>
+  !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
 
 const Home = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { dreams, isLoading: feedLoading } = useFeedPublicDreams(user);
-  const { stats } = useLucidStats();
-  const { pinnedIndices } = usePinnedTechniques();
+  const { dreams: feedDreams, isLoading: feedLoading } = useFeedPublicDreams(user);
 
-  const { data: todayCount } = useQuery({
-    queryKey: ["repo-today-count"],
-    queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const { count } = await supabase
-        .from("dream_entries")
-        .select("*", { count: "exact", head: true })
-        .eq("is_public", true)
-        .gte("created_at", today);
-      return count ?? 0;
-    },
-    staleTime: 60_000,
-  });
+  // Pull from store first (instant), fall back to a sync if empty.
+  const { entries } = useDreamStore();
+  useJournalEntries(); // triggers a background sync when user is present
+
+  const myDreams = entries as DreamEntry[];
+
+  const heroDream = useMemo(() => {
+    if (!myDreams.length) return null;
+    const withVideo = myDreams.find((d) => !!d.video_url && hasPoster(d));
+    if (withVideo) return withVideo;
+    const withMedia = myDreams.find(hasPoster);
+    return withMedia || myDreams[0];
+  }, [myDreams]);
+
+  const continueCreating = useMemo(
+    () => myDreams.filter((d) => !d.video_url).slice(0, 10),
+    [myDreams],
+  );
+  const cinematicDreams = useMemo(
+    () => myDreams.filter((d) => !!d.video_url).slice(0, 10),
+    [myDreams],
+  );
+
+  // Stats strip (compact, text-only)
+  const stats = useMemo(() => {
+    const now = new Date();
+    const weekAgo = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+    const weekCount = myDreams.filter(
+      (d) => new Date(d.created_at || d.date).getTime() >= weekAgo,
+    ).length;
+    const cinematicCount = myDreams.filter((d) => !!d.video_url).length;
+    const sceneCount = myDreams.reduce(
+      (sum, d) =>
+        sum + (d.section_images?.filter((s) => !!s.image_url).length || 0),
+      0,
+    );
+    return { weekCount, cinematicCount, sceneCount };
+  }, [myDreams]);
+
+  // Signed-out: keep a simple welcome hero
+  if (!user) {
+    return (
+      <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
+        <div className="max-w-2xl mx-auto px-4 md:px-8 pt-12 pb-10">
+          <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-primary/30 via-accent/20 to-background aspect-[3/4] md:aspect-[21/9]">
+            <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
+            <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 px-6 z-10">
+              <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
+                <Film className="h-7 w-7 text-white" />
+              </div>
+              <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 drop-shadow-md">
+                Your dreams, as cinema.
+              </h1>
+              <p className="text-sm text-white/70 max-w-md mb-5">
+                Sign in to record dreams and turn them into cinematic scenes and short films.
+              </p>
+              <Button onClick={() => navigate("/auth")} variant="luminous" size="lg">
+                Sign In
+              </Button>
+            </div>
+          </div>
+        </div>
+      </PageTransition>
+    );
+  }
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
-      <div className="max-w-2xl mx-auto space-y-6">
-        {/* Greeting + Record CTA */}
-        <div className="pt-12 mb-8">
-          <h1 className="text-3xl font-bold text-foreground leading-tight">
-            {user ? "Welcome back," : "Sign in to get started"}
-          </h1>
-          {user ? (
-            <p className="text-2xl font-semibold text-primary mt-1">
-              {profile?.display_name || profile?.username || "Dreamer"}
-            </p>
-          ) : (
-            <Button
-              onClick={() => navigate("/auth")}
-              className="mt-3 w-full"
-              variant="luminous"
-            >
-              Sign In
-            </Button>
-          )}
-
-          <div className="mt-[10px]">
-            <AnnouncementBanner />
-          </div>
-          
-          <div
-            className="mt-2 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
-            onClick={() => navigate("/journal/new")}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                <Pencil size={16} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground text-sm">Record a Dream</h3>
-                <p className="text-xs text-muted-foreground">What did you dream last night?</p>
-              </div>
-              <ArrowUpRight size={16} className="text-foreground shrink-0" />
-            </div>
-          </div>
-
-          {/* Dream Book CTA */}
-          <div
-            className="mt-3 rounded-2xl bg-[#0d1425] border border-primary/15 p-3 cursor-pointer hover:border-primary/25 transition-colors"
-            onClick={() => navigate("/dream-book")}
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                <BookOpen size={16} className="text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-foreground text-sm">Dream Book</h3>
-                <p className="text-xs text-muted-foreground">Your personal dream gallery</p>
-              </div>
-              <ArrowUpRight size={16} className="text-foreground shrink-0" />
-            </div>
-          </div>
-        </div>
-        {/* Pinned Techniques */}
-        <PinnedTechniquesSection pinnedIndices={pinnedIndices} />
-
-
-        {/* Lucid Insights */}
-        {stats && <LucidInsightsCard stats={stats} onTap={() => navigate("/lucid-stats")} />}
-
-        {/* Feed */}
-        <div>
-          <h2 className="text-lg font-semibold text-foreground mb-3">
-            Following Feed
-          </h2>
-          {feedLoading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-xl" />
-              ))}
-            </div>
-          ) : dreams.length === 0 ? (
-            <div className="rounded-2xl bg-[#0d1425] border border-primary/10">
-              <div className="p-6 text-center">
-                <p className="text-muted-foreground text-sm">
-                  No dreams from people you follow yet.
-                </p>
-                <Button
-                  variant="link"
-                  className="text-primary mt-2"
-                  onClick={() => navigate("/lucid-repo")}
-                >
-                  Discover dreamers to follow →
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {dreams.slice(0, 3).map((dream: any) => (
-                <FeedDreamCard
-                  key={dream.id}
-                  dream={dream}
-                  onClick={() => navigate(`/dream/${dream.id}`)}
-                />
-              ))}
-            </div>
-          )}
+    <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-10">
+        {/* Soft greeting strip (no big text hero — the visual hero is the dream) */}
+        <div className="pt-6 mb-3 flex items-baseline justify-between">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+            Tonight's Dreamscape
+          </p>
+          <p className="text-xs text-muted-foreground truncate max-w-[40%] text-right">
+            {profile?.display_name || profile?.username || "Dreamer"}
+          </p>
         </div>
 
-        {/* Today's Repo Activity */}
-        {todayCount != null && todayCount > 0 && (
-          <button
-            onClick={() => navigate("/lucid-repo")}
-            className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-full bg-primary/10 border border-primary/15 hover:bg-primary/15 transition-colors"
-          >
-            <span className="text-sm">🌙</span>
-            <span className="text-xs font-medium text-primary">
-              {todayCount} dream{todayCount !== 1 ? "s" : ""} shared to the Repo today
-            </span>
-            <ChevronRight size={14} className="text-primary/60" />
-          </button>
+        <div className="mb-4">
+          <AnnouncementBanner />
+        </div>
+
+        {/* Cinematic hero — featured personal dream */}
+        {heroDream ? (
+          <JournalHeroPoster dream={heroDream} label="Featured" />
+        ) : (
+          <EmptyHero onCreate={() => navigate("/journal/new")} />
         )}
 
-        {/* While Falling Asleep */}
-        <FallingAsleepSection />
+        {/* Stats strip */}
+        {myDreams.length > 0 && (
+          <div className="mb-6 -mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
+            {stats.weekCount > 0 && (
+              <span>
+                <span className="text-foreground font-semibold">{stats.weekCount}</span>{" "}
+                dream{stats.weekCount !== 1 ? "s" : ""} this week
+              </span>
+            )}
+            {stats.cinematicCount > 0 && (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span>
+                  <span className="text-foreground font-semibold">{stats.cinematicCount}</span>{" "}
+                  cinematic{stats.cinematicCount !== 1 ? "s" : ""}
+                </span>
+              </>
+            )}
+            {stats.sceneCount > 0 && (
+              <>
+                <span className="text-muted-foreground/40">·</span>
+                <span>
+                  <span className="text-foreground font-semibold">{stats.sceneCount}</span>{" "}
+                  scene{stats.sceneCount !== 1 ? "s" : ""}
+                </span>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Continue Creating */}
+        {continueCreating.length > 0 && (
+          <PosterRail
+            title="Continue Creating"
+            onSeeAll={() => navigate("/journal")}
+          >
+            {continueCreating.map((d) => (
+              <JournalPosterCard key={d.id} dream={d} />
+            ))}
+          </PosterRail>
+        )}
+
+        {/* Your Cinematic Dreams */}
+        {cinematicDreams.length > 0 && (
+          <PosterRail
+            title="Your Cinematics"
+            onSeeAll={() => navigate("/journal")}
+          >
+            {cinematicDreams.map((d) => (
+              <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
+            ))}
+          </PosterRail>
+        )}
+
+        {/* Featured Dreamscapes (community / public feed) */}
+        <PosterRail
+          title="Featured Dreamscapes"
+          onSeeAll={() => navigate("/lucid-repo")}
+        >
+          {feedLoading ? (
+            [0, 1, 2, 3, 4].map((i) => (
+              <Skeleton
+                key={i}
+                className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md"
+              />
+            ))
+          ) : feedDreams.length > 0 ? (
+            feedDreams.slice(0, 10).map((d: any) => (
+              <PosterCard key={d.id} dream={d as DreamEntry} />
+            ))
+          ) : (
+            <button
+              onClick={() => navigate("/lucid-repo")}
+              className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md border border-dashed border-border/50 flex flex-col items-center justify-center text-center px-3 hover:border-primary/40 transition-colors"
+            >
+              <Moon className="h-6 w-6 text-muted-foreground/60 mb-2" />
+              <span className="text-[11px] text-muted-foreground leading-tight">
+                Discover dreams shared by others
+              </span>
+            </button>
+          )}
+        </PosterRail>
       </div>
+
+      {/* FAB */}
+      <FAB label="New Dream" to="/journal/new" />
     </PageTransition>
   );
 };
 
-/* ===== Sub-components ===== */
-
-interface LucidInsightsProps {
-  stats: {
-    recall_chart: { day?: string; count?: number }[];
-    total_lucid_dreams: number;
-    total_entries: number;
-    techniques: { technique: string; rate: number }[];
-    avg_lucidity_level: number;
-  };
-  onTap: () => void;
-}
-
-const LucidInsightsCard: React.FC<LucidInsightsProps> = ({ stats, onTap }) => {
-  const chartData = (stats.recall_chart || []).slice(-14).map((p) => ({
-    day: p.day ? new Date(p.day).toLocaleDateString(undefined, { day: "numeric" }) : "",
-    count: p.count ?? 0,
-  }));
-
-  const lucidRate =
-    stats.total_entries > 0
-      ? Math.round((stats.total_lucid_dreams / stats.total_entries) * 100)
-      : 0;
-
-  const topTechnique = stats.techniques?.[0];
-
-  return (
-    <div
-      className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 space-y-3 cursor-pointer hover:border-primary/25 transition-colors"
-      onClick={onTap}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Moon size={16} className="text-primary" />
-          <h2 className="text-sm font-semibold text-foreground">Lucid Insights</h2>
+const EmptyHero: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
+  <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 md:rounded-2xl overflow-hidden">
+    <div className="relative aspect-[3/4] md:aspect-[21/9] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
+      <div className="absolute -top-16 -left-8 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
+      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
+      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent" />
+      <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 px-6 z-10">
+        <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
+          <Film className="h-7 w-7 text-white" />
         </div>
-        <ChevronRight size={16} className="text-muted-foreground" />
-      </div>
-
-      {chartData.length > 2 && (
-        <div className="h-24 -mx-1">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="insightGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false}
-                tickLine={false}
-                interval="preserveStartEnd"
-              />
-              <YAxis hide allowDecimals={false} />
-              <Area
-                type="monotone"
-                dataKey="count"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fill="url(#insightGrad)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <div>
-          <p className="text-lg font-bold text-foreground">{lucidRate}%</p>
-          <p className="text-[10px] text-muted-foreground">Lucid Rate</p>
-        </div>
-        <div>
-          <p className="text-lg font-bold text-foreground truncate">
-            {topTechnique ? topTechnique.technique : "—"}
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            {topTechnique ? `${topTechnique.rate}% success` : "Top Technique"}
-          </p>
-        </div>
-        <div>
-          <p className="text-lg font-bold text-foreground">{stats.avg_lucidity_level}</p>
-          <p className="text-[10px] text-muted-foreground">Avg Lucidity</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FeedDreamCard = ({
-  dream,
-  onClick,
-}: {
-  dream: any;
-  onClick: () => void;
-}) => (
-  <div
-    className="rounded-2xl bg-[#0d1425] border border-border/20 cursor-pointer hover:border-primary/25 transition-colors overflow-hidden"
-    onClick={onClick}
-  >
-    <div className="flex gap-3 p-3">
-      {(dream.image_url || dream.generatedImage) && (
-        <img
-          src={dream.image_url || dream.generatedImage}
-          alt=""
-          className="w-20 h-20 rounded-lg object-cover shrink-0"
-        />
-      )}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-1">
-          <SymbolAvatar
-            avatarUrl={dream.profiles?.avatar_url}
-            symbol={dream.profiles?.avatar_symbol}
-            color={dream.profiles?.avatar_color}
-            fallbackLetter={(dream.profiles?.display_name || dream.profiles?.username || "D").charAt(0).toUpperCase()}
-            size={20}
-          />
-          <span className="text-xs text-muted-foreground truncate">
-            {dream.profiles?.display_name ||
-              dream.profiles?.username ||
-              "Dreamer"}
-          </span>
-        </div>
-        <h3 className="font-semibold text-sm text-foreground truncate">
-          {dream.title}
-        </h3>
-        <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-          {dream.content?.slice(0, 120)}
+        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow-md">
+          Start your dream cinema
+        </h2>
+        <p className="text-sm text-white/70 max-w-sm mb-5">
+          Record a dream and we'll turn it into scenes, images, and short films.
         </p>
-        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Heart size={12} /> {dream.like_count || 0}
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageSquare size={12} /> {dream.comment_count || 0}
-          </span>
-        </div>
+        <button
+          onClick={onCreate}
+          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          Record First Dream
+        </button>
       </div>
     </div>
   </div>
 );
 
-
-
-/* Sleep-onset technique cards with custom images */
-const FALLING_ASLEEP_CARDS: { idx: number; image: string }[] = [
-  { idx: 3, image: techniqueImgWild },
-  { idx: 4, image: techniqueImgSsild },
-  { idx: 5, image: techniqueImgFild },
-  { idx: 6, image: techniqueImgDeild },
-  { idx: 7, image: techniqueImgMeditation },
-  { idx: 0, image: techniqueImgRealityChecks },
-];
-
-
-const PinnedTechniquesSection: React.FC<{ pinnedIndices: number[] }> = ({ pinnedIndices }) => {
-  const navigate = useNavigate();
-
-  if (pinnedIndices.length === 0) {
-    return (
-      <div>
-        <h2 className="text-sm font-medium uppercase tracking-wider mb-3 flex items-center gap-2 text-secondary-foreground">
-          <Pin size={14} className="text-secondary-foreground" />
-          Pinned Technique
-        </h2>
-        <div className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 text-center">
-          <p className="text-sm text-muted-foreground">
-            Pin a technique from the Explore page to display it here.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div>
-      <div className="space-y-3">
-        {pinnedIndices.map((idx) => {
-          const t = techniques[idx];
-          if (!t) return null;
-          return (
-            <div
-              key={idx}
-              onClick={() => navigate(`/insights/technique/${idx}`)}
-              className="rounded-2xl bg-[#0d1425] border border-border/20 p-5 cursor-pointer hover:border-primary/25 transition-colors"
-            >
-              <p className="text-xs font-medium text-primary uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <Pin size={12} />
-                Pinned Technique
-              </p>
-              <h3 className="text-xl font-bold text-foreground mb-1">
-                {t.acronym || t.name}
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-                {t.name}{t.acronym ? `. ${t.shortDescription}` : ""}
-              </p>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Clock size={12} /> 15m
-                </span>
-                <span className="flex items-center gap-1">
-                  <ArrowUpRight size={12} /> {t.difficulty}
-                </span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const FallingAsleepSection: React.FC = () => {
-  const navigate = useNavigate();
-
-  return (
-    <div>
-      <h2 className="text-lg font-bold text-foreground mb-4">
-        Lucid Techniques
-      </h2>
-      <div className="grid grid-cols-2 gap-3">
-        {FALLING_ASLEEP_CARDS.map(({ idx, image }) => {
-          const t = techniques[idx];
-          if (!t) return null;
-          return (
-            <div
-              key={idx}
-              onClick={() => navigate(`/insights/technique/${idx}`)}
-              className="cursor-pointer relative rounded-2xl overflow-hidden aspect-square group"
-            >
-              <img
-                src={image}
-                alt={t.name}
-                className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <h3 className="font-semibold text-white text-sm leading-tight drop-shadow-md">
-                  {t.acronym || t.name}
-                </h3>
-                <p className="text-[10px] text-white/70 mt-0.5">{t.shortDescription}</p>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 export default Home;
-

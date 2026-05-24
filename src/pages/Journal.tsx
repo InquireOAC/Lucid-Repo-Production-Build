@@ -1,78 +1,67 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
-import JournalHeader from "@/components/journal/JournalHeader";
-import TagFilter from "@/components/journal/TagFilter";
 import AddDreamDialog from "@/components/journal/AddDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
-import DreamsList from "@/components/journal/DreamsList";
 import EmptyJournal from "@/components/journal/EmptyJournal";
+import JournalHeroPoster from "@/components/journal/JournalHeroPoster";
+import JournalPosterCard from "@/components/journal/JournalPosterCard";
+import PosterRail from "@/components/repos/netflix/PosterRail";
+import FAB from "@/components/ui/FAB";
 import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
+import { Search, X, Film } from "lucide-react";
+import { Input } from "@/components/ui/input";
+
+const BUILTIN_CATEGORIES = ["All", "Cinematic", "Lucid", "Nightmare", "Recurring", "Flying"] as const;
+type Category = string;
+
+const hasPoster = (d: DreamEntry) =>
+  !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
+
+const filterByCategory = (dreams: DreamEntry[], cat: Category): DreamEntry[] => {
+  if (cat === "All") return dreams;
+  if (cat === "Cinematic") return dreams.filter((d) => !!d.video_url);
+  if (cat === "Lucid") return dreams.filter((d) => d.lucid);
+  const lower = cat.toLowerCase();
+  return dreams.filter(
+    (d) =>
+      d.mood?.toLowerCase() === lower ||
+      d.tags?.some((t) => t.toLowerCase() === lower),
+  );
+};
 
 const Journal = () => {
   const navigate = useNavigate();
   const {
     entries,
-    filteredDreams,
-    tags,
-    uniqueTagsInDreams,
-    activeTagIds,
     isSubmitting,
     isAddingDream,
     setIsAddingDream,
-    isEditingDream,
-    setIsEditingDream,
-    selectedDream,
-    setSelectedDream,
+    tags,
     dreamToDelete,
     setDreamToDelete,
     handleAddDream,
-    handleEditDream,
     handleDeleteDream,
-    handleTogglePublic,
-    handleTagClick,
-    setActiveTagIds,
     user,
     syncDreamsFromDb,
   } = useDreamJournal();
 
-  // Memoize the sync function to prevent infinite loops
   const memoizedSyncDreams = useCallback(() => {
-    if (user) {
-      syncDreamsFromDb();
-    }
+    if (user) syncDreamsFromDb();
   }, [user, syncDreamsFromDb]);
 
-  // Only sync on initial mount and when user changes
   useEffect(() => {
     memoizedSyncDreams();
-  }, [user]); // Remove syncDreamsFromDb from dependencies
+  }, [user]);
+
+  const [activeCategory, setActiveCategory] = useState<Category>("All");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
     setIsAddingDream(false);
-    // Sync after a short delay to avoid conflicts
-    setTimeout(memoizedSyncDreams, 500);
-  };
-
-  const handleEditDreamSubmit = async (dreamData: {
-    title: string;
-    content: string;
-    tags: string[];
-    lucid: boolean;
-    mood: string;
-    analysis?: string;
-    generatedImage?: string;
-    imagePrompt?: string;
-    audioUrl?: string;
-  }): Promise<void> => {
-    if (!selectedDream) return;
-    console.log('Edit dream submit with audio:', dreamData.audioUrl);
-    await handleEditDream(dreamData, selectedDream.id);
-    setIsEditingDream(false);
-    setSelectedDream(null);
-    // Sync after a short delay to avoid conflicts
     setTimeout(memoizedSyncDreams, 500);
   };
 
@@ -80,66 +69,211 @@ const Journal = () => {
     if (dreamToDelete) {
       await handleDeleteDream(dreamToDelete);
       setDreamToDelete(null);
-      if (user) {
-        memoizedSyncDreams();
-      }
+      if (user) memoizedSyncDreams();
     }
   };
 
-  const handleOpenEditDialog = (dream: DreamEntry) => {
-    navigate(`/journal/edit/${dream.id}`);
-  };
+  // Build dynamic category list: builtins + any user tag actually used
+  const categories: Category[] = useMemo(() => {
+    const set = new Set<string>(BUILTIN_CATEGORIES);
+    for (const d of entries) {
+      for (const t of d.tags || []) {
+        const name = (tags.find((x) => x.id === t)?.name || t).trim();
+        if (name) set.add(name);
+      }
+      if (d.mood) set.add(d.mood.charAt(0).toUpperCase() + d.mood.slice(1));
+    }
+    return Array.from(set);
+  }, [entries, tags]);
+
+  // Apply search across all visible dreams
+  const searched = useMemo(() => {
+    if (!searchQuery.trim()) return entries;
+    const q = searchQuery.toLowerCase();
+    return entries.filter(
+      (d) =>
+        d.title?.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.tags?.some((t) => t.toLowerCase().includes(q)),
+    );
+  }, [entries, searchQuery]);
+
+  const filtered = useMemo(
+    () => filterByCategory(searched, activeCategory),
+    [searched, activeCategory],
+  );
+
+  // Hero = most recent dream with media; fallback to most recent overall
+  const heroDream = useMemo(() => {
+    return entries.find(hasPoster) || entries[0];
+  }, [entries]);
+
+  // Rails (only shown when category is "All" and no search)
+  const recentlyAdded = useMemo(() => entries.slice(0, 12), [entries]);
+  const lucidDreams = useMemo(() => entries.filter((d) => d.lucid).slice(0, 12), [entries]);
+  const cinematicDreams = useMemo(
+    () => entries.filter((d) => !!d.video_url).slice(0, 12),
+    [entries],
+  );
+  const thisMonth = useMemo(() => {
+    const now = new Date();
+    const cutoff = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    return entries
+      .filter((d) => {
+        const t = new Date(d.created_at || d.date).getTime();
+        return Number.isFinite(t) && t >= cutoff;
+      })
+      .slice(0, 12);
+  }, [entries]);
+
+  const isCategoryView = activeCategory !== "All" || !!searchQuery.trim();
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top px-4 md:px-8 pb-4">
-      <div className="max-w-6xl mx-auto">
-        <JournalHeader onAddDream={() => setIsAddingDream(true)} />
+    <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 pb-10">
+        {/* Sticky cinematic header */}
+        <div className="sticky top-0 z-30 -mx-4 md:-mx-8 px-4 md:px-8 pt-3 pb-2 bg-background/80 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+              My <span className="text-primary">Dreams</span>
+            </h1>
+            <button
+              type="button"
+              aria-label="Search dreams"
+              onClick={() => setSearchOpen((v) => !v)}
+              className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40 transition-colors"
+            >
+              {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            </button>
+          </div>
 
-        <TagFilter
-          tags={uniqueTagsInDreams}
-          activeTags={activeTagIds}
-          onTagClick={handleTagClick}
-          onClearTags={() => setActiveTagIds([])}
-        />
-
-        <div className="mb-6">
-          {entries.length === 0 ? (
-            <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
-          ) : (
-            <DreamsList
-              dreams={filteredDreams}
-              tags={tags}
-              onSelect={(dream) => navigate(`/dream/${dream.id}`)}
-              onEdit={handleOpenEditDialog}
-              onTogglePublic={handleTogglePublic}
-              onDelete={(dreamId) => setDreamToDelete(dreamId)}
-              onTagClick={handleTagClick}
-            />
+          {searchOpen && (
+            <div className="mb-2">
+              <Input
+                autoFocus
+                type="text"
+                aria-label="Search dreams"
+                placeholder="Search your dreams..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="h-10 rounded-xl text-sm bg-muted/30 border-border/30"
+              />
+            </div>
           )}
+
+          <div
+            className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide"
+            style={{ scrollbarWidth: "none" }}
+          >
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveCategory(cat)}
+                className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                  activeCategory === cat
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <AddDreamDialog
-          isOpen={isAddingDream}
-          onOpenChange={(open) => {
-            setIsAddingDream(open);
-            if (!open && user) {
-              // Small delay to avoid conflicts
-              setTimeout(memoizedSyncDreams, 300);
-            }
-          }}
-          onSubmit={handleAddDreamAndClose}
-          tags={tags}
-          isSubmitting={isSubmitting}
-        />
+        {/* Empty state */}
+        {entries.length === 0 ? (
+          <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
+        ) : isCategoryView ? (
+          /* Category / search view — grid of posters */
+          <div className="mt-4">
+            <h2 className="text-base md:text-lg font-bold text-foreground mb-3">
+              {searchQuery
+                ? `Results for "${searchQuery}"`
+                : activeCategory === "Cinematic"
+                ? "Your Cinematic Dreams"
+                : `${activeCategory} Dreams`}
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                ({filtered.length})
+              </span>
+            </h2>
+            {filtered.length === 0 ? (
+              <div className="text-center py-16">
+                <Film className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-sm text-muted-foreground">
+                  No dreams match{searchQuery ? " your search" : ` "${activeCategory}"`}.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                {filtered.map((d) => (
+                  <JournalPosterCard key={d.id} dream={d} width="md" />
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Default view — hero + rails */
+          <>
+            {heroDream && <JournalHeroPoster dream={heroDream} />}
 
-        <DeleteDreamConfirmationDialog
-          isOpen={!!dreamToDelete}
-          onOpenChange={(open) => {
-            if (!open) setDreamToDelete(null);
-          }}
-          onConfirmDelete={confirmDeleteDream}
-        />
+            {recentlyAdded.length > 0 && (
+              <PosterRail title="Recently Added">
+                {recentlyAdded.map((d) => (
+                  <JournalPosterCard key={d.id} dream={d} />
+                ))}
+              </PosterRail>
+            )}
+
+            {cinematicDreams.length > 0 && (
+              <PosterRail title="Your Cinematics">
+                {cinematicDreams.map((d) => (
+                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
+                ))}
+              </PosterRail>
+            )}
+
+            {lucidDreams.length > 0 && (
+              <PosterRail title="Lucid Dreams">
+                {lucidDreams.map((d) => (
+                  <JournalPosterCard key={d.id} dream={d} />
+                ))}
+              </PosterRail>
+            )}
+
+            {thisMonth.length > 0 && (
+              <PosterRail title="This Month">
+                {thisMonth.map((d) => (
+                  <JournalPosterCard key={d.id} dream={d} />
+                ))}
+              </PosterRail>
+            )}
+          </>
+        )}
       </div>
+
+      {/* FAB */}
+      <FAB label="New Dream" to="/journal/new" />
+
+      <AddDreamDialog
+        isOpen={isAddingDream}
+        onOpenChange={(open) => {
+          setIsAddingDream(open);
+          if (!open && user) setTimeout(memoizedSyncDreams, 300);
+        }}
+        onSubmit={handleAddDreamAndClose}
+        tags={tags}
+        isSubmitting={isSubmitting}
+      />
+
+      <DeleteDreamConfirmationDialog
+        isOpen={!!dreamToDelete}
+        onOpenChange={(open) => {
+          if (!open) setDreamToDelete(null);
+        }}
+        onConfirmDelete={confirmDeleteDream}
+      />
     </PageTransition>
   );
 };
