@@ -469,7 +469,7 @@ const AIContextDialog = ({ open, onOpenChange }: AIContextDialogProps) => {
                 <>
                   {/* Carousel */}
                   <div className="space-y-3">
-                    <p className="text-sm text-muted-foreground">Your characters for dream image generation.</p>
+                    <p className="text-sm text-muted-foreground">Your dream self and the side characters who show up in your dreams. People named in saved dreams are auto-detected and added here.</p>
                     <div
                       ref={carouselRef}
                       className="flex gap-4 overflow-x-auto py-2 px-1 scrollbar-hide"
