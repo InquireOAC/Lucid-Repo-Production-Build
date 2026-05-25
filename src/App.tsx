@@ -9,6 +9,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './layouts/MainLayout';
 import LoadingScreen from './components/profile/LoadingScreen';
 
+// Primary tab pages — imported directly so tab switching is instant (no Suspense flash).
+import Index from './pages/Index';
+import Journal from './pages/Journal';
+import Profile from './pages/Profile';
+import LucidRepoContainer from './pages/LucidRepo';
+
 // Retry dynamic imports once after a hard reload to recover from stale chunk
 // references that occur after a new deploy invalidates previous asset hashes.
 function lazyWithRetry<T extends React.ComponentType<any>>(
@@ -39,13 +45,9 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
   });
 }
 
-const Index = lazyWithRetry(() => import('./pages/Index'));
-const Journal = lazyWithRetry(() => import('./pages/Journal'));
 const NewDream = lazyWithRetry(() => import('./pages/NewDream'));
 const EditDream = lazyWithRetry(() => import('./pages/EditDream'));
-const Profile = lazyWithRetry(() => import('./pages/Profile'));
 const Auth = lazyWithRetry(() => import('./pages/Auth'));
-const LucidRepoContainer = lazyWithRetry(() => import('./pages/LucidRepo'));
 const Chat = lazyWithRetry(() => import('./pages/Chat'));
 const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
 const Insights = lazyWithRetry(() => import('./pages/Insights'));
