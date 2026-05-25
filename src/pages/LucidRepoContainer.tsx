@@ -23,7 +23,7 @@ import { ArrowLeft, Moon, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
-import lucidRepoLogo from "@/assets/LogoForFramer.png";
+import lucidRepoLogo from "@/assets/lucid-repo-rings-logo.png";
 import { DreamEntry } from "@/types/dream";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -261,9 +261,9 @@ const LucidRepoDiscovery = () => {
             <img
               src={lucidRepoLogo}
               alt="Lucid Repo"
-              className="h-7 w-7 md:h-8 md:w-8 rounded-lg flex-shrink-0"
+              className="h-8 w-8 md:h-9 md:w-9 object-contain flex-shrink-0"
             />
-            <h1 className="text-xl md:text-2xl font-semibold text-white tracking-tight">
+            <h1 className="text-xl md:text-2xl font-semibold text-white tracking-tight leading-none">
               Lucid Repo
             </h1>
           </div>
@@ -290,8 +290,11 @@ const LucidRepoDiscovery = () => {
             />
           </div>
         )}
+      </div>
 
-        <div className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+      {/* Category filter pills — positioned below hero, above Top 10 */}
+      {!showLoading && (
+        <div className="flex overflow-x-auto gap-2 pb-1 pt-3 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
           {FILTER_CATEGORIES.map(cat => (
             <button
               key={cat}
@@ -307,7 +310,7 @@ const LucidRepoDiscovery = () => {
             </button>
           ))}
         </div>
-      </div>
+      )}
 
       {showLoading ? (
         <div className="space-y-6 mt-4">
