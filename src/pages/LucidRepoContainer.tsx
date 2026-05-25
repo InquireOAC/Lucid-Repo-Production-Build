@@ -257,13 +257,13 @@ const LucidRepoDiscovery = () => {
       {/* Sticky top bar */}
       <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 pb-2 bg-background/80 backdrop-blur-md">
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <img
               src={lucidRepoLogo}
               alt="Lucid Repo"
               className="h-8 w-8 md:h-9 md:w-9 object-contain flex-shrink-0"
             />
-            <h1 className="text-xl md:text-2xl font-semibold text-white tracking-tight leading-none">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
               Lucid Repo
             </h1>
           </div>
