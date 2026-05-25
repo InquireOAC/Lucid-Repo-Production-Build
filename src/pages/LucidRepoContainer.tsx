@@ -224,12 +224,12 @@ const LucidRepoDiscovery = () => {
   // Expanded section view
   if (expandedSection) {
     return (
-      <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
-        <div className="flex items-center gap-3 pt-3 mb-4">
+      <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 lg:pb-12 max-w-6xl lg:max-w-7xl xl:max-w-[1500px] lg:px-12 xl:px-16 pl-safe-left pr-safe-right overflow-x-hidden">
+        <div className="flex items-center gap-3 pt-3 lg:pt-6 mb-4 lg:mb-8">
           <Button variant="ghost" size="icon" onClick={() => navigate('/lucid-repo')}>
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowLeft className="h-5 w-5 lg:h-6 lg:w-6" />
           </Button>
-          <h1 className="text-lg font-bold text-foreground">{expandedSection.title}</h1>
+          <h1 className="text-lg lg:text-3xl xl:text-4xl font-bold text-foreground">{expandedSection.title}</h1>
         </div>
         {expandedSection.dreams.length === 0 ? (
           <div className="text-center py-20">
@@ -253,17 +253,17 @@ const LucidRepoDiscovery = () => {
   }
 
   return (
-    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 md:px-8 pb-6 max-w-6xl pl-safe-left pr-safe-right overflow-x-hidden">
+    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 md:px-8 pb-6 lg:pb-16 max-w-6xl lg:max-w-7xl xl:max-w-[1500px] lg:px-12 xl:px-16 pl-safe-left pr-safe-right overflow-x-hidden">
       {/* Sticky top bar */}
-      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 pb-2 bg-background/80 backdrop-blur-md">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2.5">
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
+          <div className="flex items-center gap-2.5 lg:gap-3">
             <img
               src={lucidRepoLogo}
               alt="Lucid Repo"
-              className="h-8 w-8 md:h-9 md:w-9 object-contain flex-shrink-0"
+              className="h-8 w-8 md:h-9 md:w-9 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain flex-shrink-0"
             />
-            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+            <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
               Lucid Repo
             </h1>
           </div>
@@ -271,19 +271,19 @@ const LucidRepoDiscovery = () => {
             type="button"
             aria-label="Search"
             onClick={() => setSearchOpen(v => !v)}
-            className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40"
+            className="h-9 w-9 lg:h-11 lg:w-11 flex items-center justify-center rounded-full hover:bg-muted/40"
           >
-            {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+            {searchOpen ? <X className="h-5 w-5 lg:h-6 lg:w-6" /> : <Search className="h-5 w-5 lg:h-6 lg:w-6" />}
           </button>
         </div>
 
         {searchOpen && (
-          <div className="mb-2">
+          <div className="mb-2 lg:mb-3">
             <Input
               autoFocus
               type="text"
               aria-label="Search dreams"
-              className="h-10 rounded-xl text-sm bg-muted/30 border-border/30"
+              className="h-10 lg:h-12 rounded-xl text-sm lg:text-base bg-muted/30 border-border/30"
               placeholder="Search dreams, dreamers..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -304,13 +304,13 @@ const LucidRepoDiscovery = () => {
       ) : activeFilter !== "All" ? (
         <>
           {/* Category filter pills */}
-          <div className="flex overflow-x-auto gap-2 pb-1 pt-3 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+          <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 pt-3 lg:pt-5 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
             {FILTER_CATEGORIES.map(cat => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setActiveFilter(cat)}
-                className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
                   activeFilter === cat
                     ? "bg-foreground text-background border-foreground font-semibold"
                     : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
@@ -376,13 +376,13 @@ const LucidRepoDiscovery = () => {
           )}
 
           {/* Category filter pills — below hero, above Top 10 */}
-          <div className="flex overflow-x-auto gap-2 pb-1 pt-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+          <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 pt-1 lg:pt-3 mb-2 lg:mb-5 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
             {FILTER_CATEGORIES.map(cat => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => setActiveFilter(cat)}
-                className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
                   activeFilter === cat
                     ? "bg-foreground text-background border-foreground font-semibold"
                     : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
@@ -459,11 +459,11 @@ const LucidRepoDiscovery = () => {
 
           {/* Dream Series */}
           {!searchQuery && publicSeries.length > 0 && (
-            <section className="mb-6">
-              <h2 className="text-base md:text-lg font-bold text-foreground mb-2">
+            <section className="mb-6 lg:mb-10">
+              <h2 className="text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-foreground mb-2 lg:mb-3">
                 Dream Series
               </h2>
-              <div className="flex overflow-x-auto gap-2 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+              <div className="flex overflow-x-auto gap-2 lg:gap-4 xl:gap-5 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
                 {publicSeries.map(s => (
                   <DiscoverySeriesCard key={s.id} series={s} onClick={setSelectedSeries} />
                 ))}

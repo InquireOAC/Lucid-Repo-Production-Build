@@ -92,7 +92,7 @@ const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => voi
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
 
-      <div className="absolute inset-x-0 bottom-10 px-5 z-10">
+      <div className="absolute inset-x-0 bottom-10 lg:bottom-16 px-5 lg:px-12 xl:px-16 z-10">
         <div className="flex items-center gap-2 mb-2 text-[11px]">
           <span className="px-2 py-0.5 rounded bg-primary/90 text-primary-foreground font-semibold uppercase tracking-wider text-[9px]">
             {tag}
@@ -108,9 +108,9 @@ const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => voi
               type="button"
               onMouseUp={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onNavigate(`/journal/edit/${dream.id}?play=1`); }}
-              className="flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 lg:px-6 lg:py-3 rounded-full bg-white text-black font-semibold text-sm lg:text-base hover:bg-white/90 transition-colors"
             >
-              <Play className="h-4 w-4 fill-current" />
+              <Play className="h-4 w-4 lg:h-5 lg:w-5 fill-current" />
               Watch
             </button>
           )}
@@ -119,11 +119,11 @@ const DreamSlide: React.FC<{ dream: DreamEntry; onNavigate: (url: string) => voi
             onMouseUp={(e) => e.stopPropagation()}
             onClick={(e) => { e.stopPropagation(); onNavigate(`/journal/edit/${dream.id}`); }}
             className={cn(
-              "flex items-center gap-1 px-4 py-2 rounded-full font-semibold text-sm transition-colors",
+              "flex items-center gap-1 px-4 py-2 lg:px-5 lg:py-3 rounded-full font-semibold text-sm lg:text-base transition-colors",
               hasVideo ? "bg-white/15 text-white hover:bg-white/25 backdrop-blur-sm" : "bg-white text-black hover:bg-white/90",
             )}
           >
-            Open <ChevronRight className="h-4 w-4" />
+            Open <ChevronRight className="h-4 w-4 lg:h-5 lg:w-5" />
           </button>
         </div>
       </div>
@@ -156,7 +156,7 @@ const EventSlide: React.FC<{
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
 
-      <div className="absolute inset-x-0 bottom-10 px-5 z-10">
+      <div className="absolute inset-x-0 bottom-10 lg:bottom-16 px-5 lg:px-12 xl:px-16 z-10">
         <div className="flex items-center gap-2 mb-2">
           <span className="flex items-center gap-1 px-2 py-0.5 rounded border bg-violet-500/20 text-violet-300 border-violet-500/30 text-[9px] font-semibold uppercase tracking-wider">
             <CalendarDays className="h-2.5 w-2.5" /> Event
@@ -228,18 +228,18 @@ const ChallengeSlide: React.FC<{
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
 
-      <div className="absolute inset-x-0 bottom-10 px-5 z-10">
+      <div className="absolute inset-x-0 bottom-10 lg:bottom-16 px-5 lg:px-12 xl:px-16 z-10">
         <div className="flex items-center gap-2 mb-2">
           <span className="flex items-center gap-1 px-2 py-0.5 rounded border bg-amber-500/20 text-amber-300 border-amber-500/30 text-[9px] font-semibold uppercase tracking-wider">
             <Trophy className="h-2.5 w-2.5" /> Challenge
           </span>
           {dateRange && <span className="text-white/60 text-[11px]">{dateRange}</span>}
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 mb-2 drop-shadow-md">
+        <h1 className="text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight line-clamp-2 mb-2 lg:mb-3 drop-shadow-md">
           {challenge.title}
         </h1>
         {challenge.description && (
-          <p className="text-sm text-white/70 line-clamp-2 mb-3">{challenge.description}</p>
+          <p className="text-sm lg:text-base xl:text-lg text-white/70 line-clamp-2 mb-3 lg:mb-5">{challenge.description}</p>
         )}
         {challenge.required_tag && (
           <button
@@ -278,18 +278,18 @@ const AnnouncementSlide: React.FC<{
       <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/60 to-transparent pointer-events-none" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent pointer-events-none" />
 
-      <div className="absolute inset-x-0 bottom-10 px-5 z-10">
+      <div className="absolute inset-x-0 bottom-10 lg:bottom-16 px-5 lg:px-12 xl:px-16 z-10">
         <div className="flex items-center gap-2 mb-3">
           <span className={cn("flex items-center gap-1 px-2 py-0.5 rounded border text-[9px] font-semibold uppercase tracking-wider", accent)}>
             <Icon className="h-2.5 w-2.5" />
             {announcement.type}
           </span>
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 mb-2 drop-shadow-md">
+        <h1 className="text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold text-white leading-tight line-clamp-2 mb-2 lg:mb-3 drop-shadow-md">
           {announcement.title}
         </h1>
         {announcement.content && (
-          <p className="text-sm text-white/75 line-clamp-3 mb-3">{announcement.content}</p>
+          <p className="text-sm lg:text-base xl:text-lg text-white/75 line-clamp-3 mb-3 lg:mb-5">{announcement.content}</p>
         )}
         {announcement.link_url && (
           <button
@@ -431,14 +431,14 @@ const HomeHeroCarousel: React.FC<Props> = ({
 
   return (
     <div
-      className="relative -mx-4 sm:-mx-6 md:mx-0 mb-4 md:rounded-2xl overflow-hidden stable-card select-none cursor-grab active:cursor-grabbing"
+      className="relative -mx-4 sm:-mx-6 md:mx-0 mb-4 lg:mb-8 md:rounded-2xl overflow-hidden stable-card select-none cursor-grab active:cursor-grabbing lg:max-h-[480px] xl:max-h-[560px]"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
       onMouseUp={onMouseUp}
     >
-      <div className="relative aspect-[3/4] md:aspect-[21/9]">
+      <div className="relative aspect-[3/4] md:aspect-[21/9] lg:max-h-[480px] xl:max-h-[560px]">
         {slide.type === "dream" && (
           <DreamSlide
             dream={slide.dream}
@@ -458,7 +458,7 @@ const HomeHeroCarousel: React.FC<Props> = ({
 
       {/* Dot indicators */}
       {slides.length > 1 && (
-        <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 z-20 pointer-events-none">
+        <div className="absolute bottom-3 lg:bottom-6 inset-x-0 flex items-center justify-center gap-1.5 lg:gap-2 z-20 pointer-events-none">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -467,7 +467,9 @@ const HomeHeroCarousel: React.FC<Props> = ({
               onMouseUp={(e) => { e.stopPropagation(); goto(i); resetAuto(); }}
               className={cn(
                 "rounded-full transition-all duration-300 pointer-events-auto",
-                i === safeIndex ? "w-5 h-1.5 bg-white" : "w-1.5 h-1.5 bg-white/40 hover:bg-white/60",
+                i === safeIndex
+                  ? "w-5 h-1.5 lg:w-7 lg:h-2 bg-white"
+                  : "w-1.5 h-1.5 lg:w-2.5 lg:h-2.5 bg-white/40 hover:bg-white/60",
               )}
               aria-label={`Go to slide ${i + 1}`}
             />

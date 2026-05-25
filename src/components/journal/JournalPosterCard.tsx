@@ -34,9 +34,11 @@ const JournalPosterCard: React.FC<Props> = ({
   const imageUrl = pickPoster(dream);
   const hasVideo = !!dream.video_url;
   const w =
-    width === "sm" ? "w-[110px]" :
-    width === "lg" ? "w-[150px] md:w-[180px]" :
-    "w-[130px] md:w-[150px]";
+    width === "sm"
+      ? "w-[110px] lg:w-[130px]"
+      : width === "lg"
+      ? "w-[150px] md:w-[180px] lg:w-[220px] xl:w-[260px]"
+      : "w-[130px] md:w-[150px] lg:w-[180px] xl:w-[200px]";
 
   const handleCardClick = () => {
     if (isSelectMode) {
@@ -53,7 +55,7 @@ const JournalPosterCard: React.FC<Props> = ({
         onClick={handleCardClick}
         className="relative text-left w-full"
       >
-        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30">
+        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30 md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -103,31 +105,31 @@ const JournalPosterCard: React.FC<Props> = ({
                 e.stopPropagation();
                 navigate(`/journal/edit/${dream.id}`);
               }}
-              className="absolute bottom-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 text-black flex items-center justify-center hover:bg-white transition-colors shadow-md"
+              className="absolute bottom-1.5 right-1.5 h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-white/90 text-black flex items-center justify-center hover:bg-white transition-colors shadow-md"
             >
-              <Pencil className="h-4 w-4 fill-current" />
+              <Pencil className="h-4 w-4 lg:h-4 lg:w-4 fill-current" />
             </button>
           )}
         </div>
       </button>
 
       {/* Title — below card, bigger and bolder */}
-      <p className="mt-1.5 text-xs font-bold text-foreground line-clamp-1">
+      <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm font-bold text-foreground line-clamp-1">
         {dream.title || "Untitled dream"}
       </p>
 
       {/* Author avatar + name */}
-      <div className="flex items-center gap-1.5 mt-0.5">
+      <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
         {profile?.avatar_url ? (
           <img
             src={profile.avatar_url}
             alt=""
-            className="h-4 w-4 rounded-full object-cover flex-shrink-0"
+            className="h-4 w-4 lg:h-5 lg:w-5 rounded-full object-cover flex-shrink-0"
           />
         ) : (
-          <div className="h-4 w-4 rounded-full bg-primary/30 flex-shrink-0" />
+          <div className="h-4 w-4 lg:h-5 lg:w-5 rounded-full bg-primary/30 flex-shrink-0" />
         )}
-        <span className="text-[10px] text-muted-foreground truncate">
+        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">
           {profile?.display_name || profile?.username || "You"}
         </span>
       </div>

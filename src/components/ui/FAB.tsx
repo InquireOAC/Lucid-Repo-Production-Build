@@ -30,11 +30,11 @@ const FAB: React.FC<FABProps> = ({
       onClick={handleClick}
       aria-label={label}
       className={cn(
-        "fixed z-40 right-4 flex items-center gap-2 rounded-full px-5 py-3",
-        "bg-primary text-primary-foreground font-semibold text-sm",
+        "fixed z-40 right-4 md:right-8 flex items-center gap-2 rounded-full px-5 py-3 lg:px-6 lg:py-3.5",
+        "bg-primary text-primary-foreground font-semibold text-sm lg:text-base",
         "shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.6)]",
         "hover:scale-105 active:scale-95 transition-transform",
-        "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-6",
+        "bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-8",
         className,
       )}
     >

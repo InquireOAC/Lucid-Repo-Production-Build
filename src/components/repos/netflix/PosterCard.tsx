@@ -18,7 +18,10 @@ const pickPoster = (dream: DreamEntry): string | undefined => {
 const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
   const navigate = useNavigate();
   const imageUrl = pickPoster(dream);
-  const w = width === "sm" ? "w-[110px]" : "w-[130px] md:w-[150px]";
+  const w =
+    width === "sm"
+      ? "w-[110px] lg:w-[130px]"
+      : "w-[130px] md:w-[150px] lg:w-[180px] xl:w-[200px] 2xl:w-[220px]";
 
   const handleClick = () => {
     const from = window.location.pathname + window.location.search;
@@ -37,7 +40,7 @@ const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
         onClick={handleClick}
         className="relative text-left w-full"
       >
-        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30">
+        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30 md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -54,22 +57,22 @@ const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
       </button>
 
       {/* Title — bigger and bolder */}
-      <p className="mt-1.5 text-xs font-bold text-foreground line-clamp-1">
+      <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm font-bold text-foreground line-clamp-1">
         {dream.title || "Untitled dream"}
       </p>
 
       {/* Author avatar + name */}
-      <div className="flex items-center gap-1.5 mt-0.5">
+      <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
         {dream.profiles?.avatar_url ? (
           <img
             src={dream.profiles.avatar_url}
             alt=""
-            className="h-4 w-4 rounded-full object-cover flex-shrink-0"
+            className="h-4 w-4 lg:h-5 lg:w-5 rounded-full object-cover flex-shrink-0"
           />
         ) : (
-          <div className="h-4 w-4 rounded-full bg-primary/30 flex-shrink-0" />
+          <div className="h-4 w-4 lg:h-5 lg:w-5 rounded-full bg-primary/30 flex-shrink-0" />
         )}
-        <span className="text-[10px] text-muted-foreground truncate">
+        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">
           {authorName}
         </span>
       </div>

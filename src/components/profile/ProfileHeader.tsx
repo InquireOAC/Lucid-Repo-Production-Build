@@ -136,7 +136,7 @@ const ProfileHeader = ({
   return (
     <div className="relative">
       {/* ─── Cinematic Hero ───────────────────────────────────── */}
-      <div className="relative h-56 sm:h-72 md:h-80 w-full overflow-hidden">
+      <div className="relative h-56 sm:h-72 md:h-80 lg:h-[420px] xl:h-[480px] 2xl:h-[520px] w-full overflow-hidden">
         {heroSrc ? (
           <img
             src={heroSrc}
@@ -194,11 +194,11 @@ const ProfileHeader = ({
         )}
 
         {/* Identity overlay — bottom of hero */}
-        <div className="absolute inset-x-0 bottom-0 px-4 pb-4 z-10">
-          <div className="flex items-end justify-between gap-3">
+        <div className="absolute inset-x-0 bottom-0 px-4 pb-4 lg:px-12 lg:pb-8 xl:px-16 xl:pb-10 z-10">
+          <div className="flex items-end justify-between gap-3 lg:gap-6">
             {/* Left: avatar + name + handle + bio */}
-            <div className="flex items-end gap-3 min-w-0">
-              <div className="flex-shrink-0">
+            <div className="flex items-end gap-3 lg:gap-5 min-w-0">
+              <div className="flex-shrink-0 lg:scale-125 xl:scale-150 origin-bottom-left">
                 <ProfileAvatar
                   avatarSymbol={profile?.avatar_symbol}
                   avatarColor={profile?.avatar_color}
@@ -208,17 +208,17 @@ const ProfileHeader = ({
                   onEdit={onEditProfileClick}
                 />
               </div>
-              <div className="min-w-0 pb-1">
-                <h1 className="text-lg sm:text-xl font-bold text-white leading-tight line-clamp-1 drop-shadow-md">
+              <div className="min-w-0 pb-1 lg:pb-2 xl:pb-4">
+                <h1 className="text-lg sm:text-xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold text-white leading-tight line-clamp-1 drop-shadow-md">
                   {profile?.display_name || profile?.username || "Unknown User"}
                 </h1>
                 {profile?.username && (
-                  <p className="text-xs text-white/70 truncate">
+                  <p className="text-xs lg:text-sm xl:text-base text-white/70 truncate">
                     @{profile.username}
                   </p>
                 )}
                 {profile?.bio && (
-                  <p className="text-xs text-white/70 line-clamp-2 mt-1 drop-shadow">
+                  <p className="text-xs lg:text-base xl:text-lg text-white/70 line-clamp-2 lg:line-clamp-3 mt-1 lg:mt-2 drop-shadow">
                     {profile.bio}
                   </p>
                 )}
@@ -226,7 +226,7 @@ const ProfileHeader = ({
             </div>
 
             {/* Right: action buttons */}
-            <div className="flex items-center gap-2 flex-shrink-0 pb-1">
+            <div className="flex items-center gap-2 lg:gap-3 flex-shrink-0 pb-1 lg:pb-2">
               <ProfileHeaderActions
                 isOwnProfile={isOwnProfile}
                 isFollowing={isFollowing}
@@ -246,9 +246,9 @@ const ProfileHeader = ({
       </div>
 
       {/* ─── Below-hero info strip ───────────────────────────── */}
-      <div className="px-4 pt-3 pb-4">
+      <div className="px-4 pt-3 pb-4 lg:px-12 lg:pt-6 lg:pb-8 xl:px-16">
         {/* Stats row */}
-        <div className="flex gap-5 text-sm">
+        <div className="flex gap-5 lg:gap-10 text-sm lg:text-base">
           <button onClick={onFollowingClick} className="hover:underline">
             <span className="font-bold">{followingCount}</span>
             <span className="text-muted-foreground ml-1">Following</span>
@@ -264,7 +264,7 @@ const ProfileHeader = ({
         </div>
 
         {/* Social links */}
-        <div className="mt-3">
+        <div className="mt-3 lg:mt-5">
           <ProfileSocialLinks
             socialLinks={profile?.social_links}
             isOwnProfile={isOwnProfile}
@@ -274,8 +274,8 @@ const ProfileHeader = ({
 
         {/* Join date */}
         {joinDate && (
-          <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground">
-            <Calendar className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1 lg:gap-1.5 mt-3 lg:mt-5 text-xs lg:text-sm text-muted-foreground">
+            <Calendar className="h-3.5 w-3.5 lg:h-4 lg:w-4" />
             <span>Joined {joinDate}</span>
           </div>
         )}

@@ -239,10 +239,10 @@ const Journal = () => {
 
   // Pills rendered below the hero (not inside sticky header)
   const FilterPills = (
-    <div className="mb-4 space-y-2">
+    <div className="mb-4 lg:mb-8 space-y-2 lg:space-y-3">
       {/* Category pills */}
       <div
-        className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide"
+        className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 scrollbar-hide"
         style={{ scrollbarWidth: "none" }}
       >
         {categories.map((cat) => (
@@ -250,7 +250,7 @@ const Journal = () => {
             key={cat}
             type="button"
             onClick={() => setActiveCategory(cat)}
-            className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+            className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
               activeCategory === cat
                 ? "bg-foreground text-background border-foreground font-semibold"
                 : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
@@ -263,7 +263,7 @@ const Journal = () => {
 
       {/* Date pills */}
       <div
-        className="flex overflow-x-auto gap-2 pb-1 scrollbar-hide"
+        className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 scrollbar-hide"
         style={{ scrollbarWidth: "none" }}
       >
         {DATE_PILLS.map(({ value, label }) => (
@@ -271,7 +271,7 @@ const Journal = () => {
             key={value}
             type="button"
             onClick={() => setDateRange(value)}
-            className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+            className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
               dateRange === value
                 ? "bg-primary text-primary-foreground border-primary font-semibold"
                 : "bg-transparent text-foreground/70 border-border/40 hover:bg-muted/30 font-medium"
@@ -286,12 +286,12 @@ const Journal = () => {
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-      <div className="max-w-6xl mx-auto px-4 md:px-8 pb-10">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 lg:max-w-7xl lg:px-12 xl:max-w-[1500px] xl:px-16 pb-10 lg:pb-16">
 
         {/* ── Sticky header: title + search + select toggle ────────── */}
-        <div className="sticky top-0 z-30 -mx-4 md:-mx-8 px-4 md:px-8 pt-3 pb-2 bg-background/80 backdrop-blur-md">
+        <div className="sticky top-0 z-30 -mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+            <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
               My <span className="text-primary">Dreams</span>
             </h1>
             <div className="flex items-center gap-1">
@@ -304,29 +304,29 @@ const Journal = () => {
                 type="button"
                 aria-label={selectMode ? "Exit select mode" : "Select dreams"}
                 onClick={toggleSelectMode}
-                className={`h-9 w-9 flex items-center justify-center rounded-full transition-colors ${
+                className={`h-9 w-9 lg:h-11 lg:w-11 flex items-center justify-center rounded-full transition-colors ${
                   selectMode
                     ? "bg-primary/15 text-primary hover:bg-primary/25"
                     : "hover:bg-muted/40"
                 }`}
               >
-                {selectMode ? <X className="h-5 w-5" /> : <CheckSquare className="h-5 w-5" />}
+                {selectMode ? <X className="h-5 w-5 lg:h-6 lg:w-6" /> : <CheckSquare className="h-5 w-5 lg:h-6 lg:w-6" />}
               </button>
               {!selectMode && (
                 <button
                   type="button"
                   aria-label="Search dreams"
                   onClick={() => setSearchOpen((v) => !v)}
-                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40 transition-colors"
+                  className="h-9 w-9 lg:h-11 lg:w-11 flex items-center justify-center rounded-full hover:bg-muted/40 transition-colors"
                 >
-                  {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+                  {searchOpen ? <X className="h-5 w-5 lg:h-6 lg:w-6" /> : <Search className="h-5 w-5 lg:h-6 lg:w-6" />}
                 </button>
               )}
             </div>
           </div>
 
           {searchOpen && !selectMode && (
-            <div className="mt-2">
+            <div className="mt-2 lg:mt-3">
               <Input
                 autoFocus
                 type="text"
@@ -334,7 +334,7 @@ const Journal = () => {
                 placeholder="Search your dreams..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-10 rounded-xl text-sm bg-muted/30 border-border/30"
+                className="h-10 lg:h-12 rounded-xl text-sm lg:text-base bg-muted/30 border-border/30"
               />
             </div>
           )}
@@ -353,7 +353,7 @@ const Journal = () => {
             {FilterPills}
 
             <div>
-              <h2 className="text-base md:text-lg font-bold text-foreground mb-3">
+              <h2 className="text-base md:text-lg lg:text-2xl xl:text-3xl font-bold text-foreground mb-3 lg:mb-5">
                 {searchQuery
                   ? `Results for "${searchQuery}"`
                   : activeCategory !== "All"
@@ -363,21 +363,21 @@ const Journal = () => {
                   : dateRange !== "any"
                   ? DATE_PILLS.find((p) => p.value === dateRange)?.label ?? "Filtered"
                   : "All Dreams"}
-                <span className="ml-2 text-xs font-normal text-muted-foreground">
+                <span className="ml-2 text-xs lg:text-sm font-normal text-muted-foreground">
                   ({filtered.length})
                 </span>
               </h2>
 
               {filtered.length === 0 ? (
-                <div className="text-center py-16">
-                  <Film className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-sm text-muted-foreground">
+                <div className="text-center py-16 lg:py-24">
+                  <Film className="h-10 w-10 lg:h-14 lg:w-14 mx-auto text-muted-foreground/50 mb-3 lg:mb-5" />
+                  <p className="text-sm lg:text-base text-muted-foreground">
                     No dreams match{" "}
                     {searchQuery ? `"${searchQuery}"` : "the current filters"}.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 lg:gap-5 xl:gap-6">
                   {filtered.map((d) => (
                     <JournalPosterCard key={d.id} dream={d} width="md" {...selectProps(d)} />
                   ))}
@@ -435,9 +435,9 @@ const Journal = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-20 md:bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none"
+            className="fixed bottom-20 md:bottom-8 left-0 right-0 z-50 flex justify-center pointer-events-none"
           >
-            <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-card border border-border/60 shadow-xl pointer-events-auto">
+            <div className="flex items-center gap-3 lg:gap-4 px-5 py-3 lg:px-7 lg:py-4 rounded-full bg-card border border-border/60 shadow-xl pointer-events-auto">
               <span className="text-sm font-semibold text-foreground">
                 {selectedIds.size} dream{selectedIds.size !== 1 ? "s" : ""}
               </span>

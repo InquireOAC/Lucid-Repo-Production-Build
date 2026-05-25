@@ -106,7 +106,7 @@ const DesktopSidebar = () => {
     <aside
       className={cn(
         "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out relative",
-        collapsed ? "w-16" : "w-64"
+        collapsed ? "w-16" : "w-64 lg:w-72"
       )}
     >
       {/* Collapse toggle — pinned to right edge */}
@@ -122,9 +122,9 @@ const DesktopSidebar = () => {
         "flex items-center gap-3 py-6 border-b border-primary/10",
         collapsed ? "justify-center px-2" : "px-5"
       )}>
-        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 rounded-lg flex-shrink-0" />
+        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 lg:h-10 lg:w-10 xl:h-11 xl:w-11 rounded-lg flex-shrink-0" />
         {!collapsed && (
-          <span className="text-lg font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
+          <span className="text-lg lg:text-xl xl:text-2xl font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
             Lucid Repo
           </span>
         )}
@@ -147,8 +147,8 @@ const DesktopSidebar = () => {
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
               )}
             >
-              <item.icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              <item.icon className="h-5 w-5 lg:h-6 lg:w-6 flex-shrink-0" />
+              {!collapsed && <span className="lg:text-base">{item.label}</span>}
               {active && !collapsed && (
                 <motion.div
                   layoutId="desktop-nav-indicator"

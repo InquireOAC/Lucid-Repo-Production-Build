@@ -85,8 +85,8 @@ const Home = () => {
   if (!user) {
     return (
       <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-        <div className="max-w-2xl mx-auto px-4 md:px-8 pt-12 pb-10">
-          <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-primary/30 via-accent/20 to-background aspect-[3/4] md:aspect-[21/9]">
+        <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-5xl lg:px-12 xl:max-w-6xl xl:px-16 pt-12 lg:pt-20 pb-10">
+          <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-primary/30 via-accent/20 to-background aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px]">
             <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
             <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
@@ -94,10 +94,10 @@ const Home = () => {
               <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
                 <Film className="h-7 w-7 text-white" />
               </div>
-              <h1 className="text-2xl md:text-4xl font-bold text-white mb-3 drop-shadow-md">
+              <h1 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 lg:mb-5 drop-shadow-md">
                 Your dreams, as cinema.
               </h1>
-              <p className="text-sm text-white/70 max-w-md mb-5">
+              <p className="text-sm lg:text-lg xl:text-xl text-white/70 max-w-md lg:max-w-2xl mb-5 lg:mb-8">
                 Sign in to record dreams and turn them into cinematic scenes and short films.
               </p>
               <Button onClick={() => navigate("/auth")} variant="luminous" size="lg">
@@ -112,14 +112,14 @@ const Home = () => {
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 pb-10">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-7xl lg:px-12 xl:max-w-[1400px] xl:px-16 2xl:max-w-[1500px] pb-10 lg:pb-16">
 
         {/* Greeting strip */}
-        <div className="pt-6 mb-3 flex items-baseline justify-between">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+        <div className="pt-6 lg:pt-10 mb-3 lg:mb-5 flex items-baseline justify-between">
+          <p className="text-xs lg:text-sm uppercase tracking-[0.2em] text-muted-foreground">
             Tonight's Dreamscape
           </p>
-          <p className="text-xs text-muted-foreground truncate max-w-[40%] text-right">
+          <p className="text-xs lg:text-sm text-muted-foreground truncate max-w-[40%] text-right">
             {profile?.display_name || profile?.username || "Dreamer"}
           </p>
         </div>
@@ -138,7 +138,7 @@ const Home = () => {
 
         {/* Stats strip */}
         {myDreams.length > 0 && (
-          <div className="mb-6 -mt-2 flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground">
+          <div className="mb-6 lg:mb-10 -mt-2 flex items-center gap-3 lg:gap-5 flex-wrap text-[11px] lg:text-sm text-muted-foreground">
             {stats.weekCount > 0 && (
               <span>
                 <span className="text-foreground font-semibold">{stats.weekCount}</span>{" "}
@@ -200,16 +200,16 @@ const Home = () => {
 
         {/* ── Lucid Techniques grid ────────────────────────────────── */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-base md:text-lg font-bold text-foreground">Lucid Techniques</h2>
+          <div className="flex items-center justify-between mb-3 lg:mb-5">
+            <h2 className="text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-foreground">Lucid Techniques</h2>
             <button
               onClick={() => navigate("/insights")}
-              className="flex items-center gap-0.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center gap-0.5 text-xs lg:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               See all <span className="ml-0.5">›</span>
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5">
             {TECHNIQUE_CARDS.map(({ idx, image }) => {
               const t = techniques[idx];
               if (!t) return null;
@@ -226,11 +226,11 @@ const Home = () => {
                     className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <h3 className="font-semibold text-white text-sm leading-tight drop-shadow-md">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-5">
+                    <h3 className="font-semibold text-white text-sm lg:text-lg xl:text-xl leading-tight drop-shadow-md">
                       {t.acronym || t.name}
                     </h3>
-                    <p className="text-[10px] text-white/70 mt-0.5">{t.difficulty}</p>
+                    <p className="text-[10px] lg:text-xs text-white/70 mt-0.5 lg:mt-1">{t.difficulty}</p>
                   </div>
                 </button>
               );
@@ -246,26 +246,26 @@ const Home = () => {
 };
 
 const EmptyHero: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
-  <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 md:rounded-2xl overflow-hidden">
-    <div className="relative aspect-[3/4] md:aspect-[21/9] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
+  <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 lg:mb-10 md:rounded-2xl overflow-hidden lg:max-h-[520px] xl:max-h-[600px]">
+    <div className="relative aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
       <div className="absolute -top-16 -left-8 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent" />
-      <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 px-6 z-10">
-        <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
-          <Film className="h-7 w-7 text-white" />
+      <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 lg:pb-16 px-6 lg:px-12 z-10">
+        <div className="h-14 w-14 lg:h-16 lg:w-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 lg:mb-6 border border-white/15">
+          <Film className="h-7 w-7 lg:h-8 lg:w-8 text-white" />
         </div>
-        <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 drop-shadow-md">
+        <h2 className="text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 lg:mb-3 drop-shadow-md">
           Start your dream cinema
         </h2>
-        <p className="text-sm text-white/70 max-w-sm mb-5">
+        <p className="text-sm lg:text-lg xl:text-xl text-white/70 max-w-sm lg:max-w-2xl mb-5 lg:mb-8">
           Record a dream and we'll turn it into scenes, images, and short films.
         </p>
         <button
           onClick={onCreate}
-          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 lg:px-8 lg:py-4 rounded-full bg-white text-black font-semibold text-sm lg:text-base hover:bg-white/90 transition-colors"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-4 w-4 lg:h-5 lg:w-5" />
           Record First Dream
         </button>
       </div>

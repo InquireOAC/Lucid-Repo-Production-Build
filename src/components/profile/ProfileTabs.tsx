@@ -20,10 +20,10 @@ const EmptySection = ({
   title: string;
   message: string;
 }) => (
-  <div className="text-center py-12 px-4">
-    <Icon className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
-    <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
-    <p className="text-xs text-muted-foreground max-w-xs mx-auto">{message}</p>
+  <div className="text-center py-12 lg:py-20 px-4">
+    <Icon className="h-10 w-10 lg:h-14 lg:w-14 mx-auto text-muted-foreground/50 mb-3 lg:mb-5" />
+    <p className="text-sm lg:text-base font-semibold text-foreground mb-1 lg:mb-2">{title}</p>
+    <p className="text-xs lg:text-sm text-muted-foreground max-w-xs lg:max-w-md mx-auto">{message}</p>
   </div>
 );
 
@@ -33,7 +33,7 @@ const ProfileTabs = ({
   isOwnProfile,
 }: ProfileTabsProps) => {
   return (
-    <div className="px-4 space-y-6 mt-2 pb-10">
+    <div className="px-4 lg:px-12 xl:px-16 space-y-6 lg:space-y-10 mt-2 lg:mt-4 pb-10 lg:pb-20">
       {/* Dreams */}
       {publicDreams.length > 0 ? (
         <PosterRail title="Dreams">
