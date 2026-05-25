@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
 import { Play, Moon, Headphones, Film, Pencil, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
   dream: DreamEntry;
@@ -29,6 +30,7 @@ const JournalPosterCard: React.FC<Props> = ({
   onSelect,
 }) => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
   const imageUrl = pickPoster(dream);
   const hasVideo = !!dream.video_url;
   const w =
@@ -45,7 +47,7 @@ const JournalPosterCard: React.FC<Props> = ({
   };
 
   return (
-    <div className={cn("flex-shrink-0 snap-start flex flex-col gap-1 stable-card", w)}>
+    <div className={cn("flex-shrink-0 snap-start flex flex-col stable-card", w)}>
       <button
         type="button"
         onClick={handleCardClick}
@@ -107,27 +109,44 @@ const JournalPosterCard: React.FC<Props> = ({
               </div>
             </>
           )}
+
+          {/* Edit icon — bottom-right inside card, only outside select mode */}
+          {!isSelectMode && (
+            <button
+              type="button"
+              aria-label="Edit dream"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/journal/edit/${dream.id}`);
+              }}
+              className="absolute bottom-1.5 right-1.5 h-7 w-7 rounded-full bg-white/90 text-black flex items-center justify-center hover:bg-white transition-colors shadow-md"
+            >
+              <Pencil className="h-4 w-4 fill-current" />
+            </button>
+          )}
         </div>
       </button>
 
-      {/* Edit icon — only visible outside select mode */}
-      {!isSelectMode && (
-        <button
-          type="button"
-          aria-label="Edit dream"
-          onClick={(e) => {
-            e.stopPropagation();
-            navigate(`/journal/edit/${dream.id}`);
-          }}
-          className="self-start ml-0.5 p-1 rounded hover:bg-muted/50 transition-colors"
-        >
-          <Pencil className="h-3 w-3 text-muted-foreground" />
-        </button>
-      )}
-
-      <p className="mt-0.5 text-[11px] text-foreground/90 line-clamp-1 font-medium">
+      {/* Title — below card, bigger and bolder */}
+      <p className="mt-1.5 text-xs font-bold text-foreground line-clamp-1">
         {dream.title || "Untitled dream"}
       </p>
+
+      {/* Author avatar + name */}
+      <div className="flex items-center gap-1.5 mt-0.5">
+        {profile?.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt=""
+            className="h-4 w-4 rounded-full object-cover flex-shrink-0"
+          />
+        ) : (
+          <div className="h-4 w-4 rounded-full bg-primary/30 flex-shrink-0" />
+        )}
+        <span className="text-[10px] text-muted-foreground truncate">
+          {profile?.display_name || profile?.username || "You"}
+        </span>
+      </div>
     </div>
   );
 };
