@@ -49,7 +49,6 @@ const LucidRepoContainer = lazyWithRetry(() => import('./pages/LucidRepo'));
 const Chat = lazyWithRetry(() => import('./pages/Chat'));
 const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
 const Insights = lazyWithRetry(() => import('./pages/Insights'));
-const LucidStats = lazyWithRetry(() => import('./pages/LucidStats'));
 const TechniqueDetailPage = lazyWithRetry(() => import('./components/insights/TechniqueDetailPage'));
 const DreamStoryPage = lazyWithRetry(() => import('./pages/DreamStoryPage'));
 const DreamBook = lazyWithRetry(() => import('./pages/DreamBook'));
@@ -100,7 +99,6 @@ function AppContent() {
           <Route path="profile/:userId" element={<Profile />} />
           <Route path="profile/:username" element={<Profile />} />
           <Route path="auth" element={<Auth />} />
-          <Route path="lucid-stats" element={<LucidStats />} />
           <Route path="lucid-repo" element={<LucidRepoContainer />} />
           <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
           <Route path="dream/:dreamId" element={<DreamStoryPage />} />

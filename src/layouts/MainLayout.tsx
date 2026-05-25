@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import PaywallDialog from "@/components/paywall/PaywallDialog";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Home, Film, Moon, User, BarChart3, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, Film, Moon, User, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -76,7 +76,6 @@ const MainLayout = () => {
             <NavTab to="/" icon={<Home size={20} />} label="Home" />
             <NavTab to="/journal" icon={<Film size={20} />} label="My Dreams" />
             <NavTab to="/lucid-repo" icon={<Moon size={20} />} label="Repo" />
-            <NavTab to="/lucid-stats" icon={<BarChart3 size={20} />} label="Stats" />
             <NavTab to="/profile" icon={<User size={20} />} label="Profile" />
           </div>
         </motion.div>
@@ -91,7 +90,6 @@ const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/journal", icon: Film, label: "My Dreams" },
   { to: "/lucid-repo", icon: Moon, label: "Lucid Repo" },
-  { to: "/lucid-stats", icon: BarChart3, label: "Stats" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
