@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Play, Moon, Headphones, Film, Pencil, CheckCircle2, Circle } from "lucide-react";
+import { Play, Moon, Pencil, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -81,22 +81,6 @@ const JournalPosterCard: React.FC<Props> = ({
           {/* Selected highlight ring */}
           {isSelectMode && isSelected && (
             <div className="absolute inset-0 rounded-md ring-2 ring-primary pointer-events-none" />
-          )}
-
-          {!isSelectMode && dream.lucid && (
-            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary/90 text-primary-foreground uppercase">
-              Lucid
-            </span>
-          )}
-          {!isSelectMode && dream.audio_url && !hasVideo && (
-            <span className="absolute top-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-black/60 text-white">
-              <Headphones className="h-2.5 w-2.5" />
-            </span>
-          )}
-          {!isSelectMode && hasVideo && (
-            <span className="absolute top-1.5 right-1.5 flex items-center justify-center h-5 w-5 rounded-full bg-black/60 text-white">
-              <Film className="h-2.5 w-2.5" />
-            </span>
           )}
 
           {!isSelectMode && (showPlayOverlay || hasVideo) && (
