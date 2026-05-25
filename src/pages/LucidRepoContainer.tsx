@@ -292,26 +292,6 @@ const LucidRepoDiscovery = () => {
         )}
       </div>
 
-      {/* Category filter pills — positioned below hero, above Top 10 */}
-      {!showLoading && (
-        <div className="flex overflow-x-auto gap-2 pb-1 pt-3 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-          {FILTER_CATEGORIES.map(cat => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveFilter(cat)}
-              className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
-                activeFilter === cat
-                  ? "bg-foreground text-background border-foreground font-semibold"
-                  : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
-
       {showLoading ? (
         <div className="space-y-6 mt-4">
           <Skeleton className="w-full aspect-[3/4] md:aspect-[21/9] rounded-2xl" />
@@ -323,6 +303,23 @@ const LucidRepoDiscovery = () => {
         </div>
       ) : activeFilter !== "All" ? (
         <>
+          {/* Category filter pills */}
+          <div className="flex overflow-x-auto gap-2 pb-1 pt-3 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveFilter(cat)}
+                className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                  activeFilter === cat
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
           {/* Sort toggle */}
           <div className="flex justify-end mb-3 mt-4">
             <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
@@ -377,6 +374,24 @@ const LucidRepoDiscovery = () => {
               onToggleList={toggleList}
             />
           )}
+
+          {/* Category filter pills — below hero, above Top 10 */}
+          <div className="flex overflow-x-auto gap-2 pb-1 pt-1 mb-2 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveFilter(cat)}
+                className={`whitespace-nowrap px-3.5 py-1 rounded-full text-xs transition-all border ${
+                  activeFilter === cat
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
           {/* Top 10 Today */}
           {topTen.length > 0 && !searchQuery && (
