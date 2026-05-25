@@ -10,8 +10,12 @@ import PosterRail from "@/components/repos/netflix/PosterRail";
 import FAB from "@/components/ui/FAB";
 import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
-import { Search, X, Film } from "lucide-react";
+import { Search, X, Film, CheckSquare, Archive, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 // ─── filter types ─────────────────────────────────────────────────────────────
 
@@ -90,6 +94,32 @@ const Journal = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // Select mode
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  // Bulk delete confirmation
+  const [bulkDeletePending, setBulkDeletePending] = useState(false);
+
+  const toggleSelectMode = () => {
+    setSelectMode((v) => !v);
+    setSelectedIds(new Set());
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Hide archived dreams from the main list
+  const activeEntries = useMemo(
+    () => entries.filter((d) => !d.is_archived),
+    [entries],
+  );
+
   const handleAddDreamAndClose = async (dreamData: any) => {
     await handleAddDream(dreamData);
     setIsAddingDream(false);
@@ -104,10 +134,52 @@ const Journal = () => {
     }
   };
 
+  const handleArchiveSelected = async () => {
+    if (!user || selectedIds.size === 0) return;
+    const ids = [...selectedIds];
+    const { error } = await supabase
+      .from("dream_entries")
+      .update({ is_archived: true })
+      .in("id", ids)
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Failed to archive dreams");
+      return;
+    }
+    toast.success(`${ids.length} dream${ids.length !== 1 ? "s" : ""} archived`);
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setTimeout(memoizedSyncDreams, 300);
+  };
+
+  const handleDeleteSelected = () => {
+    setBulkDeletePending(true);
+  };
+
+  const confirmBulkDelete = async () => {
+    if (!user || selectedIds.size === 0) return;
+    const ids = [...selectedIds];
+    const { error } = await supabase
+      .from("dream_entries")
+      .delete()
+      .in("id", ids)
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Failed to delete dreams");
+      setBulkDeletePending(false);
+      return;
+    }
+    toast.success(`${ids.length} dream${ids.length !== 1 ? "s" : ""} deleted`);
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setBulkDeletePending(false);
+    setTimeout(memoizedSyncDreams, 300);
+  };
+
   // Dynamic category list: builtins + user's actual tags + moods
   const categories: Category[] = useMemo(() => {
     const set = new Set<string>(BUILTIN_CATEGORIES);
-    for (const d of entries) {
+    for (const d of activeEntries) {
       for (const t of d.tags || []) {
         const name = (tags.find((x) => x.id === t)?.name || t).trim();
         if (name) set.add(name);
@@ -115,19 +187,19 @@ const Journal = () => {
       if (d.mood) set.add(d.mood.charAt(0).toUpperCase() + d.mood.slice(1));
     }
     return Array.from(set);
-  }, [entries, tags]);
+  }, [activeEntries, tags]);
 
   // Search
   const searched = useMemo(() => {
-    if (!searchQuery.trim()) return entries;
+    if (!searchQuery.trim()) return activeEntries;
     const q = searchQuery.toLowerCase();
-    return entries.filter(
+    return activeEntries.filter(
       (d) =>
         d.title?.toLowerCase().includes(q) ||
         d.content?.toLowerCase().includes(q) ||
         d.tags?.some((t) => t.toLowerCase().includes(q)),
     );
-  }, [entries, searchQuery]);
+  }, [activeEntries, searchQuery]);
 
   // Compose all three filters
   const filtered = useMemo(
@@ -136,27 +208,34 @@ const Journal = () => {
   );
 
   // Hero: most recent dream with media, fallback first dream
-  const heroDream = useMemo(() => entries.find(hasPoster) || entries[0], [entries]);
+  const heroDream = useMemo(() => activeEntries.find(hasPoster) || activeEntries[0], [activeEntries]);
 
   // Rails for the default "All / Any time" view
-  const recentlyAdded = useMemo(() => entries.slice(0, 12), [entries]);
-  const lucidDreams = useMemo(() => entries.filter((d) => d.lucid).slice(0, 12), [entries]);
+  const recentlyAdded = useMemo(() => activeEntries.slice(0, 12), [activeEntries]);
+  const lucidDreams = useMemo(() => activeEntries.filter((d) => d.lucid).slice(0, 12), [activeEntries]);
   const cinematicDreams = useMemo(
-    () => entries.filter((d) => !!d.video_url).slice(0, 12),
-    [entries],
+    () => activeEntries.filter((d) => !!d.video_url).slice(0, 12),
+    [activeEntries],
   );
   const thisMonth = useMemo(() => {
     const now = new Date();
     const cutoff = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    return entries
+    return activeEntries
       .filter((d) => {
         const t = new Date(d.created_at || d.date).getTime();
         return Number.isFinite(t) && t >= cutoff;
       })
       .slice(0, 12);
-  }, [entries]);
+  }, [activeEntries]);
 
   const isFiltered = activeCategory !== "All" || dateRange !== "any" || !!searchQuery.trim();
+
+  // Select props helper
+  const selectProps = (d: DreamEntry) => ({
+    isSelectMode: selectMode,
+    isSelected: selectedIds.has(d.id),
+    onSelect: toggleSelect,
+  });
 
   // Pills rendered below the hero (not inside sticky header)
   const FilterPills = (
@@ -209,23 +288,44 @@ const Journal = () => {
     <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
       <div className="max-w-6xl mx-auto px-4 md:px-8 pb-10">
 
-        {/* ── Sticky header: title + search only ──────────────────── */}
+        {/* ── Sticky header: title + search + select toggle ────────── */}
         <div className="sticky top-0 z-30 -mx-4 md:-mx-8 px-4 md:px-8 pt-3 pb-2 bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between">
             <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
               My <span className="text-primary">Dreams</span>
             </h1>
-            <button
-              type="button"
-              aria-label="Search dreams"
-              onClick={() => setSearchOpen((v) => !v)}
-              className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40 transition-colors"
-            >
-              {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
-            </button>
+            <div className="flex items-center gap-1">
+              {selectMode && selectedIds.size > 0 && (
+                <span className="text-xs font-semibold text-primary mr-1">
+                  {selectedIds.size} selected
+                </span>
+              )}
+              <button
+                type="button"
+                aria-label={selectMode ? "Exit select mode" : "Select dreams"}
+                onClick={toggleSelectMode}
+                className={`h-9 w-9 flex items-center justify-center rounded-full transition-colors ${
+                  selectMode
+                    ? "bg-primary/15 text-primary hover:bg-primary/25"
+                    : "hover:bg-muted/40"
+                }`}
+              >
+                {selectMode ? <X className="h-5 w-5" /> : <CheckSquare className="h-5 w-5" />}
+              </button>
+              {!selectMode && (
+                <button
+                  type="button"
+                  aria-label="Search dreams"
+                  onClick={() => setSearchOpen((v) => !v)}
+                  className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted/40 transition-colors"
+                >
+                  {searchOpen ? <X className="h-5 w-5" /> : <Search className="h-5 w-5" />}
+                </button>
+              )}
+            </div>
           </div>
 
-          {searchOpen && (
+          {searchOpen && !selectMode && (
             <div className="mt-2">
               <Input
                 autoFocus
@@ -241,7 +341,7 @@ const Journal = () => {
         </div>
 
         {/* ── Empty state ──────────────────────────────────────────── */}
-        {entries.length === 0 ? (
+        {activeEntries.length === 0 ? (
           <>
             {FilterPills}
             <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
@@ -279,7 +379,7 @@ const Journal = () => {
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3">
                   {filtered.map((d) => (
-                    <JournalPosterCard key={d.id} dream={d} width="md" />
+                    <JournalPosterCard key={d.id} dream={d} width="md" {...selectProps(d)} />
                   ))}
                 </div>
               )}
@@ -295,7 +395,7 @@ const Journal = () => {
             {recentlyAdded.length > 0 && (
               <PosterRail title="Recently Added">
                 {recentlyAdded.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} />
+                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -303,7 +403,7 @@ const Journal = () => {
             {cinematicDreams.length > 0 && (
               <PosterRail title="Your Cinematics">
                 {cinematicDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
+                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -311,7 +411,7 @@ const Journal = () => {
             {lucidDreams.length > 0 && (
               <PosterRail title="Lucid Dreams">
                 {lucidDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} />
+                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -319,13 +419,51 @@ const Journal = () => {
             {thisMonth.length > 0 && (
               <PosterRail title="This Month">
                 {thisMonth.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} />
+                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
           </>
         )}
       </div>
+
+      {/* ── Bulk action bar ──────────────────────────────────────────── */}
+      <AnimatePresence>
+        {selectMode && selectedIds.size > 0 && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-20 md:bottom-6 left-0 right-0 z-50 flex justify-center pointer-events-none"
+          >
+            <div className="flex items-center gap-3 px-5 py-3 rounded-full bg-card border border-border/60 shadow-xl pointer-events-auto">
+              <span className="text-sm font-semibold text-foreground">
+                {selectedIds.size} dream{selectedIds.size !== 1 ? "s" : ""}
+              </span>
+              <div className="w-px h-5 bg-border/60" />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleArchiveSelected}
+                className="gap-1.5 rounded-full text-xs"
+              >
+                <Archive className="h-3.5 w-3.5" />
+                Archive
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDeleteSelected}
+                className="gap-1.5 rounded-full text-xs"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                Delete
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <FAB label="New Dream" to="/journal/new" />
 
@@ -346,6 +484,15 @@ const Journal = () => {
           if (!open) setDreamToDelete(null);
         }}
         onConfirmDelete={confirmDeleteDream}
+      />
+
+      {/* Bulk delete confirmation dialog */}
+      <DeleteDreamConfirmationDialog
+        isOpen={bulkDeletePending}
+        onOpenChange={(open) => {
+          if (!open) setBulkDeletePending(false);
+        }}
+        onConfirmDelete={confirmBulkDelete}
       />
     </PageTransition>
   );

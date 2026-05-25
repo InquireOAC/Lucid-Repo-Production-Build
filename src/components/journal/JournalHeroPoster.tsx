@@ -34,7 +34,7 @@ const JournalHeroPoster: React.FC<Props> = ({ dream, size = "full", label }) => 
     }
   })();
 
-  const open = () => navigate(`/journal/edit/${dream.id}`);
+  const open = () => navigate(`/dream/${dream.id}`);
 
   const aspect =
     size === "compact"

@@ -47,6 +47,7 @@ export interface DreamEntry {
     video_url?: string;
   }>;
   dream_character_ids?: string[];
+  is_archived?: boolean;
 }
 
 export interface DreamTag {
