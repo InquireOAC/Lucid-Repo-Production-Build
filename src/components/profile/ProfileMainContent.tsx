@@ -123,10 +123,27 @@ const ProfileMainContent = ({
 }: ProfileMainContentProps) => {
   const { unreadCount } = useNotifications();
 
+  // Pick the first public dream with an image — that's the cinematic hero backdrop
+  const heroDreamImageUrl = React.useMemo(() => {
+    const d = publicDreams.find(
+      (x: any) =>
+        x.generatedImage ||
+        x.image_url ||
+        x.section_images?.some((s: any) => s.image_url),
+    );
+    if (!d) return null;
+    return (
+      d.generatedImage ||
+      d.image_url ||
+      d.section_images?.find((s: any) => s.image_url)?.image_url ||
+      null
+    );
+  }, [publicDreams]);
+
   return (
     <>
       {/* Notifications Button - Hidden for now */}
-      
+
       <ProfileHeader
         profile={profileToShow}
         isOwnProfile={isOwnProfile}
@@ -134,6 +151,7 @@ const ProfileMainContent = ({
         followersCount={followersCount}
         followingCount={followingCount}
         isFollowing={isFollowing}
+        heroDreamImageUrl={heroDreamImageUrl}
         onEditProfileClick={() => setIsEditProfileOpen(true)}
         onMessageClick={handleStartConversation}
         onSettingsClick={() => setIsSettingsOpen(true)}

@@ -1,7 +1,7 @@
 import React from "react";
 import { Moon, Heart } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import DreamGrid from "./DreamGrid";
+import PosterRail from "@/components/repos/netflix/PosterRail";
+import PosterCard from "@/components/repos/netflix/PosterCard";
 
 interface ProfileTabsProps {
   publicDreams: any[];
@@ -11,57 +11,57 @@ interface ProfileTabsProps {
   userId?: string;
 }
 
-const ProfileTabs = ({ publicDreams, likedDreams, isOwnProfile, refreshDreams }: ProfileTabsProps) => {
+const EmptySection = ({
+  icon: Icon,
+  title,
+  message,
+}: {
+  icon: React.ElementType;
+  title: string;
+  message: string;
+}) => (
+  <div className="text-center py-12 px-4">
+    <Icon className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+    <p className="text-sm font-semibold text-foreground mb-1">{title}</p>
+    <p className="text-xs text-muted-foreground max-w-xs mx-auto">{message}</p>
+  </div>
+);
+
+const ProfileTabs = ({
+  publicDreams,
+  likedDreams,
+  isOwnProfile,
+}: ProfileTabsProps) => {
   return (
-    <Tabs defaultValue="dreams" className="mt-4">
-      <TabsList className="w-full justify-start border-b border-primary/10 bg-transparent rounded-none p-0 h-auto">
-        <TabsTrigger 
-          value="dreams"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-        >
-          Dreams
-        </TabsTrigger>
-        <TabsTrigger 
-          value="likes"
-          className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-6 py-3"
-        >
-          Likes
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="dreams" className="mt-4">
-        <DreamGrid 
-          dreams={publicDreams}
-          isOwnProfile={isOwnProfile}
-          emptyTitle="No public dreams yet"
-          emptyMessage={{
-            own: "Share your dreams to the Lucid Repo to see them here",
-            other: "This user hasn't shared any dreams yet"
-          }}
-          emptyIcon={<Moon size={32} className="mx-auto mb-2 text-muted-foreground" />}
-          actionLink="/"
-          actionText="Go to Journal"
-          refreshDreams={refreshDreams}
+    <div className="px-4 space-y-6 mt-2 pb-10">
+      {/* Dreams */}
+      {publicDreams.length > 0 ? (
+        <PosterRail title="Dreams">
+          {publicDreams.map((d) => (
+            <PosterCard key={d.id} dream={d} />
+          ))}
+        </PosterRail>
+      ) : (
+        <EmptySection
+          icon={Moon}
+          title="No public dreams yet"
+          message={
+            isOwnProfile
+              ? "Share your dreams to the Lucid Repo to see them here"
+              : "This dreamer hasn't shared any dreams yet"
+          }
         />
-      </TabsContent>
-      
-      <TabsContent value="likes" className="mt-4">
-        <DreamGrid 
-          dreams={likedDreams}
-          isLiked={true}
-          isOwnProfile={isOwnProfile}
-          emptyTitle="No liked dreams yet"
-          emptyMessage={{
-            own: "Explore the Lucid Repo to discover and like dreams",
-            other: "This user hasn't liked any dreams yet"
-          }}
-          emptyIcon={<Heart size={32} className="mx-auto mb-2 text-muted-foreground" />}
-          actionLink="/lucid-repo"
-          actionText="Explore Dreams"
-          refreshDreams={refreshDreams}
-        />
-      </TabsContent>
-    </Tabs>
+      )}
+
+      {/* Liked dreams */}
+      {likedDreams.length > 0 && (
+        <PosterRail title="Liked">
+          {likedDreams.map((d) => (
+            <PosterCard key={d.id} dream={d} />
+          ))}
+        </PosterRail>
+      )}
+    </div>
   );
 };
 
