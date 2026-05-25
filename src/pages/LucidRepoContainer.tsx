@@ -23,6 +23,7 @@ import { ArrowLeft, Moon, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
+import lucidRepoLogo from "@/assets/LogoForFramer.png";
 import { DreamEntry } from "@/types/dream";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -256,9 +257,16 @@ const LucidRepoDiscovery = () => {
       {/* Sticky top bar */}
       <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 pb-2 bg-background/80 backdrop-blur-md">
         <div className="flex items-center justify-between mb-2">
-          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
-            Lucid<span className="text-primary">Repo</span>
-          </h1>
+          <div className="flex items-center gap-2">
+            <img
+              src={lucidRepoLogo}
+              alt="Lucid Repo"
+              className="h-7 w-7 md:h-8 md:w-8 rounded-lg flex-shrink-0"
+            />
+            <h1 className="text-xl md:text-2xl font-semibold text-white tracking-tight">
+              Lucid Repo
+            </h1>
+          </div>
           <button
             type="button"
             aria-label="Search"
