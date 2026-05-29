@@ -48,6 +48,7 @@ import { Download } from "lucide-react";
 import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { OpenInLucidEngine } from "@/components/integration/OpenInLucidEngine";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -264,6 +265,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           <ArrowLeft className="h-4 w-4" /> Back
         </Button>
         <div className="flex items-center gap-1">
+          {isOwner && <OpenInLucidEngine dream={dream} className="mr-1" />}
           <ShareButton dream={dream} variant="ghost" size="sm" />
           {isOwner && (
             <DropdownMenu>

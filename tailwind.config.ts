@@ -21,7 +21,8 @@ export default {
     	extend: {
     		fontFamily: {
     			sans: [
-    				'Lato',
+    				'Basis Grotesque Arabic Pro',
+    				'basis-grotesque-pro',
     				'ui-sans-serif',
     				'system-ui',
     				'-apple-system',
@@ -30,10 +31,10 @@ export default {
     				'Roboto',
     				'Helvetica Neue',
     				'Arial',
-    				'Noto Sans',
     				'sans-serif'
     			],
     			basis: [
+    				'Basis Grotesque Arabic Pro',
     				'basis-grotesque-pro',
     				'sans-serif'
     			],
@@ -137,7 +138,17 @@ export default {
     				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
     				border: 'hsl(var(--sidebar-border))',
     				ring: 'hsl(var(--sidebar-ring))'
-    			}
+    			},
+    			/* Lucid Engine section accent system */
+    			section: {
+    				studio:    'hsl(var(--accent-studio))',
+    				canvas:    'hsl(var(--accent-canvas))',
+    				journal:   'hsl(var(--accent-journal))',
+    				character: 'hsl(var(--accent-character))',
+    				world:     'hsl(var(--accent-world))',
+    				voice:     'hsl(var(--accent-voice))',
+    			},
+    			generate: 'hsl(var(--generate))',
     		},
     		borderRadius: {
     			lg: 'var(--radius)',

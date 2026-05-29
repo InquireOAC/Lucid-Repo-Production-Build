@@ -1,6 +1,73 @@
 
 import { supabase } from '@/integrations/supabase/client';
 
+// ============================================================
+// Lucid Engine shared tier system
+// Mirrors Lucid Engine's subscription model so both apps use
+// the same tier identifiers and feature gates.
+// ============================================================
+
+export type LucidTierId = 'free' | 'spark' | 'dreamer' | 'studio';
+
+export interface TierDefinition {
+  id: LucidTierId;
+  label: string;
+  monthlyImageLimit: number;
+  monthlyVideoLimit: number;
+  beatSequenceEnabled: boolean;
+  lucidEngineExportEnabled: boolean;
+  stripePriceId?: string;
+  revenueCatProductId?: string;
+}
+
+export const TIER_DEFINITIONS: Record<LucidTierId, TierDefinition> = {
+  free: {
+    id: 'free',
+    label: 'Free',
+    monthlyImageLimit: 3,
+    monthlyVideoLimit: 0,
+    beatSequenceEnabled: false,
+    lucidEngineExportEnabled: false,
+  },
+  spark: {
+    id: 'spark',
+    label: 'Spark',
+    monthlyImageLimit: 10,
+    monthlyVideoLimit: 2,
+    beatSequenceEnabled: false,
+    lucidEngineExportEnabled: false,
+    stripePriceId: 'price_basic',
+    revenueCatProductId: 'com.lucidrepo.limited.monthly',
+  },
+  dreamer: {
+    id: 'dreamer',
+    label: 'Dreamer',
+    monthlyImageLimit: 100,
+    monthlyVideoLimit: 10,
+    beatSequenceEnabled: true,
+    lucidEngineExportEnabled: true,
+    stripePriceId: 'price_premium',
+    revenueCatProductId: 'com.lucidrepo.unlimited.monthly',
+  },
+  studio: {
+    id: 'studio',
+    label: 'Studio',
+    monthlyImageLimit: 1000,
+    monthlyVideoLimit: 100,
+    beatSequenceEnabled: true,
+    lucidEngineExportEnabled: true,
+  },
+};
+
+/** Map a Stripe/RevenueCat price_id to a LucidTierId. */
+export function resolveTierId(priceId: string | null | undefined): LucidTierId {
+  if (!priceId) return 'free';
+  if (priceId === 'price_premium' || priceId === 'com.lucidrepo.unlimited.monthly') return 'dreamer';
+  if (priceId === 'price_basic'   || priceId === 'com.lucidrepo.limited.monthly')   return 'spark';
+  if (priceId.includes('studio')) return 'studio';
+  return 'free';
+}
+
 export type GatedFeatureType = 'analysis' | 'image' | 'chat' | 'video' | 'voice';
 
 // Check if a user has access to premium features
