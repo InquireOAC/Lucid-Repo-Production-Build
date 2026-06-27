@@ -82,7 +82,7 @@ const NewDream = () => {
       }).catch(() => {});
     }
 
-    if (visualize && newId) navigate(`/dream/${newId}`);
+    if (visualize && newId) navigate(`/dream/${newId}?visualize=1`);
     else navigate("/journal");
   };
 

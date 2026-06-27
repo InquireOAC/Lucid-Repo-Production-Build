@@ -48,6 +48,9 @@ import { Download } from "lucide-react";
 import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
 import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import VisualizingStepper from "@/components/dreams/VisualizingStepper";
+import { useSceneFilm } from "@/hooks/useSceneFilm";
+import { Clapperboard } from "lucide-react";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -218,6 +221,44 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
     setDream(prev => prev ? { ...prev, ...updated } : null);
   });
 
+  const [searchParams] = useSearchParams();
+  const autoStartedRef = useRef(false);
+
+  const { stage: filmStage, progress: filmProgress, exportFilm } = useSceneFilm(dream.id, (url) => {
+    setDream(prev => (prev ? ({ ...prev, video_url: url } as any) : null));
+  });
+
+  // Auto-start scene-image generation when arriving from "Visualize Dream".
+  useEffect(() => {
+    if (
+      searchParams.get("visualize") === "1" &&
+      isOwner &&
+      !dream.video_url &&
+      sectionImages.filter((s) => s.image_url).length === 0 &&
+      !isGenerating &&
+      !autoStartedRef.current
+    ) {
+      autoStartedRef.current = true;
+      generateSectionImages();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, isOwner, dream.video_url]);
+
+  const sceneVideoCount = sectionImages.filter((s) => s.video_url).length;
+  const filmBusy = filmStage === "preparing" || filmStage === "assembling" || filmStage === "uploading";
+  const showStepper = isGenerating || filmBusy;
+  let stepIndex = 1;
+  let stepProgress = 8;
+  if (isGenerating) {
+    if (totalSections > 0) {
+      stepIndex = 2;
+      stepProgress = Math.round((progress / totalSections) * 100);
+    }
+  } else if (filmBusy) {
+    stepIndex = 3;
+    stepProgress = filmProgress;
+  }
+
   const formattedDate = dream.created_at
     ? format(new Date(dream.created_at), "MMMM d, yyyy")
     : dream.date
@@ -252,6 +293,14 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   };
 
   return (
+    <>
+      {showStepper && (
+        <VisualizingStepper
+          activeIndex={stepIndex}
+          progress={stepProgress}
+          subtitle={filmBusy ? "Assembling your cinematic…" : "Bringing your dream to life…"}
+        />
+      )}
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -471,6 +520,23 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           </div>
         )}
 
+        {/* Export Film — stitch the per-scene clips you've generated into a
+            cinematic (the images-first path). Generate a video on individual
+            scenes above first; this assembles them. */}
+        {isOwner && !dream.video_url && sceneVideoCount >= 1 && (
+          <div className="mt-8 p-4 rounded-xl border border-primary/20 bg-primary/[0.06] text-center">
+            <Clapperboard className="h-5 w-5 mx-auto text-primary mb-2" />
+            <p className="text-sm font-medium mb-1">Export Film</p>
+            <p className="text-xs text-muted-foreground mb-3">
+              Stitch your {sceneVideoCount} scene clip{sceneVideoCount !== 1 ? "s" : ""} into a single cinematic.
+            </p>
+            <Button onClick={() => exportFilm(sectionImages)} disabled={filmBusy} size="sm" className="gap-2">
+              <Clapperboard className="h-3.5 w-3.5" />
+              {filmBusy ? "Assembling…" : "Export Film"}
+            </Button>
+          </div>
+        )}
+
         {/* Analysis */}
         {dream.analysis && (
           <Collapsible open={analysisOpen} onOpenChange={setAnalysisOpen} className="mt-8 border-t border-border/30 pt-4">
@@ -528,6 +594,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </AlertDialogContent>
       </AlertDialog>
     </motion.div>
+    </>
   );
 };
 
