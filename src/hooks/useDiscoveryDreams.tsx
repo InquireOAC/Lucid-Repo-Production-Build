@@ -13,46 +13,35 @@ interface DiscoveryData {
 }
 
 async function enrichDreams(dreamsRaw: any[], userId?: string): Promise<DreamEntry[]> {
-  return Promise.all(
-    dreamsRaw.map(async (dream: any) => {
-      const { count: likeCount } = await supabase
-        .from("dream_likes")
-        .select("id", { count: "exact", head: true })
-        .eq("dream_id", dream.id);
+  // Use the denormalized like_count/comment_count columns (trigger-maintained)
+  // and resolve the current user's likes in ONE batched query, instead of the
+  // previous per-dream count queries (an N+1 over up to 100 dreams).
+  const ids = dreamsRaw.map((d: any) => d.id);
+  let likedSet = new Set<string>();
+  if (userId && ids.length) {
+    const { data: myLikes } = await supabase
+      .from("dream_likes")
+      .select("dream_id")
+      .eq("user_id", userId)
+      .in("dream_id", ids);
+    likedSet = new Set((myLikes || []).map((r: any) => r.dream_id));
+  }
 
-      const { count: commentCount } = await supabase
-        .from("dream_comments")
-        .select("id", { count: "exact", head: true })
-        .eq("dream_id", dream.id);
-
-      let userLiked = false;
-      if (userId) {
-        const { data: likeData } = await supabase
-          .from("dream_likes")
-          .select("id")
-          .eq("dream_id", dream.id)
-          .eq("user_id", userId)
-          .maybeSingle();
-        userLiked = !!likeData;
-      }
-
-      return {
-        ...dream,
-        isPublic: dream.is_public,
-        like_count: likeCount || 0,
-        likeCount: likeCount || 0,
-        comment_count: commentCount || 0,
-        commentCount: commentCount || 0,
-        liked: userLiked,
-        userId: dream.user_id,
-        profiles: dream.profiles,
-        generatedImage: dream.generatedImage || dream.image_url || null,
-        image_url: dream.image_url || dream.generatedImage || null,
-        audio_url: dream.audio_url || null,
-        video_url: dream.video_url || null,
-      } as DreamEntry;
-    })
-  );
+  return dreamsRaw.map((dream: any) => ({
+    ...dream,
+    isPublic: dream.is_public,
+    like_count: dream.like_count || 0,
+    likeCount: dream.like_count || 0,
+    comment_count: dream.comment_count || 0,
+    commentCount: dream.comment_count || 0,
+    liked: likedSet.has(dream.id),
+    userId: dream.user_id,
+    profiles: dream.profiles,
+    generatedImage: dream.generatedImage || dream.image_url || null,
+    image_url: dream.image_url || dream.generatedImage || null,
+    audio_url: dream.audio_url || null,
+    video_url: dream.video_url || null,
+  } as DreamEntry));
 }
 
 const TAG_SECTIONS = ["Lucid", "Nightmare", "Recurring", "Adventure", "Spiritual"];
