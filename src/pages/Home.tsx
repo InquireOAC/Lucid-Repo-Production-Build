@@ -1,73 +1,54 @@
 import React, { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useFeedPublicDreams } from "@/hooks/useFeedPublicDreams";
 import { useDreamStore } from "@/store/dreamStore";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
-import { useAnnouncements } from "@/hooks/useAnnouncements";
-import { useChallenges } from "@/hooks/useChallenges";
-import { useEvents } from "@/hooks/useEvents";
 
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import PageTransition from "@/components/ui/PageTransition";
-import FAB from "@/components/ui/FAB";
-import HomeHeroCarousel from "@/components/home/HomeHeroCarousel";
 import JournalPosterCard from "@/components/journal/JournalPosterCard";
 import PosterRail from "@/components/repos/netflix/PosterRail";
-import PosterCard from "@/components/repos/netflix/PosterCard";
 import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
+import DreamStatsCard from "@/components/home/DreamStatsCard";
+import StatTile from "@/components/ui/StatTile";
 
 import { DreamEntry } from "@/types/dream";
-import { Film, Plus, Moon } from "lucide-react";
+import { Film, Plus } from "lucide-react";
 
 const hasPoster = (d: DreamEntry) =>
   !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
 
+const sceneCount = (d: DreamEntry) =>
+  d.section_images?.filter((s) => s.image_url).length || 0;
+
+const greetingForHour = (h: number) =>
+  h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+
 const Home = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { dreams: feedDreams, isLoading: feedLoading } = useFeedPublicDreams(user);
-  const { announcements } = useAnnouncements();
-  const { challenges } = useChallenges();
-  const { events } = useEvents();
 
   const { entries } = useDreamStore();
   useJournalEntries();
 
-  const myDreams = entries as DreamEntry[];
-
-  const heroDream = useMemo(() => {
-    if (!myDreams.length) return null;
-    // Most recent dream that has video or any image → ideal carousel anchor
-    return (
-      myDreams.find((d) => !!d.video_url) ||
-      myDreams.find(hasPoster) ||
-      myDreams[0]
-    );
-  }, [myDreams]);
+  const myDreams = (entries as DreamEntry[]).filter((d) => !d.is_archived);
 
   const continueCreating = useMemo(
-    () => myDreams.filter((d) => !d.video_url).slice(0, 10),
+    () => myDreams.filter((d) => !d.video_url).slice(0, 12),
     [myDreams],
   );
 
-  const cinematicDreams = useMemo(
-    () => myDreams.filter((d) => !!d.video_url).slice(0, 10),
-    [myDreams],
-  );
-
-  const stats = useMemo(() => {
+  const week = useMemo(() => {
     const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const weekCount = myDreams.filter(
+    const inWeek = myDreams.filter(
       (d) => new Date(d.created_at || d.date).getTime() >= weekAgo,
-    ).length;
-    const cinematicCount = myDreams.filter((d) => !!d.video_url).length;
-    const sceneCount = myDreams.reduce(
-      (sum, d) => sum + (d.section_images?.filter((s) => !!s.image_url).length || 0),
-      0,
     );
-    return { weekCount, cinematicCount, sceneCount };
+    return {
+      dreams: inWeek.length,
+      visualized: inWeek.filter(hasPoster).length,
+      cinematics: inWeek.filter((d) => !!d.video_url).length,
+      scenes: inWeek.reduce((sum, d) => sum + sceneCount(d), 0),
+    };
   }, [myDreams]);
 
   // Signed-out welcome
@@ -102,104 +83,72 @@ const Home = () => {
 
   return (
     <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-7xl lg:px-12 xl:max-w-[1400px] xl:px-16 2xl:max-w-[1500px] pb-10 lg:pb-16">
+      <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-5xl lg:px-12 xl:max-w-6xl xl:px-16 pb-10 lg:pb-16">
 
-        {/* Greeting strip */}
-        <div className="pt-6 lg:pt-10 mb-3 lg:mb-5 flex items-baseline justify-between">
-          <p className="text-xs lg:text-sm uppercase tracking-[0.2em] text-muted-foreground">
-            Tonight's Dreamscape
-          </p>
-          <p className="text-xs lg:text-sm text-muted-foreground truncate max-w-[40%] text-right">
-            {profile?.display_name || profile?.username || "Dreamer"}
+        {/* Greeting */}
+        <div className="pt-6 lg:pt-10 mb-5 lg:mb-7">
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
+            {greetingForHour(new Date().getHours())},{" "}
+            <span className="text-primary">{profile?.display_name || profile?.username || "Dreamer"}.</span>
+          </h1>
+          <p className="text-sm lg:text-base text-muted-foreground mt-1">
+            Ready to create something cinematic?
           </p>
         </div>
 
-        {/* ── Swipeable hero carousel ─────────────────────────────── */}
-        {myDreams.length > 0 ? (
-          <HomeHeroCarousel
-            heroDream={heroDream}
-            events={events}
-            challenges={challenges}
-            announcements={announcements}
-          />
-        ) : (
+        {myDreams.length === 0 ? (
           <EmptyHero onCreate={() => navigate("/journal/new")} />
-        )}
-
-        {/* Stats strip */}
-        {myDreams.length > 0 && (
-          <div className="mb-6 lg:mb-10 -mt-2 flex items-center gap-3 lg:gap-5 flex-wrap text-[11px] lg:text-sm text-muted-foreground">
-            {stats.weekCount > 0 && (
-              <span>
-                <span className="text-foreground font-semibold">{stats.weekCount}</span>{" "}
-                dream{stats.weekCount !== 1 ? "s" : ""} this week
-              </span>
+        ) : (
+          <>
+            {/* Continue Creating */}
+            {continueCreating.length > 0 && (
+              <PosterRail title="Continue Creating" onSeeAll={() => navigate("/journal")}>
+                {continueCreating.map((d) => {
+                  const n = sceneCount(d);
+                  return (
+                    <JournalPosterCard
+                      key={d.id}
+                      dream={d}
+                      showPlayOverlay={!!d.video_url}
+                      meta={n > 0 ? `${n} ${n === 1 ? "scene" : "scenes"}` : "Tap to visualize"}
+                    />
+                  );
+                })}
+              </PosterRail>
             )}
-            {stats.cinematicCount > 0 && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span>
-                  <span className="text-foreground font-semibold">{stats.cinematicCount}</span>{" "}
-                  cinematic{stats.cinematicCount !== 1 ? "s" : ""}
-                </span>
-              </>
-            )}
-            {stats.sceneCount > 0 && (
-              <>
-                <span className="text-muted-foreground/40">·</span>
-                <span>
-                  <span className="text-foreground font-semibold">{stats.sceneCount}</span>{" "}
-                  scene{stats.sceneCount !== 1 ? "s" : ""}
-                </span>
-              </>
-            )}
-          </div>
+
+            {/* Dream Stats */}
+            <div className="mb-6 lg:mb-8">
+              <p className="text-xs lg:text-sm uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                Dream Stats
+              </p>
+              <DreamStatsCard />
+            </div>
+
+            {/* This Week */}
+            <div className="mb-6 lg:mb-8">
+              <p className="text-xs lg:text-sm uppercase tracking-[0.18em] text-muted-foreground mb-3">
+                This Week
+              </p>
+              <div className="flex gap-2 lg:gap-3">
+                <StatTile value={week.dreams} label="Dreams" />
+                <StatTile value={week.visualized} label="Visualized" />
+                <StatTile value={week.cinematics} label="Cinematics" />
+                <StatTile value={week.scenes} label="Scenes" />
+              </div>
+            </div>
+          </>
         )}
 
-        {/* ── Continue Creating ────────────────────────────────────── */}
-        {continueCreating.length > 0 && (
-          <PosterRail title="Continue Creating" onSeeAll={() => navigate("/journal")}>
-            {continueCreating.map((d) => (
-              <JournalPosterCard key={d.id} dream={d} />
-            ))}
-          </PosterRail>
-        )}
-
-        {/* ── Your Cinematic Dreams (finished films) ──────────────── */}
-        {cinematicDreams.length > 0 && (
-          <PosterRail title="Your Cinematic Dreams" onSeeAll={() => navigate("/journal")}>
-            {cinematicDreams.map((d) => (
-              <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
-            ))}
-          </PosterRail>
-        )}
-
-        {/* ── Featured Dreamscapes (community feed) ───────────────── */}
-        <PosterRail title="Featured Dreamscapes" onSeeAll={() => navigate("/lucid-repo")}>
-          {feedLoading ? (
-            [0, 1, 2, 3, 4].map((i) => (
-              <Skeleton key={i} className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md" />
-            ))
-          ) : feedDreams.length > 0 ? (
-            feedDreams.slice(0, 10).map((d: any) => (
-              <PosterCard key={d.id} dream={d as DreamEntry} />
-            ))
-          ) : (
-            <button
-              onClick={() => navigate("/lucid-repo")}
-              className="flex-shrink-0 w-[130px] md:w-[150px] aspect-[2/3] rounded-md border border-dashed border-border/50 flex flex-col items-center justify-center text-center px-3 hover:border-primary/40 transition-colors"
-            >
-              <Moon className="h-6 w-6 text-muted-foreground/60 mb-2" />
-              <span className="text-[11px] text-muted-foreground leading-tight">
-                Discover dreams shared by others
-              </span>
-            </button>
-          )}
-        </PosterRail>
-
+        {/* New Dream CTA */}
+        <button
+          onClick={() => navigate("/journal/new")}
+          className="w-full h-12 lg:h-14 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="h-5 w-5" />
+          New Dream
+        </button>
       </div>
-
-      <FAB label="New Dream" to="/journal/new" />
     </PageTransition>
   );
 };
@@ -207,8 +156,7 @@ const Home = () => {
 const EmptyHero: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
   <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 lg:mb-10 md:rounded-2xl overflow-hidden lg:max-h-[520px] xl:max-h-[600px]">
     <div className="relative aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
-      <div className="absolute -top-16 -left-8 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
+      <DreamImageBackdrop dim={0.5} />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent" />
       <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 lg:pb-16 px-6 lg:px-12 z-10">
         <div className="h-14 w-14 lg:h-16 lg:w-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 lg:mb-6 border border-white/15">

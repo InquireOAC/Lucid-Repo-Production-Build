@@ -9,6 +9,8 @@ interface Props {
   dream: DreamEntry;
   width?: "sm" | "md" | "lg";
   showPlayOverlay?: boolean;
+  /** When set, replaces the author line with this metadata (e.g. "13 Scenes"). */
+  meta?: string;
   isSelectMode?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
@@ -25,6 +27,7 @@ const JournalPosterCard: React.FC<Props> = ({
   dream,
   width = "md",
   showPlayOverlay,
+  meta,
   isSelectMode = false,
   isSelected = false,
   onSelect,
@@ -118,21 +121,27 @@ const JournalPosterCard: React.FC<Props> = ({
         {dream.title || "Untitled dream"}
       </p>
 
-      {/* Author avatar + name */}
-      <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
-        {profile?.avatar_url ? (
-          <img
-            src={profile.avatar_url}
-            alt=""
-            className="h-4 w-4 lg:h-5 lg:w-5 rounded-full object-cover flex-shrink-0"
-          />
-        ) : (
-          <div className="h-4 w-4 lg:h-5 lg:w-5 rounded-full bg-primary/30 flex-shrink-0" />
-        )}
-        <span className="text-[10px] lg:text-xs text-muted-foreground truncate">
-          {profile?.display_name || profile?.username || "You"}
-        </span>
-      </div>
+      {/* Metadata (e.g. "13 Scenes") or author avatar + name */}
+      {meta ? (
+        <p className="mt-0.5 lg:mt-1 text-[10px] lg:text-xs text-muted-foreground truncate">
+          {meta}
+        </p>
+      ) : (
+        <div className="flex items-center gap-1.5 mt-0.5 lg:mt-1">
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt=""
+              className="h-4 w-4 lg:h-5 lg:w-5 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className="h-4 w-4 lg:h-5 lg:w-5 rounded-full bg-primary/30 flex-shrink-0" />
+          )}
+          <span className="text-[10px] lg:text-xs text-muted-foreground truncate">
+            {profile?.display_name || profile?.username || "You"}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
