@@ -1064,3 +1064,45 @@
   0% { transform: scale(1); }
   100% { transform: scale(1.06); }
 }
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+
+/* Respect users who prefer reduced motion: neutralize the ambient infinite
+   animations (cosmic-drift, aurora-shift, magic-glow, float, ken burns, …)
+   and snap transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible keyboard focus. The app previously had no focus ring, so keyboard
+   users couldn't see where they were. */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The body disables text selection for a native app feel, but a dream journal
+   must let people select and copy their own dream prose. Re-enable selection
+   for text content. */
+p,
+h1,
+h2,
+h3,
+h4,
+blockquote,
+li,
+.selectable,
+[data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
+}

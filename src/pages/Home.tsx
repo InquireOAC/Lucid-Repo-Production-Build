@@ -7,14 +7,6 @@ import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { useAnnouncements } from "@/hooks/useAnnouncements";
 import { useChallenges } from "@/hooks/useChallenges";
 import { useEvents } from "@/hooks/useEvents";
-import { techniques } from "@/components/insights/techniqueData";
-
-import techniqueImgRealityChecks from "@/assets/techniques/reality-checks.jpg";
-import techniqueImgSsild from "@/assets/techniques/ssild.jpg";
-import techniqueImgWild from "@/assets/techniques/wild.jpg";
-import techniqueImgFild from "@/assets/techniques/fild.jpg";
-import techniqueImgDeild from "@/assets/techniques/deild.jpg";
-import techniqueImgMeditation from "@/assets/techniques/meditation.jpg";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -30,15 +22,6 @@ import { Film, Plus, Moon } from "lucide-react";
 
 const hasPoster = (d: DreamEntry) =>
   !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
-
-const TECHNIQUE_CARDS: { idx: number; image: string }[] = [
-  { idx: 3, image: techniqueImgWild },
-  { idx: 4, image: techniqueImgSsild },
-  { idx: 5, image: techniqueImgFild },
-  { idx: 6, image: techniqueImgDeild },
-  { idx: 7, image: techniqueImgMeditation },
-  { idx: 0, image: techniqueImgRealityChecks },
-];
 
 const Home = () => {
   const { user, profile } = useAuth();
@@ -65,6 +48,11 @@ const Home = () => {
 
   const continueCreating = useMemo(
     () => myDreams.filter((d) => !d.video_url).slice(0, 10),
+    [myDreams],
+  );
+
+  const cinematicDreams = useMemo(
+    () => myDreams.filter((d) => !!d.video_url).slice(0, 10),
     [myDreams],
   );
 
@@ -175,6 +163,15 @@ const Home = () => {
           </PosterRail>
         )}
 
+        {/* ── Your Cinematic Dreams (finished films) ──────────────── */}
+        {cinematicDreams.length > 0 && (
+          <PosterRail title="Your Cinematic Dreams" onSeeAll={() => navigate("/journal")}>
+            {cinematicDreams.map((d) => (
+              <JournalPosterCard key={d.id} dream={d} showPlayOverlay />
+            ))}
+          </PosterRail>
+        )}
+
         {/* ── Featured Dreamscapes (community feed) ───────────────── */}
         <PosterRail title="Featured Dreamscapes" onSeeAll={() => navigate("/lucid-repo")}>
           {feedLoading ? (
@@ -197,46 +194,6 @@ const Home = () => {
             </button>
           )}
         </PosterRail>
-
-        {/* ── Lucid Techniques grid ────────────────────────────────── */}
-        <div>
-          <div className="flex items-center justify-between mb-3 lg:mb-5">
-            <h2 className="text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-foreground">Lucid Techniques</h2>
-            <button
-              onClick={() => navigate("/insights")}
-              className="flex items-center gap-0.5 text-xs lg:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              See all <span className="ml-0.5">›</span>
-            </button>
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5">
-            {TECHNIQUE_CARDS.map(({ idx, image }) => {
-              const t = techniques[idx];
-              if (!t) return null;
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => navigate(`/insights/technique/${idx}`)}
-                  className="cursor-pointer relative rounded-xl overflow-hidden aspect-square group text-left"
-                >
-                  <img
-                    src={image}
-                    alt={t.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                  <div className="absolute bottom-0 left-0 right-0 p-3 lg:p-5">
-                    <h3 className="font-semibold text-white text-sm lg:text-lg xl:text-xl leading-tight drop-shadow-md">
-                      {t.acronym || t.name}
-                    </h3>
-                    <p className="text-[10px] lg:text-xs text-white/70 mt-0.5 lg:mt-1">{t.difficulty}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
       </div>
 
