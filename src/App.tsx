@@ -54,6 +54,7 @@ const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
 const Insights = lazyWithRetry(() => import('./pages/Insights'));
 const TechniqueDetailPage = lazyWithRetry(() => import('./components/insights/TechniqueDetailPage'));
 const DreamStoryPage = lazyWithRetry(() => import('./pages/DreamStoryPage'));
+const Cinematic = lazyWithRetry(() => import('./pages/Cinematic'));
 const DreamBook = lazyWithRetry(() => import('./pages/DreamBook'));
 const NotFound = lazyWithRetry(() => import('./pages/NotFound'));
 const AdminDashboard = lazyWithRetry(() => import('./pages/AdminDashboard'));
@@ -105,6 +106,7 @@ function AppContent() {
           <Route path="lucid-repo" element={<LucidRepoContainer />} />
           <Route path="lucid-repo/:dreamId" element={<LucidRepoContainer />} />
           <Route path="dream/:dreamId" element={<DreamStoryPage />} />
+          <Route path="cinematic" element={<Cinematic />} />
           <Route path="dream-book" element={<DreamBook />} />
           <Route path="chat" element={<Chat />} />
           <Route path="notifications" element={<Notifications />} />

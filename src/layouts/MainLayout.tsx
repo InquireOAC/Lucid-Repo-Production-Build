@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import PaywallDialog from "@/components/paywall/PaywallDialog";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Home, Film, Moon, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, Film, Clapperboard, Compass, User, PanelLeftClose, PanelLeft } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -78,7 +78,8 @@ const MainLayout = () => {
           <div className="flex justify-around items-center h-14">
             <NavTab to="/" icon={<Home size={20} />} label="Home" />
             <NavTab to="/journal" icon={<Film size={20} />} label="My Dreams" />
-            <NavTab to="/lucid-repo" icon={<Moon size={20} />} label="Repo" />
+            <NavTab to="/cinematic" icon={<Clapperboard size={20} />} label="Cinematic" />
+            <NavTab to="/lucid-repo" icon={<Compass size={20} />} label="Explore" />
             <NavTab to="/profile" icon={<User size={20} />} label="Profile" />
           </div>
         </motion.div>
@@ -92,7 +93,8 @@ const MainLayout = () => {
 const navItems = [
   { to: "/", icon: Home, label: "Home" },
   { to: "/journal", icon: Film, label: "My Dreams" },
-  { to: "/lucid-repo", icon: Moon, label: "Lucid Repo" },
+  { to: "/cinematic", icon: Clapperboard, label: "Cinematic" },
+  { to: "/lucid-repo", icon: Compass, label: "Explore" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
