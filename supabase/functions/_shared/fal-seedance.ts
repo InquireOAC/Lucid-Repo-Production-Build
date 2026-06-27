@@ -92,16 +92,33 @@ export async function falSeedanceImageToVideo(
     `[fal-seedance] submit model=${model} aspect=${payload.aspect_ratio} duration=${payload.duration}s refs=${useOmni ? (payload.reference_images as string[]).length : 0}`,
   );
 
-  const submit = await falFetch(`${QUEUE_BASE}/${model}`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  }, apiKey);
-  const submitBody = await submit.json().catch(() => ({}));
-  if (!submit.ok) {
-    console.error(`[fal-seedance] submit error ${submit.status}:`, JSON.stringify(submitBody).slice(0, 500));
-    throw new Error(`Seedance submit failed (${submit.status})`);
+  // Submit with a couple of retries on transient failures (network blips / 5xx).
+  // 4xx are caller errors and are not retried.
+  let submitBody: any = {};
+  let requestId: string | undefined;
+  const submitAttempts = 3;
+  for (let attempt = 0; attempt < submitAttempts; attempt += 1) {
+    try {
+      const submit = await falFetch(`${QUEUE_BASE}/${model}`, {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }, apiKey);
+      submitBody = await submit.json().catch(() => ({}));
+      if (submit.ok) {
+        requestId = submitBody?.request_id;
+        break;
+      }
+      console.error(`[fal-seedance] submit error ${submit.status} (attempt ${attempt + 1}):`, JSON.stringify(submitBody).slice(0, 500));
+      // Don't retry client errors — they won't succeed on retry.
+      if (submit.status >= 400 && submit.status < 500) {
+        throw new Error(`Seedance submit failed (${submit.status})`);
+      }
+    } catch (e) {
+      console.warn(`[fal-seedance] submit attempt ${attempt + 1} threw: ${(e as Error)?.message}`);
+      if (attempt === submitAttempts - 1) throw e;
+    }
+    await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
   }
-  const requestId = submitBody?.request_id;
   if (!requestId) throw new Error("Seedance returned no request_id");
 
   // Poll for completion. 15s clips take ~90–180s.
@@ -111,19 +128,27 @@ export async function falSeedanceImageToVideo(
   let videoHostedUrl: string | null = null;
   for (let i = 0; i < maxAttempts; i += 1) {
     await new Promise((r) => setTimeout(r, 5000));
-    const sRes = await falFetch(statusUrl, { method: "GET" }, apiKey);
-    const sBody = await sRes.json().catch(() => ({}));
-    const status = sBody?.status;
-    if (status === "COMPLETED") {
-      const rRes = await falFetch(resultUrl, { method: "GET" }, apiKey);
-      const rBody = await rRes.json().catch(() => ({}));
-      videoHostedUrl = rBody?.video?.url || rBody?.output?.video?.url || null;
-      break;
+    try {
+      const sRes = await falFetch(statusUrl, { method: "GET" }, apiKey);
+      const sBody = await sRes.json().catch(() => ({}));
+      const status = sBody?.status;
+      if (status === "COMPLETED") {
+        const rRes = await falFetch(resultUrl, { method: "GET" }, apiKey);
+        const rBody = await rRes.json().catch(() => ({}));
+        videoHostedUrl = rBody?.video?.url || rBody?.output?.video?.url || null;
+        break;
+      }
+      if (status === "FAILED" || status === "ERROR") {
+        throw new Error(`Seedance failed: ${JSON.stringify(sBody).slice(0, 300)}`);
+      }
+      console.log(`[fal-seedance] status=${status} attempt=${i + 1}`);
+    } catch (e) {
+      // A terminal FAILED/ERROR is rethrown above; only transient network/parse
+      // errors land here — log and keep polling instead of aborting the job.
+      const msg = (e as Error)?.message || "";
+      if (msg.startsWith("Seedance failed:")) throw e;
+      console.warn(`[fal-seedance] transient poll error attempt=${i + 1}: ${msg}`);
     }
-    if (status === "FAILED" || status === "ERROR") {
-      throw new Error(`Seedance failed: ${JSON.stringify(sBody).slice(0, 300)}`);
-    }
-    console.log(`[fal-seedance] status=${status} attempt=${i + 1}`);
   }
 
   if (!videoHostedUrl) throw new Error("Seedance timed out waiting for video");

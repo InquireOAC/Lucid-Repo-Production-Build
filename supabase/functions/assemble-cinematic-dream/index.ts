@@ -32,6 +32,29 @@ async function invokeChild(name: string, body: any, authHeader: string) {
   return data;
 }
 
+// Retry a child invocation a couple of times with backoff. The child
+// generators write their own beat row (keyed by beat_index), so re-running is
+// idempotent at the row level — a retry overwrites that beat, it does not
+// duplicate work for the other beat.
+async function invokeChildWithRetry(
+  name: string,
+  body: any,
+  authHeader: string,
+  attempts = 2,
+) {
+  let lastErr: unknown;
+  for (let i = 0; i < attempts; i += 1) {
+    try {
+      return await invokeChild(name, body, authHeader);
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[assemble] ${name} attempt ${i + 1}/${attempts} failed: ${(e as Error)?.message}`);
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 1500 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
 function buildStyleBlock(spec: any): string {
   const locks = spec?.locks || {};
   const style = spec?.style || {};
@@ -133,7 +156,7 @@ Deno.serve(async (req) => {
 
     // Step 1: frame 0 — anchored on user avatar + side characters appearing in segment 0.
     const frame0Prompt = `${segments[0].key_frame_prompt} ${styleBlock}`.trim();
-    const frame0 = await invokeChild(
+    const frame0 = await invokeChildWithRetry(
       "generate-cinematic-beat-frame",
       { dreamId, beatIndex: 0, framePrompt: frame0Prompt, extraRefUrls: seg0Chars },
       authHeader,
@@ -144,7 +167,7 @@ Deno.serve(async (req) => {
     // Step 2: frame 1 — anchored on user avatar AND segment-0's frame for continuity
     // AND any side characters appearing in segment 1.
     const frame1Prompt = `${segments[1].key_frame_prompt} ${styleBlock} Carry the character, wardrobe, lighting and color palette forward exactly from the previous reference image.`.trim();
-    const frame1 = await invokeChild(
+    const frame1 = await invokeChildWithRetry(
       "generate-cinematic-beat-frame",
       { dreamId, beatIndex: 1, framePrompt: frame1Prompt, prevFrameUrl: frame0Url, extraRefUrls: seg1Chars },
       authHeader,
@@ -163,12 +186,22 @@ Deno.serve(async (req) => {
     const refs0 = [avatarUrl, ...seg0Chars].filter((u): u is string => !!u);
     const refs1 = [avatarUrl, frame0Url, ...seg1Chars].filter((u): u is string => !!u);
 
-    await Promise.all([
-      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15, referenceImages: refs0 }, authHeader),
-      invokeChild("generate-cinematic-beat-video", { dreamId, beatIndex: 1, motionPrompt: motion1, duration: 15, referenceImages: refs1 }, authHeader),
-      invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 0, voiceId }, authHeader),
-      invokeChild("generate-cinematic-beat-narration", { dreamId, beatIndex: 1, voiceId }, authHeader),
+    // Generate clips + narrations independently. A single narration (or even
+    // one clip) failing must NOT discard the other segments' already-rendered
+    // (and already-paid-for) work, so use allSettled and recover from the
+    // persisted beat rows rather than aborting the whole run.
+    const childResults = await Promise.allSettled([
+      invokeChildWithRetry("generate-cinematic-beat-video", { dreamId, beatIndex: 0, motionPrompt: motion0, duration: 15, referenceImages: refs0 }, authHeader),
+      invokeChildWithRetry("generate-cinematic-beat-video", { dreamId, beatIndex: 1, motionPrompt: motion1, duration: 15, referenceImages: refs1 }, authHeader),
+      invokeChildWithRetry("generate-cinematic-beat-narration", { dreamId, beatIndex: 0, voiceId }, authHeader),
+      invokeChildWithRetry("generate-cinematic-beat-narration", { dreamId, beatIndex: 1, voiceId }, authHeader),
     ]);
+    const labels = ["video[0]", "video[1]", "narration[0]", "narration[1]"];
+    childResults.forEach((r, i) => {
+      if (r.status === "rejected") {
+        console.error(`[assemble] ${labels[i]} failed: ${(r.reason as Error)?.message}`);
+      }
+    });
 
     const { data: completed } = await supabase
       .from("dream_cinematic_beats")
@@ -177,7 +210,14 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .order("beat_index");
 
-    return new Response(JSON.stringify({ beats: completed }), {
+    // The client-side assembler needs at least one segment with a rendered
+    // clip. Narration is optional (the assembler tolerates a null narration_url).
+    const renderedClips = (completed || []).filter((b: any) => b.video_url).length;
+    if (renderedClips === 0) {
+      throw new Error("Cinematic render failed — no segments produced a video clip. Please try again.");
+    }
+
+    return new Response(JSON.stringify({ beats: completed, renderedClips }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e: any) {

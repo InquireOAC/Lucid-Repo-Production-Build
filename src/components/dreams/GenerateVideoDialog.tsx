@@ -192,6 +192,22 @@ export const GenerateVideoDialog = ({
                     <p className="text-xs text-white/40 capitalize">{cinematic.stage.replace("_", " ")}…</p>
                   </div>
                 )}
+                {cinematic.stage === "error" && (
+                  <div className="space-y-2">
+                    {cinematic.error && (
+                      <p className="text-xs text-red-400/80">{cinematic.error}</p>
+                    )}
+                    {cinematic.canRetryStitch && (
+                      <Button
+                        onClick={() => cinematic.retryStitch()}
+                        variant="outline"
+                        className="w-full h-10 rounded-xl border-white/15 bg-white/[0.04] text-white/80 text-xs hover:bg-white/[0.08]"
+                      >
+                        Retry assembly — your clips are saved, no re-render needed
+                      </Button>
+                    )}
+                  </div>
+                )}
                 <Button
                   onClick={() => cinematic.run()}
                   disabled={cinematic.stage !== "idle" && cinematic.stage !== "done" && cinematic.stage !== "error"}
