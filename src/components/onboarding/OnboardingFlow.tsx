@@ -4,19 +4,16 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { ChapterProgress } from "./components";
-import {
-  AwakeningScreen,
-  CaptureScreen,
-  IntelligenceScreen,
-  CommunityScreen,
-  ThresholdScreen,
-} from "./screens";
+import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
+import { AwakeningScreen, CaptureScreen, ThresholdScreen } from "./screens";
 
 interface OnboardingFlowProps {
   onComplete: () => void;
 }
 
-const CHAPTERS = ["Awakening", "Capture", "Insight", "Community", "Threshold"];
+// Streamlined to three image-led chapters: a welcome, the create loop, and the
+// threshold (which still carries the required terms-acceptance checkbox).
+const CHAPTERS = ["Awakening", "Create", "Threshold"];
 
 /* ----------------------------- Orchestrator ---------------------------- */
 
@@ -25,14 +22,6 @@ const screenVariants = {
   center: { x: 0, opacity: 1 },
   exit: (dir: number) => ({ x: dir > 0 ? -60 : 60, opacity: 0 }),
 };
-
-const gradients = [
-  "radial-gradient(ellipse at 50% 30%, hsl(240 50% 14%) 0%, hsl(230 60% 7%) 45%, hsl(220 70% 3%) 100%)",
-  "radial-gradient(ellipse at 30% 50%, hsl(210 60% 12%) 0%, hsl(215 70% 5%) 50%, hsl(220 75% 3%) 100%)",
-  "radial-gradient(ellipse at 70% 30%, hsl(255 55% 13%) 0%, hsl(240 65% 5%) 55%, hsl(230 70% 3%) 100%)",
-  "radial-gradient(ellipse at 50% 40%, hsl(185 45% 11%) 0%, hsl(200 55% 5%) 50%, hsl(220 65% 3%) 100%)",
-  "radial-gradient(ellipse at 50% 35%, hsl(260 55% 14%) 0%, hsl(245 60% 6%) 50%, hsl(230 65% 3%) 100%)",
-];
 
 const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
   const [step, setStep] = useState(0);
@@ -94,10 +83,6 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       case 1:
         return <CaptureScreen />;
       case 2:
-        return <IntelligenceScreen />;
-      case 3:
-        return <CommunityScreen />;
-      case 4:
         return (
           <ThresholdScreen
             termsAccepted={termsAccepted}
@@ -112,16 +97,17 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[100] overflow-hidden select-none h-[100dvh]"
+      className="fixed inset-0 z-[100] overflow-hidden select-none h-[100dvh] bg-background"
       style={{
-        background: gradients[step],
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
-        transition: "background 800ms ease-in-out",
       }}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
+      {/* Cinematic dream-imagery backdrop (real public dreams, Ken Burns) */}
+      <DreamImageBackdrop dim={0.62} />
+
       {/* Film grain */}
       <div
         className="fixed inset-0 pointer-events-none opacity-[0.018] z-[5] mix-blend-overlay"

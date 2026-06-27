@@ -13,6 +13,7 @@ import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
 import lucidEngineLogo from "@/assets/lucid-logo.png";
+import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
@@ -161,33 +162,8 @@ const Auth = () => {
       className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden pb-24"
       style={{ background: C.bg }}
     >
-      {/* Cosmic background effects */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Radial glow top */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px]"
-          style={{
-            background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 70%)`,
-            filter: "blur(60px)",
-          }}
-        />
-        {/* Radial glow bottom-right */}
-        <div
-          className="absolute bottom-20 right-0 w-[300px] h-[300px]"
-          style={{
-            background: `radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)`,
-            filter: "blur(50px)",
-          }}
-        />
-        {/* Grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(56,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(56,130,246,0.3) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
+      {/* Cinematic dream-imagery backdrop (real public dreams, Ken Burns) */}
+      <DreamImageBackdrop dim={0.6} className="z-0" />
 
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
         {/* ── SECTION 1: Header ── */}

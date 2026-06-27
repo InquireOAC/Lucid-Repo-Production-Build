@@ -3,10 +3,10 @@ import { GlassCard, AnimatedIcon } from "../components";
 import type { DrawIconName } from "../components/AnimatedIcon";
 
 const powers: { icon: DrawIconName; title: string; description: string }[] = [
-  { icon: "mic", title: "Voice Capture", description: "Speak it before it fades — full transcription on wake." },
-  { icon: "pen", title: "Written Journal", description: "A canvas for the fragments your morning mind remembers." },
-  { icon: "moon", title: "Lucidity Tracking", description: "Mark every flicker of awareness inside the dream." },
-  { icon: "tag", title: "Dream Tags", description: "Symbols, people, places — your private dream lexicon." },
+  { icon: "mic", title: "Capture", description: "Speak or write your dream the moment you wake, before it fades." },
+  { icon: "sparkles", title: "Generate Scenes", description: "Turn your words into striking AI dream imagery." },
+  { icon: "moon", title: "Cinematic Shorts", description: "Stitch your scenes into a narrated ~30-second film." },
+  { icon: "globe", title: "Share & Discover", description: "Post to the Repo and explore the dreams of others." },
 ];
 
 const CaptureScreen = () => {
@@ -27,9 +27,9 @@ const CaptureScreen = () => {
           show.title ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
         }`}
       >
-        <h2 className="text-2xl md:text-4xl font-bold mb-2">Capture Every Dream</h2>
+        <h2 className="text-2xl md:text-4xl font-bold mb-2">Dreams Become Films</h2>
         <p className="text-sm md:text-base text-muted-foreground max-w-md mx-auto">
-          Every dream is a message. Catch it before it dissolves into morning.
+          Capture the dream, then watch it become scenes — then a short cinematic, all from your words.
         </p>
       </div>
 

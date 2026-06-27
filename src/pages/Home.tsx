@@ -16,6 +16,7 @@ import HomeHeroCarousel from "@/components/home/HomeHeroCarousel";
 import JournalPosterCard from "@/components/journal/JournalPosterCard";
 import PosterRail from "@/components/repos/netflix/PosterRail";
 import PosterCard from "@/components/repos/netflix/PosterCard";
+import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
 
 import { DreamEntry } from "@/types/dream";
 import { Film, Plus, Moon } from "lucide-react";
@@ -75,6 +76,7 @@ const Home = () => {
       <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
         <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-5xl lg:px-12 xl:max-w-6xl xl:px-16 pt-12 lg:pt-20 pb-10">
           <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-primary/30 via-accent/20 to-background aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px]">
+            <DreamImageBackdrop dim={0.5} />
             <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
             <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />

@@ -69,7 +69,7 @@ const AwakeningScreen = ({ onNext, onSkip }: Props) => {
           s.tag ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3"
         }`}
       >
-        Your dreams hold secrets. It's time to decode them.
+        Your dreams, as cinema. Record them, and watch them come alive.
       </p>
 
       <div
