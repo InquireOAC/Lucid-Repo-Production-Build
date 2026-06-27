@@ -41,6 +41,11 @@ const DATE_CUTOFF_MS: Record<Exclude<DateRange, "any">, number> = {
 const hasPoster = (d: DreamEntry) =>
   !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
 
+const sceneMeta = (d: DreamEntry): string | undefined => {
+  const n = d.section_images?.filter((s) => s.image_url).length || 0;
+  return n > 0 ? `${n} ${n === 1 ? "scene" : "scenes"}` : undefined;
+};
+
 const filterByCategory = (dreams: DreamEntry[], cat: Category): DreamEntry[] => {
   if (cat === "All") return dreams;
   if (cat === "Cinematic") return dreams.filter((d) => !!d.video_url);
@@ -379,7 +384,7 @@ const Journal = () => {
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 lg:gap-5 xl:gap-6">
                   {filtered.map((d) => (
-                    <JournalPosterCard key={d.id} dream={d} width="md" {...selectProps(d)} />
+                    <JournalPosterCard key={d.id} dream={d} width="md" meta={sceneMeta(d)} {...selectProps(d)} />
                   ))}
                 </div>
               )}
@@ -395,7 +400,7 @@ const Journal = () => {
             {recentlyAdded.length > 0 && (
               <PosterRail title="Recently Added">
                 {recentlyAdded.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
+                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -403,7 +408,7 @@ const Journal = () => {
             {cinematicDreams.length > 0 && (
               <PosterRail title="Your Cinematics">
                 {cinematicDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay {...selectProps(d)} />
+                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay meta={sceneMeta(d)} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -411,7 +416,7 @@ const Journal = () => {
             {lucidDreams.length > 0 && (
               <PosterRail title="Lucid Dreams">
                 {lucidDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
+                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
@@ -419,7 +424,7 @@ const Journal = () => {
             {thisMonth.length > 0 && (
               <PosterRail title="This Month">
                 {thisMonth.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} {...selectProps(d)} />
+                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
                 ))}
               </PosterRail>
             )}
