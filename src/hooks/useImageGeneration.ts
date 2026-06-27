@@ -26,7 +26,7 @@ export const useImageGeneration = ({
 }: UseImageGenerationProps) => {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
-  const { hasUsedFeature, canUseFeature, recordFeatureUsage } = useFeatureUsage();
+  const { hasUsedFeature, canUseFeature } = useFeatureUsage();
   const { getImagePrompt, generateDreamImageFromAI } = useDreamImageAI();
 
   const [isGenerating, setIsGenerating] = useState(false);
@@ -145,24 +145,23 @@ export const useImageGeneration = ({
       onImageGenerated(openaiUrl, generatedPromptText);
       toast.success("Dream image generated!");
 
-      // 4. Record feature usage and refresh subscription data
-      if (!isAdmin) {
-        console.log('Recording image usage...');
-        const usageRecorded = await recordFeatureUsage("image");
-        console.log('Image usage recorded:', usageRecorded);
-        
-        if (onSubscriptionRefresh) {
-          console.log('Refreshing subscription data after image generation...');
-          setTimeout(() => {
-            console.log('Delayed subscription refresh executing...');
-            onSubscriptionRefresh();
-          }, 1000);
-        }
+      // 4. Usage is metered server-side by the edge function (entitlement gate),
+      //    so we no longer record it from the client — just refresh the UI's
+      //    cached subscription/usage data.
+      if (!isAdmin && onSubscriptionRefresh) {
+        setTimeout(() => onSubscriptionRefresh(), 1000);
       }
     } catch (error: any) {
       console.error("=== IMAGE GENERATION FAILED ===");
       console.error("Error details:", error);
-      toast.error(`Image generation failed: ${error.message}`);
+      // The edge function returns a 402 with code 'entitlement_required' when
+      // the user is out of free/subscription credits — show the paywall.
+      if (error?.code === "entitlement_required") {
+        toast.error(error.message || "Upgrade to generate more dream scenes.");
+        showSubscriptionPrompt("image");
+      } else {
+        toast.error(`Image generation failed: ${error.message}`);
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -173,7 +172,6 @@ export const useImageGeneration = ({
     dreamId,
     isAdmin,
     canUseFeature,
-    recordFeatureUsage,
     onImageGenerated,
     onSubscriptionRefresh,
     getImagePrompt,

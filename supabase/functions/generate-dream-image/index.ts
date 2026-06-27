@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { falNanoBanana2 } from "../_shared/fal-nano-banana.ts"
+import { checkAndConsumeImageCredit, refundImageCredit } from "../_shared/entitlement.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +26,8 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     })
+    // Service-role client for server-authoritative entitlement checks (bypasses RLS).
+    const admin = createClient(supabaseUrl, serviceRoleKey)
 
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
@@ -33,6 +36,17 @@ serve(async (req) => {
 
     if (!prompt || typeof prompt !== 'string') throw new Error('Invalid prompt')
     if (prompt.length > MAX_PROMPT_LENGTH) throw new Error(`Prompt too long. Maximum ${MAX_PROMPT_LENGTH} characters allowed.`)
+
+    // ── Server-side entitlement gate + meter ──────────────────────────────
+    // The UI gates this too, but the endpoint is directly callable, so the
+    // paid FAL call must never run without a valid entitlement.
+    const entitlement = await checkAndConsumeImageCredit(admin, user.id)
+    if (!entitlement.allowed) {
+      return new Response(
+        JSON.stringify({ error: entitlement.reason ?? 'Image generation not allowed', code: 'entitlement_required' }),
+        { status: entitlement.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     const extraRefs: string[] = Array.isArray(extraReferenceImageUrls)
       ? extraReferenceImageUrls.filter((u: unknown): u is string => typeof u === 'string' && u.length > 0)
@@ -69,25 +83,36 @@ serve(async (req) => {
       'Render in vertical 9:16 portrait orientation, photographic cinematic quality, clean anatomy with five fingers per hand and natural symmetric eyes, no text or watermarks.',
     ].filter(Boolean).join('\n\n')
 
-    const { imageUrls } = await falNanoBanana2(
-      {
-        prompt: fullPrompt,
-        numImages: 1,
-        aspectRatio: '9:16',
-        resolution: '1K',
-        imageUrls: cappedRefs,
-        outputFormat: 'png',
-      },
-      {
-        supabaseUrl,
-        serviceRoleKey,
-        bucket: 'dream-images',
-        pathPrefix: `${user.id}/dream`,
-      },
-    )
+    let imageUrls: string[]
+    try {
+      ;({ imageUrls } = await falNanoBanana2(
+        {
+          prompt: fullPrompt,
+          numImages: 1,
+          aspectRatio: '9:16',
+          resolution: '1K',
+          imageUrls: cappedRefs,
+          outputFormat: 'png',
+        },
+        {
+          supabaseUrl,
+          serviceRoleKey,
+          bucket: 'dream-images',
+          pathPrefix: `${user.id}/dream`,
+        },
+      ))
+    } catch (genErr) {
+      // The credit was consumed before generation — release it so the user
+      // isn't charged for a failed render.
+      await refundImageCredit(admin, user.id, entitlement.tier)
+      throw genErr
+    }
 
     const imageUrl = imageUrls[0]
-    if (!imageUrl) throw new Error('No image returned from FAL')
+    if (!imageUrl) {
+      await refundImageCredit(admin, user.id, entitlement.tier)
+      throw new Error('No image returned from FAL')
+    }
     console.log('Image generated via FAL, persisted at:', imageUrl)
 
     return new Response(

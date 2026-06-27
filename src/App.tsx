@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import MainLayout from './layouts/MainLayout';
 import LoadingScreen from './components/profile/LoadingScreen';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Primary tab pages — imported directly so tab switching is instant (no Suspense flash).
 import Index from './pages/Index';
@@ -126,7 +127,9 @@ function App() {
         <SubscriptionProvider>
           <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
             <ColorSchemeProvider>
-              <AppContent />
+              <ErrorBoundary>
+                <AppContent />
+              </ErrorBoundary>
             </ColorSchemeProvider>
           </ThemeProvider>
         </SubscriptionProvider>

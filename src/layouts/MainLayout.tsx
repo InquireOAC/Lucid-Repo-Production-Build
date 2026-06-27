@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import lucidRepoLogo from "@/assets/LogoForFramer.png";
 
 const MainLayout = () => {
@@ -59,7 +60,9 @@ const MainLayout = () => {
           style={isMobile ? { paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' } : undefined}
         >
           <div className="md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
-            <Outlet />
+            <ErrorBoundary resetKey={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
           </div>
         </div>
         

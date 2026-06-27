@@ -72,7 +72,24 @@ export function useDreamImageAI() {
     if (extraReferenceImageUrls?.length) body.extraReferenceImageUrls = extraReferenceImageUrls;
     const result = await supabase.functions.invoke("generate-dream-image", { body });
     if (result.error || !result.data) {
-      throw new Error(result.error?.message || "Failed to generate image");
+      // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
+      // .context is the raw Response — read it so entitlement (402) denials
+      // surface their real message + code instead of a generic error.
+      let message = result.error?.message || "Failed to generate image";
+      let code: string | undefined;
+      const ctx = (result.error as { context?: Response } | undefined)?.context;
+      if (ctx && typeof ctx.json === "function") {
+        try {
+          const body = await ctx.json();
+          if (body?.error) message = body.error;
+          if (body?.code) code = body.code;
+        } catch {
+          /* response body wasn't JSON — keep the default message */
+        }
+      }
+      const err = new Error(message) as Error & { code?: string };
+      if (code) err.code = code;
+      throw err;
     }
     return (
       result.data?.imageUrl ||
