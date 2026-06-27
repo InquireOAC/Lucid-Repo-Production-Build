@@ -48,12 +48,12 @@ export const useJournalActions = () => {
     audioUrl?: string;
     technique_used?: string;
     lucidity_level?: number;
-  }): Promise<void> => {
+  }): Promise<string | undefined> => {
     setIsSubmitting(true);
     if (!user) {
       toast.error("You must be logged in to save a dream.");
       setIsSubmitting(false);
-      return;
+      return undefined;
     }
 
     try {
@@ -128,9 +128,11 @@ export const useJournalActions = () => {
       toast.success("Dream saved successfully!");
       // Auto-detect named people in the dream. Fire-and-forget.
       extractCharactersInBackground(newDreamForStore.id, newDreamForStore.content || "");
+      return newDreamForStore.id;
     } catch (error) {
       console.error("Error adding dream:", error);
       toast.error("Failed to save dream.");
+      return undefined;
     } finally {
       setIsSubmitting(false);
     }

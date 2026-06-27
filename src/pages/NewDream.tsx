@@ -1,27 +1,28 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Mic, FileText, Save, Tag, Brain, ImageIcon, Headphones, ChevronDown, Zap } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { ArrowLeft, Mic, FileText, Sparkles, X, Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
 import { VoiceRecorder } from "@/components/dreams/VoiceRecorder";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { useAudioUpload } from "@/hooks/useAudioUpload";
-import DreamAnalysis from "@/components/DreamAnalysis";
-import DreamImageGenerator from "@/components/DreamImageGenerator";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { DreamDataPlugin } from "@/plugins/DreamDataPlugin";
-
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
-const CHARACTER_LIMIT = 3000;
+const CHARACTER_LIMIT = 2000;
+const EMOTIONS = ["Awe", "Dreamy", "Fear", "Excited", "Calm"];
+
+const deriveTitle = (content: string): string => {
+  const firstLine = (content.trim().split(/\n/)[0] || "").trim();
+  const words = firstLine.split(/\s+/).slice(0, 6).join(" ");
+  if (!words) return "Untitled dream";
+  return words.length > 60 ? words.slice(0, 60) + "…" : words;
+};
 
 const NewDream = () => {
   const navigate = useNavigate();
@@ -29,189 +30,116 @@ const NewDream = () => {
   const { tags, handleAddDream, isSubmitting } = useDreamJournal();
   const { uploadAudio, isUploading } = useAudioUpload();
 
-  const [formData, setFormData] = useState({
-    title: "",
-    content: "",
-    date: new Date().toISOString().split("T")[0],
-    tags: [] as string[],
-    mood: "Neutral",
-    analysis: "",
-    generatedImage: "",
-    imagePrompt: "",
-    lucid: false,
-    technique_used: "",
-  });
-
-  const TECHNIQUES = [
-    { id: "MILD", label: "MILD" },
-    { id: "WILD", label: "WILD" },
-    { id: "WBTB", label: "WBTB" },
-    { id: "Reality Checks", label: "Reality Checks" },
-    { id: "Meditation", label: "Meditation" },
-    { id: "Supplements", label: "Supplements" },
-  ];
-
+  const [content, setContent] = useState("");
+  const [emotion, setEmotion] = useState<string>("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [lucidity, setLucidity] = useState(0);
   const [inputMode, setInputMode] = useState<"text" | "voice">("text");
   const [recordedAudio, setRecordedAudio] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string>("");
-  const [analysisOpen, setAnalysisOpen] = useState(false);
-  const [imageOpen, setImageOpen] = useState(false);
+  const [showTagPicker, setShowTagPicker] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    if (name === "content" && value.length > CHARACTER_LIMIT) return;
-    setFormData((p) => ({ ...p, [name]: value }));
+  const now = useMemo(() => new Date(), []);
+  const availableTags = tags.filter((t) => !selectedTags.includes(t.id));
+  const tagName = (id: string) => tags.find((t) => t.id === id)?.name ?? id;
+
+  const handleVoiceRecording = async (blob: Blob) => {
+    setRecordedAudio(blob);
+    setAudioUrl(URL.createObjectURL(blob));
   };
+  const handleTranscription = (text: string) =>
+    setContent((c) => (c ? (c + "\n\n" + text).trim() : text));
 
-  const handleTagSelect = (tagId: string) => {
-    setFormData((p) => ({
-      ...p,
-      tags: p.tags.includes(tagId) ? p.tags.filter((id) => id !== tagId) : [...p.tags, tagId],
-    }));
-  };
-
-  const handleVoiceRecording = async (audioBlob: Blob) => {
-    setRecordedAudio(audioBlob);
-    setAudioUrl(URL.createObjectURL(audioBlob));
-  };
-
-  const handleTranscriptionComplete = (text: string) => {
-    setFormData((p) => ({
-      ...p,
-      content: p.content ? (p.content + "\n\n" + text).trim() : text,
-    }));
-  };
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault();
+  const save = async (visualize: boolean) => {
     if (!user) { navigate("/auth"); return; }
-    if (!formData.title.trim()) { toast.error("Please add a title for your dream"); return; }
-
+    if (content.trim().length < 10) {
+      toast.error("Tell us a little more about your dream first.");
+      return;
+    }
 
     let uploadedAudioUrl = audioUrl;
     if (recordedAudio) {
       const uploaded = await uploadAudio(recordedAudio, "new");
-      if (uploaded) { uploadedAudioUrl = uploaded; }
+      if (uploaded) uploadedAudioUrl = uploaded;
       else { toast.error("Failed to upload audio recording"); return; }
     }
 
-    try {
-      await handleAddDream({
-        title: formData.title,
-        content: formData.content,
-        tags: formData.tags,
-        lucid: formData.lucid,
-        mood: formData.mood,
-        analysis: formData.analysis,
-        generatedImage: formData.generatedImage,
-        imagePrompt: formData.imagePrompt,
-        audioUrl: uploadedAudioUrl || undefined,
-        technique_used: formData.technique_used || undefined,
-      });
+    const newId = await handleAddDream({
+      title: deriveTitle(content),
+      content,
+      tags: selectedTags,
+      lucid: lucidity > 0,
+      mood: emotion || "Neutral",
+      audioUrl: uploadedAudioUrl || undefined,
+      lucidity_level: lucidity || undefined,
+    });
 
-      // Sync the latest dream to the iOS WidgetKit extension via App Groups.
-      // Fire-and-forget — a widget sync failure must never block navigation.
-      if (Capacitor.getPlatform() === 'ios') {
-        DreamDataPlugin.saveLatestDream({
-          title: formData.title,
-          preview: formData.content.slice(0, 120),
-          date: format(new Date(), "MMM d"),
-        }).catch(() => {/* widget sync is best-effort */});
-      }
-
-      navigate("/");
-    } catch (error) {
-      console.error("Submit error:", error);
-      toast.error("Failed to save dream");
+    if (Capacitor.getPlatform() === "ios") {
+      DreamDataPlugin.saveLatestDream({
+        title: deriveTitle(content),
+        preview: content.slice(0, 120),
+        date: format(now, "MMM d"),
+      }).catch(() => {});
     }
+
+    if (visualize && newId) navigate(`/dream/${newId}`);
+    else navigate("/journal");
   };
 
-  const dateDisplay = format(new Date(formData.date), "MMM d, yyyy");
+  const busy = isSubmitting || isUploading;
 
   return (
-    <div className="min-h-screen starry-background animate-page-reveal">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background/60 backdrop-blur-lg border-b border-border/30 pt-safe-top">
+    <div className="min-h-screen starry-background animate-page-reveal pb-28">
+      {/* Header */}
+      <div className="sticky top-0 z-30 bg-background/70 backdrop-blur-lg border-b border-border/30 pt-safe-top">
         <div className="flex items-center justify-between px-4 py-3 max-w-2xl mx-auto">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/")} className="text-muted-foreground">
+          <button onClick={() => navigate(-1)} className="text-muted-foreground hover:text-foreground p-1 -ml-1">
             <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => handleSubmit()}
-            disabled={isSubmitting || isUploading || !formData.title.trim()}
-            className="text-primary font-semibold"
+          </button>
+          <h1 className="text-base font-semibold text-foreground">New Dream</h1>
+          <button
+            onClick={() => save(false)}
+            disabled={busy || content.trim().length < 10}
+            className="text-primary font-semibold text-sm disabled:opacity-40"
           >
-            {isSubmitting ? "Saving..." : "Save"}
-          </Button>
+            {isSubmitting ? "Saving…" : "Save"}
+          </button>
         </div>
       </div>
 
-      <div className="px-4 md:px-8 py-6 pb-28 md:pb-6 space-y-6 max-w-2xl mx-auto">
-        {/* Title + date */}
-        <div className="space-y-1">
-          <Input
-            type="text"
-            name="title"
-            placeholder="Title your dream..."
-            value={formData.title}
-            onChange={handleChange}
-            className="text-2xl font-bold bg-transparent border-0 border-b-2 border-blue-500 rounded-none px-0 h-auto py-2 focus:border-blue-400 placeholder:text-muted-foreground/40"
-          />
-          <div className="flex items-center gap-2">
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="text-xs text-muted-foreground bg-transparent border-0 cursor-pointer"
-            />
-          </div>
+      <div className="px-4 md:px-8 py-5 space-y-7 max-w-2xl mx-auto">
+        <p className="text-xs text-muted-foreground">{format(now, "MMM d, yyyy · h:mm a")}</p>
+
+        {/* Text / Voice toggle */}
+        <div className="flex items-center bg-muted/30 rounded-full p-1 w-fit">
+          {(["text", "voice"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setInputMode(m)}
+              className={cn(
+                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium transition-all capitalize",
+                inputMode === m ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {m === "text" ? <FileText className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+              {m}
+            </button>
+          ))}
         </div>
 
-        {/* Segmented control */}
-        <div className="flex items-center bg-muted/30 rounded-full p-1 w-fit mx-auto">
-          <button
-            type="button"
-            onClick={() => setInputMode("text")}
-            className={cn(
-              "flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all",
-              inputMode === "text"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <FileText className="h-3.5 w-3.5" />
-            Text
-          </button>
-          <button
-            type="button"
-            onClick={() => setInputMode("voice")}
-            className={cn(
-              "flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-medium transition-all",
-              inputMode === "voice"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Mic className="h-3.5 w-3.5" />
-            Voice
-          </button>
-        </div>
-
-        {/* Content area */}
-        {inputMode === "voice" ? (
-          <div className="space-y-4">
-            <div className="border border-border/30 rounded-2xl p-6 bg-muted/5">
+        {/* Dream content */}
+        {inputMode === "voice" && (
+          <div className="space-y-3">
+            <div className="border border-border/30 rounded-2xl p-5 bg-muted/5">
               <VoiceRecorder
                 onRecordingComplete={handleVoiceRecording}
-                onTranscriptionComplete={handleTranscriptionComplete}
+                onTranscriptionComplete={handleTranscription}
                 onClear={() => {
                   setRecordedAudio(null);
                   if (audioUrl?.startsWith("blob:")) { URL.revokeObjectURL(audioUrl); setAudioUrl(""); }
                 }}
-                disabled={isUploading || isSubmitting}
+                disabled={busy}
               />
             </div>
             {audioUrl && (
@@ -219,201 +147,116 @@ const NewDream = () => {
                 <AudioPlayer audioUrl={audioUrl} title="Dream Recording" compact />
               </div>
             )}
-            <Textarea
-              name="content"
-              placeholder="Add any extra details..."
-              value={formData.content}
-              onChange={handleChange}
-              className="resize-none min-h-[120px] bg-transparent border-border/20 focus:border-primary/40"
-              maxLength={CHARACTER_LIMIT}
-            />
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <div className="flex justify-end">
-              <span className={cn("text-xs", formData.content.length > CHARACTER_LIMIT * 0.9 ? "text-destructive" : "text-muted-foreground")}>
-                {formData.content.length}/{CHARACTER_LIMIT}
-              </span>
-            </div>
-            <Textarea
-              name="content"
-              placeholder="Close your eyes and let the dream flow back to you..."
-              value={formData.content}
-              onChange={handleChange}
-              className="resize-none min-h-[300px] text-base leading-relaxed bg-transparent border-blue-500 focus:border-blue-400 focus:shadow-[0_0_15px_hsl(var(--primary)/0.1)] transition-shadow"
-              maxLength={CHARACTER_LIMIT}
-            />
           </div>
         )}
 
-        {/* Tags - horizontal scroll */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
-            <Tag className="h-3.5 w-3.5" />
-            Tags
-          </Label>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            <Badge
-              variant={formData.lucid ? "lucid" : "outline"}
-              className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
-              onClick={() => setFormData((p) => ({ ...p, lucid: !p.lucid }))}
-            >
-              ✦ Lucid
-            </Badge>
-            {tags.map((tag) => (
-              <Badge
-                key={tag.id}
-                variant={formData.tags.includes(tag.id) ? "aurora" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
-                onClick={() => handleTagSelect(tag.id)}
+        <div className="relative">
+          <div className="rounded-2xl border border-primary/30 bg-card/40 p-4 focus-within:border-primary/60 transition-colors">
+            <Textarea
+              value={content}
+              onChange={(e) => e.target.value.length <= CHARACTER_LIMIT && setContent(e.target.value)}
+              placeholder="Close your eyes and let the dream flow back to you…"
+              className="resize-none min-h-[180px] text-base leading-relaxed bg-transparent border-0 p-0 focus-visible:ring-0 placeholder:text-muted-foreground/40"
+            />
+            <div className="flex justify-end pt-2">
+              <span className={cn("text-xs", content.length > CHARACTER_LIMIT * 0.9 ? "text-destructive" : "text-muted-foreground/60")}>
+                {content.length} / {CHARACTER_LIMIT}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Emotions */}
+        <div className="space-y-2.5">
+          <p className="text-sm font-medium text-foreground">Emotions</p>
+          <p className="text-xs text-muted-foreground -mt-1.5">How did you feel?</p>
+          <div className="flex flex-wrap gap-2">
+            {EMOTIONS.map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => setEmotion((cur) => (cur === e ? "" : e))}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-sm border transition-all",
+                  emotion === e
+                    ? "bg-primary text-primary-foreground border-primary font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/40 hover:bg-muted/30",
+                )}
               >
-                {tag.name}
-              </Badge>
+                {e}
+              </button>
             ))}
           </div>
         </div>
 
-        {/* Technique selector */}
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2 text-muted-foreground text-xs uppercase tracking-wider">
-            <Zap className="h-3.5 w-3.5" />
-            Technique Used
-          </Label>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-            {TECHNIQUES.map((tech) => (
-              <Badge
-                key={tech.id}
-                variant={formData.technique_used === tech.id ? "aurora" : "outline"}
-                className="cursor-pointer transition-all hover:scale-105 flex-shrink-0"
-                onClick={() =>
-                  setFormData((p) => ({
-                    ...p,
-                    technique_used: p.technique_used === tech.id ? "" : tech.id,
-                  }))
-                }
+        {/* Tags */}
+        <div className="space-y-2.5">
+          <p className="text-sm font-medium text-foreground">Tags</p>
+          <p className="text-xs text-muted-foreground -mt-1.5">Add keywords</p>
+          <div className="flex flex-wrap gap-2 items-center">
+            {selectedTags.map((id) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setSelectedTags((s) => s.filter((x) => x !== id))}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm bg-primary/15 text-primary border border-primary/30"
               >
-                {tech.label}
-              </Badge>
+                {tagName(id)}
+                <X className="h-3.5 w-3.5" />
+              </button>
             ))}
+            <button
+              type="button"
+              onClick={() => setShowTagPicker((v) => !v)}
+              disabled={availableTags.length === 0}
+              className="h-8 w-8 rounded-full border border-border/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors disabled:opacity-30"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
           </div>
+          {showTagPicker && availableTags.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-1">
+              {availableTags.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedTags((s) => [...s, t.id]);
+                    if (availableTags.length === 1) setShowTagPicker(false);
+                  }}
+                  className="px-3 py-1.5 rounded-full text-sm bg-transparent text-foreground/70 border border-border/40 hover:bg-muted/30"
+                >
+                  {t.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Dream Tools */}
-        <motion.div
-          className="space-y-3"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-        >
-          <Label className="text-muted-foreground text-xs uppercase tracking-wider">Dream Tools</Label>
-
-          {/* AI Analysis */}
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <button
-              type="button"
-              onClick={() => setAnalysisOpen(!analysisOpen)}
-              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
-            >
-              <motion.div
-                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
-                animate={{ rotate: analysisOpen ? 10 : 0 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Brain className="h-4 w-4 text-primary" />
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">AI Analysis</p>
-                <p className="text-xs text-muted-foreground">Get insights about your dream</p>
-              </div>
-              <motion.div
-                animate={{ rotate: analysisOpen ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </motion.div>
-            </button>
-          </motion.div>
-          <AnimatePresence>
-            {analysisOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="pt-2">
-                  <DreamAnalysis
-                    dreamContent={formData.content}
-                    existingAnalysis={formData.analysis}
-                    onAnalysisComplete={(analysis) => setFormData((p) => ({ ...p, analysis }))}
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Dream Image */}
-          <motion.div whileTap={{ scale: 0.98 }}>
-            <button
-              type="button"
-              onClick={() => setImageOpen(!imageOpen)}
-              className="w-full flex items-center gap-3 p-4 rounded-xl border border-border bg-muted/5 hover:bg-muted/10 transition-colors text-left"
-            >
-              <motion.div
-                className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0"
-                animate={{ rotate: imageOpen ? 10 : 0 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <ImageIcon className="h-4 w-4 text-primary" />
-              </motion.div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">Dream Image</p>
-                <p className="text-xs text-muted-foreground">Generate art from your dream</p>
-              </div>
-              <motion.div
-                animate={{ rotate: imageOpen ? 180 : 0 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              >
-                <ChevronDown className="h-4 w-4 text-muted-foreground" />
-              </motion.div>
-            </button>
-          </motion.div>
-          <AnimatePresence>
-            {imageOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div className="pt-2">
-                  <DreamImageGenerator
-                    dreamContent={formData.content}
-                    existingImage={formData.generatedImage}
-                    existingPrompt={formData.imagePrompt}
-                    onImageGenerated={(image, prompt) =>
-                      setFormData((p) => ({ ...p, generatedImage: image, imagePrompt: prompt }))
-                    }
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+        {/* Lucidity */}
+        <div className="space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-foreground">Lucidity</p>
+              <p className="text-xs text-muted-foreground">How aware were you?</p>
+            </div>
+            <span className="text-sm font-semibold text-primary">{lucidity} / 10</span>
+          </div>
+          <Slider value={[lucidity]} onValueChange={([v]) => setLucidity(v)} min={0} max={10} step={1} />
+        </div>
       </div>
 
-      {/* Fixed bottom save — mobile only; inline on desktop */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/60 backdrop-blur-lg border-t border-border/30 pb-safe-bottom z-20 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:pb-0 md:max-w-2xl md:mx-auto md:mt-2 md:mb-8">
+      {/* Visualize CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/70 backdrop-blur-lg border-t border-border/30 pb-safe-bottom z-20 md:static md:border-0 md:bg-transparent md:backdrop-blur-none md:max-w-2xl md:mx-auto md:mb-8">
         <div className="max-w-2xl mx-auto">
-          <Button
-            className="w-full h-12 text-base font-semibold"
-            onClick={() => handleSubmit()}
-            disabled={isSubmitting || isUploading || !formData.title.trim()}
+          <button
+            onClick={() => save(true)}
+            disabled={busy || content.trim().length < 10}
+            className="w-full h-14 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:bg-primary/90 transition-colors disabled:opacity-40"
           >
-            {isSubmitting ? "Saving..." : "Save Dream"}
-          </Button>
+            <Sparkles className="h-5 w-5" />
+            {isSubmitting ? "Saving…" : "Visualize Dream"}
+          </button>
         </div>
       </div>
     </div>
