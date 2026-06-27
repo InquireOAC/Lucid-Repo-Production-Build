@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamStore } from "@/store/dreamStore";
@@ -6,6 +6,7 @@ import { useJournalEntries } from "@/hooks/useJournalEntries";
 import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
 import JournalPosterCard from "@/components/journal/JournalPosterCard";
+import CinematicPlayer from "@/components/cinematic/CinematicPlayer";
 import { Clapperboard, Play, Plus } from "lucide-react";
 
 const pickPoster = (d: DreamEntry): string | undefined =>
@@ -19,6 +20,8 @@ const Cinematic = () => {
   const { user } = useAuth();
   const { entries } = useDreamStore();
   useJournalEntries();
+
+  const [activeFilm, setActiveFilm] = useState<DreamEntry | null>(null);
 
   const films = useMemo(
     () => (entries as DreamEntry[]).filter((d) => !!d.video_url && !d.is_archived),
@@ -44,7 +47,7 @@ const Cinematic = () => {
             {featured && (
               <button
                 type="button"
-                onClick={() => navigate(`/dream/${featured.id}`)}
+                onClick={() => setActiveFilm(featured)}
                 className="relative w-full rounded-2xl overflow-hidden mt-3 mb-6 lg:mb-10 aspect-[16/10] md:aspect-[21/9] group text-left"
               >
                 {pickPoster(featured) ? (
@@ -85,12 +88,26 @@ const Cinematic = () => {
             </h2>
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-3 lg:gap-5">
               {films.map((d) => (
-                <JournalPosterCard key={d.id} dream={d} width="md" showPlayOverlay />
+                <JournalPosterCard
+                  key={d.id}
+                  dream={d}
+                  width="md"
+                  showPlayOverlay
+                  onOpen={(film) => setActiveFilm(film)}
+                />
               ))}
             </div>
           </>
         )}
       </div>
+
+      {activeFilm?.video_url && (
+        <CinematicPlayer
+          videoUrl={activeFilm.video_url}
+          title={activeFilm.title}
+          onClose={() => setActiveFilm(null)}
+        />
+      )}
     </PageTransition>
   );
 };

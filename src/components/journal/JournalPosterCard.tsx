@@ -11,6 +11,8 @@ interface Props {
   showPlayOverlay?: boolean;
   /** When set, replaces the author line with this metadata (e.g. "13 Scenes"). */
   meta?: string;
+  /** Override the default navigate-to-detail tap (e.g. open a player). */
+  onOpen?: (dream: DreamEntry) => void;
   isSelectMode?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
@@ -28,6 +30,7 @@ const JournalPosterCard: React.FC<Props> = ({
   width = "md",
   showPlayOverlay,
   meta,
+  onOpen,
   isSelectMode = false,
   isSelected = false,
   onSelect,
@@ -46,6 +49,8 @@ const JournalPosterCard: React.FC<Props> = ({
   const handleCardClick = () => {
     if (isSelectMode) {
       onSelect?.(dream.id);
+    } else if (onOpen) {
+      onOpen(dream);
     } else {
       navigate(`/dream/${dream.id}`);
     }
