@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface LearningLevel {
   id: string;
@@ -27,7 +26,6 @@ export const useLearningLevels = () => {
       setLevels(data || []);
     } catch (error) {
       console.error('Error fetching learning levels:', error);
-      toast.error('Failed to load learning levels');
     } finally {
       setLoading(false);
     }

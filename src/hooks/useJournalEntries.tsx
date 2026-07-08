@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useDreamStore } from "@/store/dreamStore";
+import { cacheMediaFromUrl, mediaCacheKey } from "@/utils/localMediaCache";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useJournalEntries = () => {
@@ -51,7 +52,9 @@ export const useJournalEntries = () => {
             user_id: dream.user_id,
             audio_url: dream.audio_url,
             audioUrl: dream.audio_url,
-            video_url: dream.video_url
+            video_url: dream.video_url,
+            section_images: dream.section_images || [],
+            dream_character_ids: dream.dream_character_ids || [],
           };
         });
         
@@ -60,6 +63,16 @@ export const useJournalEntries = () => {
         // Instead of updating each entry individually, replace the entire collection
         setAllEntries(formattedDreams);
         setLastSynced(Date.now());
+
+        // Background cache media for offline access (non-blocking)
+        formattedDreams.forEach((dream) => {
+          if (dream.generatedImage) {
+            cacheMediaFromUrl(mediaCacheKey(dream.id, 'image'), dream.generatedImage).catch(() => {});
+          }
+          if (dream.video_url) {
+            cacheMediaFromUrl(mediaCacheKey(dream.id, 'video'), dream.video_url).catch(() => {});
+          }
+        });
       }
     } catch (error) {
       console.error("Error syncing dreams from database:", error);

@@ -1,6 +1,4 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,98 +11,83 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     const { sceneBrief, imageStyle, hasCharacterReference } = await req.json()
 
     if (!sceneBrief || typeof sceneBrief !== 'string') {
       throw new Error('Invalid scene brief')
     }
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured')
-    }
-
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
     const styleName = imageStyle || 'surreal'
 
-    const systemPrompt = `You are CINEMATOGRAPHER-1, a world-class film director of photography and visual storyteller. You receive a raw SCENE BRIEF describing a dream, and you must transform it into a masterful CINEMATIC SHOT DESCRIPTION ready for an AI image renderer.
+    // Single, focused compiler prompt. Output goes directly to FAL nano-banana-2,
+    // which prefers concrete, scene-grounded language over stacked meta-directives.
+    const systemPrompt = `You are the cinematic prompt compiler for an AI image renderer (nano-banana-2). You receive a SCENE BRIEF describing a dream and produce ONE clean, renderable image prompt.
 
-YOUR PROCESS — Think through each decision:
+WRITE THE OUTPUT AS A SINGLE DESCRIPTIVE PARAGRAPH, 110-150 WORDS, that names — in this order — subject, action, setting, lighting, atmosphere, color palette, lens/framing. No headers, no bullet points, no labels, no preamble.
 
-1. NARRATIVE WEIGHT: What is the emotional core of this scene? What does the viewer need to FEEL?
+WHAT TO INCLUDE
+- Subject and clear action: who is in frame and what they are doing in this exact moment.
+- Setting: architecture or landscape, time of day, weather.
+- Lighting: one dominant source plus how it shapes the subject (rim, soft wrap, hard shadows).
+- Atmosphere: dust, mist, particles, rain — pick at most two and place them spatially.
+- Color story: 2 primary hues plus 1 accent, named concretely (e.g. "deep teal and bruised violet, accented by amber lamp glow").
+- Lens / framing: focal length feel (35mm / 50mm / 85mm), shot size (medium / wide / over-the-shoulder), and depth of field.
+- Style language: weave the requested style "${styleName}" into the description naturally — not as an appendix.
 
-2. CAMERA PLACEMENT: Based on the emotional weight, choose the OPTIMAL camera angle and focal length.
-   - Low angle for empowerment, heroism, awe
-   - High angle for vulnerability, isolation, smallness
-   - Eye-level for intimacy, connection, naturalism
-   - Dutch tilt for unease, dream-logic, psychological tension
-   - Wide for environmental storytelling and scale
-   - Close for emotional intensity and character focus
-   EXPLAIN WHY your choice serves THIS specific scene.
+ANATOMY + RENDERING SAFEGUARDS (always include, phrased naturally inside the paragraph)
+- Hands fully visible with five clean fingers each, natural finger spacing, no extra digits.
+- Eyes symmetrical, both visible if facing camera, natural pupils — no warped or doubled eyes.
+- Clothing folds consistent, no fused or detached fabric, no melting seams.
+- One head, one body, accurate limb count, limbs attached at natural joints.
+- Sharp main subject; any blur is intentional motion blur or shallow-DOF background.
 
-3. MOTIVATED LIGHTING: Design a lighting rig where every light source has a REASON to exist in the world.
-   - What is the primary light source and WHY is it there? (sun through stained glass, bioluminescent flora, neon signs, campfire)
-   - What color temperature does it cast and how does that reinforce the emotion?
-   - Where do shadows fall and what mood do they create?
-   - Is there rim/separation light and what world element provides it?
+HARD CONSTRAINTS
+- ${hasCharacterReference ? 'A character reference image WILL be supplied. Describe the character only by pose, body language and position in the frame. Do NOT describe their face, hair color, skin tone or specific facial features — the reference handles identity.' : 'No character reference is supplied. Describe character appearance naturally if the scene calls for one.'}
+- No text, no signs, no UI, no watermarks in the image.
+- Vertical 9:16 framing is enforced by the renderer — do not waste words restating it.
+- One coherent moment only. No collages, no split screens, no multiple panels.
 
-4. COLOR STORY: Choose 2-3 dominant hues plus one accent that creates the emotional palette.
-   - Warm palettes for nostalgia, comfort, passion
-   - Cool palettes for mystery, isolation, serenity
-   - Complementary tension for conflict, energy, transformation
-   - Monochromatic for focus, meditation, singularity
+OUTPUT ONLY THE PARAGRAPH. NO EXPLANATION.`
 
-5. CHARACTER STAGING: Where does the character exist in the frame and what are they doing?
-   - Their pose, gesture, and emotional expression
-   - Their spatial relationship to the environment (dwarfed by it, commanding it, at peace within it)
-   - Eye direction and implied narrative
-
-6. ART STYLE INTEGRATION: The requested style is "${styleName}". Weave the style's visual language ORGANICALLY into every decision above — don't append it as a separate block. The style should feel like a natural consequence of the scene's emotional needs, not a filter applied on top.
-
-OUTPUT FORMAT:
-Write a single flowing paragraph of 200-300 words. This is a professional shot description — dense, specific, every word earning its place. No headers, no bullet points, no labels, no preamble. Just the cinematic description.
-
-${hasCharacterReference ? 'NOTE: A character reference photo will be provided to the image renderer. Your description should include clear character presence and staging but do NOT describe specific facial features — the reference photo handles identity matching.' : ''}
-
-CRITICAL RULES:
-- Every composition choice must be MOTIVATED by the scene's emotional content
-- Do NOT use generic phrases like "rule of thirds" without explaining WHY that serves this scene
-- Do NOT include any text, words, signs, letters, or UI elements in the description
-- Output ONLY the cinematic description — no explanations of your reasoning process`
-
-    console.log(`Composing cinematic prompt for style: ${styleName}, hasCharRef: ${hasCharacterReference}`)
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    console.log(`Composing cinematic prompt via Lovable AI, style: ${styleName}`)
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-flash',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `SCENE BRIEF:\n${sceneBrief}` }
+          { role: 'user', content: `SCENE BRIEF:\n${sceneBrief}` },
         ],
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI Gateway error:', response.status, errorText)
-      if (response.status === 429) {
-        throw new Error('Rate limit exceeded. Please try again in a moment.')
-      }
-      if (response.status === 402) {
-        throw new Error('AI credits exhausted. Please add credits to continue.')
-      }
-      throw new Error(`AI Gateway error: ${response.status}`)
+      console.error('AI gateway error:', response.status, errorText)
+      if (response.status === 429) throw new Error('Rate limit exceeded. Please try again in a moment.')
+      throw new Error(`AI gateway error: ${response.status}`)
     }
 
     const result = await response.json()
     const cinematicPrompt = result.choices?.[0]?.message?.content
 
     if (!cinematicPrompt) {
-      console.error('No content in AI response:', JSON.stringify(result))
+      console.error('No content in Lovable AI response:', JSON.stringify(result))
       throw new Error('No cinematic prompt generated')
     }
 

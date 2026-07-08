@@ -5,7 +5,7 @@ import { getUserAIContext } from "@/utils/aiContextUtils";
 import { buildPersonalizedPrompt } from "@/utils/promptBuildingUtils";
 
 export function useDreamImageAI() {
-  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true, imageStyle?: string) => {
+  const getImagePrompt = useCallback(async (dreamContent: string, userId?: string, useAIContext: boolean = true, imageStyle?: string, characterData?: { photo_url?: string; visual_fingerprint?: string; name?: string }) => {
     // Step 1: Get raw scene brief from analyze-dream (now using Gemini 3 Flash)
     const result = await supabase.functions.invoke("analyze-dream", {
       body: { dreamContent, task: "create_image_prompt" },
@@ -22,7 +22,11 @@ export function useDreamImageAI() {
     let hasCharacterReference = false;
     let aiContext = null;
 
-    if (userId && useAIContext) {
+    if (characterData?.photo_url) {
+      // Use explicitly selected character data
+      hasCharacterReference = true;
+      aiContext = characterData;
+    } else if (userId && useAIContext) {
       aiContext = await getUserAIContext(userId);
       hasCharacterReference = !!(aiContext?.photo_url);
     }
@@ -56,17 +60,36 @@ export function useDreamImageAI() {
     return cinematicPrompt;
   }, []);
 
-  const generateDreamImageFromAI = useCallback(async (prompt: string, referenceImageUrl?: string, imageStyle?: string) => {
-    const body: Record<string, string> = { prompt };
-    if (referenceImageUrl) {
-      body.referenceImageUrl = referenceImageUrl;
-    }
-    if (imageStyle) {
-      body.imageStyle = imageStyle;
-    }
+  const generateDreamImageFromAI = useCallback(async (
+    prompt: string,
+    referenceImageUrl?: string,
+    imageStyle?: string,
+    extraReferenceImageUrls?: string[],
+  ) => {
+    const body: Record<string, unknown> = { prompt };
+    if (referenceImageUrl) body.referenceImageUrl = referenceImageUrl;
+    if (imageStyle) body.imageStyle = imageStyle;
+    if (extraReferenceImageUrls?.length) body.extraReferenceImageUrls = extraReferenceImageUrls;
     const result = await supabase.functions.invoke("generate-dream-image", { body });
     if (result.error || !result.data) {
-      throw new Error(result.error?.message || "Failed to generate image");
+      // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
+      // .context is the raw Response — read it so entitlement (402) denials
+      // surface their real message + code instead of a generic error.
+      let message = result.error?.message || "Failed to generate image";
+      let code: string | undefined;
+      const ctx = (result.error as { context?: Response } | undefined)?.context;
+      if (ctx && typeof ctx.json === "function") {
+        try {
+          const body = await ctx.json();
+          if (body?.error) message = body.error;
+          if (body?.code) code = body.code;
+        } catch {
+          /* response body wasn't JSON — keep the default message */
+        }
+      }
+      const err = new Error(message) as Error & { code?: string };
+      if (code) err.code = code;
+      throw err;
     }
     return (
       result.data?.imageUrl ||

@@ -72,7 +72,7 @@ const ModerationQueue = () => {
       ]),
     ];
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("id, username, display_name")
       .in("id", allUserIds);
 

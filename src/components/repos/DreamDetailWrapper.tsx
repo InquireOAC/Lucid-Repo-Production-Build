@@ -1,8 +1,6 @@
-
 import React from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import DreamDetail from "@/components/DreamDetail";
-import { toast } from "sonner";
 
 interface DreamDetailWrapperProps {
   selectedDream: DreamEntry | null;
@@ -52,15 +50,13 @@ const DreamDetailWrapper = ({
       // Call the provided update handler (which will refresh the dream list)
       onUpdate(id, cleanedUpdates);
       
-      // If we're making it private, close the modal (common UX pattern)
       if (cleanedUpdates.is_public === false) {
         setTimeout(() => {
-          onClose(); // Close the modal after a brief delay
+          onClose();
         }, 300);
       }
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
     }
   };
 

@@ -29,7 +29,7 @@ const FeaturedDream = ({
 
   return (
     <div 
-      className="vault-glass corner-brackets rounded-xl overflow-hidden cursor-pointer group border border-primary/15"
+      className="vault-glass corner-brackets rounded-xl overflow-hidden cursor-pointer group border border-primary/15 will-change-transform"
       onClick={() => onOpenDream(dream)}
     >
       {/* Hero Image */}
@@ -45,7 +45,7 @@ const FeaturedDream = ({
           {/* Featured badge */}
           <div className="absolute top-3 left-3">
             <span className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-aurora-gold/90 text-cosmic-black">
-              ✦ Featured
+              Featured
             </span>
           </div>
         </div>

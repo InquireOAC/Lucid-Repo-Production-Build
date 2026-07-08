@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen } from "lucide-react";
+import { ArrowLeft, BarChart3, Megaphone, Trophy, Shield, Users, Plus, ChevronDown, BookOpen, CreditCard, Eye, CalendarDays, LineChart } from "lucide-react";
 import ExploreContentManager from "@/components/admin/ExploreContentManager";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminStats } from "@/hooks/useAdminStats";
@@ -14,6 +14,10 @@ import ModerationQueue from "@/components/admin/ModerationQueue";
 import UserManager from "@/components/admin/UserManager";
 import ChallengeComposer from "@/components/admin/ChallengeComposer";
 import ChallengeManager from "@/components/admin/ChallengeManager";
+import EventComposer from "@/components/admin/EventComposer";
+import EventManager from "@/components/admin/EventManager";
+import EngagementAnalytics from "@/components/admin/EngagementAnalytics";
+import SubscribersList from "@/components/admin/SubscribersList";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { motion } from "framer-motion";
 
@@ -68,8 +72,11 @@ const AdminDashboard = () => {
   const tabs = [
     { value: "stats", label: "Stats", icon: BarChart3 },
     { value: "announcements", label: "Announce", icon: Megaphone },
-    { value: "events", label: "Events", icon: Trophy },
+    { value: "events", label: "Events", icon: CalendarDays },
+    { value: "challenges", label: "Challenges", icon: Trophy },
+    { value: "analytics", label: "Reach", icon: LineChart },
     { value: "moderation", label: "Moderate", icon: Shield, badge: flagCount },
+    { value: "subscribers", label: "Subs", icon: CreditCard, badge: stats.activeSubscriptions },
     { value: "users", label: "Users", icon: Users },
     { value: "content", label: "Content", icon: BookOpen },
   ];
@@ -91,7 +98,14 @@ const AdminDashboard = () => {
             <h1 className="text-sm font-semibold">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Command Center</p>
           </div>
-          <div className="w-10" />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate("/onboarding")}
+            title="Preview onboarding"
+          >
+            <Eye className="h-5 w-5" />
+          </Button>
         </div>
         <div className="h-[2px] bg-gradient-to-r from-primary via-secondary to-primary" />
       </div>
@@ -137,6 +151,14 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="events" className="space-y-3 mt-4">
+            <CollapsibleComposer label="New Event" onCreated={() => setRefreshKey(k => k + 1)}>
+              {({ onCreated }) => <EventComposer onCreated={onCreated} />}
+            </CollapsibleComposer>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">All Events</h3>
+            <EventManager refreshKey={refreshKey} />
+          </TabsContent>
+
+          <TabsContent value="challenges" className="space-y-3 mt-4">
             <CollapsibleComposer label="New Challenge" onCreated={() => setRefreshKey(k => k + 1)}>
               {({ onCreated }) => <ChallengeComposer onCreated={onCreated} />}
             </CollapsibleComposer>
@@ -144,8 +166,16 @@ const AdminDashboard = () => {
             <ChallengeManager refreshKey={refreshKey} />
           </TabsContent>
 
+          <TabsContent value="analytics" className="mt-4">
+            <EngagementAnalytics />
+          </TabsContent>
+
           <TabsContent value="moderation" className="mt-4">
             <ModerationQueue />
+          </TabsContent>
+
+          <TabsContent value="subscribers" className="mt-4">
+            <SubscribersList />
           </TabsContent>
 
           <TabsContent value="users" className="mt-4">

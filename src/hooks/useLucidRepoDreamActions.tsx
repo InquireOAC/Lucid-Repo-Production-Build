@@ -2,7 +2,6 @@ import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { useNavigate } from "react-router-dom";
 import { useLikes } from "@/hooks/useLikes";
-import { toast } from "sonner";
 
 export function useLucidRepoDreamActions(
   user: any,
@@ -21,9 +20,7 @@ export function useLucidRepoDreamActions(
   const { handleLike } = useLikes(user, dreamsState, setDreamsState, refreshLikedDreams);
 
   const handleOpenDream = (dream: DreamEntry) => {
-    // Save current scroll position
-    setSavedScrollPosition(window.scrollY);
-    setSelectedDream({ ...dream });
+    navigate(`/dream/${dream.id}`);
   };
 
   const handleCloseDream = () => {
@@ -76,7 +73,7 @@ export function useLucidRepoDreamActions(
   const handleDreamUpdate = (id: string, updates: Partial<DreamEntry>) => {
     const dreamToUpdate = dreamsState.find(d => d.id === id);
     if (!dreamToUpdate) {
-      toast.error("Dream not found");
+      console.error("Dream not found");
       return;
     }
     if (user && dreamToUpdate.user_id !== user.id) {
@@ -85,11 +82,8 @@ export function useLucidRepoDreamActions(
     handleUpdateDream(id, updates).then(success => {
       if (success) {
         fetchPublicDreams();
-        if (updates.is_public === false || updates.isPublic === false) {
-          toast.success("Dream is now private");
-        }
       } else {
-        toast.error("Failed to update dream");
+        console.error("Failed to update dream");
       }
     });
   };

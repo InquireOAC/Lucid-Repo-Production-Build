@@ -1,138 +1,159 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap");
+/* JetBrains Mono — timecodes, technical readouts */
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   Basis Grotesque Arabic Pro — Lucid Engine shared typography
+   ============================================================ */
+@font-face {
+  font-family: 'Basis Grotesque Arabic Pro';
+  src: url('/fonts/BasisGrotesqueArabicPro-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Basis Grotesque Arabic Pro';
+  src: url('/fonts/BasisGrotesqueArabicPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Basis Grotesque Arabic Pro';
+  src: url('/fonts/BasisGrotesqueArabicPro-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Basis Grotesque Arabic Pro';
+  src: url('/fonts/BasisGrotesqueArabicPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Basis Grotesque Arabic Pro';
+  src: url('/fonts/BasisGrotesqueArabicPro-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
-    /* ==========================================
-       COSMIC AURORA THEME - Dream-Centered Tech Forward
-       ========================================== */
+    /* ============================================================
+       LUCID ENGINE CINEMATIC SYSTEM
+       Dark-only cinematic app — these ARE the tokens.
+       Shared identity with Lucid Engine (the full studio platform).
+       ============================================================ */
 
-    /* Cosmic Black Base */
-    --background: 0 0% 96%;
-    --foreground: 0 0% 9%;
+    /* Base surfaces */
+    --background:   220 13% 5%;     /* near-black deep navy */
+    --foreground:   210 10% 95%;
 
-    /* Deep Space Cards */
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 9%;
+    --card:         220 13% 8%;
+    --card-foreground: 210 10% 95%;
 
-    --popover: 0 0% 89%;
-    --popover-foreground: 0 0% 9%;
+    --popover:      220 13% 10%;
+    --popover-foreground: 210 10% 95%;
 
-    /* Aurora Purple - Primary */
-    --primary: 243 75% 58%;
-    --primary-foreground: 225 100% 96%;
+    /* Primary: Lucid Engine Blue */
+    --primary:      217 91% 60%;
+    --primary-foreground: 220 13% 5%;
 
-    /* Deep Cosmic Blue */
-    --secondary: 0 0% 32%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary:    217 30% 25%;
+    --secondary-foreground: 210 10% 95%;
 
-    /* Cosmic Muted */
-    --muted: 0 0% 63%;
-    --muted-foreground: 0 0% 9%;
+    --muted:        220 10% 18%;
+    --muted-foreground: 220 5% 65%;
 
-    /* Electric Violet Accent */
-    --accent: 250 100% 97%;
-    --accent-foreground: 258 89% 66%;
+    --accent:       220 10% 14%;
+    --accent-foreground: 210 10% 95%;
 
-    --destructive: 0 72% 50%;
+    --destructive:  0 84% 60%;
     --destructive-foreground: 0 85% 97%;
 
-    --border: 0 0% 83%;
-    --input: 0 0% 83%;
-    --ring: 243 75% 58%;
+    --border:       215 20% 15%;
+    --input:        220 10% 16%;
+    --ring:         217 91% 60%;
 
-    --radius: 1.25rem;
+    --radius: 0.75rem;
 
-    /* Aurora Design Tokens */
+    /* ---- Section accent system (mirrors Lucid Engine) ---- */
+    --accent-studio:    217 91% 60%;   /* Blue  — Home / Studio HQ */
+    --accent-canvas:    263 70% 63%;   /* Violet — Dream Canvas / shots */
+    --accent-journal:   24 95% 53%;    /* Orange — Journal / script */
+    --accent-character: 38 92% 50%;    /* Amber — Characters / assets */
+    --accent-world:     160 84% 39%;   /* Emerald — World Build */
+    --accent-voice:     350 89% 60%;   /* Rose — Voices */
+
+    /* ---- Generate CTA (matches Lucid Engine green button) ---- */
+    --generate:     120 74% 32%;       /* #1a8a1a */
+    --generate-fg:  0 0% 100%;
+
+    /* ---- Glass morphism ---- */
+    --glass-surface: 0 0% 100% / 0.03;
+    --glass-strong:  0 0% 100% / 0.07;
+    --glass-border:  0 0% 100% / 0.06;
+    --ink-soft:      0 0% 100% / 0.70;
+    --ink-faint:     0 0% 100% / 0.50;
+
+    /* ---- Gradients & glow ---- */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(217 80% 70%) 100%);
+    --gradient-radial:  radial-gradient(circle at 50% 0%, hsl(217 91% 60% / 0.08) 0%, transparent 70%);
+    --glow-primary:     0 0 20px hsl(217 91% 60% / 0.20);
+    --glow-secondary:   0 0 15px hsl(217 80% 70% / 0.12);
+
+    /* ---- Motion tokens ---- */
+    --transition-fast:   all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.20s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ---- Typography ---- */
+    --font-sans: 'Basis Grotesque Arabic Pro', 'basis-grotesque-pro', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+    /* ---- Sidebar ---- */
+    --sidebar-background:           220 13% 8%;
+    --sidebar-foreground:           210 10% 95%;
+    --sidebar-primary:              217 91% 60%;
+    --sidebar-primary-foreground:   220 13% 5%;
+    --sidebar-accent:               220 10% 14%;
+    --sidebar-accent-foreground:    210 10% 95%;
+    --sidebar-border:               215 20% 15%;
+    --sidebar-ring:                 217 91% 60%;
+    --sidebar:                      220 13% 8%;
+
+    /* ---- Charts ---- */
+    --chart-1: 217 91% 60%;
+    --chart-2: 263 70% 63%;
+    --chart-3: 160 84% 39%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 350 89% 60%;
+
+    /* ---- Legacy aurora tokens (kept for backward compat) ---- */
     --aurora-purple: 217 91% 60%;
-    --aurora-blue: 220 80% 60%;
-    --aurora-teal: 175 70% 50%;
-    --mystic-gold: 45 90% 60%;
-    --electric-violet: 220 80% 65%;
-    --cosmic-black: 220 15% 6%;
+    --aurora-blue:   220 80% 60%;
+    --aurora-teal:   175 70% 50%;
+    --mystic-gold:   45 90% 60%;
+    --cosmic-black:  220 13% 5%;
 
-    /* Glow effects */
-    --glow-purple: 217 91% 60%;
-    --glow-violet: 220 80% 65%;
-    --glow-gold: 45 90% 60%;
+    /* ---- Shadows ---- */
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.12);
+    --shadow-xs:  0 1px 3px 0px hsl(0 0% 0% / 0.15);
+    --shadow-sm:  0 1px 3px 0px hsl(0 0% 0% / 0.2), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
+    --shadow:     0 1px 3px 0px hsl(0 0% 0% / 0.25), 0 1px 2px -1px hsl(0 0% 0% / 0.2);
+    --shadow-md:  0 4px 6px -1px hsl(0 0% 0% / 0.3), 0 2px 4px -2px hsl(0 0% 0% / 0.2);
+    --shadow-lg:  0 10px 15px -3px hsl(0 0% 0% / 0.35), 0 4px 6px -4px hsl(0 0% 0% / 0.2);
+    --shadow-xl:  0 20px 25px -5px hsl(0 0% 0% / 0.4), 0 8px 10px -6px hsl(0 0% 0% / 0.25);
+    --shadow-2xl: 0 25px 50px -12px hsl(0 0% 0% / 0.5);
 
-    --sidebar-background: 220 13% 8%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 243 75% 58%;
-    --sidebar-primary-foreground: 225 100% 96%;
-    --sidebar-accent: 0 0% 32%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 83%;
-    --sidebar-ring: 243 75% 58%;
-    --chart-1: 234 89% 73%;
-    --chart-2: 255 91% 76%;
-    --chart-3: 270 95% 75%;
-    --chart-4: 238 83% 66%;
-    --chart-5: 0 0% 45%;
-    --sidebar: 0 0% 98%;
-    --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-serif: 'EB Garamond', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
-    --font-mono: 'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
-  }
-  .dark {
-    --background: 220 15% 6%;
-    --foreground: 210 10% 95%;
-    --card: 220 13% 8%;
-    --card-foreground: 210 10% 95%;
-    --popover: 220 13% 10%;
-    --popover-foreground: 210 10% 95%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 220 15% 6%;
-    --secondary: 263 60% 55%;
-    --secondary-foreground: 210 10% 95%;
-    --muted: 220 10% 18%;
-    --muted-foreground: 220 5% 65%;
-    --accent: 263 60% 22%;
-    --accent-foreground: 263 80% 76%;
-    --border: 220 10% 16%;
-    --input: 220 10% 16%;
-    --ring: 217 91% 60%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
-    --chart-1: 229 93% 81%;
-    --chart-2: 252 94% 85%;
-    --chart-3: 269 97% 85%;
-    --chart-4: 234 89% 73%;
-    --chart-5: 0 0% 45%;
-    --sidebar: 0 0% 14%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 234 89% 73%;
-    --sidebar-primary-foreground: 243 47% 20%;
-    --sidebar-accent: 255 91% 76%;
-    --sidebar-accent-foreground: 261 72% 22%;
-    --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 234 89% 73%;
-    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
-    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
-    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
-    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
-    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
-    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
   }
 }
 
@@ -160,6 +181,20 @@
     position: relative;
     touch-action: pan-x pan-y;
   }
+}
+
+/* =========================================================
+   Lucid Studios shared surface utilities
+   Mirrors Lucid Engine's .bg-glass / .text-ink layer so
+   components can be lifted between the two apps.
+   ========================================================= */
+@layer components {
+  .bg-glass            { background-color: hsl(var(--glass-surface)); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+  .bg-glass-strong     { background-color: hsl(var(--glass-strong)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+  .border-glass        { border-color: hsl(var(--glass-border)); }
+  .text-ink            { color: hsl(var(--foreground)); }
+  .text-ink-soft       { color: hsl(var(--ink-soft)); }
+  .text-ink-faint      { color: hsl(var(--ink-faint)); }
 }
 
 /* Safe area utilities for iOS devices */
@@ -847,6 +882,26 @@
   z-index: 0;
 }
 
+/* Stable card — forces GPU layer isolation to prevent text flicker on scroll */
+.stable-card {
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+  contain: paint;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Stable horizontal scroll container */
+.stable-scroll {
+  -webkit-overflow-scrolling: touch;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  isolation: isolate;
+  contain: content;
+}
+
 /* Vault glass card */
 .vault-glass {
   background: linear-gradient(180deg,
@@ -857,48 +912,57 @@
   backdrop-filter: blur(16px) saturate(120%);
   border: 1px solid hsl(var(--primary) / 0.12);
   box-shadow: 0 8px 32px hsl(var(--background) / 0.5);
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  isolation: isolate;
+  contain: paint;
 }
 
-/* Vault card lift on hover */
+/* Vault card lift on hover — desktop only */
 .vault-card-lift {
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.vault-card-lift:hover {
-  transform: translateY(-4px);
-  border-color: hsl(var(--primary) / 0.25);
-  box-shadow:
-    0 12px 40px hsl(var(--background) / 0.6),
-    0 0 20px hsl(var(--primary) / 0.08);
+@media (hover: hover) {
+  .vault-card-lift:hover {
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.25);
+    box-shadow:
+      0 12px 40px hsl(var(--background) / 0.6),
+      0 0 20px hsl(var(--primary) / 0.08);
+  }
 }
 
-/* Light sweep on hover */
+/* Light sweep on hover — desktop only */
 .vault-light-sweep {
   position: relative;
   overflow: hidden;
 }
 
-.vault-light-sweep::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    hsl(var(--primary) / 0.04) 50%,
-    transparent 100%
-  );
-  transition: left 0.6s ease;
-  z-index: 1;
-  pointer-events: none;
-}
+@media (hover: hover) {
+  .vault-light-sweep::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      hsl(var(--primary) / 0.04) 50%,
+      transparent 100%
+    );
+    transition: left 0.6s ease;
+    z-index: 1;
+    pointer-events: none;
+  }
 
-.vault-light-sweep:hover::before {
-  left: 100%;
+  .vault-light-sweep:hover::before {
+    left: 100%;
+  }
 }
 
 /* Corner bracket accents for featured elements */
@@ -985,4 +1049,60 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.1;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+
+/* ==========================================
+   ACCESSIBILITY
+   ========================================== */
+
+/* Respect users who prefer reduced motion: neutralize the ambient infinite
+   animations (cosmic-drift, aurora-shift, magic-glow, float, ken burns, …)
+   and snap transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Visible keyboard focus. The app previously had no focus ring, so keyboard
+   users couldn't see where they were. */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* The body disables text selection for a native app feel, but a dream journal
+   must let people select and copy their own dream prose. Re-enable selection
+   for text content. */
+p,
+h1,
+h2,
+h3,
+h4,
+blockquote,
+li,
+.selectable,
+[data-selectable] {
+  -webkit-user-select: text;
+  user-select: text;
 }

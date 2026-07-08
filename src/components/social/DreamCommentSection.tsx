@@ -80,7 +80,7 @@ export default function DreamCommentSection({ dreamId, user }) {
                   </button>
                 )}
               </div>
-              <div className="text-xs">{c.comment_text}</div>
+              <div className="text-xs">{c.content ?? c.comment_text}</div>
             </div>
           </div>
         ))}

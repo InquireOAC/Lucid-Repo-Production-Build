@@ -1,17 +1,31 @@
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
+import PaywallDialog from "@/components/paywall/PaywallDialog";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Book, Moon, User, Compass } from "lucide-react";
+import { Home, Film, Clapperboard, Compass, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
-import { AnimatePresence } from "framer-motion";
+import SymbolAvatar from "@/components/profile/SymbolAvatar";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import lucidRepoLogo from "@/assets/LogoForFramer.png";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = React.useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo(0, 0);
+    }
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+  }, [location.pathname]);
   
   React.useEffect(() => {
     const publicRoutes = ["/", "/journal", "/journal/new", "/auth"];
@@ -24,39 +38,147 @@ const MainLayout = () => {
   }, [user, loading, location.pathname, navigate]);
 
   return (
-    <div className="flex flex-col min-h-screen cosmic-background">
-      {/* Fixed opaque overlay for status bar safe area */}
-      <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay" />
-      
-      {/* Announcement banner - fixed overlay on community pages */}
-      {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
-        <div className="fixed top-0 left-0 right-0 z-50 pt-safe-top">
-          <AnnouncementBanner />
+    <div className="flex h-screen overflow-hidden cosmic-background">
+      {/* Desktop Sidebar */}
+      <DesktopSidebar />
+
+      <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Fixed opaque overlay for status bar safe area */}
+        <div className="fixed top-0 left-0 right-0 z-40 bg-background safe-area-overlay md:hidden" />
+        
+        {/* Announcement banner - fixed overlay on community pages */}
+        {!(location.pathname === "/" || location.pathname === "/journal" || location.pathname.startsWith("/journal/")) && (
+          <div className="fixed top-0 left-0 right-0 z-50 pt-safe-top md:hidden">
+            <AnnouncementBanner />
+          </div>
+        )}
+        
+        {/* Main content - scrollable area */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none"
+          style={isMobile ? { paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' } : undefined}
+        >
+          <div className="md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
+            <ErrorBoundary resetKey={location.pathname}>
+              <Outlet />
+            </ErrorBoundary>
+          </div>
         </div>
-      )}
-      
-      {/* Main content - scrollable area with proper bottom padding for tab bar + safe area */}
-      <div className="flex-1 overflow-y-auto ios-scroll-fix" style={{ paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
-        <Outlet />
+        
+        <PaywallDialog />
+        
+        {/* Mobile bottom tab bar */}
+        <motion.div
+          initial={{ y: 60 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right md:hidden"
+        >
+          <div className="flex justify-around items-center h-14">
+            <NavTab to="/" icon={<Home size={20} />} label="Home" />
+            <NavTab to="/journal" icon={<Film size={20} />} label="My Dreams" />
+            <NavTab to="/cinematic" icon={<Clapperboard size={20} />} label="Cinematic" />
+            <NavTab to="/lucid-repo" icon={<Compass size={20} />} label="Explore" />
+            <NavTab to="/profile" icon={<User size={20} />} label="Profile" />
+          </div>
+        </motion.div>
       </div>
-      
-      {/* Fixed tab bar positioned at the bottom with safe area padding */}
-      <motion.div
-        initial={{ y: 60 }}
-        animate={{ y: 0 }}
-        transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right"
-      >
-        <div className="flex justify-around items-center h-14">
-          <NavTab to="/" icon={<Book />} label="Journal" />
-          <NavTab to="/lucid-repo" icon={<Moon />} label="Lucid Repo" />
-          <NavTab to="/explore" icon={<Compass />} label="Explore" />
-          <NavTab to="/profile" icon={<User />} label="Profile" />
-        </div>
-      </motion.div>
     </div>
   );
 };
+
+/* ========== Desktop Sidebar ========== */
+
+const navItems = [
+  { to: "/", icon: Home, label: "Home" },
+  { to: "/journal", icon: Film, label: "My Dreams" },
+  { to: "/cinematic", icon: Clapperboard, label: "Cinematic" },
+  { to: "/lucid-repo", icon: Compass, label: "Explore" },
+  { to: "/profile", icon: User, label: "Profile" },
+];
+
+const DesktopSidebar = () => {
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const isActive = (to: string) => {
+    if (to === "/") return location.pathname === "/";
+    return location.pathname === to || location.pathname.startsWith(to + "/");
+  };
+
+  return (
+    <aside
+      className={cn(
+        "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out relative",
+        collapsed ? "w-16" : "w-64 lg:w-72"
+      )}
+    >
+      {/* Collapse toggle — pinned to right edge */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full border border-primary/20 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors shadow-sm"
+      >
+        {collapsed ? <PanelLeft className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
+      </button>
+
+      {/* Logo */}
+      <div className={cn(
+        "flex items-center gap-3 py-6 border-b border-primary/10",
+        collapsed ? "justify-center px-2" : "px-5"
+      )}>
+        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 lg:h-10 lg:w-10 xl:h-11 xl:w-11 rounded-lg flex-shrink-0" />
+        {!collapsed && (
+          <span className="text-lg lg:text-xl xl:text-2xl font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
+            Lucid Repo
+          </span>
+        )}
+      </div>
+
+      {/* Nav items */}
+      <nav className="flex-1 px-2 py-4 space-y-1">
+        {navItems.map((item) => {
+          const active = isActive(item.to);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              title={collapsed ? item.label : undefined}
+              className={cn(
+                "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-200",
+                collapsed ? "justify-center px-2 py-3" : "px-4 py-3",
+                active
+                  ? "bg-primary/15 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/10"
+              )}
+            >
+              <item.icon className="h-5 w-5 lg:h-6 lg:w-6 flex-shrink-0" />
+              {!collapsed && <span className="lg:text-base">{item.label}</span>}
+              {active && !collapsed && (
+                <motion.div
+                  layoutId="desktop-nav-indicator"
+                  className="ml-auto w-1.5 h-1.5 rounded-full bg-primary"
+                  transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                />
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Bottom section */}
+      <div className="px-2 py-4 border-t border-primary/10">
+        {!collapsed && (
+          <div className="px-4 py-2 text-xs text-muted-foreground/60">
+            © Lucid Repo
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+};
+
+/* ========== Mobile Nav Tab ========== */
 
 interface NavTabProps {
   to: string;
@@ -68,8 +190,8 @@ interface NavTabProps {
 const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
   const location = useLocation();
   
-  const isActive = to === "/" 
-    ? (location.pathname === "/" || location.pathname === "/journal" || location.pathname === "/journal/new")
+  const isActive = to === "/"
+    ? location.pathname === "/"
     : location.pathname === to || location.pathname.startsWith(to + "/");
   
   return (
@@ -104,6 +226,12 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
           </div>
         )}
       </div>
+      <span className={cn(
+        "text-[10px] font-medium leading-none",
+        isActive ? "text-primary" : "text-white/50"
+      )}>
+        {label}
+      </span>
     </NavLink>
   );
 };

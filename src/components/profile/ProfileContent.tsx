@@ -22,7 +22,7 @@ function extractProfileUuid(profileObj: any): string | undefined {
 
 const ProfileContent = () => {
   const { userId, username } = useParams<{ userId?: string; username?: string }>();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -109,6 +109,8 @@ const ProfileContent = () => {
 
   // Ensure switching profiles in the UI triggers correct fetch
   useEffect(() => {
+    // Wait for auth to finish hydrating before redirecting
+    if (authLoading) return;
     if (!user) {
       navigate("/auth");
       return;
@@ -122,23 +124,10 @@ const ProfileContent = () => {
       fetchUserProfile(effectiveIdentifier).finally(() => setLoadingProfile(false));
       checkIfFollowing(effectiveIdentifier);
     }
-  }, [user, profile, effectiveIdentifier]);
+  }, [authLoading, user, profile, effectiveIdentifier]);
 
   useEffect(() => { if (user) fetchSubscription(); }, [user]);
 
-  // Refresh data when navigating to profile (background refresh)
-  useEffect(() => {
-    if (location.pathname.includes('/profile') && user) {
-      const timer = setTimeout(() => {
-        if (effectiveIdentifier) {
-          fetchUserProfile(effectiveIdentifier);
-        } else {
-          fetchUserProfile(user.id);
-        }
-      }, 100);
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname, user, effectiveIdentifier]);
 
   // Use memo to guard against hook execution with an invalid ID
   const { profileToShow, profileIdForHooks } = useMemo(

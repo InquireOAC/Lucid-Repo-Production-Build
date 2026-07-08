@@ -54,7 +54,7 @@ const SharedDreamCard = ({
       const {
         data: profileData,
         error: profileError
-      } = await supabase.from("profiles").select("id, username, display_name, avatar_url, avatar_symbol, avatar_color").eq("id", dreamData.user_id).single();
+      } = await supabase.from("public_profiles").select("id, username, display_name, avatar_url, avatar_symbol, avatar_color").eq("id", dreamData.user_id).single();
       if (profileError) throw profileError;
       setDream(dreamData);
       setProfile(profileData);

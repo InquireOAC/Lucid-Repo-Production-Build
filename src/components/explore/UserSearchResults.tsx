@@ -31,7 +31,7 @@ const UserSearchResults: React.FC<UserSearchResultsProps> = ({ query }) => {
     const timer = setTimeout(async () => {
       setIsLoading(true);
       const { data } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("id, username, display_name, profile_picture, avatar_symbol, avatar_color")
         .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
         .limit(10);

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { DreamEntry, DreamTag } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+
 import { useSortAndFilter } from "./useSortAndFilter";
 import { useLikes } from "./useLikes";
 
@@ -112,7 +112,7 @@ export function useDreams(refreshLikedDreams?: () => void) {
       setDreams(dreamsWithCounts);
     } catch (error) {
       console.error("Error fetching public dreams:", error);
-      toast.error("Failed to fetch dreams");
+      console.error("Failed to fetch dreams");
     } finally {
       setIsLoading(false);
     }

@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 export function useProfileEditing(user: any) {
   const [displayName, setDisplayName] = useState("");
@@ -33,9 +32,8 @@ export function useProfileEditing(user: any) {
         })
         .eq("id", user.id);
       if (error) throw error;
-      toast.success("Profile updated successfully!");
     } catch (error: any) {
-      toast.error(error.message || "Error updating profile");
+      console.error(error.message || "Error updating profile");
     }
   };
 
@@ -50,9 +48,8 @@ export function useProfileEditing(user: any) {
         })
         .eq("id", user.id);
       if (error) throw error;
-      toast.success("Social links updated successfully!");
     } catch (error: any) {
-      toast.error(error.message || "Error updating social links");
+      console.error(error.message || "Error updating social links");
     }
   };
 

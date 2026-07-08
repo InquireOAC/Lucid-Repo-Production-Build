@@ -47,27 +47,58 @@ export const elementToPngBase64 = async (element: HTMLElement): Promise<string |
     if (isMobile) {
       // html2canvas draws directly to canvas, bypassing SVG foreignObject
       // size limits that corrupt large base64 images on mobile Safari
-      try {
-        console.log("Attempting html2canvas capture on mobile");
-        const canvas = await html2canvas(element, {
-          useCORS: true,
-          scale: 2,
-          backgroundColor: null,
-          logging: false,
-          allowTaint: true,
-        });
-        dataUrl = canvas.toDataURL('image/png', 0.95);
-        console.log("html2canvas capture succeeded");
-      } catch (canvasError) {
-        console.warn("html2canvas failed, falling back to toPng:", canvasError);
-        dataUrl = await toPng(element, {
-          quality: 0.95,
-          pixelRatio: 2.0,
-          backgroundColor: null,
-          cacheBust: false,
-        });
-        console.log("toPng fallback succeeded");
-      }
+      const attemptCapture = async (attempt: number): Promise<string> => {
+        try {
+          console.log(`Attempting html2canvas capture on mobile (attempt ${attempt})`);
+          const canvas = await html2canvas(element, {
+            useCORS: true,
+            scale: 2,
+            backgroundColor: '#060B18',
+            logging: false,
+            allowTaint: false,
+            onclone: (clonedDoc) => {
+              // Ensure cloned images have loaded
+              const clonedImages = Array.from(clonedDoc.querySelectorAll('img'));
+              clonedImages.forEach(img => {
+                if (img.src && img.src.startsWith('data:')) {
+                  img.setAttribute('crossorigin', '');
+                }
+              });
+            },
+          });
+          
+          // Verify the canvas actually has content (not blank)
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            const pixel = ctx.getImageData(canvas.width / 2, canvas.height / 2, 1, 1).data;
+            const isBlank = pixel[0] === 0 && pixel[1] === 0 && pixel[2] === 0 && pixel[3] === 0;
+            if (isBlank && attempt < 3) {
+              console.warn(`Canvas appears blank on attempt ${attempt}, retrying...`);
+              await new Promise(r => setTimeout(r, 500));
+              return attemptCapture(attempt + 1);
+            }
+          }
+          
+          const result = canvas.toDataURL('image/png', 0.95);
+          console.log("html2canvas capture succeeded");
+          return result;
+        } catch (canvasError) {
+          console.warn("html2canvas failed:", canvasError);
+          if (attempt < 3) {
+            await new Promise(r => setTimeout(r, 500));
+            return attemptCapture(attempt + 1);
+          }
+          // Final fallback to toPng
+          console.log("Falling back to toPng");
+          return await toPng(element, {
+            quality: 0.95,
+            pixelRatio: 2.0,
+            backgroundColor: '#060B18',
+            cacheBust: false,
+          });
+        }
+      };
+      dataUrl = await attemptCapture(1);
     } else {
       // html-to-image produces higher quality on desktop
       dataUrl = await toPng(element, {

@@ -90,7 +90,7 @@ const ProfileBanner = ({ className, bannerImage, isOwnProfile, onBannerUpdated, 
       {bannerImage ? (
         <img src={bannerImage} alt="Profile banner" className="w-full h-full object-cover relative z-10" />
       ) : (
-        <div className="w-full h-full bg-gradient-to-r from-aurora-purple/40 via-aurora-violet/30 to-aurora-blue/40" />
+        <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/15 to-background" />
       )}
 
       {isOwnProfile && (

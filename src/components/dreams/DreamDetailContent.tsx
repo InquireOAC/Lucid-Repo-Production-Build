@@ -139,7 +139,7 @@ const DreamDetailContent = ({
       )}
 
       {/* Paginated Content */}
-      <PaginatedText text={content} className="text-sm whitespace-pre-wrap" />
+      <PaginatedText text={content} className="text-sm whitespace-pre-wrap font-basis" />
 
       {/* Tags */}
       {dreamTags.length > 0 && (

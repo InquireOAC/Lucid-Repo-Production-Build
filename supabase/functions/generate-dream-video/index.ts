@@ -1,74 +1,11 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { falSeedanceImageToVideo } from "../_shared/fal-seedance.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
-
-// Generate a JWT from a Google Service Account key
-async function getGoogleAccessToken(saKey: any): Promise<string> {
-  const header = { alg: "RS256", typ: "JWT" };
-  const now = Math.floor(Date.now() / 1000);
-  const payload = {
-    iss: saKey.client_email,
-    scope: "https://www.googleapis.com/auth/cloud-platform",
-    aud: "https://oauth2.googleapis.com/token",
-    iat: now,
-    exp: now + 3600,
-  };
-
-  const encode = (obj: any) => {
-    const json = JSON.stringify(obj);
-    const b64 = btoa(json);
-    return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  };
-
-  const headerB64 = encode(header);
-  const payloadB64 = encode(payload);
-  const unsignedToken = `${headerB64}.${payloadB64}`;
-
-  // Import the private key
-  const pemContents = saKey.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/, "")
-    .replace(/-----END PRIVATE KEY-----/, "")
-    .replace(/\n/g, "");
-  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
-
-  const cryptoKey = await crypto.subtle.importKey(
-    "pkcs8",
-    binaryKey,
-    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-
-  const signature = await crypto.subtle.sign(
-    "RSASSA-PKCS1-v1_5",
-    cryptoKey,
-    new TextEncoder().encode(unsignedToken)
-  );
-
-  const sigB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  const jwt = `${unsignedToken}.${sigB64}`;
-
-  // Exchange JWT for access token
-  const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
-
-  const tokenData = await tokenRes.json();
-  if (!tokenData.access_token) {
-    throw new Error(`Failed to get Google access token: ${JSON.stringify(tokenData)}`);
-  }
-  return tokenData.access_token;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -78,14 +15,8 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const saKeyRaw = Deno.env.get("GOOGLE_VERTEX_SA_KEY");
-    const projectId = Deno.env.get("GOOGLE_CLOUD_PROJECT_ID");
-
-    if (!saKeyRaw || !projectId) {
-      throw new Error("Google Cloud credentials not configured");
-    }
-
-    const saKey = JSON.parse(saKeyRaw);
+    const falKey = Deno.env.get("FAL_API_KEY");
+    if (!falKey) throw new Error("FAL_API_KEY not configured");
 
     // Auth check
     const authHeader = req.headers.get("Authorization");
@@ -99,7 +30,7 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authError } = await userClient.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
-    const { dreamId, imageUrl, animationPrompt, aspectRatio: clientAspectRatio } = await req.json();
+    const { dreamId, imageUrl, animationPrompt, skipDreamUpdate } = await req.json();
     if (!dreamId || !imageUrl) throw new Error("dreamId and imageUrl are required");
 
     // Check if user is admin (bypass subscription check)
@@ -113,7 +44,7 @@ Deno.serve(async (req) => {
     const isAdmin = !!roleData;
 
     if (!isAdmin) {
-      // Check subscription
+      // Check subscription - only top-tier plans allowed
       const { data: subData } = await supabase
         .from("stripe_subscriptions")
         .select("status, price_id")
@@ -125,190 +56,45 @@ Deno.serve(async (req) => {
       if (!subData) {
         throw new Error("Active subscription required for video generation");
       }
+
+      const allowedPriceIds = ["price_premium", "com.lucidrepo.unlimited.monthly"];
+      if (!allowedPriceIds.includes(subData.price_id)) {
+        throw new Error("Premium (Mystic) subscription required for video generation");
+      }
     }
-
-    // Fetch the image and convert to base64
-    const imageRes = await fetch(imageUrl);
-    if (!imageRes.ok) throw new Error("Failed to fetch dream image");
-    const imageBuffer = await imageRes.arrayBuffer();
-    // Chunk the conversion to avoid stack overflow on large images
-    const bytes = new Uint8Array(imageBuffer);
-    let imageBase64 = '';
-    const chunkSize = 8192;
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      const chunk = bytes.subarray(i, i + chunkSize);
-      imageBase64 += String.fromCharCode(...chunk);
-    }
-    imageBase64 = btoa(imageBase64);
-
-    // Determine mime type
-    const contentType = imageRes.headers.get("content-type") || "image/png";
-
-    // Always use 9:16 vertical portrait for dream videos
-    const detectedAspectRatio = "9:16";
-
-    // Get Google access token
-    const accessToken = await getGoogleAccessToken(saKey);
 
     const prompt = animationPrompt || "Gently animate this dream scene with subtle, dreamlike motion and atmospheric effects";
-    const modelId = "veo-3.0-generate-preview";
-    const location = "us-central1";
-
-    // Start video generation
-    const veoUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelId}:predictLongRunning`;
-
-    console.log("Using aspect ratio:", detectedAspectRatio);
-
-    const veoRes = await fetch(veoUrl, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        instances: [
-          {
-            prompt,
-            image: {
-              bytesBase64Encoded: imageBase64,
-              mimeType: contentType,
-            },
-          },
-        ],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio: detectedAspectRatio,
-        },
-      }),
-    });
-
-    if (!veoRes.ok) {
-      const errText = await veoRes.text();
-      throw new Error(`Veo API error: ${veoRes.status} - ${errText}`);
-    }
-
-    const operation = await veoRes.json();
-    const operationName = operation.name;
-
-    if (!operationName) {
-      throw new Error("No operation name returned from Veo API");
-    }
-
-    // Poll for completion using fetchPredictOperation (max ~5 minutes)
-    const pollUrl = `https://${location}-aiplatform.googleapis.com/v1/projects/${projectId}/locations/${location}/publishers/google/models/${modelId}:fetchPredictOperation`;
-    let result = null;
-    const maxAttempts = 60; // 60 * 5s = 300s
-
-    for (let i = 0; i < maxAttempts; i++) {
-      await new Promise((r) => setTimeout(r, 5000));
-
-      const pollRes = await fetch(pollUrl, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ operationName }),
-      });
-
-      if (!pollRes.ok) {
-        const pollErr = await pollRes.text();
-        console.error("Poll error:", pollErr);
-        continue;
-      }
-
-      const pollData = await pollRes.json();
-
-      if (pollData.done) {
-        if (pollData.error) {
-          throw new Error(`Video generation failed: ${JSON.stringify(pollData.error)}`);
-        }
-        result = pollData.response;
-        break;
-      }
-    }
-
-    if (!result) {
-      throw new Error("Video generation timed out after 5 minutes");
-    }
-
-    console.log("Veo response structure:", JSON.stringify(result).substring(0, 500));
-
-    // Extract video data - Veo returns various nested formats
-    const generatedVideos =
-      result.videos ||
-      result.generateVideoResponse?.generatedSamples ||
-      result.predictions ||
-      result.generatedSamples ||
-      [];
-
-    if (generatedVideos.length === 0) {
-      if (result.raiMediaFilteredCount && result.raiMediaFilteredCount > 0) {
-        throw new Error("Video was blocked by safety filters. Try a gentler prompt.");
-      }
-      throw new Error("No video generated in the response. Keys: " + Object.keys(result).join(", "));
-    }
-
-    const videoData = generatedVideos[0];
-    let videoBytes: Uint8Array;
-
-    if (videoData.bytesBase64Encoded || videoData.video?.bytesBase64Encoded) {
-      // Video returned as base64
-      const b64 = videoData.bytesBase64Encoded || videoData.video.bytesBase64Encoded;
-      const binaryString = atob(b64);
-      videoBytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        videoBytes[i] = binaryString.charCodeAt(i);
-      }
-    } else if (videoData.gcsUri || videoData.uri || videoData.video?.uri || videoData.video?.gcsUri) {
-      // Video stored in GCS (or direct URI), need to download it
-      const sourceUri = videoData.gcsUri || videoData.uri || videoData.video?.uri || videoData.video?.gcsUri;
-
-      const downloadUrl = sourceUri.startsWith("gs://")
-        ? (() => {
-            const gcsPath = sourceUri.replace("gs://", "");
-            const bucket = gcsPath.split("/")[0];
-            const objectPath = gcsPath.split("/").slice(1).join("/");
-            return `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media`;
-          })()
-        : sourceUri;
-
-      const gcsRes = await fetch(downloadUrl, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      if (!gcsRes.ok) throw new Error(`Failed to download video from source URI: ${gcsRes.status}`);
-      videoBytes = new Uint8Array(await gcsRes.arrayBuffer());
-    } else {
-      throw new Error("Unexpected video response format");
-    }
-
-    // Upload to Supabase Storage
     const fileName = `${user.id}/${dreamId}-${Date.now()}.mp4`;
-    const { error: uploadError } = await supabase.storage
-      .from("dream-videos")
-      .upload(fileName, videoBytes, {
-        contentType: "video/mp4",
-        upsert: true,
-      });
 
-    if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+    const { videoUrl } = await falSeedanceImageToVideo(
+      {
+        prompt,
+        imageUrl,
+        aspectRatio: "9:16",
+        duration: 5,
+        resolution: "720p",
+      },
+      {
+        supabaseUrl,
+        serviceRoleKey: supabaseServiceKey,
+        bucket: "dream-videos",
+        path: fileName,
+      },
+    );
 
-    const { data: publicUrl } = supabase.storage
-      .from("dream-videos")
-      .getPublicUrl(fileName);
+    // Update dream entry only if not a section-specific video
+    if (!skipDreamUpdate) {
+      const { error: updateError } = await supabase
+        .from("dream_entries")
+        .update({ video_url: videoUrl })
+        .eq("id", dreamId)
+        .eq("user_id", user.id);
 
-    // Update dream entry
-    const { error: updateError } = await supabase
-      .from("dream_entries")
-      .update({ video_url: publicUrl.publicUrl })
-      .eq("id", dreamId)
-      .eq("user_id", user.id);
-
-    if (updateError) throw new Error(`Failed to update dream: ${updateError.message}`);
+      if (updateError) throw new Error(`Failed to update dream: ${updateError.message}`);
+    }
 
     return new Response(
-      JSON.stringify({ videoUrl: publicUrl.publicUrl }),
+      JSON.stringify({ videoUrl }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

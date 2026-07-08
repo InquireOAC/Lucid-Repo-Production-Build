@@ -1,9 +1,8 @@
 
-import { Navigate } from "react-router-dom";
+import Home from "./Home";
 
 const Index = () => {
-  // Redirect to Journal page which is the main page of the app
-  return <Navigate to="/journal" replace />;
+  return <Home />;
 };
 
 export default Index;

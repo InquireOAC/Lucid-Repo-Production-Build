@@ -6,6 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -25,15 +26,17 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) throw new Error('Unauthorized')
 
-    const { photoUrl } = await req.json()
+    const { photoUrl, target, characterId } = await req.json()
     if (!photoUrl) throw new Error('Missing photoUrl')
+    const writeTarget: "ai_context" | "dream_character" = target === "dream_character" ? "dream_character" : "ai_context"
+    if (writeTarget === "dream_character" && !characterId) {
+      throw new Error("characterId is required when target=dream_character")
+    }
 
     console.log(`Analyzing character image for user ${user.id}`)
-
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured')
-
-    const analysisPrompt = `You are a visual identity analyst. Analyze this reference photo and produce an extremely detailed visual fingerprint description. This will be used to recreate this person's likeness in AI-generated dream scenes.
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+const analysisPrompt = `You are a visual identity analyst. Analyze this reference photo and produce an extremely detailed visual fingerprint description. This will be used to recreate this person's likeness in AI-generated dream scenes.
 
 Describe IN DETAIL:
 
@@ -102,16 +105,16 @@ Format as a single continuous paragraph that could be injected into an image gen
             role: 'user',
             content: [
               { type: 'text', text: analysisPrompt },
-              { type: 'image_url', image_url: { url: photoUrl } }
-            ]
-          }
+              { type: 'image_url', image_url: { url: photoUrl } },
+            ],
+          },
         ],
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI Gateway error:', response.status, errorText)
+      console.error('AI gateway error:', response.status, errorText)
       throw new Error(`AI analysis failed: ${response.status}`)
     }
 
@@ -122,15 +125,25 @@ Format as a single continuous paragraph that could be injected into an image gen
 
     console.log(`Visual fingerprint generated, length: ${fingerprint.length}`)
 
-    // Save fingerprint to ai_context
-    const { error: updateError } = await supabase
-      .from('ai_context')
-      .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
-      .eq('user_id', user.id)
-
-    if (updateError) {
-      console.error('Error saving fingerprint:', updateError)
-      throw new Error('Failed to save visual fingerprint')
+    if (writeTarget === "dream_character") {
+      const { error: updateError } = await supabase
+        .from('dream_characters')
+        .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
+        .eq('id', characterId)
+        .eq('user_id', user.id)
+      if (updateError) {
+        console.error('Error saving fingerprint to dream_characters:', updateError)
+        throw new Error('Failed to save visual fingerprint to dream_characters')
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from('ai_context')
+        .update({ visual_fingerprint: fingerprint, updated_at: new Date().toISOString() })
+        .eq('user_id', user.id)
+      if (updateError) {
+        console.error('Error saving fingerprint:', updateError)
+        throw new Error('Failed to save visual fingerprint')
+      }
     }
 
     return new Response(

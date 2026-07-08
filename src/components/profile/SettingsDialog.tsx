@@ -3,8 +3,9 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard, Image as ImageIcon } from "lucide-react";
+import { Shield, Users, LogOut, UserMinus, Trash2, FileText, Scale, User, Link, Bell, AlarmClock, Palette, ArrowLeft, BookOpen, LayoutDashboard, Image as ImageIcon, Lock } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
 import { AnimatePresence, motion } from "framer-motion";
 import CommunityGuidelinesDialog from "@/components/moderation/CommunityGuidelinesDialog";
 import BlockedUsersDialog from "@/components/moderation/BlockedUsersDialog";
@@ -14,9 +15,10 @@ import SocialLinksDialog from "./SocialLinksDialog";
 import NotificationsDialog from "./NotificationsDialog";
 import WakeTimerDialog from "./WakeTimerDialog";
 import ColorSchemeDialog from "./ColorSchemeDialog";
-import ExportJournalDialog from "./ExportJournalDialog";
+
 import { SubscriptionDialog } from "./SubscriptionDialog";
 import DreamGalleryDialog from "./DreamGalleryDialog";
+import LucidSuiteCard from "./LucidSuiteCard";
 import { Crown } from "lucide-react";
 
 interface SettingsDialogProps {
@@ -40,6 +42,7 @@ const SettingsDialog = ({
 }: SettingsDialogProps) => {
   const navigate = useNavigate();
   const { isAdmin } = useUserRole();
+  const { hasActiveSubscription } = useFeatureUsage();
   const [showGuidelines, setShowGuidelines] = useState(false);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
@@ -48,7 +51,7 @@ const SettingsDialog = ({
   const [showNotifications, setShowNotifications] = useState(false);
   const [showWakeTimer, setShowWakeTimer] = useState(false);
   const [showColorScheme, setShowColorScheme] = useState(false);
-  const [showExportJournal, setShowExportJournal] = useState(false);
+  
   const [showSubscription, setShowSubscription] = useState(false);
   const [showDreamGallery, setShowDreamGallery] = useState(false);
 
@@ -79,7 +82,10 @@ const SettingsDialog = ({
             <div className="px-6 py-6 space-y-4">
               <Button
               className="w-full justify-center gap-2 h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 hover:shadow-primary/40 text-secondary-foreground"
-              onClick={() => setShowSubscription(true)}>
+              onClick={() => {
+                onOpenChange(false);
+                window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }));
+              }}>
 
                 <Crown className="h-5 w-5" />
                 Upgrade to Pro
@@ -133,9 +139,22 @@ const SettingsDialog = ({
 
               <div className="space-y-2">
                 <h4 className="font-medium text-sm text-muted-foreground">Dream Avatar</h4>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => setShowAIContext(true)}>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => {
+                  if (hasActiveSubscription || isAdmin) {
+                    setShowAIContext(true);
+                  } else {
+                    onOpenChange(false);
+                    window.dispatchEvent(new CustomEvent('show-paywall', { detail: { feature: 'analysis' } }));
+                  }
+                }}>
                   <User className="h-4 w-4 mr-2" />
                   Edit Avatar
+                  {!hasActiveSubscription && !isAdmin && (
+                    <span className="ml-auto flex items-center gap-1 text-xs text-primary">
+                      <Crown className="h-3.5 w-3.5" />
+                      Pro
+                    </span>
+                  )}
                 </Button>
               </div>
 
@@ -147,10 +166,9 @@ const SettingsDialog = ({
                   <ImageIcon className="h-4 w-4 mr-2" />
                   Dream Gallery
                 </Button>
-                <Button variant="ghost" className="w-full justify-start opacity-60 cursor-not-allowed" disabled>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => { onOpenChange(false); navigate("/dream-book"); }}>
                   <BookOpen className="h-4 w-4 mr-2" />
-                  Export Dream Journal
-                  <span className="ml-auto text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Coming Soon</span>
+                  Dream Book
                 </Button>
               </div>
 
@@ -184,6 +202,13 @@ const SettingsDialog = ({
 
               <Separator />
 
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-muted-foreground">Ecosystem</h4>
+                <LucidSuiteCard />
+              </div>
+
+              <Separator />
+
               <div className="space-y-2 pb-24">
                 <h4 className="font-medium text-sm text-muted-foreground">Account</h4>
                 <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={() => {
@@ -211,7 +236,7 @@ const SettingsDialog = ({
     <NotificationsDialog isOpen={showNotifications} onOpenChange={setShowNotifications} />
     <WakeTimerDialog isOpen={showWakeTimer} onOpenChange={setShowWakeTimer} />
     <ColorSchemeDialog open={showColorScheme} onOpenChange={setShowColorScheme} />
-    <ExportJournalDialog open={showExportJournal} onOpenChange={setShowExportJournal} />
+    
     <SubscriptionDialog isOpen={showSubscription} onOpenChange={setShowSubscription} />
     <DreamGalleryDialog open={showDreamGallery} onOpenChange={setShowDreamGallery} />
     {socialLinks && setSocialLinks && handleUpdateSocialLinks && <SocialLinksDialog isOpen={showSocialLinks} onOpenChange={setShowSocialLinks} socialLinks={socialLinks} setSocialLinks={setSocialLinks} handleUpdateSocialLinks={handleUpdateSocialLinks} />}

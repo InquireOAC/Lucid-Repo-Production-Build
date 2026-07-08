@@ -21,7 +21,8 @@ export default {
     	extend: {
     		fontFamily: {
     			sans: [
-    				'Lato',
+    				'Basis Grotesque Arabic Pro',
+    				'basis-grotesque-pro',
     				'ui-sans-serif',
     				'system-ui',
     				'-apple-system',
@@ -30,10 +31,10 @@ export default {
     				'Roboto',
     				'Helvetica Neue',
     				'Arial',
-    				'Noto Sans',
     				'sans-serif'
     			],
     			basis: [
+    				'Basis Grotesque Arabic Pro',
     				'basis-grotesque-pro',
     				'sans-serif'
     			],
@@ -47,6 +48,7 @@ export default {
     				'serif'
     			],
     			mono: [
+    				'JetBrains Mono',
     				'Fira Code',
     				'ui-monospace',
     				'SFMono-Regular',
@@ -136,7 +138,17 @@ export default {
     				'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
     				border: 'hsl(var(--sidebar-border))',
     				ring: 'hsl(var(--sidebar-ring))'
-    			}
+    			},
+    			/* Lucid Engine section accent system */
+    			section: {
+    				studio:    'hsl(var(--accent-studio))',
+    				canvas:    'hsl(var(--accent-canvas))',
+    				journal:   'hsl(var(--accent-journal))',
+    				character: 'hsl(var(--accent-character))',
+    				world:     'hsl(var(--accent-world))',
+    				voice:     'hsl(var(--accent-voice))',
+    			},
+    			generate: 'hsl(var(--generate))',
     		},
     		borderRadius: {
     			lg: 'var(--radius)',
@@ -235,6 +247,18 @@ export default {
     				'50%': {
     					backgroundPosition: '100% 50%'
     				}
+    			},
+    			'logo-breathe': {
+    				'0%, 100%': { opacity: '0.75', transform: 'scale(0.97)' },
+    				'50%': { opacity: '1', transform: 'scale(1.03)' }
+    			},
+    			'logo-shimmer': {
+    				'0%': { backgroundPosition: '-150% 0' },
+    				'100%': { backgroundPosition: '250% 0' }
+    			},
+    			'logo-glow': {
+    				'0%, 100%': { opacity: '0.35', transform: 'scale(1.4)' },
+    				'50%': { opacity: '0.75', transform: 'scale(1.6)' }
     			}
     		},
     		animation: {
@@ -248,7 +272,10 @@ export default {
     			'page-reveal': 'page-reveal 0.5s ease-out forwards',
     			'glow-pulse': 'glow-pulse 3s ease-in-out infinite',
     			'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
-    			'gradient-shift': 'gradient-shift 6s ease-in-out infinite'
+    			'gradient-shift': 'gradient-shift 6s ease-in-out infinite',
+    			'logo-breathe': 'logo-breathe 2.4s ease-in-out infinite',
+    			'logo-shimmer': 'logo-shimmer 2.6s ease-in-out infinite',
+    			'logo-glow': 'logo-glow 2.4s ease-in-out infinite'
     		},
     		backgroundImage: {
     			'cosmic-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
@@ -258,8 +285,8 @@ export default {
     			'oniri-gradient': 'linear-gradient(135deg, hsl(220, 15%, 6%) 0%, hsl(220, 13%, 8%) 50%, hsl(220, 15%, 6%) 100%)',
     			'oniri-card': 'linear-gradient(135deg, hsl(217, 91%, 60% / 0.02) 0%, hsl(263, 60%, 55% / 0.01) 100%)',
     			'luminous-gradient': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 50%, hsl(217, 91%, 60%) 100%)',
-    			'gradient-primary': 'linear-gradient(135deg, hsl(217, 91%, 60%) 0%, hsl(263, 60%, 55%) 100%)',
-    			'gradient-radial': 'radial-gradient(circle at 50% 0%, hsl(217, 91%, 60% / 0.15) 0%, transparent 70%)'
+    			'gradient-primary': 'var(--gradient-primary)',
+    			'gradient-radial': 'var(--gradient-radial)'
     		},
     		boxShadow: {
     			'2xs': 'var(--shadow-2xs)',

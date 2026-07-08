@@ -65,7 +65,7 @@ const VaultTabContent: React.FC<VaultTabContentProps> = ({ category }) => {
       {rest.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-foreground mb-3">More Videos</h2>
-          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none">
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-none md:mx-0 md:px-0 md:grid md:grid-cols-3 lg:grid-cols-4 md:overflow-visible">
             {rest.map((video) => (
               <VideoThumbnailCard key={video.id} video={video} />
             ))}

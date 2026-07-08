@@ -1,7 +1,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
 
 interface UseImageFileUploadProps {
   dreamId?: string;
@@ -25,7 +24,7 @@ export const useImageFileUpload = ({
     console.log("handleImageFromFile triggered with file");
     if (!fileDataUrl || !user) {
       setImageError(true);
-      toast.error("Could not add image. Please try again.");
+      console.error("Could not add image. Please try again.");
       return;
     }
     setIsUploading(true);
@@ -33,35 +32,26 @@ export const useImageFileUpload = ({
     
     try {
       console.log("Converting file data URL to blob for upload...");
-      // Convert data URL to blob
       const response = await fetch(fileDataUrl);
       const blob = await response.blob();
-      
-      // Create object URL from blob for upload
       const blobUrl = URL.createObjectURL(blob);
       console.log("Created blob URL for upload:", blobUrl);
       
-      // Use reliable upload with blob URL
       const publicUrl = await uploadImage(blobUrl, dreamId);
-      
-      // Clean up the blob URL
       URL.revokeObjectURL(blobUrl);
       
       if (!publicUrl) {
         console.warn("Upload failed, using local fallback");
         setImageError(true);
         onImageGenerated(fileDataUrl, imagePrompt || "Uploaded image");
-        toast.warning("Failed to upload image permanently. Using local version - please save manually if needed.");
       } else {
         console.log("File uploaded successfully to:", publicUrl);
         onImageGenerated(publicUrl, imagePrompt || "Uploaded image");
-        toast.success("Image uploaded successfully!");
       }
     } catch (error) {
       console.error("File upload error:", error);
       setImageError(true);
       onImageGenerated(fileDataUrl, imagePrompt || "Uploaded image");
-      toast.warning("Upload error, but image is available locally. Please save manually if needed.");
     } finally {
       setIsUploading(false);
     }

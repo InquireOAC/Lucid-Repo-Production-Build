@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -121,10 +120,8 @@ export const useDreamJournal = () => {
         }
       }
       setIsAddingDream(false);
-      toast.success("Dream saved successfully!");
     } catch (error) {
       console.error("Error adding dream:", error);
-      toast.error("Failed to save dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -180,10 +177,8 @@ export const useDreamJournal = () => {
       }
       setIsEditingDream(false);
       setSelectedDream(null);
-      toast.success("Dream updated successfully!");
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
     } finally {
       setIsSubmitting(false);
     }
@@ -207,12 +202,10 @@ export const useDreamJournal = () => {
         
         // Make sure we keep both versions of image fields for database compatibility
         if ('generatedImage' in dbUpdates) {
-          // Keep the image_url field synced with generatedImage
           dbUpdates.image_url = dbUpdates.generatedImage;
         }
         
         if ('imagePrompt' in dbUpdates) {
-          // Keep the image_prompt field synced with imagePrompt
           dbUpdates.image_prompt = dbUpdates.imagePrompt;
         }
         
@@ -230,12 +223,8 @@ export const useDreamJournal = () => {
           throw error;
         }
       }
-      if (updates.is_public || updates.isPublic) {
-        toast.success("Dream shared to Lucid Repo!");
-      }
     } catch (error) {
       console.error("Error updating dream:", error);
-      toast.error("Failed to update dream");
     }
   };
 
@@ -258,10 +247,8 @@ export const useDreamJournal = () => {
       }
       setSelectedDream(null);
       setDreamToDelete(null);
-      toast.success("Dream deleted successfully");
     } catch (error) {
       console.error("Error deleting dream:", error);
-      toast.error("Failed to delete dream");
     }
   };
 
@@ -272,14 +259,8 @@ export const useDreamJournal = () => {
         is_public: newStatus,
         isPublic: newStatus
       });
-      if (newStatus) {
-        toast.success("Dream published to Lucid Repo");
-      } else {
-        toast.success("Dream set to private");
-      }
     } catch (error) {
       console.error("Error toggling dream visibility:", error);
-      toast.error("Failed to update dream visibility");
     }
   };
 

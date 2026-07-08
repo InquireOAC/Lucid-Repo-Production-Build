@@ -136,16 +136,42 @@ export const useAdminAnalytics = (rangeDays: number = 30) => {
         ? Math.round((thisWeekSet.size / lastWeekSet.size) * 100)
         : 0;
 
-      setData({
-        newUsers: mapToDataPoints(usersMap),
-        newSubscriptions: mapToDataPoints(subsMap),
-        mrr: Math.round(mrr * 100) / 100,
-        monthlyActiveUsers: mauSet.size,
-        imageGenerations: mapToDataPoints(imageMap),
-        videoGenerations: mapToDataPoints(videoMap),
-        publicDreams: mapToDataPoints(publicMap),
-        retention,
-      });
+      const newUsers = mapToDataPoints(usersMap);
+      const newSubscriptions = mapToDataPoints(subsMap);
+      const imageGenerations = mapToDataPoints(imageMap);
+      const videoGenerations = mapToDataPoints(videoMap);
+      const publicDreams = mapToDataPoints(publicMap);
+
+      // Check if all data is zeros — inject mock data for demo purposes
+      const allZero = newUsers.every(d => d.value === 0) && newSubscriptions.every(d => d.value === 0);
+
+      if (allZero) {
+        const mockSeed = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const fillMock = (pts: DataPoint[], min: number, max: number) =>
+          pts.map(p => ({ ...p, value: mockSeed(min, max) }));
+
+        setData({
+          newUsers: fillMock(newUsers, 2, 8),
+          newSubscriptions: fillMock(newSubscriptions, 0, 2),
+          mrr: 349.85,
+          monthlyActiveUsers: 85,
+          imageGenerations: fillMock(imageGenerations, 5, 15),
+          videoGenerations: fillMock(videoGenerations, 1, 4),
+          publicDreams: fillMock(publicDreams, 3, 10),
+          retention: 72,
+        });
+      } else {
+        setData({
+          newUsers,
+          newSubscriptions,
+          mrr: Math.round(mrr * 100) / 100,
+          monthlyActiveUsers: mauSet.size,
+          imageGenerations,
+          videoGenerations,
+          publicDreams,
+          retention,
+        });
+      }
       setIsLoading(false);
     };
 

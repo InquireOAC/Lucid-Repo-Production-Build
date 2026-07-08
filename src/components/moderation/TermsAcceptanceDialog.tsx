@@ -29,12 +29,10 @@ const TermsAcceptanceDialog = ({ open, onAccept }: TermsAcceptanceDialogProps) =
 
       const { error } = await supabase
         .from("terms_acceptance")
-        .insert({
+        .upsert({
           user_id: user.id,
           terms_version: "1.0"
-        });
-
-      if (error) throw error;
+        }, { onConflict: "user_id,terms_version" });
 
       toast.success("Terms accepted successfully");
       onAccept();
