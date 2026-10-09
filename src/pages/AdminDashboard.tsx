@@ -83,7 +83,7 @@ const AdminDashboard = () => {
 
   return (
     <motion.div
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-[#07111b]"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -95,8 +95,8 @@ const AdminDashboard = () => {
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="text-center">
-            <h1 className="text-sm font-semibold">Admin Dashboard</h1>
-            <p className="text-[10px] text-muted-foreground tracking-widest uppercase">Command Center</p>
+            <h1 className="lucid-display text-xl md:text-2xl">Admin Dashboard</h1>
+            <p className="lucid-overline">Command Center</p>
           </div>
           <Button
             variant="ghost"

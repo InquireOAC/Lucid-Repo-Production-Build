@@ -5,45 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   Basis Grotesque Arabic Pro — Lucid Engine shared typography
-   ============================================================ */
-@font-face {
-  font-family: 'Basis Grotesque Arabic Pro';
-  src: url('/fonts/BasisGrotesqueArabicPro-Light.ttf') format('truetype');
-  font-weight: 300;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Basis Grotesque Arabic Pro';
-  src: url('/fonts/BasisGrotesqueArabicPro-Regular.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Basis Grotesque Arabic Pro';
-  src: url('/fonts/BasisGrotesqueArabicPro-Medium.ttf') format('truetype');
-  font-weight: 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Basis Grotesque Arabic Pro';
-  src: url('/fonts/BasisGrotesqueArabicPro-Bold.ttf') format('truetype');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Basis Grotesque Arabic Pro';
-  src: url('/fonts/BasisGrotesqueArabicPro-Black.ttf') format('truetype');
-  font-weight: 900;
-  font-style: normal;
-  font-display: swap;
-}
-
 @layer base {
   :root {
     /* ============================================================
@@ -53,13 +14,13 @@
        ============================================================ */
 
     /* Base surfaces */
-    --background:   220 13% 5%;     /* near-black deep navy */
+    --background:   211 59% 7%;     /* Lucid midnight */
     --foreground:   210 10% 95%;
 
-    --card:         220 13% 8%;
+    --card:         211 52% 10%;
     --card-foreground: 210 10% 95%;
 
-    --popover:      220 13% 10%;
+    --popover:      211 45% 12%;
     --popover-foreground: 210 10% 95%;
 
     /* Primary: Lucid Engine Blue */
@@ -171,7 +132,7 @@
     -webkit-touch-callout: none;
     -webkit-user-select: none;
     user-select: none;
-    font-family: 'basis-grotesque-pro', sans-serif;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   }
 
   html, body {
@@ -1106,3 +1067,156 @@ li,
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* Lucid Repo cinematic redesign */
+.lucid-app {
+  background: #07111b;
+  color: #eef5ff;
+}
+
+.lucid-app .cosmic-background,
+.lucid-app .starry-background {
+  background-color: #07111b;
+  background-image: radial-gradient(circle at 84% -10%, rgba(50, 117, 210, .14), transparent 38%);
+}
+
+.lucid-display {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+}
+
+.lucid-overline {
+  color: #8da7c8;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.lucid-ring {
+  display: inline-flex;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 2px solid #4a8dff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(74, 141, 255, .1), inset 0 0 12px rgba(69, 184, 255, .25), 0 0 17px rgba(52, 170, 255, .4);
+}
+
+.lucid-panel {
+  background: linear-gradient(145deg, rgba(18, 40, 62, .94), rgba(8, 23, 37, .96));
+  border: 1px solid rgba(133, 181, 234, .17);
+  border-radius: 1.15rem;
+  box-shadow: 0 14px 38px rgba(1, 8, 17, .16);
+}
+
+.lucid-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: .65rem;
+  min-height: 2.9rem;
+  padding: .7rem 1.25rem;
+  border-radius: .85rem;
+  background: linear-gradient(135deg, #448cfa, #2f75e9);
+  color: white;
+  font-size: .9rem;
+  font-weight: 700;
+  box-shadow: 0 8px 28px rgba(40, 113, 239, .2);
+  transition: transform .2s, box-shadow .2s, background-color .2s;
+}
+.lucid-button:hover { transform: translateY(-2px); box-shadow: 0 12px 35px rgba(40, 113, 239, .35); }
+.lucid-button:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+.lucid-button-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-height: 2.9rem;
+  padding: .7rem 1.15rem;
+  border: 1px solid rgba(160, 194, 238, .3);
+  border-radius: .85rem;
+  background: rgba(8, 25, 43, .72);
+  color: #dfebfa;
+  font-weight: 600;
+}
+.lucid-button-secondary:hover { border-color: #4a8dff; background: rgba(48, 106, 174, .19); }
+
+.lucid-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.25rem;
+  padding: .38rem .95rem;
+  border: 1px solid rgba(134, 172, 217, .28);
+  border-radius: 999px;
+  background: rgba(8, 24, 42, .62);
+  color: #b8c9df;
+  font-size: .82rem;
+  white-space: nowrap;
+}
+.lucid-pill[aria-pressed="true"], .lucid-pill.active {
+  border-color: #4a8dff;
+  background: #347ff0;
+  color: #fff;
+  box-shadow: 0 5px 18px rgba(52, 127, 240, .22);
+}
+
+.lucid-hero {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(142, 188, 237, .16);
+  border-radius: 1.25rem;
+  background-color: #10283f;
+}
+.lucid-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(4, 14, 27, .96), transparent 70%), linear-gradient(90deg, rgba(5, 16, 29, .38), transparent 70%);
+  pointer-events: none;
+}
+.lucid-hero > img, .lucid-hero > video { width: 100%; height: 100%; object-fit: cover; }
+
+.lucid-page .glass-card { border-color: rgba(129, 177, 223, .16); background: rgba(13, 31, 50, .84); }
+.lucid-page :is(input, textarea) { color: #eaf3ff; }
+.lucid-page :is(h1, h2) { letter-spacing: -.025em; }
+.lucid-page :is(a, button) { -webkit-tap-highlight-color: transparent; }
+
+.lucid-poster { border-radius: .85rem; overflow: hidden; background: #10283f; border: 1px solid rgba(132, 174, 226, .18); }
+.lucid-poster img { width: 100%; height: 100%; object-fit: cover; }
+
+@media (max-width: 767px) {
+  .lucid-app .lucid-page { padding-bottom: 1rem; }
+  .lucid-hero { border-radius: 1rem; }
+}
+
+.lucid-sidebar {
+  background: linear-gradient(180deg, #091727, #07111b);
+  border-right: 1px solid rgba(106, 161, 222, .17);
+}
+.lucid-mobile-nav {
+  background: rgba(5, 15, 27, .96);
+  backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(111, 167, 228, .23);
+  box-shadow: 0 -18px 50px rgba(0, 5, 13, .45);
+}
+.lucid-create-tab { color: #74b1ff !important; }
+.lucid-create-icon {
+  width: 3.4rem;
+  height: 3.4rem;
+  margin-top: -1.4rem;
+  display: grid;
+  place-items: center;
+  color: white !important;
+  background: linear-gradient(140deg, #43b4ff, #2862ef);
+  border: 3px solid #0a253e;
+  box-shadow: 0 0 0 2px #48c8ff, 0 0 27px rgba(41, 146, 255, .7);
+}
+.lucid-page :is(h1, h2, h3) { color: #f3f7ff; }
+.lucid-page .text-muted-foreground { color: #a7b8cf; }
+.lucid-page .bg-background\/80 { background-color: rgba(7, 17, 27, .9); }
+.lucid-page .bg-card { background-color: #0e2237; }
+.lucid-page .border-border\/30 { border-color: rgba(126, 170, 218, .2); }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCard from "@/components/notifications/NotificationCard";
@@ -13,6 +13,8 @@ const Notifications = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { notifications, loading, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+  const [filter, setFilter] = useState<"all" | "dreams" | "community">("all");
+  const visibleNotifications = notifications.filter((item) => filter === "all" || (filter === "dreams" ? ["like", "comment", "share"].includes(item.type) : ["follow", "message"].includes(item.type)));
 
   if (!user) {
     return (
@@ -34,7 +36,7 @@ const Notifications = () => {
             >
               <ArrowLeft className="h-5 w-5 text-foreground" />
             </button>
-            <h1 className="text-xl font-bold text-foreground">Activity</h1>
+            <div><p className="lucid-overline mb-1">From your dream world</p><h1 className="lucid-display text-3xl md:text-4xl">Activity</h1></div>
             {unreadCount > 0 && (
               <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-primary/15 text-primary border border-primary/20">
                 {unreadCount}
@@ -54,7 +56,9 @@ const Notifications = () => {
           )}
         </div>
 
-        {/* Broadcasts (platform-wide announcements, events, challenges) */}
+        <div role="tablist" aria-label="Activity filter" className="lucid-panel mb-5 grid grid-cols-3 gap-1 p-1">
+          {(["all", "dreams", "community"] as const).map((item) => <button key={item} role="tab" aria-selected={filter === item} onClick={() => setFilter(item)} className={`rounded-xl px-2 py-2 text-sm font-medium capitalize ${filter === item ? "bg-blue-500 text-white" : "text-slate-400 hover:text-white"}`}>{item}</button>)}
+        </div>
         <BroadcastsSection />
 
         {/* Loading State */}
@@ -75,16 +79,16 @@ const Notifications = () => {
         )}
 
         {/* Empty State */}
-        {!loading && notifications.length === 0 && (
+        {!loading && visibleNotifications.length === 0 && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20"
+            className="lucid-panel text-center py-16 px-6"
           >
             <div className="mx-auto w-16 h-16 rounded-2xl bg-muted/50 border border-border/50 flex items-center justify-center mb-4">
               <Bell className="h-7 w-7 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">No activity yet</h3>
+            <h3 className="lucid-display text-2xl text-foreground mb-1">No activity yet</h3>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               When someone likes, comments, or follows you, it'll show up here.
             </p>
@@ -92,10 +96,10 @@ const Notifications = () => {
         )}
 
         {/* Notifications List */}
-        {!loading && notifications.length > 0 && (
-          <div className="space-y-1">
+        {!loading && visibleNotifications.length > 0 && (
+          <div className="space-y-2">
             <AnimatePresence>
-              {notifications.map((notification, index) => (
+              {visibleNotifications.map((notification, index) => (
                 <motion.div
                   key={notification.id}
                   initial={{ opacity: 0, y: 8 }}

@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDreamJournal } from "@/hooks/useDreamJournal";
-import AddDreamDialog from "@/components/journal/AddDreamDialog";
 import DeleteDreamConfirmationDialog from "@/components/journal/DeleteDreamConfirmationDialog";
 import EmptyJournal from "@/components/journal/EmptyJournal";
 import JournalHeroPoster from "@/components/journal/JournalHeroPoster";
 import JournalPosterCard from "@/components/journal/JournalPosterCard";
-import PosterRail from "@/components/repos/netflix/PosterRail";
-import FAB from "@/components/ui/FAB";
 import { DreamEntry } from "@/types/dream";
 import PageTransition from "@/components/ui/PageTransition";
-import { Search, X, Film, CheckSquare, Archive, Trash2 } from "lucide-react";
+import { Search, X, Film, CheckSquare, Archive, Trash2, Plus, LockKeyhole, ArrowRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -74,13 +71,9 @@ const Journal = () => {
   const navigate = useNavigate();
   const {
     entries,
-    isSubmitting,
-    isAddingDream,
-    setIsAddingDream,
     tags,
     dreamToDelete,
     setDreamToDelete,
-    handleAddDream,
     handleDeleteDream,
     user,
     syncDreamsFromDb,
@@ -121,15 +114,9 @@ const Journal = () => {
 
   // Hide archived dreams from the main list
   const activeEntries = useMemo(
-    () => entries.filter((d) => !d.is_archived),
-    [entries],
+    () => user ? entries.filter((d) => !d.is_archived && (!d.user_id || d.user_id === user.id)) : [],
+    [entries, user],
   );
-
-  const handleAddDreamAndClose = async (dreamData: any) => {
-    await handleAddDream(dreamData);
-    setIsAddingDream(false);
-    setTimeout(memoizedSyncDreams, 500);
-  };
 
   const confirmDeleteDream = async () => {
     if (dreamToDelete) {
@@ -215,24 +202,6 @@ const Journal = () => {
   // Hero: most recent dream with media, fallback first dream
   const heroDream = useMemo(() => activeEntries.find(hasPoster) || activeEntries[0], [activeEntries]);
 
-  // Rails for the default "All / Any time" view
-  const recentlyAdded = useMemo(() => activeEntries.slice(0, 12), [activeEntries]);
-  const lucidDreams = useMemo(() => activeEntries.filter((d) => d.lucid).slice(0, 12), [activeEntries]);
-  const cinematicDreams = useMemo(
-    () => activeEntries.filter((d) => !!d.video_url).slice(0, 12),
-    [activeEntries],
-  );
-  const thisMonth = useMemo(() => {
-    const now = new Date();
-    const cutoff = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
-    return activeEntries
-      .filter((d) => {
-        const t = new Date(d.created_at || d.date).getTime();
-        return Number.isFinite(t) && t >= cutoff;
-      })
-      .slice(0, 12);
-  }, [activeEntries]);
-
   const isFiltered = activeCategory !== "All" || dateRange !== "any" || !!searchQuery.trim();
 
   // Select props helper
@@ -257,8 +226,8 @@ const Journal = () => {
             onClick={() => setActiveCategory(cat)}
             className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
               activeCategory === cat
-                ? "bg-foreground text-background border-foreground font-semibold"
-                : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                ? "bg-blue-500 text-white border-blue-400 font-semibold"
+                : "bg-[#0d2339] text-slate-300 border-sky-200/20 hover:bg-sky-800/30 font-medium"
             }`}
           >
             {cat}
@@ -278,8 +247,8 @@ const Journal = () => {
             onClick={() => setDateRange(value)}
             className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
               dateRange === value
-                ? "bg-primary text-primary-foreground border-primary font-semibold"
-                : "bg-transparent text-foreground/70 border-border/40 hover:bg-muted/30 font-medium"
+                ? "bg-blue-500 text-white border-blue-400 font-semibold"
+                : "bg-[#0d2339] text-slate-300 border-sky-200/20 hover:bg-sky-800/30 font-medium"
             }`}
           >
             {label}
@@ -290,15 +259,13 @@ const Journal = () => {
   );
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
+    <PageTransition className="min-h-screen pt-safe-top pb-safe-bottom">
       <div className="max-w-6xl mx-auto px-4 md:px-8 lg:max-w-7xl lg:px-12 xl:max-w-[1500px] xl:px-16 pb-10 lg:pb-16">
 
         {/* ── Sticky header: title + search + select toggle ────────── */}
-        <div className="sticky top-0 z-30 -mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
+        <div className="sticky top-0 z-30 -mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16 pt-5 lg:pt-8 pb-4 lg:pb-5 bg-background/80 backdrop-blur-md">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
-              My <span className="text-primary">Dreams</span>
-            </h1>
+            <div><p className="lucid-overline mb-1">Your creative archive</p><h1 className="lucid-display text-3xl md:text-4xl xl:text-5xl">My Library</h1></div>
             <div className="flex items-center gap-1">
               {selectMode && selectedIds.size > 0 && (
                 <span className="text-xs font-semibold text-primary mr-1">
@@ -327,6 +294,7 @@ const Journal = () => {
                   {searchOpen ? <X className="h-5 w-5 lg:h-6 lg:w-6" /> : <Search className="h-5 w-5 lg:h-6 lg:w-6" />}
                 </button>
               )}
+              <button type="button" onClick={() => navigate("/journal/new")} className="lucid-button !min-h-9 !px-3 md:!px-5 ml-1"><Plus size={17}/><span className="hidden sm:inline">New Dream</span></button>
             </div>
           </div>
 
@@ -349,12 +317,12 @@ const Journal = () => {
         {activeEntries.length === 0 ? (
           <>
             {FilterPills}
-            <EmptyJournal onAddDream={() => setIsAddingDream(true)} />
+            <EmptyJournal onAddDream={() => navigate("/journal/new")} />
           </>
         ) : isFiltered ? (
           /* ── Filtered / search view: hero → pills → poster grid ─── */
           <>
-            {heroDream && <JournalHeroPoster dream={heroDream} size="compact" />}
+            {filtered[0] && <JournalHeroPoster dream={filtered[0]} size="compact" />}
             {FilterPills}
 
             <div>
@@ -382,9 +350,9 @@ const Journal = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-3 lg:gap-5 xl:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-5 xl:gap-6">
                   {filtered.map((d) => (
-                    <JournalPosterCard key={d.id} dream={d} width="md" meta={sceneMeta(d)} {...selectProps(d)} />
+                    <JournalPosterCard key={d.id} dream={d} landscape meta={sceneMeta(d)} {...selectProps(d)} />
                   ))}
                 </div>
               )}
@@ -397,37 +365,12 @@ const Journal = () => {
 
             {FilterPills}
 
-            {recentlyAdded.length > 0 && (
-              <PosterRail title="Recently Added">
-                {recentlyAdded.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
-                ))}
-              </PosterRail>
-            )}
-
-            {cinematicDreams.length > 0 && (
-              <PosterRail title="Your Cinematics">
-                {cinematicDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} showPlayOverlay meta={sceneMeta(d)} {...selectProps(d)} />
-                ))}
-              </PosterRail>
-            )}
-
-            {lucidDreams.length > 0 && (
-              <PosterRail title="Lucid Dreams">
-                {lucidDreams.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
-                ))}
-              </PosterRail>
-            )}
-
-            {thisMonth.length > 0 && (
-              <PosterRail title="This Month">
-                {thisMonth.map((d) => (
-                  <JournalPosterCard key={d.id} dream={d} meta={sceneMeta(d)} {...selectProps(d)} />
-                ))}
-              </PosterRail>
-            )}
+            <div className="mb-4 flex items-end justify-between"><div><p className="lucid-overline mb-1">Your collection</p><h2 className="lucid-display text-2xl md:text-3xl">All Dreams</h2></div><span className="text-sm text-slate-400">{activeEntries.length} dreams</span></div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
+              {activeEntries.map((d) => <JournalPosterCard key={d.id} dream={d} landscape meta={d.video_url ? "Film ready" : sceneMeta(d) || "Dream journal"} {...selectProps(d)} />)}
+            </div>
+            <div className="lucid-panel mt-7 flex items-center gap-3 p-4"><LockKeyhole className="flex-none text-sky-300" size={20}/><p className="text-sm text-slate-300">Only you can see private dreams. You choose what to share.</p></div>
+            <button onClick={() => navigate("/lucid-repo")} className="mt-8 flex items-center gap-2 text-sm font-semibold text-sky-400">Explore dreams from the community <ArrowRight size={16}/></button>
           </>
         )}
       </div>
@@ -469,19 +412,6 @@ const Journal = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <FAB label="New Dream" to="/journal/new" />
-
-      <AddDreamDialog
-        isOpen={isAddingDream}
-        onOpenChange={(open) => {
-          setIsAddingDream(open);
-          if (!open && user) setTimeout(memoizedSyncDreams, 300);
-        }}
-        onSubmit={handleAddDreamAndClose}
-        tags={tags}
-        isSubmitting={isSubmitting}
-      />
 
       <DeleteDreamConfirmationDialog
         isOpen={!!dreamToDelete}

@@ -12,18 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
-import lucidEngineLogo from "@/assets/lucid-logo.png";
-import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
-  bg: "#060B18",
+  bg: "#07111b",
   surface: "rgba(56,130,246,0.06)",
   surfaceBorder: "rgba(56,130,246,0.12)",
   primary: "#3B82F6",
   primaryGlow: "rgba(56,130,246,0.25)",
   text: "#E2E8F0",
-  muted: "#64748B",
+  muted: "#9cb2ce",
   divider: "rgba(56,130,246,0.10)",
   ink: "#060B18",
 } as const;
@@ -69,6 +67,19 @@ const fadeUp = {
 };
 
 const REMEMBER_ME_KEY = "lucid-repo-remember-me";
+const PRODUCTION_SITE_ORIGIN = "https://lucidrepo.app";
+
+const authRedirectOrigin = () =>
+  ["localhost", "127.0.0.1"].includes(window.location.hostname)
+    ? window.location.origin
+    : PRODUCTION_SITE_ORIGIN;
+
+const explainAuthError = (message: string) => {
+  if (/invalid login credentials/i.test(message)) return "Invalid email or password. Please check your credentials and try again.";
+  if (/email not confirmed/i.test(message)) return "Please verify your email address before signing in.";
+  if (/failed to fetch|network|fetch failed/i.test(message)) return "We couldn't reach the sign-in service. Check your connection and try again.";
+  return message;
+};
 
 const Auth = () => {
   const [recentDreams, setRecentDreams] = useState<any[]>([]);
@@ -89,37 +100,91 @@ const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [username, setUsername] = useState("");
   const [hasAcceptedTermsLocal, setHasAcceptedTermsLocal] = useState(false);
   const [showTermsText, setShowTermsText] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [recoveryStep, setRecoveryStep] = useState<"request" | "update" | null>(() =>
+    new URLSearchParams(window.location.search).has("recovery") ? "update" : null
+  );
+  const [authFeedback, setAuthFeedback] = useState<{ kind: "error" | "success"; message: string } | null>(null);
   const [rememberMe, setRememberMe] = useState(() => {
     const stored = localStorage.getItem(REMEMBER_ME_KEY);
     return stored !== null ? stored === "true" : true;
   });
 
   useEffect(() => {
-    if (user) {
+    if (user && !recoveryStep) {
       navigate("/", { replace: true });
     }
-  }, [user, navigate]);
+  }, [user, recoveryStep, navigate]);
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setRecoveryStep("update");
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleResetRequest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthFeedback(null);
+    if (!email.trim()) { setAuthFeedback({ kind: "error", message: "Enter your email address first." }); return; }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+        redirectTo: `${authRedirectOrigin()}/auth?recovery=1`,
+      });
+      if (error) throw error;
+      setAuthFeedback({ kind: "success", message: "If an account exists for this email, a password-reset link is on its way." });
+    } catch (error) {
+      setAuthFeedback({ kind: "error", message: explainAuthError(error instanceof Error ? error.message : "Could not send a reset link.") });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthFeedback(null);
+    if (password.length < 6) { setAuthFeedback({ kind: "error", message: "Password must be at least 6 characters long." }); return; }
+    if (password !== confirmPassword) { setAuthFeedback({ kind: "error", message: "Passwords do not match." }); return; }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      setPassword("");
+      setConfirmPassword("");
+      toast.success("Password updated. You're signed in.");
+      navigate("/", { replace: true });
+    } catch (error) {
+      setAuthFeedback({ kind: "error", message: explainAuthError(error instanceof Error ? error.message : "Could not update your password. Request a new reset link.") });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) { toast.error("Please fill in all fields"); return; }
+    setAuthFeedback(null);
+    if (!email || !password) { setAuthFeedback({ kind: "error", message: "Please fill in all fields." }); return; }
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) {
-        toast.error(error.message.includes("Invalid login credentials")
-          ? "Invalid email or password. Please check your credentials and try again."
-          : error.message);
+        const message = explainAuthError(error.message);
+        setAuthFeedback({ kind: "error", message });
+        toast.error(message);
         return;
       }
+      setAuthFeedback(null);
       toast.success("Signed in successfully!");
     } catch (error) {
       console.error("Sign in error:", error);
-      toast.error("An error occurred during sign in");
+      const message = explainAuthError(error instanceof Error ? error.message : "An error occurred during sign in.");
+      setAuthFeedback({ kind: "error", message });
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -127,27 +192,33 @@ const Auth = () => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !username) { toast.error("Please fill in all fields"); return; }
-    if (!hasAcceptedTermsLocal) { toast.error("Please accept the Terms of Use to continue"); return; }
-    if (containsInappropriateContent(username)) { toast.error("Username contains inappropriate content. Please choose a different username."); return; }
-    if (password.length < 6) { toast.error("Password must be at least 6 characters long"); return; }
+    setAuthFeedback(null);
+    if (!email || !password || !username) { setAuthFeedback({ kind: "error", message: "Please fill in all fields." }); return; }
+    if (!hasAcceptedTermsLocal) { setAuthFeedback({ kind: "error", message: "Please accept the Terms of Use to continue." }); return; }
+    if (containsInappropriateContent(username)) { setAuthFeedback({ kind: "error", message: "Username contains inappropriate content. Please choose a different username." }); return; }
+    if (password.length < 6) { setAuthFeedback({ kind: "error", message: "Password must be at least 6 characters long." }); return; }
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.signUp({
         email: email.trim(),
         password,
-        options: { emailRedirectTo: `${window.location.origin}/`, data: { username } },
+        options: { emailRedirectTo: `${authRedirectOrigin()}/`, data: { username } },
       });
       if (error) {
-        toast.error(error.message.includes("User already registered")
+        const message = explainAuthError(error.message.includes("User already registered")
           ? "An account with this email already exists"
           : error.message);
+        setAuthFeedback({ kind: "error", message });
+        toast.error(message);
         return;
       }
+      setAuthFeedback({ kind: "success", message: "Account created. Check your email to verify your account." });
       toast.success("Account created successfully! Please check your email to verify your account.");
     } catch (error) {
       console.error("Sign up error:", error);
-      toast.error("An error occurred during sign up");
+      const message = explainAuthError(error instanceof Error ? error.message : "An error occurred during sign up.");
+      setAuthFeedback({ kind: "error", message });
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -162,8 +233,8 @@ const Auth = () => {
       className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden pb-24"
       style={{ background: C.bg }}
     >
-      {/* Cinematic dream-imagery backdrop (real public dreams, Ken Burns) */}
-      <DreamImageBackdrop dim={0.6} className="z-0" />
+      <img src="/dream-art/starry-lake.png" alt="" className="absolute inset-0 z-0 h-full w-full object-cover opacity-45" />
+      <div className="absolute inset-0 z-0 bg-gradient-to-b from-[#07111b]/30 via-[#07111b]/70 to-[#07111b]" />
 
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
         {/* ── SECTION 1: Header ── */}
@@ -182,22 +253,16 @@ const Auth = () => {
               filter: "blur(40px)",
             }}
           />
-          <motion.img
-            src={lucidEngineLogo}
-            alt="Lucid Engine"
-            className="w-48 h-auto mx-auto mb-5 relative"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          />
+          <span className="lucid-ring !h-14 !w-14 mx-auto mb-5 relative" aria-hidden="true" />
+          <h1 className="lucid-display text-4xl mb-3 text-white">Welcome to Lucid Repo</h1>
           <p
             className="text-[11px] uppercase tracking-[0.3em] font-medium relative"
             style={{ color: C.primary, opacity: 0.85 }}
           >
-            Engineer your dreams
+            Your dreams deserve a second life
           </p>
           <p className="text-sm mt-2 relative" style={{ color: C.muted }}>
-            Master the lucid state.
+            Capture a dream. Create a world. Make a film.
           </p>
         </motion.div>
 
@@ -219,7 +284,7 @@ const Auth = () => {
             }}
           >
             {/* Tab switcher */}
-            <div className="flex rounded-xl mb-6 p-1 relative" style={{ background: "rgba(56,130,246,0.06)", border: `1px solid ${C.surfaceBorder}` }}>
+            {!recoveryStep && <div className="flex rounded-xl mb-6 p-1 relative" style={{ background: "rgba(56,130,246,0.06)", border: `1px solid ${C.surfaceBorder}` }}>
               {/* Animated pill */}
               <motion.div
                 className="absolute top-1 bottom-1 rounded-lg"
@@ -233,7 +298,7 @@ const Auth = () => {
               />
               <button
                 type="button"
-                onClick={() => setMode("signin")}
+                onClick={() => { setMode("signin"); setRecoveryStep(null); setAuthFeedback(null); }}
                 className="flex-1 py-2 text-sm font-medium rounded-lg relative z-10 transition-colors duration-200"
                 style={{ color: mode === "signin" ? "#fff" : C.muted }}
               >
@@ -241,26 +306,35 @@ const Auth = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setMode("signup")}
+                onClick={() => { setMode("signup"); setRecoveryStep(null); setAuthFeedback(null); }}
                 className="flex-1 py-2 text-sm font-medium rounded-lg relative z-10 transition-colors duration-200"
                 style={{ color: mode === "signup" ? "#fff" : C.muted }}
               >
                 Sign Up
               </button>
-            </div>
+            </div>}
+
+            {recoveryStep && (
+              <div className="mb-6">
+                <h2 className="lucid-display text-2xl text-white">{recoveryStep === "request" ? "Reset your password" : "Choose a new password"}</h2>
+                <p className="mt-2 text-sm" style={{ color: C.muted }}>
+                  {recoveryStep === "request" ? "We'll email you a link to get back into your account." : "Enter a new password to finish recovering your account."}
+                </p>
+              </div>
+            )}
 
             {/* Form with animated transitions */}
             <AnimatePresence mode="wait">
               <motion.form
-                key={mode}
-                onSubmit={mode === "signin" ? handleSignIn : handleSignUp}
+                key={recoveryStep || mode}
+                onSubmit={recoveryStep === "request" ? handleResetRequest : recoveryStep === "update" ? handlePasswordUpdate : mode === "signin" ? handleSignIn : handleSignUp}
                 className="space-y-4"
                 initial={{ opacity: 0, x: mode === "signup" ? 20 : -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: mode === "signup" ? -20 : 20 }}
                 transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               >
-                {mode === "signup" && (
+                {mode === "signup" && !recoveryStep && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -277,7 +351,7 @@ const Auth = () => {
                     />
                   </motion.div>
                 )}
-                <div>
+                {recoveryStep !== "update" && <div>
                   <input
                     type="email"
                     placeholder="Email"
@@ -287,22 +361,34 @@ const Auth = () => {
                     className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
                     style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
                   />
-                </div>
-                <div>
+                </div>}
+                {recoveryStep !== "request" && <div>
                   <input
                     type="password"
-                    placeholder={mode === "signup" ? "Password (min 6 characters)" : "Password"}
+                    placeholder={recoveryStep === "update" ? "New password (min 6 characters)" : mode === "signup" ? "Password (min 6 characters)" : "Password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    minLength={mode === "signup" ? 6 : undefined}
+                    minLength={mode === "signup" || recoveryStep === "update" ? 6 : undefined}
                     className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
                     style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
                   />
-                </div>
+                </div>}
+                {recoveryStep === "update" && (
+                  <input
+                    type="password"
+                    placeholder="Confirm new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    className="w-full bg-transparent text-sm py-3 outline-none placeholder:opacity-40"
+                    style={{ color: C.text, borderBottom: `1px solid ${C.surfaceBorder}` }}
+                  />
+                )}
 
                 {/* Remember me (sign-in only) */}
-                {mode === "signin" && (
+                {mode === "signin" && !recoveryStep && (
                   <div className="flex items-center gap-2">
                     <Switch
                       id="remember-me"
@@ -318,8 +404,23 @@ const Auth = () => {
                   </div>
                 )}
 
+                {mode === "signin" && !recoveryStep && (
+                  <button type="button" onClick={() => { setRecoveryStep("request"); setAuthFeedback(null); }} className="text-sm text-blue-300 hover:text-blue-200">
+                    Forgot password?
+                  </button>
+                )}
+
+                {authFeedback && (
+                  <p
+                    role={authFeedback.kind === "error" ? "alert" : "status"}
+                    className={`rounded-lg border px-3 py-2 text-sm ${authFeedback.kind === "error" ? "border-red-400/30 bg-red-400/10 text-red-100" : "border-emerald-400/30 bg-emerald-400/10 text-emerald-100"}`}
+                  >
+                    {authFeedback.message}
+                  </p>
+                )}
+
                 {/* Terms (sign-up only) */}
-                {mode === "signup" && (
+                {mode === "signup" && !recoveryStep && (
                   <motion.div
                     className="space-y-3 pt-2"
                     style={{ borderTop: `1px solid ${C.surfaceBorder}` }}
@@ -370,8 +471,13 @@ const Auth = () => {
                   transition={{ duration: 0.2 }}
                   disabled={isLoading}
                 >
-                  {isLoading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}
+                  {isLoading ? "Please wait…" : recoveryStep === "request" ? "Send reset link" : recoveryStep === "update" ? "Set new password" : mode === "signin" ? "Sign In" : "Create Account"}
                 </motion.button>
+                {recoveryStep && (
+                  <button type="button" onClick={() => { setRecoveryStep(null); setAuthFeedback(null); }} className="block mx-auto text-sm text-blue-300 hover:text-blue-200">
+                    Back to Sign In
+                  </button>
+                )}
               </motion.form>
             </AnimatePresence>
           </div>

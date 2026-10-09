@@ -88,11 +88,11 @@ const NotificationCard: React.FC<NotificationCardProps> = ({ notification, onMar
     <button
       onClick={handleClick}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200",
-        "hover:bg-muted/40 active:scale-[0.99]",
+        "lucid-panel w-full flex items-center gap-3 px-4 py-4 text-left transition-all duration-200",
+        "hover:border-sky-400/40 active:scale-[0.99]",
         !notification.read
-          ? "bg-primary/[0.04] border border-primary/10"
-          : "border border-transparent"
+          ? "border-blue-400/35"
+          : "border-sky-200/15"
       )}
     >
       {/* Avatar with type badge */}

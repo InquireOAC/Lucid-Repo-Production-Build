@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import PaywallDialog from "@/components/paywall/PaywallDialog";
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Home, Film, Clapperboard, Compass, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, Clapperboard, Compass, User, PanelLeftClose, PanelLeft, Plus, BookOpen, BarChart3, Bell, Library } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import AnnouncementBanner from "@/components/announcements/AnnouncementBanner";
 import SymbolAvatar from "@/components/profile/SymbolAvatar";
 import ErrorBoundary from "@/components/ErrorBoundary";
-import lucidRepoLogo from "@/assets/LogoForFramer.png";
 
 const MainLayout = () => {
   const { user, loading } = useAuth();
@@ -18,6 +17,7 @@ const MainLayout = () => {
   const location = useLocation();
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
+  const immersiveRoute = location.pathname === "/auth" || location.pathname === "/journal/new" || location.pathname.startsWith("/journal/edit/");
 
   React.useEffect(() => {
     if (scrollRef.current) {
@@ -28,17 +28,19 @@ const MainLayout = () => {
   }, [location.pathname]);
   
   React.useEffect(() => {
-    const publicRoutes = ["/", "/journal", "/journal/new", "/auth"];
+    const publicRoutes = ["/", "/journal", "/journal/new", "/auth", "/lucid-repo", "/cinematic"];
     const isPublicRoute = publicRoutes.includes(location.pathname);
+    const protectedPrefixes = ["/profile", "/dream/", "/journal/edit/", "/dream-book", "/chat", "/notifications", "/insights", "/admin"];
+    const isProtectedRoute = protectedPrefixes.some((route) => location.pathname === route || location.pathname.startsWith(route.endsWith("/") ? route : route + "/"));
     
-    if (!loading && !user && !isPublicRoute) {
+    if (!loading && !user && !isPublicRoute && isProtectedRoute) {
       console.log("Redirecting to auth - user not authenticated");
       navigate("/auth", { replace: true });
     }
   }, [user, loading, location.pathname, navigate]);
 
   return (
-    <div className="flex h-screen overflow-hidden cosmic-background">
+    <div className="lucid-app flex h-screen overflow-hidden cosmic-background">
       {/* Desktop Sidebar */}
       <DesktopSidebar />
 
@@ -57,9 +59,9 @@ const MainLayout = () => {
         <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto ios-scroll-fix scrollbar-none"
-          style={isMobile ? { paddingBottom: 'calc(3.5rem + env(safe-area-inset-bottom))' } : undefined}
+          style={isMobile && !immersiveRoute ? { paddingBottom: 'calc(4.5rem + env(safe-area-inset-bottom))' } : undefined}
         >
-          <div className="md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
+          <div className="lucid-page md:pb-0" style={{ ['--mobile-pb' as string]: 'calc(3.5rem + env(safe-area-inset-bottom))' }}>
             <ErrorBoundary resetKey={location.pathname}>
               <Outlet />
             </ErrorBoundary>
@@ -69,20 +71,20 @@ const MainLayout = () => {
         <PaywallDialog />
         
         {/* Mobile bottom tab bar */}
-        <motion.div
+        {!immersiveRoute && <motion.div
           initial={{ y: 60 }}
           animate={{ y: 0 }}
           transition={{ delay: 0.2, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed bottom-0 left-0 right-0 glass-card border-t border-primary/10 backdrop-blur-xl z-50 pb-safe-bottom pl-safe-left pr-safe-right md:hidden"
+          className="lucid-mobile-nav fixed bottom-0 left-0 right-0 z-50 pb-safe-bottom pl-safe-left pr-safe-right md:hidden"
         >
-          <div className="flex justify-around items-center h-14">
+          <div className="flex justify-around items-center h-[4.5rem]">
             <NavTab to="/" icon={<Home size={20} />} label="Home" />
-            <NavTab to="/journal" icon={<Film size={20} />} label="My Dreams" />
-            <NavTab to="/cinematic" icon={<Clapperboard size={20} />} label="Cinematic" />
             <NavTab to="/lucid-repo" icon={<Compass size={20} />} label="Explore" />
+            <NavTab to="/journal/new" icon={<Plus size={28} />} label="Create" featured />
+            <NavTab to="/journal" icon={<Library size={20} />} label="Library" />
             <NavTab to="/profile" icon={<User size={20} />} label="Profile" />
           </div>
-        </motion.div>
+        </motion.div>}
       </div>
     </div>
   );
@@ -92,9 +94,13 @@ const MainLayout = () => {
 
 const navItems = [
   { to: "/", icon: Home, label: "Home" },
-  { to: "/journal", icon: Film, label: "My Dreams" },
-  { to: "/cinematic", icon: Clapperboard, label: "Cinematic" },
   { to: "/lucid-repo", icon: Compass, label: "Explore" },
+  { to: "/journal/new", icon: Plus, label: "Create Dream" },
+  { to: "/journal", icon: Library, label: "My Library" },
+  { to: "/cinematic", icon: Clapperboard, label: "Your Films" },
+  { to: "/dream-book", icon: BookOpen, label: "Dream Book" },
+  { to: "/insights", icon: BarChart3, label: "Insights" },
+  { to: "/notifications", icon: Bell, label: "Activity" },
   { to: "/profile", icon: User, label: "Profile" },
 ];
 
@@ -110,13 +116,14 @@ const DesktopSidebar = () => {
   return (
     <aside
       className={cn(
-        "hidden md:flex flex-col h-screen border-r border-primary/10 glass-card z-30 flex-shrink-0 transition-all duration-300 ease-in-out relative",
+        "lucid-sidebar hidden md:flex flex-col h-screen z-30 flex-shrink-0 transition-all duration-300 ease-in-out relative",
         collapsed ? "w-16" : "w-64 lg:w-72"
       )}
     >
       {/* Collapse toggle — pinned to right edge */}
       <button
         onClick={() => setCollapsed(!collapsed)}
+        aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
         className="absolute -right-3 top-7 z-40 w-6 h-6 rounded-full border border-primary/20 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors shadow-sm"
       >
         {collapsed ? <PanelLeft className="h-3 w-3" /> : <PanelLeftClose className="h-3 w-3" />}
@@ -127,9 +134,9 @@ const DesktopSidebar = () => {
         "flex items-center gap-3 py-6 border-b border-primary/10",
         collapsed ? "justify-center px-2" : "px-5"
       )}>
-        <img src={lucidRepoLogo} alt="Lucid Repo" className="h-8 w-8 lg:h-10 lg:w-10 xl:h-11 xl:w-11 rounded-lg flex-shrink-0" />
+        <span className="lucid-ring" aria-hidden="true" />
         {!collapsed && (
-          <span className="text-lg lg:text-xl xl:text-2xl font-bold text-foreground tracking-tight whitespace-nowrap overflow-hidden">
+          <span className="text-base lg:text-lg font-semibold text-foreground tracking-[.23em] uppercase whitespace-nowrap overflow-hidden">
             Lucid Repo
           </span>
         )}
@@ -185,9 +192,10 @@ interface NavTabProps {
   icon: React.ReactNode;
   label: string;
   badge?: number;
+  featured?: boolean;
 }
 
-const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
+const NavTab = ({ to, icon, label, badge, featured }: NavTabProps) => {
   const location = useLocation();
   
   const isActive = to === "/"
@@ -199,6 +207,7 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
       to={to} 
       className={cn(
         "flex flex-col items-center justify-center w-full py-2 transition-all duration-300 rounded-lg mx-1 relative",
+        featured && "lucid-create-tab",
         isActive 
           ? "text-primary" 
           : "text-white/50 hover:text-white/70 hover:bg-white/5"
@@ -206,11 +215,12 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
     >
       <div className={cn(
         "p-1.5 rounded-full transition-all duration-300 relative",
+        featured && "lucid-create-icon",
         isActive 
           ? "text-primary" 
           : "text-white/50"
       )}>
-        {isActive && (
+        {isActive && !featured && (
           <motion.div
             layoutId="nav-tab-glow"
             className="absolute inset-0 bg-primary/15 rounded-full"
@@ -227,7 +237,7 @@ const NavTab = ({ to, icon, label, badge }: NavTabProps) => {
         )}
       </div>
       <span className={cn(
-        "text-[10px] font-medium leading-none",
+        "text-[11px] font-medium leading-none",
         isActive ? "text-primary" : "text-white/50"
       )}>
         {label}

@@ -1,11 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Moon } from "lucide-react";
 
 interface Props {
   dream: DreamEntry;
   width?: "sm" | "md";
+  fluid?: boolean;
 }
 
 const pickPoster = (dream: DreamEntry): string | undefined => {
@@ -15,13 +15,13 @@ const pickPoster = (dream: DreamEntry): string | undefined => {
   return sec?.image_url;
 };
 
-const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
+const PosterCard: React.FC<Props> = ({ dream, width = "md", fluid = false }) => {
   const navigate = useNavigate();
   const imageUrl = pickPoster(dream);
-  const w =
+  const w = fluid ? "w-full" :
     width === "sm"
-      ? "w-[110px] lg:w-[130px]"
-      : "w-[130px] md:w-[150px] lg:w-[180px] xl:w-[200px] 2xl:w-[220px]";
+      ? "w-[150px] lg:w-[180px]"
+      : "w-[200px] md:w-[230px] lg:w-[260px] xl:w-[290px]";
 
   const handleClick = () => {
     const from = window.location.pathname + window.location.search;
@@ -40,7 +40,7 @@ const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
         onClick={handleClick}
         className="relative text-left w-full"
       >
-        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30 md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer">
+        <div className="lucid-poster relative aspect-[3/4] md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -49,15 +49,13 @@ const PosterCard: React.FC<Props> = ({ dream, width = "md" }) => {
               loading="lazy"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-              <Moon className="h-8 w-8 text-foreground/40" />
-            </div>
+            <img src="/dream-art/starry-lake.png" alt="" className="w-full h-full object-cover" />
           )}
         </div>
       </button>
 
       {/* Title — bigger and bolder */}
-      <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm font-bold text-foreground line-clamp-1">
+      <p className="lucid-display mt-2 text-base lg:text-xl text-foreground line-clamp-2">
         {dream.title || "Untitled dream"}
       </p>
 

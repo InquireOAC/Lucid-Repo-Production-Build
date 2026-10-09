@@ -136,7 +136,7 @@ const ProfileHeader = ({
   return (
     <div className="relative">
       {/* ─── Cinematic Hero ───────────────────────────────────── */}
-      <div className="relative h-56 sm:h-72 md:h-80 lg:h-[420px] xl:h-[480px] 2xl:h-[520px] w-full overflow-hidden">
+      <div className="relative h-72 sm:h-80 md:h-[420px] lg:h-[470px] xl:h-[520px] w-full overflow-hidden">
         {heroSrc ? (
           <img
             src={heroSrc}
@@ -144,7 +144,7 @@ const ProfileHeader = ({
             className="absolute inset-0 w-full h-full object-cover"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-accent/20 to-background" />
+          <img src="/dream-art/starry-lake.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
 
         {/* Top fade for nav/status */}
@@ -209,7 +209,7 @@ const ProfileHeader = ({
                 />
               </div>
               <div className="min-w-0 pb-1 lg:pb-2 xl:pb-4">
-                <h1 className="text-lg sm:text-xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-bold text-white leading-tight line-clamp-1 drop-shadow-md">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl 2xl:text-5xl font-semibold text-white leading-tight line-clamp-1 drop-shadow-md">
                   {profile?.display_name || profile?.username || "Unknown User"}
                 </h1>
                 {profile?.username && (
@@ -248,18 +248,18 @@ const ProfileHeader = ({
       {/* ─── Below-hero info strip ───────────────────────────── */}
       <div className="px-4 pt-3 pb-4 lg:px-12 lg:pt-6 lg:pb-8 xl:px-16">
         {/* Stats row */}
-        <div className="flex gap-5 lg:gap-10 text-sm lg:text-base">
+        <div className="lucid-panel grid grid-cols-3 gap-2 px-4 py-4 text-center text-sm lg:text-base">
           <button onClick={onFollowingClick} className="hover:underline">
-            <span className="font-bold">{followingCount}</span>
-            <span className="text-muted-foreground ml-1">Following</span>
+            <span className="block text-xl font-semibold md:text-2xl">{followingCount}</span>
+            <span className="text-muted-foreground">Following</span>
           </button>
           <button onClick={onFollowersClick} className="hover:underline">
-            <span className="font-bold">{followersCount}</span>
-            <span className="text-muted-foreground ml-1">Followers</span>
+            <span className="block text-xl font-semibold md:text-2xl">{followersCount}</span>
+            <span className="text-muted-foreground">Followers</span>
           </button>
           <div>
-            <span className="font-bold">{dreamCount}</span>
-            <span className="text-muted-foreground ml-1">Dreams</span>
+            <span className="block text-xl font-semibold md:text-2xl">{dreamCount}</span>
+            <span className="text-muted-foreground">Dreams</span>
           </div>
         </div>
 

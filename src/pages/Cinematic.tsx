@@ -30,13 +30,12 @@ const Cinematic = () => {
   const featured = films[0];
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
+    <PageTransition className="min-h-screen pt-safe-top pb-safe-bottom">
       <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-7xl lg:px-12 xl:max-w-[1400px] xl:px-16 pb-10 lg:pb-16">
         {/* Sticky header */}
         <div className="sticky top-0 z-30 -mx-4 md:-mx-8 lg:-mx-12 xl:-mx-16 px-4 md:px-8 lg:px-12 xl:px-16 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
-          <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
-            Cinematic
-          </h1>
+          <p className="lucid-overline mb-1">Your dreams in motion</p>
+          <h1 className="lucid-display text-3xl md:text-4xl xl:text-5xl">Your Films</h1>
         </div>
 
         {!user || films.length === 0 ? (
@@ -48,7 +47,7 @@ const Cinematic = () => {
               <button
                 type="button"
                 onClick={() => setActiveFilm(featured)}
-                className="relative w-full rounded-2xl overflow-hidden mt-3 mb-6 lg:mb-10 aspect-[16/10] md:aspect-[21/9] group text-left"
+                className="lucid-hero relative w-full mt-3 mb-6 lg:mb-10 aspect-[16/10] md:aspect-[21/9] group text-left"
               >
                 {pickPoster(featured) ? (
                   <img
@@ -57,7 +56,7 @@ const Cinematic = () => {
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-accent/20 to-background" />
+                  <img src="/dream-art/city-above-clouds.png" alt="" className="absolute inset-0 w-full h-full object-cover" />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                 <div className="absolute inset-0 flex items-center justify-center">
@@ -69,7 +68,7 @@ const Cinematic = () => {
                   <p className="text-[11px] lg:text-xs uppercase tracking-[0.2em] text-primary/90 mb-1">
                     Latest Cinematic
                   </p>
-                  <h2 className="text-2xl lg:text-4xl font-black text-white drop-shadow-md leading-tight">
+                  <h2 className="lucid-display text-3xl lg:text-5xl text-white drop-shadow-md leading-tight">
                     {featured.title || "Untitled dream"}
                   </h2>
                   <p className="text-xs lg:text-sm text-white/70 mt-1">
@@ -113,24 +112,23 @@ const Cinematic = () => {
 };
 
 const EmptyCinematic: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
-  <div className="relative -mx-4 sm:-mx-6 md:mx-0 mt-3 md:rounded-2xl overflow-hidden">
-    <div className="relative aspect-[3/4] md:aspect-[21/9] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
-      <div className="absolute -top-16 -left-8 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
-      <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
+  <div className="lucid-hero relative mt-3">
+    <div className="relative aspect-[3/4] md:aspect-[21/9]">
+      <img src="/dream-art/city-above-clouds.png" alt="Dreamlike city floating among clouds" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent" />
       <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 lg:pb-16 px-6 z-10">
         <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
           <Clapperboard className="h-7 w-7 text-white" />
         </div>
-        <h2 className="text-2xl md:text-3xl lg:text-5xl font-bold text-white mb-2 drop-shadow-md">
-          No cinematics yet
+        <h2 className="lucid-display text-3xl md:text-4xl lg:text-6xl text-white mb-2 drop-shadow-md">
+          Dream it. Make it cinema.
         </h2>
         <p className="text-sm lg:text-lg text-white/70 max-w-sm lg:max-w-2xl mb-5">
           Record a dream, visualize its scenes, then turn them into a short film.
         </p>
         <button
           onClick={onCreate}
-          className="flex items-center gap-2 px-6 py-3 rounded-full bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors"
+          className="lucid-button"
         >
           <Plus className="h-4 w-4" />
           New Dream

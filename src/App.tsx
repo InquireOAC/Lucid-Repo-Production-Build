@@ -48,6 +48,7 @@ function lazyWithRetry<T extends React.ComponentType<any>>(
 
 const NewDream = lazyWithRetry(() => import('./pages/NewDream'));
 const EditDream = lazyWithRetry(() => import('./pages/EditDream'));
+const DreamStudio = lazyWithRetry(() => import('./pages/DreamStudio'));
 const Auth = lazyWithRetry(() => import('./pages/Auth'));
 const Chat = lazyWithRetry(() => import('./pages/Chat'));
 const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
@@ -69,6 +70,7 @@ if (typeof window !== 'undefined') {
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from "@/contexts/SubscriptionContext";
 import { ColorSchemeProvider } from "@/contexts/ColorSchemeContext";
+import { Toaster } from "@/components/ui/sonner";
 import OnboardingFlow from './components/onboarding/OnboardingFlow';
 import { useOnboarding } from './hooks/useOnboarding';
 
@@ -99,6 +101,7 @@ function AppContent() {
           <Route path="journal" element={<Journal />} />
           <Route path="journal/new" element={<NewDream />} />
           <Route path="journal/edit/:dreamId" element={<EditDream />} />
+          <Route path="journal/studio/:dreamId" element={<DreamStudio />} />
           <Route path="profile" element={<Profile />} />
           <Route path="profile/:userId" element={<Profile />} />
           <Route path="profile/:username" element={<Profile />} />
@@ -132,6 +135,7 @@ function App() {
               <ErrorBoundary>
                 <AppContent />
               </ErrorBoundary>
+              <Toaster />
             </ColorSchemeProvider>
           </ThemeProvider>
         </SubscriptionProvider>

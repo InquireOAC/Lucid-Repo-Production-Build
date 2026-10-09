@@ -173,6 +173,7 @@ const ProfileMainContent = ({
         isOwnProfile={isOwnProfile}
         publicDreams={publicDreams}
         likedDreams={likedDreams}
+        bio={profileToShow?.bio}
         refreshDreams={refreshDreams}
         userId={profileToShow?.id}
       />

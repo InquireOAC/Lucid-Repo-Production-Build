@@ -9,6 +9,7 @@ interface Scene {
   image_url?: string;
   video_url?: string;
   narration_url?: string | null;
+  clip_duration_seconds?: number;
 }
 
 // Read a clip's real duration so each scene plays in full when stitched.
@@ -47,7 +48,8 @@ export function useSceneFilm(dreamId: string, onDone?: (url: string) => void) {
         let t = 0;
         const beats: AssembleBeat[] = [];
         for (const c of clips) {
-          const d = await getVideoDuration(c.video_url as string);
+          const fullDuration = await getVideoDuration(c.video_url as string);
+          const d = Math.min(fullDuration, Math.max(1, c.clip_duration_seconds || fullDuration));
           beats.push({
             video_url: c.video_url as string,
             narration_url: c.narration_url ?? null,
@@ -72,17 +74,18 @@ export function useSceneFilm(dreamId: string, onDone?: (url: string) => void) {
         if (upErr) throw upErr;
         const { data: pub } = supabase.storage.from("dream-videos").getPublicUrl(path);
 
-        await supabase.from("dream_entries").update({ video_url: pub.publicUrl }).eq("id", dreamId);
+        const { error: saveError } = await supabase.from("dream_entries").update({ video_url: pub.publicUrl }).eq("id", dreamId);
+        if (saveError) throw saveError;
 
         setProgress(100);
         setStage("done");
         toast.success("Your film is ready");
         onDone?.(pub.publicUrl);
         return pub.publicUrl;
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error("[useSceneFilm] export failed", e);
         setStage("error");
-        toast.error(e?.message || "Film export failed");
+        toast.error(e instanceof Error ? e.message : "Film export failed");
         return null;
       }
     },

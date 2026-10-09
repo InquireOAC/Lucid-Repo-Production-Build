@@ -82,7 +82,7 @@ const TechniqueDetailPage: React.FC = () => {
   const paragraphs = technique.longDescription.split("\n\n");
 
   return (
-    <div className="min-h-screen pb-32 bg-background">
+    <div className="min-h-screen pb-32 bg-[#07111b]">
       {/* Sticky translucent nav (appears on scroll) */}
       <motion.div
         initial={false}
@@ -175,7 +175,7 @@ const TechniqueDetailPage: React.FC = () => {
               </span>
             )}
           </div>
-          <h1 className="text-3xl sm:text-4xl font-medium text-foreground tracking-tight leading-[1.1]">
+          <h1 className="lucid-display text-4xl sm:text-5xl text-foreground leading-[1.1]">
             {technique.name}
           </h1>
           <p className="text-sm text-ink-soft mt-3 max-w-prose leading-relaxed">

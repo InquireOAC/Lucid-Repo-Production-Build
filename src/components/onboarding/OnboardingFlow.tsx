@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
 import { ChapterProgress } from "./components";
-import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
 import { AwakeningScreen, CaptureScreen, ThresholdScreen } from "./screens";
 
 interface OnboardingFlowProps {
@@ -105,8 +104,8 @@ const OnboardingFlow = ({ onComplete }: OnboardingFlowProps) => {
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
-      {/* Cinematic dream-imagery backdrop (real public dreams, Ken Burns) */}
-      <DreamImageBackdrop dim={0.62} />
+      <img src="/dream-art/city-above-clouds.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-75"/>
+      <div className="absolute inset-0 bg-gradient-to-b from-[#07111b]/35 via-[#07111b]/60 to-[#07111b]/95"/>
 
       {/* Film grain */}
       <div

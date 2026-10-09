@@ -230,7 +230,7 @@ serve(async (req) => {
           console.log(`Using fallbackOrigin from body: ${origin}`);
         } else {
           // fallback to production domain or localhost
-          origin = 'https://lucidrepo.com'; // << YOUR PRODUCTION URL HERE
+          origin = 'https://lucidrepo.app';
           console.log(`No valid origin in headers, using default: ${origin}`);
         }
       }

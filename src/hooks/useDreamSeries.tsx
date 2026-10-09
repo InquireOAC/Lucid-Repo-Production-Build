@@ -233,12 +233,27 @@ export function usePublicSeries() {
       try {
         const { data, error } = await supabase
           .from("dream_series")
-          .select("*, profiles!dream_series_user_id_fkey(username, display_name, avatar_url, avatar_symbol, avatar_color)")
+          .select("*")
           .eq("is_public", true)
           .order("updated_at", { ascending: false })
           .limit(20);
         if (error) throw error;
-        setSeries(data || []);
+        const rows = data || [];
+        const userIds = [...new Set(rows.map(row => row.user_id))];
+        if (!userIds.length) {
+          setSeries([]);
+          return;
+        }
+
+        // dream_series.user_id references auth.users, not profiles. Fetch the
+        // public author profiles separately so a missing embed cannot hide series.
+        const { data: profiles, error: profilesError } = await supabase
+          .from("profiles")
+          .select("id, username, display_name, avatar_url, avatar_symbol, avatar_color")
+          .in("id", userIds);
+        if (profilesError) console.warn("Could not load series authors:", profilesError);
+        const profilesById = new Map((profiles || []).map(profile => [profile.id, profile]));
+        setSeries(rows.map(row => ({ ...row, profiles: profilesById.get(row.user_id) })));
       } catch (e) {
         console.error("Error fetching public series:", e);
       } finally {

@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Play, Moon, Pencil, CheckCircle2, Circle } from "lucide-react";
+import { Play, Pencil, CheckCircle2, Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,6 +16,7 @@ interface Props {
   isSelectMode?: boolean;
   isSelected?: boolean;
   onSelect?: (id: string) => void;
+  landscape?: boolean;
 }
 
 const pickPoster = (dream: DreamEntry): string | undefined => {
@@ -34,12 +35,13 @@ const JournalPosterCard: React.FC<Props> = ({
   isSelectMode = false,
   isSelected = false,
   onSelect,
+  landscape = false,
 }) => {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const imageUrl = pickPoster(dream);
   const hasVideo = !!dream.video_url;
-  const w =
+  const w = landscape ? "w-full" :
     width === "sm"
       ? "w-[110px] lg:w-[130px]"
       : width === "lg"
@@ -58,12 +60,13 @@ const JournalPosterCard: React.FC<Props> = ({
 
   return (
     <div className={cn("flex-shrink-0 snap-start flex flex-col stable-card", w)}>
+      <div className="relative">
       <button
         type="button"
         onClick={handleCardClick}
         className="relative text-left w-full"
       >
-        <div className="relative aspect-[2/3] rounded-md overflow-hidden bg-muted/30 md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer">
+        <div className={cn("lucid-poster relative md:transition-all md:duration-200 md:hover:-translate-y-1 md:hover:shadow-2xl md:hover:ring-2 md:hover:ring-primary/40 md:cursor-pointer", landscape ? "aspect-[4/3] md:aspect-[16/10]" : "aspect-[2/3]")}>
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -72,10 +75,10 @@ const JournalPosterCard: React.FC<Props> = ({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-accent/20">
-              <Moon className="h-8 w-8 text-foreground/40" />
-            </div>
+            <img src="/dream-art/door-at-horizon.png" alt="" className="w-full h-full object-cover" />
           )}
+          {landscape && <div className="absolute inset-0 bg-gradient-to-t from-[#05111f]/85 via-transparent to-transparent pointer-events-none" />}
+          {landscape && <div className="lucid-display absolute bottom-3 left-3 right-10 text-lg text-white md:text-2xl pointer-events-none line-clamp-2">{dream.title || "Untitled dream"}</div>}
 
           {/* Select mode checkbox overlay */}
           {isSelectMode && (
@@ -104,25 +107,17 @@ const JournalPosterCard: React.FC<Props> = ({
             </>
           )}
 
-          {/* Edit icon — bottom-right inside card, only outside select mode */}
-          {!isSelectMode && (
-            <button
-              type="button"
-              aria-label="Edit dream"
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/journal/edit/${dream.id}`);
-              }}
-              className="absolute bottom-1.5 right-1.5 h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-white/90 text-black flex items-center justify-center hover:bg-white transition-colors shadow-md"
-            >
-              <Pencil className="h-4 w-4 lg:h-4 lg:w-4 fill-current" />
-            </button>
-          )}
         </div>
       </button>
+      {!isSelectMode && (
+        <button type="button" aria-label={`Edit ${dream.title || "dream"}`} onClick={() => navigate(`/journal/edit/${dream.id}`)} className="absolute bottom-2 right-2 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-white/30 bg-[#0b243d]/90 text-white shadow-md hover:bg-blue-500">
+          <Pencil className="h-4 w-4" />
+        </button>
+      )}
+      </div>
 
       {/* Title — below card, bigger and bolder */}
-      <p className="mt-1.5 lg:mt-2 text-xs lg:text-sm font-bold text-foreground line-clamp-1">
+      <p className={cn("lucid-display mt-2 text-sm lg:text-lg text-foreground line-clamp-2", landscape && "sr-only")}>
         {dream.title || "Untitled dream"}
       </p>
 

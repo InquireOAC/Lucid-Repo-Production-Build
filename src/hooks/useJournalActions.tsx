@@ -220,15 +220,15 @@ export const useJournalActions = () => {
     generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
-  }, dreamId: string): Promise<void> => {
+  }, dreamId: string): Promise<boolean> => {
     if (!dreamId) {
       console.error("Error: dreamId is required for editing.");
       toast.error("Failed to update dream: Missing dream ID");
-      return;
+      return false;
     }
     if (!user) {
       toast.error("You must be logged in to edit a dream.");
-      return;
+      return false;
     }
 
     setIsSubmitting(true);
@@ -238,8 +238,10 @@ export const useJournalActions = () => {
 
       // Check if a new image was provided that needs uploading
       if (dreamData.generatedImage) {
-        if (dreamData.generatedImage.startsWith("data:image/") || 
-            (dreamData.generatedImage.startsWith("http") && !dreamData.generatedImage.includes("supabase.co"))) {
+        const existingImage = useDreamStore.getState().entries.find((entry) => entry.id === dreamId)?.generatedImage;
+        if (dreamData.generatedImage !== existingImage &&
+            (dreamData.generatedImage.startsWith("data:image/") || dreamData.generatedImage.startsWith("/dream-art/") ||
+            (dreamData.generatedImage.startsWith("http") && !dreamData.generatedImage.includes("supabase.co")))) {
           // New image that needs uploading
           console.log('[Dream Edit] Uploading new image to Supabase...');
           const uploadedImageUrl = await uploadDreamImage(dreamId, dreamData.generatedImage, user.id);
@@ -251,7 +253,7 @@ export const useJournalActions = () => {
             console.error("[Dream Edit] Failed upload");
             toast.error("Failed to persist image—please try again.");
             setIsSubmitting(false);
-            return;
+            return false;
           }
         } else {
           // Already a persisted URL
@@ -283,12 +285,15 @@ export const useJournalActions = () => {
 
       console.log("[Dream Edit] Persisting updates:", updates);
 
-      await handleUpdateDreamInternal(dreamId, updates);
+      const saved = await handleUpdateDreamInternal(dreamId, updates);
+      if (!saved) return false;
       // Auto-detect named people in the updated content. Fire-and-forget.
       extractCharactersInBackground(dreamId, dreamData.content || "");
+      return true;
     } catch (error) {
       console.error("Error editing dream:", error);
       toast.error("Failed to update dream.");
+      return false;
     } finally {
       setIsSubmitting(false);
     }

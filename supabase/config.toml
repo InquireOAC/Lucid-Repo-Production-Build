@@ -1,6 +1,17 @@
 
 project_id = "oelghoaiuvjhywlzldkt"
 
+[auth]
+site_url = "https://lucidrepo.app"
+additional_redirect_urls = [
+  "https://lucidrepo.app/",
+  "https://lucidrepo.app/auth?recovery=1",
+  "http://127.0.0.1:8080/",
+  "http://127.0.0.1:8080/auth?recovery=1",
+  "http://localhost:8080/",
+  "http://localhost:8080/auth?recovery=1",
+]
+
 [functions.create-checkout-session]
 verify_jwt = true
 

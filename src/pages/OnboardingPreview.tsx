@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 
@@ -7,10 +7,7 @@ const OnboardingPreview = () => {
   const { isAdmin, isLoading } = useUserRole();
 
   if (isLoading) return null;
-  if (!isAdmin) {
-    navigate("/");
-    return null;
-  }
+  if (!isAdmin) return <Navigate to="/" replace />;
 
   return <OnboardingFlow onComplete={() => navigate("/admin")} />;
 };

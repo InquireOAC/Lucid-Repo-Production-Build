@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { DreamEntry } from "@/types/dream";
-import { Play, Moon, ChevronRight } from "lucide-react";
+import { Play, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -41,7 +41,7 @@ const JournalHeroPoster: React.FC<Props> = ({ dream, size = "full" }) => {
       : "aspect-[3/4] md:aspect-[21/9]";
 
   return (
-    <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 lg:mb-10 md:rounded-2xl overflow-hidden stable-card lg:max-h-[480px] xl:max-h-[560px]">
+    <div className="lucid-hero relative mb-6 lg:mb-10 stable-card lg:max-h-[480px] xl:max-h-[560px]">
       <div className={cn("relative cursor-pointer lg:max-h-[480px] xl:max-h-[560px]", aspect)} onClick={open}>
         {hasVideo ? (
           <video
@@ -58,9 +58,7 @@ const JournalHeroPoster: React.FC<Props> = ({ dream, size = "full" }) => {
         ) : imageUrl ? (
           <img src={imageUrl} alt={dream.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/40 to-accent/40 flex items-center justify-center">
-            <Moon className="h-20 w-20 text-white/60" />
-          </div>
+          <img src="/dream-art/door-at-horizon.png" alt="" className="w-full h-full object-cover" />
         )}
         {/* Top fade for status bar */}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/80 to-transparent pointer-events-none" />
@@ -72,7 +70,7 @@ const JournalHeroPoster: React.FC<Props> = ({ dream, size = "full" }) => {
       <div className="absolute inset-x-0 bottom-0 px-5 pb-5 pt-10 lg:px-10 lg:pb-10 xl:px-14 xl:pb-14 z-10">
         <h1
           className={cn(
-            "font-bold text-white leading-tight line-clamp-2 mb-1 lg:mb-2 drop-shadow-md",
+            "lucid-display text-white leading-tight line-clamp-2 mb-1 lg:mb-2 drop-shadow-md",
             size === "compact"
               ? "text-xl md:text-3xl lg:text-4xl xl:text-5xl"
               : "text-2xl md:text-4xl lg:text-5xl xl:text-6xl",

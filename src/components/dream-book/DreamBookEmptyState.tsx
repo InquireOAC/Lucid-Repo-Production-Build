@@ -1,20 +1,15 @@
 import React from "react";
-import { BookOpen, Pencil } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const DreamBookEmptyState = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6">
-      <div className="relative mb-8">
-        <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
-          <BookOpen className="w-12 h-12 text-primary" />
-        </div>
-      </div>
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-6 py-10">
+      <div className="lucid-hero relative mb-8 h-52 w-full max-w-lg"><img src="/dream-art/door-at-horizon.png" alt="Glowing doorway at the horizon" className="h-full w-full object-cover"/></div>
 
-      <h2 className="text-2xl font-bold font-serif text-foreground mb-3">
+      <h2 className="lucid-display text-3xl md:text-4xl text-foreground mb-3">
         Your Story Awaits
       </h2>
       <p className="text-muted-foreground max-w-sm mb-2 text-base">
@@ -24,10 +19,10 @@ const DreamBookEmptyState = () => {
         Start journaling your dreams and watch them transform into a beautiful book you can read, share, and export.
       </p>
 
-      <Button variant="luminous" onClick={() => navigate("/journal/new")}>
+      <button className="lucid-button" onClick={() => navigate("/journal/new")}>
         <Pencil className="w-4 h-4 mr-2" />
         Begin Your First Entry
-      </Button>
+      </button>
     </div>
   );
 };

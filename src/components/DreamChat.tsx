@@ -314,7 +314,7 @@ const DreamChat = () => {
   }
 
   return (
-    <div className="h-full starry-background flex flex-col overflow-hidden pt-safe-top pl-safe-left pr-safe-right" style={{ minHeight: 'calc(100vh - 4rem - env(safe-area-inset-bottom))' }}>
+    <div className="h-full flex flex-col overflow-hidden pt-safe-top pl-safe-left pr-safe-right" style={{ minHeight: 'calc(100vh - 4rem - env(safe-area-inset-bottom))' }}>
       <div className="flex-shrink-0 p-4">
         <div className="flex items-center justify-between mb-4">
           <Button
@@ -326,8 +326,8 @@ const DreamChat = () => {
             <MessageCircle className="h-4 w-4" />
             Chats
           </Button>
-          <h1 className="text-base font-bold absolute left-1/2 transform -translate-x-1/2 text-foreground">
-            Dream Chat
+          <h1 className="lucid-display text-xl md:text-3xl absolute left-1/2 transform -translate-x-1/2 text-foreground">
+            Dream Companion
           </h1>
           <div className="flex gap-2">
             {messages.length > 0 && !isReadOnly && (
@@ -350,7 +350,9 @@ const DreamChat = () => {
           </div>
         </div>
 
-        <div className="luminous-card rounded-xl border border-primary/10">
+        <div className="relative mb-4 h-28 overflow-hidden rounded-2xl border border-sky-300/20 md:h-36"><img src="/dream-art/luminous-whale.png" alt="Luminous whale in a dream sea" className="h-full w-full object-cover"/><div className="absolute inset-0 bg-gradient-to-r from-[#061526]/70 to-transparent"/><p className="lucid-overline absolute bottom-4 left-4 !text-sky-100">Explore what your dreams mean</p></div>
+
+        <div className="lucid-panel rounded-xl">
           {/* Expert Selection */}
           <div className="p-4 border-b border-primary/10">
             <label className="block text-sm font-medium mb-2 text-foreground">Choose Your Dream Expert:</label>
@@ -425,15 +427,16 @@ const DreamChat = () => {
         <div className="flex-1 overflow-y-auto ios-scroll-fix p-4 space-y-4" style={{ paddingBottom: '140px' }}>
           {messages.length === 0 ? (
             <div className="text-center">
-              <div className="luminous-card rounded-2xl p-8 max-w-md mx-auto">
+              <div className="lucid-panel rounded-2xl p-8 max-w-md mx-auto">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/30">
                   <MessageCircle className="h-8 w-8 text-primary-foreground" />
                 </div>
-                <p className="mb-2 text-foreground font-medium text-lg">Welcome to your Dream Consultant</p>
+                <p className="lucid-display mb-2 text-foreground text-2xl">Welcome to your Dream Companion</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Ask questions about your dreams and get insights from your chosen expert. 
                   Your dreams from the journal will provide context for interpretations.
                 </p>
+                <div className="mt-5 flex flex-wrap justify-center gap-2"><button onClick={() => setInput("What symbols keep appearing in my dreams?")} className="lucid-pill">Find symbols</button><button onClick={() => setInput("What patterns connect my dreams?")} className="lucid-pill">Compare dreams</button></div>
               </div>
             </div>
           ) : (
@@ -445,8 +448,8 @@ const DreamChat = () => {
                 <div
                   className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                     message.sender === 'user'
-                      ? 'bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/25'
-                      : 'luminous-card border border-primary/10 text-foreground'
+                      ? 'bg-blue-500 text-white shadow-lg shadow-primary/25'
+                      : 'lucid-panel text-foreground'
                   }`}
                 >
                   <p className="text-sm">{message.content}</p>
@@ -470,7 +473,7 @@ const DreamChat = () => {
       </div>
 
       {/* Input Area - Fixed at bottom above tab bar */}
-      <div className="fixed left-0 right-0 p-4 border-t border-primary/10 luminous-card backdrop-blur-xl bg-background/95 pl-safe-left pr-safe-right" style={{ bottom: 'calc(4rem + env(safe-area-inset-bottom))' }}>
+      <div className="fixed left-0 right-0 p-4 border-t border-sky-300/20 backdrop-blur-xl bg-[#07111b]/95 pl-safe-left pr-safe-right" style={{ bottom: 'calc(4.5rem + env(safe-area-inset-bottom))' }}>
         <div className="flex gap-2">
           <Input
             value={input}
@@ -484,7 +487,7 @@ const DreamChat = () => {
             }
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             disabled={isLoading || isReadOnly || isChecking || !isChatEnabled}
-            className="bg-background border-input text-foreground placeholder:text-muted-foreground focus:border-ring"
+            className="h-12 rounded-xl bg-[#0e2237] border-sky-200/25 text-foreground placeholder:text-muted-foreground focus:border-ring"
           />
           <Button
             onClick={handleSendMessage}

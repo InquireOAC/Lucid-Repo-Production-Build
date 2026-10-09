@@ -59,8 +59,9 @@ const DreamBook = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] max-h-[calc(100dvh-4rem)] md:h-screen md:max-h-dvh">
       {/* Header */}
-      <div className="text-center pt-4 pb-1 px-4">
-        <h1 className="text-xl font-bold font-serif text-foreground">Dream Book</h1>
+      <div className="text-center pt-6 pb-2 px-4">
+        <p className="lucid-overline mb-2">An anthology of your imagination</p>
+        <h1 className="lucid-display text-3xl md:text-4xl">Dream Book</h1>
         <p className="text-xs text-muted-foreground">
           {filteredDreams.length} dream{filteredDreams.length !== 1 ? "s" : ""}
         </p>

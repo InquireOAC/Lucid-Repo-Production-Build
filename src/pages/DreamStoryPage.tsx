@@ -28,13 +28,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, ImageIcon, Loader2, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Video, Crown, RefreshCw, BookOpen } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Heart, MessageCircle, Eye, ChevronDown, Headphones, MoreVertical, Pencil, Trash2, Globe, Lock, Clapperboard, BookOpen, Maximize2 } from "lucide-react";
 import { AudioPlayer } from "@/components/dreams/AudioPlayer";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
-import { useSectionImageGeneration } from "@/hooks/useSectionImageGeneration";
 import { toast } from "sonner";
 import { suppressNativeStyle } from "@/hooks/useLongPressSave";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
@@ -45,12 +43,8 @@ import {
   DrawerTitle,
 } from "@/components/ui/drawer";
 import { Download } from "lucide-react";
-import { GenerateVideoDialog } from "@/components/dreams/GenerateVideoDialog";
-import { useSubscriptionContext } from "@/contexts/SubscriptionContext";
-import { useUserRole } from "@/hooks/useUserRole";
-import VisualizingStepper from "@/components/dreams/VisualizingStepper";
-import { useSceneFilm } from "@/hooks/useSceneFilm";
-import { Clapperboard } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { splitStoryAroundScenes } from "@/utils/illustratedStory";
 
 const DreamStoryPage: React.FC = () => {
   const { dreamId } = useParams<{ dreamId: string }>();
@@ -180,85 +174,20 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
   const { likeCount, liked, handleLikeToggle } = useDreamLikes(user, dream);
   const [analysisOpen, setAnalysisOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [showVideoDialog, setShowVideoDialog] = useState(false);
   const profile = dream.profiles || {} as any;
   const username = profile.username;
   const displayName = profile.display_name || username || "Anonymous";
   const imageUrl = dream.generatedImage || dream.image_url;
   const isOwner = user?.id === dream.user_id;
 
-  // Video access gating
-  const { subscription } = useSubscriptionContext();
-  const { isAdmin } = useUserRole();
-  const isMystic = isAdmin || (subscription?.status === "active" && subscription?.plan === "Premium");
-  const canGenerateVideo = isOwner && isMystic;
-  const showSubscribeLocked = isOwner && !isMystic;
-
-  // Parse section_images
-  const sectionImages: Array<{ section: number; text: string; image_url?: string; prompt?: string; video_url?: string }> =
-    Array.isArray((dream as any).section_images) ? (dream as any).section_images : [];
-
-  const handleSectionVideoGenerated = async (index: number, videoUrl: string) => {
-    const updated = [...sectionImages];
-    updated[index] = { ...updated[index], video_url: videoUrl };
-    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
-    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
-  };
-
-  const handleSectionImageRegenerated = async (index: number, newImageUrl: string, newPrompt: string) => {
-    const updated = [...sectionImages];
-    updated[index] = { ...updated[index], image_url: newImageUrl, prompt: newPrompt };
-    await supabase.from("dream_entries").update({ section_images: updated as any }).eq("id", dream.id);
-    setDream(prev => prev ? { ...prev, section_images: updated } as any : null);
-  };
-
-  const {
-    isGenerating,
-    progress,
-    totalSections,
-    generateSectionImages,
-  } = useSectionImageGeneration(dream, (updated) => {
-    setDream(prev => prev ? { ...prev, ...updated } : null);
-  });
-
+  const sectionImages: Array<{ section: number; text: string; image_url?: string; video_url?: string; story_text_exact?: boolean }> =
+    Array.isArray(dream.section_images) ? dream.section_images : [];
+  const storyBeats = splitStoryAroundScenes(dream.content || "", sectionImages);
   const [searchParams] = useSearchParams();
-  const autoStartedRef = useRef(false);
-
-  const { stage: filmStage, progress: filmProgress, exportFilm } = useSceneFilm(dream.id, (url) => {
-    setDream(prev => (prev ? ({ ...prev, video_url: url } as any) : null));
-  });
-
-  // Auto-start scene-image generation when arriving from "Visualize Dream".
   useEffect(() => {
-    if (
-      searchParams.get("visualize") === "1" &&
-      isOwner &&
-      !dream.video_url &&
-      sectionImages.filter((s) => s.image_url).length === 0 &&
-      !isGenerating &&
-      !autoStartedRef.current
-    ) {
-      autoStartedRef.current = true;
-      generateSectionImages();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams, isOwner, dream.video_url]);
-
-  const sceneVideoCount = sectionImages.filter((s) => s.video_url).length;
-  const filmBusy = filmStage === "preparing" || filmStage === "assembling" || filmStage === "uploading";
-  const showStepper = isGenerating || filmBusy;
-  let stepIndex = 1;
-  let stepProgress = 8;
-  if (isGenerating) {
-    if (totalSections > 0) {
-      stepIndex = 2;
-      stepProgress = Math.round((progress / totalSections) * 100);
-    }
-  } else if (filmBusy) {
-    stepIndex = 3;
-    stepProgress = filmProgress;
-  }
-
+    if (searchParams.get("visualize") === "1" && isOwner) navigate(`/journal/studio/${dream.id}`, { replace: true });
+  }, [searchParams, isOwner, navigate, dream.id]);
+  const sceneVideoCount = sectionImages.filter((scene) => scene.video_url).length;
   const formattedDate = dream.created_at
     ? format(new Date(dream.created_at), "MMMM d, yyyy")
     : dream.date
@@ -294,13 +223,6 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
 
   return (
     <>
-      {showStepper && (
-        <VisualizingStepper
-          activeIndex={stepIndex}
-          progress={stepProgress}
-          subtitle={filmBusy ? "Assembling your cinematic…" : "Bringing your dream to life…"}
-        />
-      )}
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -357,15 +279,15 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
           tags={dream.tags}
           lucid={dream.lucid}
           videoUrl={dream.video_url}
-          canGenerateVideo={canGenerateVideo}
-          showSubscribeLocked={showSubscribeLocked}
-          onGenerateVideo={() => setShowVideoDialog(true)}
+          canOpenStudio={isOwner}
+          onOpenStudio={() => navigate(`/journal/studio/${dream.id}`)}
         />
       )}
 
       {/* No image fallback */}
       {!imageUrl && (
         <div className="px-4 pt-6">
+          <div className="lucid-hero mb-6 h-48 md:h-72"><img src="/dream-art/door-at-horizon.png" alt="Dreamlike doorway" className="h-full w-full object-cover"/></div>
           {dream.tags && dream.tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-3">
               {dream.lucid && (
@@ -380,7 +302,7 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
               ))}
             </div>
           )}
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
+          <h1 className="lucid-display text-3xl sm:text-4xl text-foreground leading-tight">
             {dream.title}
           </h1>
         </div>
@@ -438,101 +360,55 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         </div>
       )}
 
+      {isOwner && (
+        <div className="mx-4 mb-5 flex flex-wrap gap-3">
+          <button onClick={() => navigate(`/journal/edit/${dream.id}`)} className="lucid-button-secondary"><Pencil size={16}/> Edit dream</button>
+          <button onClick={() => navigate(`/journal/studio/${dream.id}`)} className="lucid-button"><Clapperboard size={16}/> Create in Studio</button>
+        </div>
+      )}
+
       {/* Story Content */}
       <div className="px-4">
-        <div className="border-t border-border/30 pt-6">
-          {/* When the dream has a final cinematic video, that hero video takes
-              center stage and per-scene images are hidden (still stored in the
-              DB, just not rendered). Text-only story body keeps the writing
-              readable underneath the cinematic. */}
-          {sectionImages.length > 0 && !dream.video_url ? (
-            <div className="space-y-8">
-              {sectionImages.map((sec, i) => (
-                <div key={i}>
-                  <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
-                    {sec.text}
-                  </p>
-                  {sec.image_url && (
-                    <SectionImage
-                      imageUrl={sec.image_url}
-                      section={sec.section}
-                      index={i}
-                      prompt={sec.prompt}
-                      sectionText={sec.text}
-                      videoUrl={sec.video_url}
-                      dreamId={dream.id}
-                      canGenerateVideo={canGenerateVideo}
-                      showSubscribeLocked={showSubscribeLocked}
-                      isOwner={isOwner}
-                      onVideoGenerated={(videoUrl) => handleSectionVideoGenerated(i, videoUrl)}
-                      onImageRegenerated={(newUrl, newPrompt) => handleSectionImageRegenerated(i, newUrl, newPrompt)}
-                    />
-                  )}
-                </div>
+        <article aria-label="Dream story" className="mx-auto max-w-2xl py-2 pb-8">
+          <h2 className="sr-only">The dream</h2>
+          {sectionImages.length > 0 ? sectionImages.map((sec, i) => (
+            <section key={i} className="mb-7 md:mb-10">
+              <div className="space-y-5 text-[16px] leading-[1.85] text-slate-100/90 sm:text-lg">
+                {(storyBeats[i] || "").split(/\n\s*\n/).filter(Boolean).map((paragraph, paragraphIndex) => (
+                  <p key={paragraphIndex} className="whitespace-pre-wrap">{paragraph.trim()}</p>
+                ))}
+              </div>
+              {sec.image_url && (
+                <SectionImage
+                  imageUrl={sec.image_url}
+                  section={sec.section}
+                  index={i}
+                  videoUrl={sec.video_url}
+                  dreamId={dream.id}
+                  isOwner={isOwner}
+                />
+              )}
+            </section>
+          )) : (
+            <div className="space-y-5 text-[16px] leading-[1.85] text-slate-100/90 sm:text-lg">
+              {(dream.content || "").split(/\n\s*\n/).filter(Boolean).map((paragraph, index) => (
+                <p key={index} className="whitespace-pre-wrap">{paragraph.trim()}</p>
               ))}
             </div>
-          ) : sectionImages.length > 0 && dream.video_url ? (
-            <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
-              {sectionImages.map((sec) => sec.text).join("\n\n")}
-            </p>
-          ) : (
-            <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-wrap font-basis">
-              {dream.content}
-            </p>
           )}
-        </div>
+        </article>
 
-        {/* Generate section images button (owner only, hidden when a final
-            cinematic already exists — the cinematic supersedes scene images). */}
-        {isOwner && !dream.video_url && sectionImages.filter(s => s.image_url).length === 0 && (
-          <div className="mt-8 p-4 rounded-xl border border-border/30 bg-muted/10 text-center">
-            <ImageIcon className="h-5 w-5 mx-auto text-primary mb-2" />
-            <p className="text-sm font-medium mb-1">Generate Story Images</p>
-            <p className="text-xs text-muted-foreground mb-3">
-              AI will split your dream into scenes and create cinematic images for each (uses 2-4 image credits)
-            </p>
-            <Button
-              onClick={generateSectionImages}
-              disabled={isGenerating}
-              size="sm"
-              className="gap-2"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Generating {progress}/{totalSections}...
-                </>
-              ) : (
-                <>
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Generate Story Images
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
-        {/* Generating progress inline */}
-        {isGenerating && sectionImages.length === 0 && (
-          <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Creating image {progress} of {totalSections}...
-          </div>
-        )}
-
-        {/* Export Film — stitch the per-scene clips you've generated into a
-            cinematic (the images-first path). Generate a video on individual
-            scenes above first; this assembles them. */}
+        {/* Continue creation in the unified studio. */}
         {isOwner && !dream.video_url && sceneVideoCount >= 1 && (
           <div className="mt-8 p-4 rounded-xl border border-primary/20 bg-primary/[0.06] text-center">
             <Clapperboard className="h-5 w-5 mx-auto text-primary mb-2" />
-            <p className="text-sm font-medium mb-1">Export Film</p>
+            <p className="text-sm font-medium mb-1">Your scenes are ready for film</p>
             <p className="text-xs text-muted-foreground mb-3">
-              Stitch your {sceneVideoCount} scene clip{sceneVideoCount !== 1 ? "s" : ""} into a single cinematic.
+              Review and assemble {sceneVideoCount} scene clip{sceneVideoCount !== 1 ? "s" : ""} in the studio.
             </p>
-            <Button onClick={() => exportFilm(sectionImages)} disabled={filmBusy} size="sm" className="gap-2">
+            <Button onClick={() => navigate(`/journal/studio/${dream.id}`)} size="sm" className="gap-2">
               <Clapperboard className="h-3.5 w-3.5" />
-              {filmBusy ? "Assembling…" : "Export Film"}
+              Open Studio
             </Button>
           </div>
         )}
@@ -561,20 +437,6 @@ const DreamStoryContent: React.FC<DreamStoryContentProps> = ({ dream, setDream, 
         {/* Keep Reading section */}
         <KeepReadingSection currentDreamId={dream.id} tags={dream.tags} />
       </div>
-
-      {/* Video Generation Dialog */}
-      {imageUrl && (
-        <GenerateVideoDialog
-          open={showVideoDialog}
-          onOpenChange={setShowVideoDialog}
-          dreamId={dream.id}
-          imageUrl={imageUrl}
-          dreamContent={dream.content}
-          onVideoGenerated={(videoUrl) => {
-            setDream(prev => prev ? { ...prev, video_url: videoUrl } : null);
-          }}
-        />
-      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
@@ -711,12 +573,11 @@ interface HeroImageProps {
   tags?: string[];
   lucid?: boolean;
   videoUrl?: string | null;
-  canGenerateVideo?: boolean;
-  showSubscribeLocked?: boolean;
-  onGenerateVideo?: () => void;
+  canOpenStudio?: boolean;
+  onOpenStudio?: () => void;
 }
 
-const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, videoUrl, canGenerateVideo, showSubscribeLocked, onGenerateVideo }) => {
+const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, videoUrl, canOpenStudio, onOpenStudio }) => {
   const [showMenu, setShowMenu] = useState(false);
   const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
@@ -782,7 +643,7 @@ const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, vid
               ))}
             </div>
           )}
-          <h1 className="text-2xl sm:text-3xl font-bold text-white leading-tight">
+          <h1 className="lucid-display text-3xl sm:text-4xl text-white leading-tight">
             {title}
           </h1>
         </div>
@@ -795,22 +656,13 @@ const HeroImage: React.FC<HeroImageProps> = ({ imageUrl, title, tags, lucid, vid
               <Download className="h-5 w-5 text-primary" />
               <span className="font-medium">Save Image</span>
             </button>
-            {canGenerateVideo && (
+            {canOpenStudio && (
               <button
                 className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
-                onClick={() => { setShowMenu(false); onGenerateVideo?.(); }}
+                onClick={() => { setShowMenu(false); onOpenStudio?.(); }}
               >
-                <Video className="h-5 w-5 text-primary" />
-                <span className="font-medium">Generate Video</span>
-              </button>
-            )}
-            {showSubscribeLocked && (
-              <button
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left opacity-60"
-                disabled
-              >
-                <Crown className="h-5 w-5" />
-                <span className="font-medium">Generate Video (Subscribe)</span>
+                <Clapperboard className="h-5 w-5 text-primary" />
+                <span className="font-medium">Create in Studio</span>
               </button>
             )}
           </div>
@@ -824,200 +676,54 @@ interface SectionImageProps {
   imageUrl: string;
   section: number;
   index: number;
-  prompt?: string;
-  sectionText?: string;
   videoUrl?: string;
-  dreamId?: string;
-  canGenerateVideo?: boolean;
-  showSubscribeLocked?: boolean;
-  isOwner?: boolean;
-  onVideoGenerated?: (videoUrl: string) => void;
-  onImageRegenerated?: (newImageUrl: string, newPrompt: string) => void;
+  dreamId: string;
+  isOwner: boolean;
 }
 
-const SectionImage: React.FC<SectionImageProps> = ({
-  imageUrl, section, index, prompt, sectionText, videoUrl,
-  dreamId, canGenerateVideo, showSubscribeLocked, isOwner,
-  onVideoGenerated, onImageRegenerated,
-}) => {
+const SectionImage: React.FC<SectionImageProps> = ({ imageUrl, section, index, videoUrl, dreamId, isOwner }) => {
+  const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
-  const [showVideoDialog, setShowVideoDialog] = useState(false);
-  const [showRegeneratePrompt, setShowRegeneratePrompt] = useState(false);
-  const [editPrompt, setEditPrompt] = useState(prompt || "");
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
-  const touchStartPos = React.useRef<{ x: number; y: number } | null>(null);
-
-  const clearTimer = () => { if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; } };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touchStartPos.current = { x: t.clientX, y: t.clientY };
-    timerRef.current = setTimeout(() => setShowMenu(true), 500);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [showClip, setShowClip] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressedRef = useRef(false);
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null);
+  const clearTimer = () => { if (timerRef.current) clearTimeout(timerRef.current); timerRef.current = null; };
+  const handleTouchStart = (event: React.TouchEvent) => {
+    longPressedRef.current = false;
+    touchStartPos.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+    timerRef.current = setTimeout(() => { longPressedRef.current = true; setShowMenu(true); }, 500);
   };
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (event: React.TouchEvent) => {
     if (!touchStartPos.current) return;
-    const t = e.touches[0];
-    if (Math.hypot(t.clientX - touchStartPos.current.x, t.clientY - touchStartPos.current.y) > 10) clearTimer();
+    if (Math.hypot(event.touches[0].clientX - touchStartPos.current.x, event.touches[0].clientY - touchStartPos.current.y) > 10) clearTimer();
   };
-  const handleTouchEnd = () => clearTimer();
-  const handleContextMenu = (e: React.MouseEvent) => { e.preventDefault(); setShowMenu(true); };
-
-  const handleSave = () => {
-    setShowMenu(false);
-    shareOrSaveImage(imageUrl, `dream-section-${section}.png`).catch(() => toast.error("Failed to save image"));
+  const handleOpen = () => {
+    if (longPressedRef.current) { longPressedRef.current = false; return; }
+    setLightboxOpen(true);
   };
-
-  const handleRegenerate = async () => {
-    if (isRegenerating) return;
-    setIsRegenerating(true);
-    try {
-      const promptToUse = editPrompt.trim() || sectionText || "";
-      const { data: promptData, error: promptError } = await supabase.functions.invoke("compose-cinematic-prompt", {
-        body: { sceneBrief: promptToUse },
-      });
-      if (promptError || !promptData?.cinematicPrompt) throw new Error("Failed to generate prompt");
-
-      const finalPrompt = promptData.cinematicPrompt;
-      const { data: imgData, error: imgError } = await supabase.functions.invoke("generate-dream-image", {
-        body: { prompt: finalPrompt },
-      });
-      if (imgError || !imgData?.imageUrl) throw new Error("Failed to generate image");
-
-      onImageRegenerated?.(imgData.imageUrl, finalPrompt);
-      setShowRegeneratePrompt(false);
-      toast.success("Image regenerated!");
-    } catch (err: any) {
-      console.error("Section regenerate failed:", err);
-      toast.error(`Regeneration failed: ${err.message}`);
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
-
-  return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.1 }}
-        className="mt-4 rounded-xl overflow-hidden"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onContextMenu={handleContextMenu}
-        style={suppressNativeStyle}
-      >
-        {videoUrl ? (
-          <video
-            src={videoUrl}
-            poster={imageUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full object-cover rounded-xl"
-            draggable={false}
-            style={suppressNativeStyle}
-          />
-        ) : (
-          <img
-            src={imageUrl}
-            alt={`Section ${section}`}
-            className="w-full object-cover rounded-xl"
-            loading="lazy"
-            draggable={false}
-            style={suppressNativeStyle}
-          />
-        )}
-      </motion.div>
-
-      {/* Regenerate prompt editor */}
-      {showRegeneratePrompt && isOwner && (
-        <div className="mt-3 p-3 rounded-xl border border-border/40 bg-muted/20 space-y-2">
-          <Textarea
-            value={editPrompt}
-            onChange={(e) => setEditPrompt(e.target.value)}
-            placeholder="Customize the image prompt..."
-            rows={3}
-            className="resize-none text-sm"
-            disabled={isRegenerating}
-          />
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              onClick={handleRegenerate}
-              disabled={isRegenerating}
-              className="gap-1.5"
-            >
-              {isRegenerating ? (
-                <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Regenerating...</>
-              ) : (
-                <><RefreshCw className="h-3.5 w-3.5" /> Regenerate</>
-              )}
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => setShowRegeneratePrompt(false)} disabled={isRegenerating}>
-              Cancel
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <Drawer open={showMenu} onOpenChange={setShowMenu}>
-        <DrawerContent>
-          <DrawerHeader><DrawerTitle>Image Actions</DrawerTitle></DrawerHeader>
-          <div className="flex flex-col gap-1 px-4 pb-6">
-            <button className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left" onClick={handleSave}>
-              <Download className="h-5 w-5 text-primary" />
-              <span className="font-medium">Save Image</span>
-            </button>
-            {canGenerateVideo && (
-              <button
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
-                onClick={() => { setShowMenu(false); setShowVideoDialog(true); }}
-              >
-                <Video className="h-5 w-5 text-primary" />
-                <span className="font-medium">Generate Video</span>
-              </button>
-            )}
-            {showSubscribeLocked && (
-              <button
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left opacity-60"
-                disabled
-              >
-                <Crown className="h-5 w-5" />
-                <span className="font-medium">Generate Video (Subscribe)</span>
-              </button>
-            )}
-            {isOwner && (
-              <button
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
-                onClick={() => { setShowMenu(false); setEditPrompt(prompt || ""); setShowRegeneratePrompt(true); }}
-              >
-                <RefreshCw className="h-5 w-5 text-primary" />
-                <span className="font-medium">Regenerate Image</span>
-              </button>
-            )}
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Video dialog for this section */}
-      {dreamId && (
-        <GenerateVideoDialog
-          open={showVideoDialog}
-          onOpenChange={setShowVideoDialog}
-          dreamId={dreamId}
-          imageUrl={imageUrl}
-          dreamContent={sectionText || ""}
-          skipDreamUpdate
-          onVideoGenerated={(url) => {
-            onVideoGenerated?.(url);
-          }}
-        />
-      )}
-    </>
-  );
+  return <>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}
+      className="group relative mt-6 overflow-hidden rounded-2xl border border-sky-100/10 bg-[#07111b] shadow-[0_18px_44px_rgba(0,0,0,0.3)]"
+      onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={clearTimer}
+      onContextMenu={(event) => { event.preventDefault(); setShowMenu(true); }} style={suppressNativeStyle}>
+      <button type="button" onClick={handleOpen} aria-label={`Enlarge scene ${section}`} className="relative block w-full cursor-zoom-in text-left">
+        <img src={imageUrl} alt={`Illustration for scene ${section}`} className="h-auto w-full" loading="lazy" draggable={false} style={suppressNativeStyle} />
+        <span aria-hidden="true" className="absolute right-3 top-3 rounded-full border border-white/20 bg-black/50 p-2 text-white backdrop-blur-sm"><Maximize2 className="h-4 w-4" /></span>
+      </button>
+    </motion.div>
+    <Dialog open={lightboxOpen} onOpenChange={(open) => { setLightboxOpen(open); if (!open) setShowClip(false); }}>
+      <DialogContent className="flex h-[92dvh] max-h-[92dvh] w-[98vw] max-w-none flex-col items-center justify-center gap-2 overflow-hidden rounded-xl border border-sky-100/15 bg-[#030812] p-3 pt-12 sm:w-[94vw]">
+        <DialogTitle className="sr-only">Scene {section}</DialogTitle>
+        {showClip && videoUrl ? <video src={videoUrl} poster={imageUrl} controls playsInline autoPlay className="max-h-[calc(92dvh-5rem)] max-w-full rounded-lg object-contain" /> : <img src={imageUrl} alt={`Scene ${section} enlarged`} className="max-h-[calc(92dvh-5rem)] max-w-full rounded-lg object-contain" />}
+        <div className="flex items-center gap-4 text-xs tracking-widest text-slate-300"><span>SCENE {section}</span>{videoUrl && <button type="button" onClick={() => setShowClip((value) => !value)} className="rounded-full border border-sky-300/30 px-3 py-1 text-sky-200">{showClip ? "View image" : "Play clip"}</button>}</div>
+      </DialogContent>
+    </Dialog>
+    <Drawer open={showMenu} onOpenChange={setShowMenu}><DrawerContent><DrawerHeader><DrawerTitle>Scene actions</DrawerTitle></DrawerHeader><div className="flex flex-col gap-1 px-4 pb-6">
+      <button className="flex items-center gap-3 rounded-lg px-4 py-3 text-left text-foreground hover:bg-muted/50" onClick={() => { setShowMenu(false); shareOrSaveImage(imageUrl, `dream-section-${section}.png`).catch(() => toast.error("Failed to save image")); }}><Download className="h-5 w-5 text-primary" /> Save image</button>
+      {isOwner && <button className="flex items-center gap-3 rounded-lg px-4 py-3 text-left text-foreground hover:bg-muted/50" onClick={() => { setShowMenu(false); navigate(`/journal/studio/${dreamId}`); }}><Clapperboard className="h-5 w-5 text-primary" /> Edit in Studio</button>}
+    </div></DrawerContent></Drawer>
+  </>;
 };
-
 export default DreamStoryPage;

@@ -1,12 +1,12 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Heart, Video, Lock, Download } from "lucide-react";
+import { Heart, Clapperboard, Download } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { GenerateVideoDialog } from "./GenerateVideoDialog";
 import { shareOrSaveImage } from "@/utils/shareOrSaveImage";
 
 interface DreamImageWithVideoProps {
@@ -26,14 +26,11 @@ const DreamImageWithVideo = ({
   videoUrl,
   dreamId,
   isOwner,
-  isSubscribed,
   onLike,
   currentUser,
-  onVideoGenerated,
-  dreamContent,
 }: DreamImageWithVideoProps) => {
   const [isLikeAnimating, setIsLikeAnimating] = useState(false);
-  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const navigate = useNavigate();
   const [isVideoPlaying, setIsVideoPlaying] = useState(true);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isPressing, setIsPressing] = useState(false);
@@ -168,28 +165,10 @@ const DreamImageWithVideo = ({
             <DrawerTitle>Image Actions</DrawerTitle>
           </DrawerHeader>
           <div className="flex flex-col gap-1 px-4 pb-6">
-            {isOwner && !videoUrl && (
-              isSubscribed ? (
-                <button
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
-                  onClick={() => {
-                    setShowMobileMenu(false);
-                    setShowVideoDialog(true);
-                  }}
-                >
-                  <Video className="h-5 w-5 text-primary" />
-                  <span className="font-medium">Generate Video</span>
-                </button>
-              ) : (
-                <button
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground cursor-not-allowed text-left"
-                  disabled
-                >
-                  <Lock className="h-5 w-5" />
-                  <span className="font-medium">Generate Video (Subscribe)</span>
-                </button>
-              )
-            )}
+            {isOwner && dreamId && <button
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
+              onClick={() => { setShowMobileMenu(false); navigate(`/journal/studio/${dreamId}`); }}
+            ><Clapperboard className="h-5 w-5 text-primary" /><span className="font-medium">Create in Studio</span></button>}
             <button
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted/50 transition-colors text-left"
               onClick={handleSaveImage}
@@ -200,17 +179,6 @@ const DreamImageWithVideo = ({
           </div>
         </DrawerContent>
       </Drawer>
-
-      {dreamId && (
-        <GenerateVideoDialog
-          open={showVideoDialog}
-          onOpenChange={setShowVideoDialog}
-          dreamId={dreamId}
-          imageUrl={generatedImage}
-          onVideoGenerated={onVideoGenerated}
-          dreamContent={dreamContent}
-        />
-      )}
 
       <style>{`
         @keyframes heartPulse {

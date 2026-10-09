@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { DreamEntry } from "@/types/dream";
 import { supabase } from "@/integrations/supabase/client";
 import { useDreamStore } from "@/store/dreamStore";
@@ -8,28 +8,32 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export const useJournalEntries = () => {
   const { entries, updateEntry, setAllEntries } = useDreamStore();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const currentUserId = user?.id;
+  const userIdRef = useRef(user?.id);
+  userIdRef.current = currentUserId;
   const [isLoading, setIsLoading] = useState(false);
   const [lastSynced, setLastSynced] = useState<number>(0);
 
-  const syncDreamsFromDb = async () => {
-    if (!user) return;
+  const syncDreamsFromDb = useCallback(async () => {
+    if (!currentUserId) return;
+    const requestedUserId = currentUserId;
     setIsLoading(true);
     
     try {
       const { data, error } = await supabase
         .from("dream_entries")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", requestedUserId)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
       // Convert the database dreams to the local format
-      if (data) {
-        const formattedDreams = data.map((dream: any) => {
+      if (data && userIdRef.current === requestedUserId) {
+        const formattedDreams = data.map((dream) => {
           // Normalize image URL from both possible field names
-          let imageUrl = dream.generatedImage || dream.image_url;
+          const imageUrl = dream.generatedImage || dream.image_url;
           
           return {
             id: dream.id,
@@ -79,14 +83,16 @@ export const useJournalEntries = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentUserId, setAllEntries]);
 
   // When user is logged in, sync dreams from DB
   useEffect(() => {
-    if (user) {
+    if (currentUserId) {
       syncDreamsFromDb();
+    } else if (!authLoading) {
+      setAllEntries([]);
     }
-  }, [user]);
+  }, [currentUserId, authLoading, setAllEntries, syncDreamsFromDb]);
 
   return {
     entries,

@@ -1,73 +1,35 @@
-# Welcome to your Lovable project
+# Lucid Repo
 
-## Project info
+Lucid Repo is a React, Vite, TypeScript, and Capacitor dream journal. Dreamers can record dreams, visualize scenes, create short films, explore public dreams, and read their Dream Book. The interface uses a midnight-blue cinematic design with original art in `public/dream-art`.
 
-**URL**: https://lovable.dev/projects/e6894913-9eb3-4223-9a2d-4fc2a1de2b43
+## Run locally
 
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/e6894913-9eb3-4223-9a2d-4fc2a1de2b43) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Use a recent Node.js release, then install and start the web app:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+npm install --legacy-peer-deps
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The current Capacitor and RevenueCat dependency versions need `--legacy-peer-deps` for installation. The development server defaults to port 8080.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+For a production check:
 
-**Use GitHub Codespaces**
+```sh
+npx tsc --noEmit -p tsconfig.app.json
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in a local `.env` to connect your own backend. Do not put private service-role keys in Vite environment variables. The repository currently has a development fallback for its existing Supabase project.
 
-## What technologies are used for this project?
+## Design
 
-This project is built with:
+- `design/mockups/`: the 19 page and flow concepts
+- `design/dream-to-film-journey.md`: proposed story-to-image-to-film creation journey
+- `public/dream-art/`: five generated image assets used for covers, decorative art, and empty states
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Dream posters and film thumbnails come from each dream's saved media when available. The included art is used for the shared visual identity and for states with no dream media.
 
-## How can I deploy this project?
+## Dream to Film Studio
 
-Simply open [Lovable](https://lovable.dev/projects/e6894913-9eb3-4223-9a2d-4fc2a1de2b43) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+The creation workspace is available at `/journal/studio/:dreamId`. New dreams, the Edit Dream page, and the story reader lead into the same Story → Scenes → Images → Motion → Film → Share flow. Scene planning can be reviewed before generating images; completed frames and clips are saved on the dream as each scene finishes. The published story keeps its original text and displays selected scene art inline.

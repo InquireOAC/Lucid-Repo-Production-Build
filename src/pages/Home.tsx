@@ -1,183 +1,71 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { Play, Plus, ArrowRight, Sparkles, Clapperboard } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamStore } from "@/store/dreamStore";
 import { useJournalEntries } from "@/hooks/useJournalEntries";
-
-import { Button } from "@/components/ui/button";
-import PageTransition from "@/components/ui/PageTransition";
-import JournalPosterCard from "@/components/journal/JournalPosterCard";
-import PosterRail from "@/components/repos/netflix/PosterRail";
-import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
-import DreamStatsCard from "@/components/home/DreamStatsCard";
-import StatTile from "@/components/ui/StatTile";
-
 import { DreamEntry } from "@/types/dream";
-import { Film, Plus } from "lucide-react";
+import PageTransition from "@/components/ui/PageTransition";
 
-const hasPoster = (d: DreamEntry) =>
-  !!(d.generatedImage || d.image_url || d.section_images?.some((s) => s.image_url));
+const art = {
+  city: "/dream-art/city-above-clouds.png",
+  whale: "/dream-art/luminous-whale.png",
+  door: "/dream-art/door-at-horizon.png",
+  lake: "/dream-art/starry-lake.png",
+};
 
-const sceneCount = (d: DreamEntry) =>
-  d.section_images?.filter((s) => s.image_url).length || 0;
-
-const greetingForHour = (h: number) =>
-  h < 5 ? "Good night" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+const imageFor = (dream?: DreamEntry, fallback = art.city) =>
+  dream?.generatedImage || dream?.image_url || dream?.section_images?.find((s) => s.image_url)?.image_url || fallback;
 
 const Home = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-
   const { entries } = useDreamStore();
   useJournalEntries();
-
-  const myDreams = (entries as DreamEntry[]).filter((d) => !d.is_archived);
-
-  const continueCreating = useMemo(
-    () => myDreams.filter((d) => !d.video_url).slice(0, 12),
-    [myDreams],
-  );
-
-  const week = useMemo(() => {
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const inWeek = myDreams.filter(
-      (d) => new Date(d.created_at || d.date).getTime() >= weekAgo,
-    );
-    return {
-      dreams: inWeek.length,
-      visualized: inWeek.filter(hasPoster).length,
-      cinematics: inWeek.filter((d) => !!d.video_url).length,
-      scenes: inWeek.reduce((sum, d) => sum + sceneCount(d), 0),
-    };
-  }, [myDreams]);
-
-  // Signed-out welcome
-  if (!user) {
-    return (
-      <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-        <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-5xl lg:px-12 xl:max-w-6xl xl:px-16 pt-12 lg:pt-20 pb-10">
-          <div className="rounded-2xl overflow-hidden relative bg-gradient-to-br from-primary/30 via-accent/20 to-background aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px]">
-            <DreamImageBackdrop dim={0.5} />
-            <div className="absolute -top-10 -left-10 w-80 h-80 rounded-full bg-primary/40 blur-3xl" />
-            <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full bg-accent/30 blur-3xl" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-            <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 px-6 z-10">
-              <div className="h-14 w-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 border border-white/15">
-                <Film className="h-7 w-7 text-white" />
-              </div>
-              <h1 className="text-2xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-white mb-3 lg:mb-5 drop-shadow-md">
-                Your dreams, as cinema.
-              </h1>
-              <p className="text-sm lg:text-lg xl:text-xl text-white/70 max-w-md lg:max-w-2xl mb-5 lg:mb-8">
-                Sign in to record dreams and turn them into cinematic scenes and short films.
-              </p>
-              <Button onClick={() => navigate("/auth")} variant="luminous" size="lg">
-                Sign In
-              </Button>
-            </div>
-          </div>
-        </div>
-      </PageTransition>
-    );
-  }
+  const dreams = useMemo(() => user ? (entries as DreamEntry[]).filter((d) => !d.is_archived && (!d.user_id || d.user_id === user.id)) : [], [entries, user]);
+  const films = useMemo(() => dreams.filter((d) => d.video_url), [dreams]);
+  const creating = useMemo(() => dreams.filter((d) => !d.video_url).slice(0, 2), [dreams]);
+  const featured = films[0] || dreams[0];
 
   return (
-    <PageTransition className="min-h-screen starry-background pt-safe-top pb-safe-bottom">
-      <div className="max-w-2xl mx-auto px-4 md:px-8 lg:max-w-5xl lg:px-12 xl:max-w-6xl xl:px-16 pb-10 lg:pb-16">
+    <PageTransition className="min-h-screen pb-safe-bottom">
+      <div className="mx-auto max-w-[1400px] px-4 pb-12 pt-safe-top md:px-10 lg:px-14">
+        <header className="flex items-center justify-between gap-4 py-5 md:py-8">
+          <div className="flex items-center gap-4 md:hidden"><span className="lucid-ring" /><span className="text-lg font-medium tracking-[.3em] uppercase">Lucid Repo</span></div>
+          <div className="hidden md:block"><p className="lucid-overline mb-1">Your creative home</p><p className="text-sm text-slate-300">{user ? `Welcome back, ${profile?.display_name || profile?.username || "dreamer"}` : "Where dreams become cinema"}</p></div>
+          <button onClick={() => navigate(user ? "/profile" : "/auth")} className="h-11 w-11 overflow-hidden rounded-full border border-sky-400/50 bg-[#173554] text-sky-200 flex items-center justify-center" aria-label={user ? "Open profile" : "Sign in"}>
+            {profile?.avatar_url ? <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" /> : <span className="text-sm font-semibold">{(profile?.display_name || profile?.username || "L").slice(0, 1).toUpperCase()}</span>}
+          </button>
+        </header>
 
-        {/* Greeting */}
-        <div className="pt-6 lg:pt-10 mb-5 lg:mb-7">
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">
-            {greetingForHour(new Date().getHours())},{" "}
-            <span className="text-primary">{profile?.display_name || profile?.username || "Dreamer"}.</span>
-          </h1>
-          <p className="text-sm lg:text-base text-muted-foreground mt-1">
-            Ready to create something cinematic?
-          </p>
-        </div>
+        <section className="lucid-hero relative min-h-[530px] md:min-h-[540px] lg:min-h-[590px]" aria-label="Featured dream">
+          <img src={imageFor(featured)} alt={featured?.title || "Fantastical city above the clouds"} className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#061626]/75 via-transparent to-transparent" />
+          <div className="absolute bottom-0 left-0 z-10 max-w-2xl p-6 pb-8 md:p-12 lg:p-16">
+            <p className="lucid-overline !text-sky-200">{featured ? (featured.video_url ? "Ready to watch" : "Continue your dream") : "Your dream, a higher reality"}</p>
+            <h1 className="lucid-display mt-4 text-5xl text-white drop-shadow-xl md:text-6xl lg:text-[5.5rem]">{featured?.title || "Your dreams, as cinema"}</h1>
+            <p className="mt-5 max-w-md text-sm leading-relaxed text-slate-200 md:text-base">{featured ? (featured.video_url ? "Your film is ready. Step back into the world you imagined." : "Return to your story and bring its next scene to life.") : "Capture what you remember. Shape it into scenes. Watch your imagination come alive."}</p>
+            <button className="lucid-button mt-7 min-w-48" onClick={() => navigate(featured ? (featured.video_url ? "/cinematic" : `/dream/${featured.id}`) : (user ? "/journal/new" : "/auth"))}>
+              {featured?.video_url ? <Play size={19} fill="currentColor" /> : <Plus size={20} />}
+              {featured ? (featured.video_url ? "Watch Film" : "Open Dream") : (user ? "Record a Dream" : "Get Started")}
+            </button>
+          </div>
+        </section>
 
-        {myDreams.length === 0 ? (
-          <EmptyHero onCreate={() => navigate("/journal/new")} />
-        ) : (
-          <>
-            {/* Continue Creating */}
-            {continueCreating.length > 0 && (
-              <PosterRail title="Continue Creating" onSeeAll={() => navigate("/journal")}>
-                {continueCreating.map((d) => {
-                  const n = sceneCount(d);
-                  return (
-                    <JournalPosterCard
-                      key={d.id}
-                      dream={d}
-                      showPlayOverlay={!!d.video_url}
-                      meta={n > 0 ? `${n} ${n === 1 ? "scene" : "scenes"}` : "Tap to visualize"}
-                    />
-                  );
-                })}
-              </PosterRail>
-            )}
+        <section className="mt-10 md:mt-14">
+          <div className="mb-5 flex items-end justify-between gap-3"><div><p className="lucid-overline mb-2">The journey continues</p><h2 className="text-2xl font-semibold md:text-3xl">Continue Creating</h2></div><button onClick={() => navigate("/journal")} className="flex items-center gap-1 text-sm font-semibold text-sky-400">See All <ArrowRight size={16}/></button></div>
+          {creating.length ? <div className="grid grid-cols-2 gap-3 md:gap-5">{creating.map((dream, i) => <button key={dream.id} onClick={() => navigate(`/dream/${dream.id}`)} className="group relative h-56 overflow-hidden rounded-xl border border-sky-300/20 text-left md:h-72"><img src={imageFor(dream, i ? art.door : art.whale)} alt="" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"/><div className="absolute inset-0 bg-gradient-to-t from-[#06121f] via-transparent to-transparent"/><div className="absolute bottom-0 p-4 md:p-6"><h3 className="lucid-display text-xl md:text-3xl">{dream.title}</h3><p className="mt-2 text-xs text-sky-200">{dream.section_images?.filter(s => s.image_url).length || 0} scenes created · Open dream</p></div></button>)}</div> : <div className="grid grid-cols-2 gap-3 md:gap-5"><div className="lucid-panel overflow-hidden"><img src={art.whale} alt="Dreamlike whale beneath the sea" className="h-36 w-full object-cover md:h-48"/><div className="p-4"><p className="lucid-overline">01 · Capture</p><h3 className="lucid-display mt-2 text-xl md:text-2xl">Remember the feeling</h3><p className="mt-2 text-xs text-slate-400">Start with a few details from your dream.</p></div></div><div className="lucid-panel overflow-hidden"><img src={art.door} alt="Glowing door on a dream horizon" className="h-36 w-full object-cover md:h-48"/><div className="p-4"><p className="lucid-overline">02 · Create</p><h3 className="lucid-display mt-2 text-xl md:text-2xl">Give it a new life</h3><p className="mt-2 text-xs text-slate-400">Visualize scenes and build a film.</p></div></div></div>}
+        </section>
 
-            {/* Dream Stats */}
-            <div className="mb-6 lg:mb-8">
-              <p className="text-xs lg:text-sm uppercase tracking-[0.18em] text-muted-foreground mb-3">
-                Dream Stats
-              </p>
-              <DreamStatsCard />
-            </div>
+        <section className="mt-10 md:mt-14">
+          <div className="mb-5 flex items-end justify-between"><div><p className="lucid-overline mb-2">Made from your imagination</p><h2 className="text-2xl font-semibold md:text-3xl">Your Films</h2></div><button onClick={() => navigate("/cinematic")} className="flex items-center gap-1 text-sm font-semibold text-sky-400">See All <ArrowRight size={16}/></button></div>
+          {films.length ? <div className="flex gap-3 overflow-x-auto pb-3 md:gap-5">{films.slice(0, 8).map((film) => <button key={film.id} onClick={() => navigate("/cinematic")} className="lucid-poster relative aspect-[3/4] w-40 flex-none text-left md:w-52"><img src={imageFor(film, art.lake)} alt=""/><span className="absolute inset-0 bg-gradient-to-t from-[#06121f] via-transparent to-transparent"/><span className="lucid-display absolute bottom-3 left-3 right-3 text-xl">{film.title}</span></button>)}</div> : <div className="lucid-panel flex items-center gap-4 p-4 md:p-6"><img src={art.lake} alt="Starry dream landscape" className="h-24 w-24 rounded-lg object-cover md:h-32 md:w-40"/><div><Clapperboard className="mb-2 text-sky-400" size={22}/><h3 className="text-lg font-semibold">Your first film starts with a dream.</h3><p className="mt-1 text-sm text-slate-400">Once you make a cinematic, it will live here.</p><button onClick={() => navigate("/journal/new")} className="mt-3 text-sm font-semibold text-sky-400">Create a dream <ArrowRight size={14} className="inline"/></button></div></div>}
+        </section>
 
-            {/* This Week */}
-            <div className="mb-6 lg:mb-8">
-              <p className="text-xs lg:text-sm uppercase tracking-[0.18em] text-muted-foreground mb-3">
-                This Week
-              </p>
-              <div className="flex gap-2 lg:gap-3">
-                <StatTile value={week.dreams} label="Dreams" />
-                <StatTile value={week.visualized} label="Visualized" />
-                <StatTile value={week.cinematics} label="Cinematics" />
-                <StatTile value={week.scenes} label="Scenes" />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* New Dream CTA */}
-        <button
-          onClick={() => navigate("/journal/new")}
-          className="w-full h-12 lg:h-14 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center gap-2 shadow-[0_0_24px_hsl(var(--primary)/0.35)] hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="h-5 w-5" />
-          New Dream
-        </button>
+        <button onClick={() => navigate(user ? "/journal/new" : "/auth")} className="lucid-button mt-10 w-full md:mt-14 md:w-auto"><Sparkles size={18}/> Create a new dream</button>
       </div>
     </PageTransition>
   );
 };
-
-const EmptyHero: React.FC<{ onCreate: () => void }> = ({ onCreate }) => (
-  <div className="relative -mx-4 sm:-mx-6 md:mx-0 mb-6 lg:mb-10 md:rounded-2xl overflow-hidden lg:max-h-[520px] xl:max-h-[600px]">
-    <div className="relative aspect-[3/4] md:aspect-[21/9] lg:max-h-[520px] xl:max-h-[600px] bg-gradient-to-br from-primary/30 via-accent/20 to-background">
-      <DreamImageBackdrop dim={0.5} />
-      <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-background via-background/70 to-transparent" />
-      <div className="absolute inset-0 flex flex-col items-center justify-end text-center pb-10 lg:pb-16 px-6 lg:px-12 z-10">
-        <div className="h-14 w-14 lg:h-16 lg:w-16 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-4 lg:mb-6 border border-white/15">
-          <Film className="h-7 w-7 lg:h-8 lg:w-8 text-white" />
-        </div>
-        <h2 className="text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold text-white mb-2 lg:mb-3 drop-shadow-md">
-          Start your dream cinema
-        </h2>
-        <p className="text-sm lg:text-lg xl:text-xl text-white/70 max-w-sm lg:max-w-2xl mb-5 lg:mb-8">
-          Record a dream and we'll turn it into scenes, images, and short films.
-        </p>
-        <button
-          onClick={onCreate}
-          className="flex items-center gap-2 px-6 py-3 lg:px-8 lg:py-4 rounded-full bg-white text-black font-semibold text-sm lg:text-base hover:bg-white/90 transition-colors"
-        >
-          <Plus className="h-4 w-4 lg:h-5 lg:w-5" />
-          Record First Dream
-        </button>
-      </div>
-    </div>
-  </div>
-);
 
 export default Home;

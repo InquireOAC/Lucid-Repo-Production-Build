@@ -10,7 +10,6 @@ import DreamStoryPage from "@/pages/DreamStoryPage";
 import HeroPoster from "@/components/repos/netflix/HeroPoster";
 import PosterRail from "@/components/repos/netflix/PosterRail";
 import PosterCard from "@/components/repos/netflix/PosterCard";
-import TopTenCard from "@/components/repos/netflix/TopTenCard";
 import ContinueReadingCard from "@/components/repos/netflix/ContinueReadingCard";
 import CategoryHeroCard from "@/components/repos/netflix/CategoryHeroCard";
 import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
@@ -23,7 +22,6 @@ import { ArrowLeft, Moon, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import PageTransition from "@/components/ui/PageTransition";
-import lucidRepoLogo from "@/assets/lucid-repo-rings-logo.png";
 import { DreamEntry } from "@/types/dream";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -258,14 +256,8 @@ const LucidRepoDiscovery = () => {
       <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
         <div className="flex items-center justify-between mb-2 lg:mb-3">
           <div className="flex items-center gap-2.5 lg:gap-3">
-            <img
-              src={lucidRepoLogo}
-              alt="Lucid Repo"
-              className="h-8 w-8 md:h-9 md:w-9 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain flex-shrink-0"
-            />
-            <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
-              Lucid Repo
-            </h1>
+            <span className="lucid-ring" aria-hidden="true" />
+            <div><p className="lucid-overline hidden sm:block">Real dreams · extraordinary worlds</p><h1 className="lucid-display text-3xl lg:text-4xl xl:text-5xl">Explore Dreams</h1></div>
           </div>
           <button
             type="button"
@@ -312,8 +304,8 @@ const LucidRepoDiscovery = () => {
                 onClick={() => setActiveFilter(cat)}
                 className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
                   activeFilter === cat
-                    ? "bg-foreground text-background border-foreground font-semibold"
-                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                    ? "bg-blue-500 text-white border-blue-400 font-semibold"
+                    : "bg-[#0d2339] text-slate-300 border-sky-200/20 hover:bg-sky-800/30 font-medium"
                 }`}
               >
                 {cat}
@@ -346,14 +338,9 @@ const LucidRepoDiscovery = () => {
               <p className="text-muted-foreground">Try a different category</p>
             </div>
           ) : (
-            <div>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 md:gap-5">
               {categoryDreams.map(dream => (
-                <CategoryHeroCard
-                  key={dream.id}
-                  dream={dream}
-                  inList={inList(dream.id)}
-                  onToggleList={toggleList}
-                />
+                <PosterCard key={dream.id} dream={dream} fluid />
               ))}
             </div>
           )}
@@ -366,6 +353,12 @@ const LucidRepoDiscovery = () => {
         </div>
       ) : (
         <>
+          <div className="mb-3 mt-3 flex items-center gap-2 text-xs text-slate-400 md:mb-5"><span className="lucid-overline">Real dreams · extraordinary worlds</span></div>
+          <div className="mb-4 flex overflow-x-auto gap-2 pb-1 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CATEGORIES.map(cat => (
+              <button key={cat} type="button" onClick={() => setActiveFilter(cat)} className={`lucid-pill ${activeFilter === cat ? "active" : ""}`}>{cat}</button>
+            ))}
+          </div>
           {/* Hero */}
           {heroDream && !searchQuery && (
             <HeroPoster
@@ -375,29 +368,11 @@ const LucidRepoDiscovery = () => {
             />
           )}
 
-          {/* Category filter pills — below hero, above Top 10 */}
-          <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 pt-1 lg:pt-3 mb-2 lg:mb-5 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
-            {FILTER_CATEGORIES.map(cat => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setActiveFilter(cat)}
-                className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
-                  activeFilter === cat
-                    ? "bg-foreground text-background border-foreground font-semibold"
-                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Top 10 Today */}
+          {/* Trending dreams */}
           {topTen.length > 0 && !searchQuery && (
-            <PosterRail title="Top 10 Dreams Today">
-              {topTen.map((d, i) => (
-                <TopTenCard key={d.id} dream={d} rank={i + 1} />
+            <PosterRail title="Trending Now">
+              {topTen.map((d) => (
+                <PosterCard key={d.id} dream={d} />
               ))}
             </PosterRail>
           )}
