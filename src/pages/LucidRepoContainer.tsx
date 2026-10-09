@@ -1,41 +1,88 @@
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
-import LucidRepoHeader from "@/components/repos/LucidRepoHeader";
-import DreamDetailWrapper from "@/components/repos/DreamDetailWrapper";
-import AuthDialog from "@/components/repos/AuthDialog";
-import FeaturedDreamCarousel from "@/components/repos/FeaturedDreamCarousel";
-import MasonryDreamGrid from "@/components/repos/MasonryDreamGrid";
-import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
-import { useLucidRepoDreamState } from "@/hooks/useLucidRepoDreamState";
-import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
-import { useLucidRepoFilters } from "@/components/repos/LucidRepoFilters";
-import { Moon } from "lucide-react";
-import PageTransition from "@/components/ui/PageTransition";
 
-const ALLOWED_TAGS = ["Nightmare", "Lucid", "Recurring", "Adventure", "Spiritual", "Flying", "Falling", "Water", "Love"];
+import React, { useState, useMemo } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import AuthDialog from "@/components/repos/AuthDialog";
+import StoryListCard from "@/components/repos/StoryListCard";
+import DiscoverySeriesCard from "@/components/series/DiscoverySeriesCard";
+import SeriesDetailPage from "@/components/series/SeriesDetailPage";
+import DreamStoryPage from "@/pages/DreamStoryPage";
+import HeroPoster from "@/components/repos/netflix/HeroPoster";
+import PosterRail from "@/components/repos/netflix/PosterRail";
+import PosterCard from "@/components/repos/netflix/PosterCard";
+import TopTenCard from "@/components/repos/netflix/TopTenCard";
+import ContinueReadingCard from "@/components/repos/netflix/ContinueReadingCard";
+import CategoryHeroCard from "@/components/repos/netflix/CategoryHeroCard";
+import { usePublicDreamTags } from "@/hooks/usePublicDreamTags";
+import { useDiscoveryDreams } from "@/hooks/useDiscoveryDreams";
+import { usePublicSeries, DreamSeries } from "@/hooks/useDreamSeries";
+import { useLucidRepoDreamActions } from "@/hooks/useLucidRepoDreamActions";
+import { useReadingHistory } from "@/hooks/useReadingHistory";
+import { useDreamList } from "@/hooks/useDreamList";
+import { ArrowLeft, Moon, Search, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import PageTransition from "@/components/ui/PageTransition";
+import lucidRepoLogo from "@/assets/lucid-repo-rings-logo.png";
+import { DreamEntry } from "@/types/dream";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const LucidRepoContainer = () => {
-  const { user } = useAuth();
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [hasInitialized, setHasInitialized] = useState(false);
+  const { dreamId } = useParams<{ dreamId?: string }>();
 
-  function refreshLikedDreams() {
-    fetchPublicDreams();
+  if (dreamId) {
+    return <DreamStoryPage />;
   }
 
+  return <LucidRepoDiscovery />;
+};
+
+const FILTER_CATEGORIES = ["All", "Lucid", "Nightmare", "Recurring", "Adventure", "Spiritual", "Flying", "Prophetic", "Sleep Paralysis"];
+
+const LucidRepoDiscovery = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const expandedSectionKey = searchParams.get("section");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState("All");
+  const [selectedSeries, setSelectedSeries] = useState<DreamSeries | null>(null);
+  const [sortMode, setSortMode] = useState<"popular" | "new">("popular");
+  const { series: publicSeries } = usePublicSeries();
+  const { recentIds, history } = useReadingHistory();
+  const { has: inList, toggle: toggleList, ids: myListIds } = useDreamList();
+
   const {
-    dreamsState,
-    setDreamsState,
+    featured,
+    trending,
+    following,
+    newReleases,
+    tagSections,
     isLoading,
-    sortBy,
-    setSortBy,
-    activeTab,
-    setActiveTab,
-    handleUpdateDream,
-    fetchPublicDreams
-  } = useLucidRepoDreamState(user, refreshLikedDreams);
+    refetch,
+  } = useDiscoveryDreams(user);
+
+  // Combine all dreams
+  const allDreams = [
+    ...(featured ? [featured] : []),
+    ...trending,
+    ...following,
+    ...newReleases,
+    ...tagSections.flatMap(s => s.dreams),
+  ];
+
+  const seenIds = new Set<string>();
+  const uniqueDreams = allDreams.filter(d => {
+    if (seenIds.has(d.id)) return false;
+    seenIds.add(d.id);
+    return true;
+  });
+
+  const [dreamsState, setDreamsState] = useState<DreamEntry[]>([]);
+  React.useEffect(() => {
+    if (uniqueDreams.length > 0) setDreamsState(uniqueDreams);
+  }, [uniqueDreams.length]);
 
   const {
     selectedDream,
@@ -46,129 +93,393 @@ const LucidRepoContainer = () => {
     handleNavigateToProfile,
     handleDreamLike,
     handleDreamLikeFromCard,
-    handleDreamUpdate
+    handleDreamUpdate,
   } = useLucidRepoDreamActions(
     user,
     dreamsState,
     setDreamsState,
-    refreshLikedDreams,
-    handleUpdateDream,
-    fetchPublicDreams
+    refetch,
+    async () => false,
+    refetch
   );
 
   const { tags: publicTags, isLoading: tagsLoading } = usePublicDreamTags();
-  const filteredDreamTags = publicTags.filter(tag => ALLOWED_TAGS.includes(tag.name));
 
-  const { filteredDreams } = useLucidRepoFilters({
-    dreamsState,
-    searchQuery,
-    activeTags,
-    publicTags: filteredDreamTags
-  });
-
-  useEffect(() => {
-    if (!hasInitialized) {
-      if (user && activeTab === "recent") {
-        setActiveTab("following");
-      }
-      setHasInitialized(true);
+  // Search + category filter
+  const filterDreams = (dreams: DreamEntry[]) => {
+    let result = dreams;
+    if (activeFilter !== "All") {
+      const filterLower = activeFilter.toLowerCase();
+      result = result.filter(d =>
+        d.tags?.some(t => t.toLowerCase() === filterLower)
+      );
     }
-    
-    if (activeTab === "recent" || activeTab === "popular") {
-      fetchPublicDreams();
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
     }
-  }, [user, activeTab, hasInitialized]);
-
-  const handleTabChange = (newTab: string) => {
-    setActiveTab(newTab);
-    if (newTab === "recent" || newTab === "popular") {
-      setTimeout(fetchPublicDreams, 100);
-    }
+    return result;
   };
 
-  const handleTagClick = (tagId: string) => {
-    setActiveTags(prev => prev.includes(tagId) ? prev.filter(t => t !== tagId) : [...prev, tagId]);
+  React.useEffect(() => {
+    setSortMode("popular");
+  }, [activeFilter]);
+
+  // Category grid dreams
+  const categoryDreams = useMemo(() => {
+    if (activeFilter === "All") return [];
+    const filterLower = activeFilter.toLowerCase();
+    let result = uniqueDreams.filter(d =>
+      d.tags?.some(t => t.toLowerCase() === filterLower)
+    );
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(d =>
+        d.title.toLowerCase().includes(q) ||
+        d.content?.toLowerCase().includes(q) ||
+        d.profiles?.username?.toLowerCase().includes(q) ||
+        d.profiles?.display_name?.toLowerCase().includes(q)
+      );
+    }
+    if (sortMode === "popular") {
+      result.sort((a, b) => ((b.like_count || 0) + (b.comment_count || 0)) - ((a.like_count || 0) + (a.comment_count || 0)));
+    } else {
+      result.sort((a, b) => new Date(b.created_at || b.date).getTime() - new Date(a.created_at || a.date).getTime());
+    }
+    return result;
+  }, [activeFilter, uniqueDreams, searchQuery, sortMode]);
+
+  const showLoading = isLoading || tagsLoading;
+
+  // Build queue IDs
+  const trendingIds = trending.map(d => d.id);
+
+  // Deterministic daily hero
+  const heroDream = useMemo(() => {
+    if (!trending.length && !featured) return featured || null;
+    const pool = [featured, ...trending].filter(Boolean) as DreamEntry[];
+    if (!pool.length) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    let hash = 0;
+    for (let i = 0; i < today.length; i++) hash = (hash * 31 + today.charCodeAt(i)) | 0;
+    return pool[Math.abs(hash) % pool.length];
+  }, [featured, trending]);
+
+  const topTen = useMemo(() => {
+    const scored = [...uniqueDreams]
+      .map(d => ({
+        d,
+        score: (d.like_count || 0) * 3 + (d.comment_count || 0) * 2 + (d.view_count || 0),
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map(x => x.d);
+    return scored;
+  }, [uniqueDreams]);
+
+  const continueReading = useMemo(
+    () => recentIds.map(id => uniqueDreams.find(d => d.id === id)).filter(Boolean) as DreamEntry[],
+    [recentIds, uniqueDreams]
+  );
+
+  const myListDreams = useMemo(
+    () => myListIds.map(id => uniqueDreams.find(d => d.id === id)).filter(Boolean) as DreamEntry[],
+    [myListIds, uniqueDreams]
+  );
+
+  const lastReadDream = continueReading[0];
+  const becauseYouRead = useMemo(() => {
+    if (!lastReadDream) return [];
+    const tags = (lastReadDream.tags || []).map(t => t.toLowerCase());
+    if (!tags.length) return [];
+    return uniqueDreams
+      .filter(d => d.id !== lastReadDream.id && d.tags?.some(t => tags.includes(t.toLowerCase())))
+      .slice(0, 12);
+  }, [lastReadDream, uniqueDreams]);
+
+  // Derive expanded section from URL param
+  const expandedSection = useMemo(() => {
+    if (!expandedSectionKey) return null;
+    const sectionMap: Record<string, { title: string; dreams: DreamEntry[] }> = {
+      following: { title: "From People You Follow", dreams: filterDreams(following) },
+      trending: { title: "Trending Stories", dreams: filterDreams(trending) },
+      new: { title: "New Releases", dreams: filterDreams(newReleases) },
+    };
+    // Check tag sections
+    for (const section of tagSections) {
+      sectionMap[`tag-${section.tag.toLowerCase()}`] = { title: `${section.tag} Dreams`, dreams: section.dreams };
+    }
+    return sectionMap[expandedSectionKey] || null;
+  }, [expandedSectionKey, following, trending, newReleases, tagSections, searchQuery, activeFilter]);
+
+  const navigateToSection = (key: string) => {
+    navigate(`/lucid-repo?section=${encodeURIComponent(key)}`);
   };
 
-  const handleClearTags = () => setActiveTags([]);
-
-  // Get up to 3 featured dreams (with images, prioritizing likes)
-  const featuredDreams = filteredDreams
-    .filter(d => d.generatedImage || d.image_url)
-    .sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
-    .slice(0, 3);
-  
-  // Rest of dreams for masonry grid
-  const featuredIds = new Set(featuredDreams.map(d => d.id));
-  const gridDreams = filteredDreams.filter(d => !featuredIds.has(d.id));
+  // Expanded section view
+  if (expandedSection) {
+    return (
+      <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 lg:pb-12 max-w-6xl lg:max-w-7xl xl:max-w-[1500px] lg:px-12 xl:px-16 pl-safe-left pr-safe-right overflow-x-hidden">
+        <div className="flex items-center gap-3 pt-3 lg:pt-6 mb-4 lg:mb-8">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/lucid-repo')}>
+            <ArrowLeft className="h-5 w-5 lg:h-6 lg:w-6" />
+          </Button>
+          <h1 className="text-lg lg:text-3xl xl:text-4xl font-bold text-foreground">{expandedSection.title}</h1>
+        </div>
+        {expandedSection.dreams.length === 0 ? (
+          <div className="text-center py-20">
+            <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+            <p className="text-muted-foreground">No dreams in this section</p>
+          </div>
+        ) : (
+          <div>
+            {expandedSection.dreams.map(dream => (
+              <CategoryHeroCard
+                key={dream.id}
+                dream={dream}
+                inList={inList(dream.id)}
+                onToggleList={toggleList}
+              />
+            ))}
+          </div>
+        )}
+      </PageTransition>
+    );
+  }
 
   return (
-    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 pb-6 max-w-6xl pl-safe-left pr-safe-right tech-grid-bg overflow-x-hidden">
-      <LucidRepoHeader 
-        searchQuery={searchQuery} 
-        setSearchQuery={setSearchQuery} 
-        activeTab={activeTab} 
-        setActiveTab={handleTabChange} 
-        sortBy={sortBy} 
-        setSortBy={setSortBy} 
-        handleSearch={(e: React.FormEvent) => e.preventDefault()} 
-        tags={filteredDreamTags} 
-        activeTags={activeTags} 
-        onTagClick={handleTagClick} 
-        onClearTags={handleClearTags}
-      />
-      
-      {isLoading || tagsLoading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Moon className="h-10 w-10 text-aurora-purple animate-float" />
-          <p className="mt-4 text-muted-foreground">Loading dreams...</p>
+    <PageTransition className="container mx-auto pt-safe-top px-4 sm:px-6 md:px-8 pb-6 lg:pb-16 max-w-6xl lg:max-w-7xl xl:max-w-[1500px] lg:px-12 xl:px-16 pl-safe-left pr-safe-right overflow-x-hidden">
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-30 -mx-4 sm:-mx-6 md:mx-0 px-4 sm:px-6 md:px-0 pt-3 lg:pt-5 pb-2 lg:pb-3 bg-background/80 backdrop-blur-md">
+        <div className="flex items-center justify-between mb-2 lg:mb-3">
+          <div className="flex items-center gap-2.5 lg:gap-3">
+            <img
+              src={lucidRepoLogo}
+              alt="Lucid Repo"
+              className="h-8 w-8 md:h-9 md:w-9 lg:h-11 lg:w-11 xl:h-12 xl:w-12 object-contain flex-shrink-0"
+            />
+            <h1 className="text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold text-foreground tracking-tight">
+              Lucid Repo
+            </h1>
+          </div>
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => setSearchOpen(v => !v)}
+            className="h-9 w-9 lg:h-11 lg:w-11 flex items-center justify-center rounded-full hover:bg-muted/40"
+          >
+            {searchOpen ? <X className="h-5 w-5 lg:h-6 lg:w-6" /> : <Search className="h-5 w-5 lg:h-6 lg:w-6" />}
+          </button>
         </div>
-      ) : filteredDreams.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="text-center py-20"
-        >
+
+        {searchOpen && (
+          <div className="mb-2 lg:mb-3">
+            <Input
+              autoFocus
+              type="text"
+              aria-label="Search dreams"
+              className="h-10 lg:h-12 rounded-xl text-sm lg:text-base bg-muted/30 border-border/30"
+              placeholder="Search dreams, dreamers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {showLoading ? (
+        <div className="space-y-6 mt-4">
+          <Skeleton className="w-full aspect-[3/4] md:aspect-[21/9] rounded-2xl" />
+          <div className="flex gap-2 overflow-hidden">
+            {[1, 2, 3, 4].map(i => (
+              <Skeleton key={i} className="flex-shrink-0 w-[130px] aspect-[2/3] rounded-md" />
+            ))}
+          </div>
+        </div>
+      ) : activeFilter !== "All" ? (
+        <>
+          {/* Category filter pills */}
+          <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 pt-3 lg:pt-5 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveFilter(cat)}
+                className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
+                  activeFilter === cat
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+          {/* Sort toggle */}
+          <div className="flex justify-end mb-3 mt-4">
+            <div className="flex items-center gap-1 bg-muted/30 rounded-lg p-0.5">
+              {(["popular", "new"] as const).map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setSortMode(mode)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${
+                    sortMode === mode
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {mode === "popular" ? "Popular" : "New"}
+                </button>
+              ))}
+            </div>
+          </div>
+          {categoryDreams.length === 0 ? (
+            <div className="text-center py-20">
+              <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
+              <h3 className="text-lg font-medium mb-2">No {activeFilter.toLowerCase()} dreams</h3>
+              <p className="text-muted-foreground">Try a different category</p>
+            </div>
+          ) : (
+            <div>
+              {categoryDreams.map(dream => (
+                <CategoryHeroCard
+                  key={dream.id}
+                  dream={dream}
+                  inList={inList(dream.id)}
+                  onToggleList={toggleList}
+                />
+              ))}
+            </div>
+          )}
+        </>
+      ) : uniqueDreams.length === 0 ? (
+        <div className="text-center py-20">
           <Moon className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-medium mb-2">No dreams found</h3>
-          <p className="text-muted-foreground">
-            {searchQuery ? "Try a different search term" : "Be the first to share a dream!"}
-          </p>
-        </motion.div>
+          <h3 className="text-lg font-medium mb-2">No dreams yet</h3>
+          <p className="text-muted-foreground">Be the first to share a dream!</p>
+        </div>
       ) : (
         <>
-          {featuredDreams.length > 0 && (
-            <FeaturedDreamCarousel
-              dreams={featuredDreams}
-              tags={filteredDreamTags}
-              onLike={handleDreamLikeFromCard}
-              onOpenDream={handleOpenDream}
-              onUserClick={handleNavigateToProfile}
-              currentUser={user}
+          {/* Hero */}
+          {heroDream && !searchQuery && (
+            <HeroPoster
+              dream={heroDream}
+              inList={inList(heroDream.id)}
+              onToggleList={toggleList}
             />
           )}
-          
-          <MasonryDreamGrid
-            dreams={gridDreams}
-            tags={filteredDreamTags}
-            onLike={handleDreamLikeFromCard}
-            onOpenDream={handleOpenDream}
-            onUserClick={handleNavigateToProfile}
-            onTagClick={handleTagClick}
-            currentUser={user}
-          />
+
+          {/* Category filter pills — below hero, above Top 10 */}
+          <div className="flex overflow-x-auto lg:flex-wrap gap-2 lg:gap-2.5 pb-1 pt-1 lg:pt-3 mb-2 lg:mb-5 scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+            {FILTER_CATEGORIES.map(cat => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setActiveFilter(cat)}
+                className={`whitespace-nowrap px-3.5 py-1 lg:px-4 lg:py-1.5 rounded-full text-xs lg:text-sm transition-all border ${
+                  activeFilter === cat
+                    ? "bg-foreground text-background border-foreground font-semibold"
+                    : "bg-transparent text-foreground/80 border-border/50 hover:bg-muted/30 font-medium"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Top 10 Today */}
+          {topTen.length > 0 && !searchQuery && (
+            <PosterRail title="Top 10 Dreams Today">
+              {topTen.map((d, i) => (
+                <TopTenCard key={d.id} dream={d} rank={i + 1} />
+              ))}
+            </PosterRail>
+          )}
+
+          {/* Continue Reading */}
+          {continueReading.length > 0 && !searchQuery && (
+            <PosterRail title="Continue Reading">
+              {continueReading.map(d => (
+                <ContinueReadingCard key={d.id} dream={d} />
+              ))}
+            </PosterRail>
+          )}
+
+          {/* My List */}
+          {myListDreams.length > 0 && !searchQuery && (
+            <PosterRail title="My List">
+              {myListDreams.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* From People You Follow */}
+          {user && filterDreams(following).length > 0 && (
+            <PosterRail title="From Dreamers You Follow" onSeeAll={() => navigateToSection("following")}>
+              {filterDreams(following).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* Recommended */}
+          {filterDreams(trending).length > 0 && (
+            <PosterRail title="Recommended for You" onSeeAll={() => navigateToSection("trending")}>
+              {filterDreams(trending).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* Because you read ... */}
+          {becauseYouRead.length > 0 && !searchQuery && lastReadDream && (
+            <PosterRail title={`Because you read "${lastReadDream.title}"`}>
+              {becauseYouRead.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* New Releases */}
+          {filterDreams(newReleases).length > 0 && (
+            <PosterRail title="Recently Added" onSeeAll={() => navigateToSection("new")}>
+              {filterDreams(newReleases).map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          )}
+
+          {/* Dream-type rows */}
+          {!searchQuery && tagSections.map(section => (
+            <PosterRail
+              key={section.tag}
+              title={`${section.tag} Dreams`}
+              onSeeAll={() => navigateToSection(`tag-${section.tag.toLowerCase()}`)}
+            >
+              {section.dreams.map(d => <PosterCard key={d.id} dream={d} />)}
+            </PosterRail>
+          ))}
+
+          {/* Dream Series */}
+          {!searchQuery && publicSeries.length > 0 && (
+            <section className="mb-6 lg:mb-10">
+              <h2 className="text-base md:text-lg lg:text-xl xl:text-2xl font-bold text-foreground mb-2 lg:mb-3">
+                Dream Series
+              </h2>
+              <div className="flex overflow-x-auto gap-2 lg:gap-4 xl:gap-5 pb-1 snap-x scrollbar-hide" style={{ scrollbarWidth: "none" }}>
+                {publicSeries.map(s => (
+                  <DiscoverySeriesCard key={s.id} series={s} onClick={setSelectedSeries} />
+                ))}
+              </div>
+            </section>
+          )}
         </>
       )}
 
-      {selectedDream && (
-        <DreamDetailWrapper 
-          selectedDream={dreamsState.find(d => d.id === selectedDream.id) || selectedDream} 
-          tags={filteredDreamTags} 
-          onClose={handleCloseDream} 
-          onUpdate={handleDreamUpdate} 
-          isAuthenticated={!!user} 
-          onLike={() => handleDreamLike(selectedDream.id)} 
+      {selectedSeries && (
+        <SeriesDetailPage
+          series={selectedSeries}
+          open={!!selectedSeries}
+          onClose={() => setSelectedSeries(null)}
+          isOwner={user?.id === selectedSeries.user_id}
+          onOpenDream={handleOpenDream}
         />
       )}
 

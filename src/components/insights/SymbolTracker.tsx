@@ -3,7 +3,7 @@ import { useSymbolAnalysis } from "@/hooks/useSymbolAnalysis";
 import SymbolCategory from "./SymbolCategory";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Sparkles } from "lucide-react";
+import { RefreshCw, Star } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 
@@ -14,7 +14,7 @@ const SymbolTracker: React.FC = () => {
   if (!user) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center px-4">
-        <Sparkles className="w-12 h-12 text-primary mb-4" />
+        <Star className="w-12 h-12 text-primary mb-4" />
         <h3 className="text-lg font-semibold mb-2">Sign in to see your dream symbols</h3>
         <p className="text-muted-foreground text-sm">Your recurring symbols, themes, and patterns will appear here.</p>
       </div>
@@ -55,7 +55,7 @@ const SymbolTracker: React.FC = () => {
 
       {!analysis ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Sparkles className="w-10 h-10 text-primary mb-3" />
+          <Star className="w-10 h-10 text-primary mb-3" />
           <h3 className="font-semibold mb-1">No analysis yet</h3>
           <p className="text-muted-foreground text-sm max-w-xs">
             Tap "Analyze Dreams" to discover recurring symbols, themes, and patterns across all your dream entries.

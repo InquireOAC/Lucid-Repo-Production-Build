@@ -111,6 +111,9 @@ const ProfileDialogs = ({
       avatarUrl={avatarUrl}
       setAvatarUrl={setAvatarUrl}
       handleUpdateProfile={handleUpdateProfile}
+      socialLinks={socialLinks}
+      setSocialLinks={setSocialLinks}
+      handleUpdateSocialLinks={handleUpdateSocialLinks}
     />
     <SocialLinksDialog
       isOpen={isSocialLinksOpen}

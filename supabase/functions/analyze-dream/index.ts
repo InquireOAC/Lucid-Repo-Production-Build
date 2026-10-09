@@ -1,12 +1,11 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import "https://deno.land/x/xhr@0.1.0/mod.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 }
+
 
 const VALID_TASKS = ['analyze_dream', 'generate_image_prompt', 'create_image_prompt']
 const MAX_CONTENT_LENGTH = 5000
@@ -17,7 +16,6 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authentication
     const authHeader = req.headers.get('Authorization')
     if (!authHeader?.startsWith('Bearer ')) {
       throw new Error('Missing authorization header')
@@ -39,22 +37,18 @@ serve(async (req) => {
 
     const { dreamContent, task = 'analyze_dream' } = await req.json()
 
-    // Input validation
     if (!dreamContent || typeof dreamContent !== 'string') {
       throw new Error('Invalid dream content')
     }
-
     if (dreamContent.length > MAX_CONTENT_LENGTH) {
       throw new Error(`Dream content too long. Maximum ${MAX_CONTENT_LENGTH} characters allowed.`)
     }
-
     if (!VALID_TASKS.includes(task)) {
       throw new Error('Invalid task type')
     }
 
     console.log(`Processing ${task} for user ${userId}, content length: ${dreamContent.length}`)
-    
-    // Set system prompt based on the requested task
+
     const systemPrompt = (task === 'create_image_prompt' || task === 'generate_image_prompt')
       ? `You are a world-class cinematographer and concept artist specializing in dream visualization. Your task is to transform a dream description into a rich CINEMATIC SCENE BRIEF for an AI image generator.
 
@@ -100,55 +94,41 @@ TONE RULES:
 - Do not be prescriptive — offer possibilities, not definitive interpretations
 - Express genuine curiosity and respect for the dreamer's inner world
 - Each section should be 2-4 sentences — substantive but not exhausting`
-    
-    console.log(`Generating ${task} for dream content using Gemini 3 Flash Preview`)
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) {
-      throw new Error('LOVABLE_API_KEY is not configured')
-    }
-    
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    console.log(`Generating ${task} using Lovable AI gemini-2.5-flash`)
+    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
+    if (!LOVABLE_API_KEY) throw new Error('LOVABLE_API_KEY not configured');
+const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${LOVABLE_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-3-flash-preview',
+        model: 'google/gemini-2.5-flash',
         messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: dreamContent
-          }
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: dreamContent },
         ],
       }),
     })
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI Gateway error:', response.status, errorText)
+      console.error('AI gateway error:', response.status, errorText)
       if (response.status === 429) {
         throw new Error('Rate limit exceeded. Please try again in a moment.')
       }
-      if (response.status === 402) {
-        throw new Error('AI credits exhausted. Please add credits to continue.')
-      }
-      throw new Error(`AI Gateway error: ${response.status}`)
+      throw new Error(`AI gateway error: ${response.status}`)
     }
 
     const result = await response.json()
-    
     const analysis = result.choices?.[0]?.message?.content
     if (!analysis) {
-      console.error('No content in AI response:', JSON.stringify(result))
+      console.error('No content in Lovable AI response:', JSON.stringify(result))
       throw new Error('No analysis generated')
     }
-    
+
     console.log(`Successfully generated ${task} result`)
 
     return new Response(

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 interface LearningProgress {
   id: string;
@@ -71,7 +70,6 @@ export const useLearningProgress = (userId?: string) => {
       }
     } catch (error) {
       console.error('Error fetching learning progress:', error);
-      toast.error('Failed to load learning progress');
     } finally {
       setLoading(false);
     }
@@ -95,7 +93,6 @@ export const useLearningProgress = (userId?: string) => {
       setProgress(data);
     } catch (error) {
       console.error('Error updating learning progress:', error);
-      toast.error('Failed to update progress');
     }
   };
 
@@ -113,9 +110,7 @@ export const useLearningProgress = (userId?: string) => {
 
     // Check for level up
     if (currentLevel > progress.current_level) {
-      toast.success(`Level up! You reached Level ${currentLevel}!`, {
-        duration: 5000,
-      });
+      console.log(`Level up! You reached Level ${currentLevel}!`);
     }
   };
 
@@ -150,7 +145,7 @@ export const useLearningProgress = (userId?: string) => {
     });
 
     if (newStreak > progress.current_streak) {
-      toast.success(`🔥 ${newStreak} day streak!`);
+      console.log(`🔥 ${newStreak} day streak!`);
     }
   };
 

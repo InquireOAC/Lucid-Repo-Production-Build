@@ -8,11 +8,12 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
-import { useTermsAcceptance } from "@/hooks/useTermsAcceptance";
+
 import { containsInappropriateContent } from "@/utils/contentFilter";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon } from "lucide-react";
-import lucidRepoLogo from "@/assets/lucid-repo-logo.png";
+import lucidEngineLogo from "@/assets/lucid-logo.png";
+import DreamImageBackdrop from "@/components/ui/DreamImageBackdrop";
 
 /* ── colour tokens (cosmic blue palette) ── */
 const C = {
@@ -83,7 +84,7 @@ const Auth = () => {
   }, []);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasAcceptedTerms, isLoading: termsLoading, markTermsAsAccepted } = useTermsAcceptance();
+  
 
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -98,14 +99,10 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    if (user && !termsLoading) {
-      if (hasAcceptedTerms === true) {
-        navigate("/");
-      } else if (hasAcceptedTerms === false) {
-        console.log("User needs to accept terms");
-      }
+    if (user) {
+      navigate("/", { replace: true });
     }
-  }, [user, hasAcceptedTerms, termsLoading, navigate]);
+  }, [user, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +144,6 @@ const Auth = () => {
           : error.message);
         return;
       }
-      await markTermsAsAccepted();
       toast.success("Account created successfully! Please check your email to verify your account.");
     } catch (error) {
       console.error("Sign up error:", error);
@@ -157,55 +153,6 @@ const Auth = () => {
     }
   };
 
-  const handleAcceptTerms = async () => {
-    if (!user) return;
-    try {
-      await markTermsAsAccepted();
-      toast.success("Terms accepted successfully!");
-      navigate("/");
-    } catch (error) {
-      console.error("Error accepting terms:", error);
-      toast.error("Failed to accept terms. Please try again.");
-    }
-  };
-
-  /* ── loading state ── */
-  if (termsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen pt-safe-top" style={{ background: C.bg, color: C.text }}>
-        Loading…
-      </div>
-    );
-  }
-
-  /* ── terms acceptance for existing users ── */
-  if (user && hasAcceptedTerms === false) {
-    return (
-      <div className="min-h-screen flex items-center justify-center pt-safe-top px-4" style={{ background: C.bg }}>
-        <div className="w-full max-w-md rounded-2xl p-6" style={{ background: C.surface, border: `1px solid ${C.surfaceBorder}` }}>
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold" style={{ color: C.text, fontFamily: "'Playfair Display', serif" }}>Terms of Use</h2>
-            <p className="text-sm mt-1" style={{ color: C.muted }}>Please accept our Terms of Use to continue using Lucid Repo</p>
-          </div>
-          <ScrollArea className="h-48 w-full rounded-xl p-3 mb-4" style={{ border: `1px solid ${C.surfaceBorder}`, background: "rgba(56,130,246,0.03)" }}>
-            <TermsText />
-          </ScrollArea>
-          <button
-            onClick={handleAcceptTerms}
-            className="w-full h-11 text-sm font-medium rounded-2xl"
-            style={{
-              background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
-              color: "#fff",
-              border: "none",
-              boxShadow: `0 4px 20px ${C.primaryGlow}`,
-            }}
-          >
-            Accept Terms and Continue
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   /* ═══════════════════════════════════════════
      MAIN AUTH — Cosmic Tech Theme
@@ -215,46 +162,42 @@ const Auth = () => {
       className="min-h-screen flex flex-col items-center justify-center px-6 pt-safe-top pb-safe-bottom relative overflow-hidden pb-24"
       style={{ background: C.bg }}
     >
-      {/* Cosmic background effects */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Radial glow top */}
-        <div
-          className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px]"
-          style={{
-            background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 70%)`,
-            filter: "blur(60px)",
-          }}
-        />
-        {/* Radial glow bottom-right */}
-        <div
-          className="absolute bottom-20 right-0 w-[300px] h-[300px]"
-          style={{
-            background: `radial-gradient(ellipse at center, rgba(99,102,241,0.12) 0%, transparent 70%)`,
-            filter: "blur(50px)",
-          }}
-        />
-        {/* Grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.03]"
-          style={{
-            backgroundImage: `linear-gradient(rgba(56,130,246,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(56,130,246,0.3) 1px, transparent 1px)`,
-            backgroundSize: "40px 40px",
-          }}
-        />
-      </div>
+      {/* Cinematic dream-imagery backdrop (real public dreams, Ken Burns) */}
+      <DreamImageBackdrop dim={0.6} className="z-0" />
 
       <div className="relative z-10 w-full max-w-[420px] flex flex-col items-center">
         {/* ── SECTION 1: Header ── */}
         <motion.div
-          className="text-center mb-10 mt-12"
+          className="text-center mb-10 mt-10 relative"
           initial="hidden"
           animate="visible"
           custom={0}
           variants={fadeUp}
         >
-          <img src={lucidRepoLogo} alt="Lucid Repo" className="w-64 h-auto mx-auto mb-4" />
-          <p className="text-sm" style={{ color: C.muted }}>
-            Join thousands sharing their nightly adventures.
+          {/* Logo halo */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 -top-6 w-[260px] h-[180px] pointer-events-none"
+            style={{
+              background: `radial-gradient(ellipse at center, ${C.primaryGlow} 0%, transparent 65%)`,
+              filter: "blur(40px)",
+            }}
+          />
+          <motion.img
+            src={lucidEngineLogo}
+            alt="Lucid Engine"
+            className="w-48 h-auto mx-auto mb-5 relative"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          />
+          <p
+            className="text-[11px] uppercase tracking-[0.3em] font-medium relative"
+            style={{ color: C.primary, opacity: 0.85 }}
+          >
+            Engineer your dreams
+          </p>
+          <p className="text-sm mt-2 relative" style={{ color: C.muted }}>
+            Master the lucid state.
           </p>
         </motion.div>
 
@@ -267,11 +210,12 @@ const Auth = () => {
           variants={fadeUp}
         >
           <div
-            className="w-full rounded-2xl p-6"
+            className="w-full rounded-2xl p-7 relative"
             style={{
-              background: C.surface,
+              background: "rgba(13,20,37,0.55)",
               border: `1px solid ${C.surfaceBorder}`,
-              backdropFilter: "blur(12px)",
+              backdropFilter: "blur(18px)",
+              boxShadow: `0 20px 60px -20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.04)`,
             }}
           >
             {/* Tab switcher */}
@@ -411,17 +355,19 @@ const Auth = () => {
                   </motion.div>
                 )}
 
-                {/* Submit */}
+            {/* Submit */}
                 <motion.button
                   type="submit"
-                  className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-2"
+                  className="w-full h-12 text-sm font-semibold rounded-xl cursor-pointer mt-3 tracking-wide"
                   style={{
-                    background: `linear-gradient(135deg, ${C.primary}, #6366F1)`,
+                    background: `linear-gradient(135deg, ${C.primary} 0%, #6366F1 100%)`,
                     color: "#fff",
                     border: "none",
-                    boxShadow: `0 4px 20px ${C.primaryGlow}`,
+                    boxShadow: `0 8px 28px ${C.primaryGlow}, inset 0 1px 0 rgba(255,255,255,0.18)`,
                   }}
-                  whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.97 }}
+                  whileHover={{ y: -1, boxShadow: `0 12px 36px ${C.primaryGlow}, inset 0 1px 0 rgba(255,255,255,0.22)` }}
+                  transition={{ duration: 0.2 }}
                   disabled={isLoading}
                 >
                   {isLoading ? "Please wait…" : mode === "signin" ? "Sign In" : "Create Account"}

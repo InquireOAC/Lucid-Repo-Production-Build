@@ -13,6 +13,17 @@ serve(async (req) => {
   }
 
   try {
+    // Verify RevenueCat webhook authorization
+    const authHeader = req.headers.get('Authorization')
+    const expectedSecret = Deno.env.get('REVENUECAT_WEBHOOK_SECRET')
+    if (!expectedSecret || !authHeader || authHeader !== `Bearer ${expectedSecret}`) {
+      console.error('Webhook auth failed: invalid or missing authorization header')
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401
+      })
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)

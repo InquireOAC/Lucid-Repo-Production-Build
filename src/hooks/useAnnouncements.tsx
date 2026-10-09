@@ -15,6 +15,11 @@ export interface Announcement {
   expires_at: string | null;
   created_at: string;
   metadata: any;
+  image_url?: string | null;
+  tags?: string[];
+  notify_users?: boolean;
+  cta_label?: string | null;
+  status?: "draft" | "published" | "archived";
 }
 
 const priorityOrder: Record<string, number> = { high: 3, normal: 2, low: 1 };
@@ -45,7 +50,10 @@ export const useAnnouncements = () => {
     setDismissedIds(dismissed);
 
     const active = (anns || [])
-      .filter((a: Announcement) => !a.expires_at || new Date(a.expires_at) > new Date())
+      .filter((a: Announcement) => {
+        if (a.status && a.status !== "published") return false;
+        return !a.expires_at || new Date(a.expires_at) > new Date();
+      })
       .sort((a: Announcement, b: Announcement) => (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0));
 
     setAnnouncements(active);

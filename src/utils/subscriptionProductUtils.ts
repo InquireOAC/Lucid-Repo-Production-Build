@@ -23,6 +23,7 @@ export function normalizeProduct(product: any): Product {
     features = [
       "Unlimited Dream Analysis",
       "Unlimited Dream Art Generations",
+      "Unlimited AI Dream Chat",
       "Dream Video Generation",
       "Voice-to-Text Journaling",
       "Priority Support"
@@ -34,9 +35,8 @@ export function normalizeProduct(product: any): Product {
     features = [
       "Unlimited Dream Analysis",
       "10 Dream Art Generations",
-      "Dream Video Generation",
+      "AI Dream Chat (5 msgs/day)",
       "Voice-to-Text Journaling",
-      "Priority Support"
     ];
   } else {
     features = product.features || [];

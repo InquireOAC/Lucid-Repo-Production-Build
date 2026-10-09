@@ -124,10 +124,13 @@ const DreamImageWithVideo = ({
         onClick={videoUrl ? togglePlayPause : undefined}
         style={{
           WebkitTapHighlightColor: 'transparent',
+          WebkitTouchCallout: 'none',
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
           touchAction: 'pan-y',
           transform: isPressing ? 'scale(0.97)' : 'scale(1)',
           transition: 'transform 0.2s ease-out',
-        }}
+        } as React.CSSProperties}
       >
         {videoUrl ? (
           <video
@@ -144,7 +147,7 @@ const DreamImageWithVideo = ({
           <img
             src={generatedImage}
             alt="Dream visualization"
-            className="rounded-md w-full h-auto pointer-events-none"
+            className="rounded-md w-full h-auto"
             draggable={false}
           />
         )}
@@ -160,7 +163,7 @@ const DreamImageWithVideo = ({
 
       {/* Mobile / desktop action drawer */}
       <Drawer open={showMobileMenu} onOpenChange={setShowMobileMenu}>
-        <DrawerContent>
+        <DrawerContent className="z-[60]" overlayClassName="z-[60]">
           <DrawerHeader>
             <DrawerTitle>Image Actions</DrawerTitle>
           </DrawerHeader>

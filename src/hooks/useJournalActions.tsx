@@ -2,11 +2,31 @@
 import { useState } from "react";
 import { DreamEntry } from "@/types/dream";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import { useDreamStore } from "@/store/dreamStore";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDreamDbActions } from "./useDreamDbActions";
 import { useDreamImageManager } from "./useDreamImageManager";
 import { uploadDreamImage } from "@/utils/imageUtils";
+import { cacheMediaFromUrl, deleteCachedMedia, mediaCacheKey } from "@/utils/localMediaCache";
+
+/**
+ * Fire-and-forget side-character name extraction. Runs server-side and
+ * silently links any detected people to the dream. Short content skips.
+ */
+function extractCharactersInBackground(dreamId: string, content: string) {
+  if (!dreamId || (content || "").trim().length < 30) return;
+  supabase.functions
+    .invoke("extract-dream-characters", { body: { dreamId } })
+    .then(({ data, error }) => {
+      if (error) { console.error("Character extraction failed:", error); return; }
+      const newCount = (data?.characters || []).filter((c: any) => c.isNew).length;
+      if (newCount > 0) {
+        toast.success(`Detected ${newCount} side character${newCount > 1 ? "s" : ""}`);
+      }
+    })
+    .catch((err) => console.error("Character extraction failed:", err));
+}
 
 export const useJournalActions = () => {
   const { addEntry, updateEntry, deleteEntry } = useDreamStore();
@@ -26,12 +46,14 @@ export const useJournalActions = () => {
     generatedImage?: string;
     imagePrompt?: string;
     audioUrl?: string;
-  }): Promise<void> => {
+    technique_used?: string;
+    lucidity_level?: number;
+  }): Promise<string | undefined> => {
     setIsSubmitting(true);
     if (!user) {
       toast.error("You must be logged in to save a dream.");
       setIsSubmitting(false);
-      return;
+      return undefined;
     }
 
     try {
@@ -76,6 +98,8 @@ export const useJournalActions = () => {
         image_dataurl: finalImageUrl,
         imagePrompt: dreamData.imagePrompt || null,
         audio_url: dreamData.audioUrl || null,
+        technique_used: dreamData.technique_used || null,
+        lucidity_level: dreamData.lucidity_level || null,
       };
 
       console.log("Saving dream to database with final image URL:", finalImageUrl);
@@ -96,10 +120,19 @@ export const useJournalActions = () => {
         audioUrl: dreamData.audioUrl || null
       });
       
+      // Cache media locally for offline access
+      if (finalImageUrl) {
+        cacheMediaFromUrl(mediaCacheKey(newDreamForStore.id, 'image'), finalImageUrl).catch(() => {});
+      }
+
       toast.success("Dream saved successfully!");
+      // Auto-detect named people in the dream. Fire-and-forget.
+      extractCharactersInBackground(newDreamForStore.id, newDreamForStore.content || "");
+      return newDreamForStore.id;
     } catch (error) {
       console.error("Error adding dream:", error);
       toast.error("Failed to save dream.");
+      return undefined;
     } finally {
       setIsSubmitting(false);
     }
@@ -251,6 +284,8 @@ export const useJournalActions = () => {
       console.log("[Dream Edit] Persisting updates:", updates);
 
       await handleUpdateDreamInternal(dreamId, updates);
+      // Auto-detect named people in the updated content. Fire-and-forget.
+      extractCharactersInBackground(dreamId, dreamData.content || "");
     } catch (error) {
       console.error("Error editing dream:", error);
       toast.error("Failed to update dream.");
@@ -291,6 +326,9 @@ export const useJournalActions = () => {
       }
       
       deleteEntry(id); // Delete from local store
+      // Clean up local media cache
+      deleteCachedMedia(mediaCacheKey(id, 'image')).catch(() => {});
+      deleteCachedMedia(mediaCacheKey(id, 'video')).catch(() => {});
       toast.success("Dream deleted successfully");
       setIsSubmitting(false);
       return true;

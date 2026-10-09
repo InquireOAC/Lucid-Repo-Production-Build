@@ -7,9 +7,21 @@ import { useDreamLikes } from "@/hooks/useDreamLikes";
 
 export default function Feed() {
   const { user } = useAuth();
-  const { dreams, isLoading } = useFeedPublicDreams(user);
+  const { dreams, isLoading, error } = useFeedPublicDreams(user);
 
   if (isLoading) return <div>Loading feed...</div>;
+  if (error)
+    return (
+      <div className="text-sm text-muted-foreground">
+        Couldn't load your feed.{" "}
+        <button
+          onClick={() => window.location.reload()}
+          className="text-primary underline underline-offset-2"
+        >
+          Retry
+        </button>
+      </div>
+    );
   if (!dreams.length) return <div>No dreams from people you follow yet.</div>;
 
   return (

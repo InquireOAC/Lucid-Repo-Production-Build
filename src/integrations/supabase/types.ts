@@ -14,6 +14,409 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_badges: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      academy_lessons: {
+        Row: {
+          cards: Json
+          created_at: string | null
+          id: string
+          lesson_number: number
+          module_id: string
+          practice_tasks: Json
+          quiz_questions: Json
+          technique_markers: Json | null
+          title: string
+          xp_reward: number | null
+        }
+        Insert: {
+          cards?: Json
+          created_at?: string | null
+          id?: string
+          lesson_number: number
+          module_id: string
+          practice_tasks?: Json
+          quiz_questions?: Json
+          technique_markers?: Json | null
+          title: string
+          xp_reward?: number | null
+        }
+        Update: {
+          cards?: Json
+          created_at?: string | null
+          id?: string
+          lesson_number?: number
+          module_id?: string
+          practice_tasks?: Json
+          quiz_questions?: Json
+          technique_markers?: Json | null
+          title?: string
+          xp_reward?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "academy_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_modules: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          lesson_count: number
+          prerequisite_module_id: string | null
+          sort_order: number | null
+          tier_required: number
+          title: string
+          track: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          lesson_count: number
+          prerequisite_module_id?: string | null
+          sort_order?: number | null
+          tier_required: number
+          title: string
+          track: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          lesson_count?: number
+          prerequisite_module_id?: string | null
+          sort_order?: number | null
+          tier_required?: number
+          title?: string
+          track?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_modules_prerequisite_module_id_fkey"
+            columns: ["prerequisite_module_id"]
+            isOneToOne: false
+            referencedRelation: "academy_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_user_badges: {
+        Row: {
+          badge_id: string
+          earned_at: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          badge_id: string
+          earned_at?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          badge_id?: string
+          earned_at?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_user_badges_badge_id_fkey"
+            columns: ["badge_id"]
+            isOneToOne: false
+            referencedRelation: "academy_badges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_user_challenge_progress: {
+        Row: {
+          challenge_id: string
+          completed: boolean | null
+          completed_at: string | null
+          dream_entry_id: string | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed?: boolean | null
+          completed_at?: string | null
+          dream_entry_id?: string | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed?: boolean | null
+          completed_at?: string | null
+          dream_entry_id?: string | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_user_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "academy_weekly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_user_lesson_progress: {
+        Row: {
+          cards_viewed: number | null
+          completed_at: string | null
+          created_at: string | null
+          dream_logged: boolean | null
+          id: string
+          lesson_id: string
+          module_id: string
+          practice_completed: boolean | null
+          quiz_passed: boolean | null
+          quiz_score: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string
+          xp_awarded: number | null
+        }
+        Insert: {
+          cards_viewed?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          dream_logged?: boolean | null
+          id?: string
+          lesson_id: string
+          module_id: string
+          practice_completed?: boolean | null
+          quiz_passed?: boolean | null
+          quiz_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id: string
+          xp_awarded?: number | null
+        }
+        Update: {
+          cards_viewed?: number | null
+          completed_at?: string | null
+          created_at?: string | null
+          dream_logged?: boolean | null
+          id?: string
+          lesson_id?: string
+          module_id?: string
+          practice_completed?: boolean | null
+          quiz_passed?: boolean | null
+          quiz_score?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string
+          xp_awarded?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_user_lesson_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "academy_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academy_user_lesson_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "academy_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_user_module_progress: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          is_completed: boolean | null
+          is_unlocked: boolean | null
+          lessons_completed: number | null
+          module_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_unlocked?: boolean | null
+          lessons_completed?: number | null
+          module_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          is_completed?: boolean | null
+          is_unlocked?: boolean | null
+          lessons_completed?: number | null
+          module_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_user_module_progress_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "academy_modules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_user_progress: {
+        Row: {
+          created_at: string | null
+          current_streak: number | null
+          current_tier: number | null
+          id: string
+          last_journal_date: string | null
+          longest_streak: number | null
+          streak_multiplier: number | null
+          total_xp: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_streak?: number | null
+          current_tier?: number | null
+          id?: string
+          last_journal_date?: string | null
+          longest_streak?: number | null
+          streak_multiplier?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_streak?: number | null
+          current_tier?: number | null
+          id?: string
+          last_journal_date?: string | null
+          longest_streak?: number | null
+          streak_multiplier?: number | null
+          total_xp?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      academy_weekly_challenges: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          end_date: string
+          id: string
+          min_tier: number | null
+          start_date: string
+          title: string
+          verification_keywords: Json
+          xp_reward: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          end_date: string
+          id?: string
+          min_tier?: number | null
+          start_date: string
+          title: string
+          verification_keywords?: Json
+          xp_reward?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          end_date?: string
+          id?: string
+          min_tier?: number | null
+          start_date?: string
+          title?: string
+          verification_keywords?: Json
+          xp_reward?: number | null
+        }
+        Relationships: []
+      }
+      academy_xp_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          final_amount: number
+          id: string
+          multiplier: number | null
+          reference_id: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          final_amount: number
+          id?: string
+          multiplier?: number | null
+          reference_id?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          final_amount?: number
+          id?: string
+          multiplier?: number | null
+          reference_id?: string | null
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       activities: {
         Row: {
           created_at: string | null
@@ -234,6 +637,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      collective_waves: {
+        Row: {
+          created_at: string
+          description: string | null
+          dream_count: number
+          emoji: string | null
+          id: string
+          percent_change: number | null
+          theme: string
+          timeframe_end: string
+          timeframe_start: string
+          top_symbols: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          id?: string
+          percent_change?: number | null
+          theme: string
+          timeframe_end?: string
+          timeframe_start?: string
+          top_symbols?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          id?: string
+          percent_change?: number | null
+          theme?: string
+          timeframe_end?: string
+          timeframe_start?: string
+          top_symbols?: string[] | null
+        }
+        Relationships: []
       }
       comments: {
         Row: {
@@ -531,6 +973,48 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_characters: {
+        Row: {
+          accessory_photo_url: string | null
+          avatar_style: string | null
+          created_at: string
+          face_photo_url: string | null
+          id: string
+          name: string | null
+          outfit_photo_url: string | null
+          photo_url: string | null
+          updated_at: string
+          user_id: string
+          visual_fingerprint: string | null
+        }
+        Insert: {
+          accessory_photo_url?: string | null
+          avatar_style?: string | null
+          created_at?: string
+          face_photo_url?: string | null
+          id?: string
+          name?: string | null
+          outfit_photo_url?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id: string
+          visual_fingerprint?: string | null
+        }
+        Update: {
+          accessory_photo_url?: string | null
+          avatar_style?: string | null
+          created_at?: string
+          face_photo_url?: string | null
+          id?: string
+          name?: string | null
+          outfit_photo_url?: string | null
+          photo_url?: string | null
+          updated_at?: string
+          user_id?: string
+          visual_fingerprint?: string | null
+        }
+        Relationships: []
+      }
       dream_chat_messages: {
         Row: {
           content: string
@@ -593,6 +1077,126 @@ export type Database = {
         }
         Relationships: []
       }
+      dream_cinematic_beats: {
+        Row: {
+          beat_index: number
+          created_at: string
+          dream_id: string
+          end_time: number
+          error_message: string | null
+          frame_url: string | null
+          id: string
+          narration_text: string | null
+          narration_url: string | null
+          prompt: string
+          start_time: number
+          status: string
+          updated_at: string
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          beat_index: number
+          created_at?: string
+          dream_id: string
+          end_time?: number
+          error_message?: string | null
+          frame_url?: string | null
+          id?: string
+          narration_text?: string | null
+          narration_url?: string | null
+          prompt: string
+          start_time?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          beat_index?: number
+          created_at?: string
+          dream_id?: string
+          end_time?: number
+          error_message?: string | null
+          frame_url?: string | null
+          id?: string
+          narration_text?: string | null
+          narration_url?: string | null
+          prompt?: string
+          start_time?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
+      dream_cinematic_specs: {
+        Row: {
+          created_at: string
+          dream_id: string
+          final_video_url: string | null
+          id: string
+          spec_json: Json
+          total_duration: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream_id: string
+          final_video_url?: string | null
+          id?: string
+          spec_json: Json
+          total_duration?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dream_id?: string
+          final_video_url?: string | null
+          id?: string
+          spec_json?: Json
+          total_duration?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dream_clusters: {
+        Row: {
+          created_at: string
+          description: string | null
+          dream_count: number
+          emoji: string | null
+          event_date: string
+          event_name: string
+          id: string
+          top_themes: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          event_date?: string
+          event_name: string
+          id?: string
+          top_themes?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dream_count?: number
+          emoji?: string | null
+          event_date?: string
+          event_name?: string
+          id?: string
+          top_themes?: string[] | null
+        }
+        Relationships: []
+      }
       dream_comments: {
         Row: {
           content: string
@@ -651,6 +1255,8 @@ export type Database = {
           content: string
           created_at: string
           date: string
+          dream_date: string | null
+          dream_symbols: string[] | null
           favorite_therapy_mode: string | null
           generatedImage: string | null
           id: string
@@ -661,14 +1267,18 @@ export type Database = {
           jungian_analysis: string | null
           like_count: number | null
           lucid: boolean | null
+          lucidity_level: number | null
           mood: string | null
+          section_images: Json | null
           shamanic_analysis: string | null
           tags: string[] | null
+          technique_used: string | null
           title: string
           updated_at: string
           user_id: string
           video_url: string | null
           view_count: number | null
+          word_count: number | null
         }
         Insert: {
           analysis?: string | null
@@ -678,6 +1288,8 @@ export type Database = {
           content: string
           created_at?: string
           date?: string
+          dream_date?: string | null
+          dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
@@ -688,14 +1300,18 @@ export type Database = {
           jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
+          lucidity_level?: number | null
           mood?: string | null
+          section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
+          technique_used?: string | null
           title: string
           updated_at?: string
           user_id: string
           video_url?: string | null
           view_count?: number | null
+          word_count?: number | null
         }
         Update: {
           analysis?: string | null
@@ -705,6 +1321,8 @@ export type Database = {
           content?: string
           created_at?: string
           date?: string
+          dream_date?: string | null
+          dream_symbols?: string[] | null
           favorite_therapy_mode?: string | null
           generatedImage?: string | null
           id?: string
@@ -715,14 +1333,18 @@ export type Database = {
           jungian_analysis?: string | null
           like_count?: number | null
           lucid?: boolean | null
+          lucidity_level?: number | null
           mood?: string | null
+          section_images?: Json | null
           shamanic_analysis?: string | null
           tags?: string[] | null
+          technique_used?: string | null
           title?: string
           updated_at?: string
           user_id?: string
           video_url?: string | null
           view_count?: number | null
+          word_count?: number | null
         }
         Relationships: [
           {
@@ -740,6 +1362,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dream_insights: {
+        Row: {
+          based_on_date_range: string | null
+          based_on_entry_count: number | null
+          generated_at: string
+          id: string
+          motivation_message: string | null
+          recommendation_message: string | null
+          summary_message: string | null
+          user_id: string
+        }
+        Insert: {
+          based_on_date_range?: string | null
+          based_on_entry_count?: number | null
+          generated_at?: string
+          id?: string
+          motivation_message?: string | null
+          recommendation_message?: string | null
+          summary_message?: string | null
+          user_id: string
+        }
+        Update: {
+          based_on_date_range?: string | null
+          based_on_entry_count?: number | null
+          generated_at?: string
+          id?: string
+          motivation_message?: string | null
+          recommendation_message?: string | null
+          summary_message?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       dream_likes: {
         Row: {
@@ -780,6 +1435,170 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_matches: {
+        Row: {
+          created_at: string
+          dream1_id: string
+          dream2_id: string
+          id: string
+          match_percentage: number
+          shared_elements: string[]
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          dream1_id: string
+          dream2_id: string
+          id?: string
+          match_percentage?: number
+          shared_elements?: string[]
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          dream1_id?: string
+          dream2_id?: string
+          id?: string
+          match_percentage?: number
+          shared_elements?: string[]
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_matches_dream1_id_fkey"
+            columns: ["dream1_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dream_matches_dream2_id_fkey"
+            columns: ["dream2_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_series: {
+        Row: {
+          chapter_count: number | null
+          cover_image_url: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_public: boolean | null
+          like_count: number | null
+          status: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          chapter_count?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          status?: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          chapter_count?: number | null
+          cover_image_url?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          like_count?: number | null
+          status?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: []
+      }
+      dream_series_chapters: {
+        Row: {
+          chapter_number: number
+          created_at: string | null
+          dream_id: string
+          id: string
+          series_id: string
+        }
+        Insert: {
+          chapter_number: number
+          created_at?: string | null
+          dream_id: string
+          id?: string
+          series_id: string
+        }
+        Update: {
+          chapter_number?: number
+          created_at?: string | null
+          dream_id?: string
+          id?: string
+          series_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_series_chapters_dream_id_fkey"
+            columns: ["dream_id"]
+            isOneToOne: false
+            referencedRelation: "dream_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dream_series_chapters_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "dream_series"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dream_series_follows: {
+        Row: {
+          created_at: string | null
+          id: string
+          series_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          series_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          series_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dream_series_follows_series_id_fkey"
+            columns: ["series_id"]
+            isOneToOne: false
+            referencedRelation: "dream_series"
             referencedColumns: ["id"]
           },
         ]
@@ -937,6 +1756,27 @@ export type Database = {
           title?: string
           youtube_id?: string
           youtube_url?: string
+        }
+        Relationships: []
+      }
+      feature_free_trials: {
+        Row: {
+          feature: string
+          id: string
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          feature: string
+          id?: string
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          feature?: string
+          id?: string
+          used_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1311,6 +2151,65 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "public_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lucid_achievement_definitions: {
+        Row: {
+          category: string | null
+          description: string
+          icon: string
+          id: string
+          key: string
+          title: string
+          unlock_rule: Json
+        }
+        Insert: {
+          category?: string | null
+          description: string
+          icon?: string
+          id?: string
+          key: string
+          title: string
+          unlock_rule?: Json
+        }
+        Update: {
+          category?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          key?: string
+          title?: string
+          unlock_rule?: Json
+        }
+        Relationships: []
+      }
+      lucid_user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lucid_user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "lucid_achievement_definitions"
             referencedColumns: ["id"]
           },
         ]
@@ -1908,6 +2807,39 @@ export type Database = {
           },
         ]
       }
+      sync_alerts: {
+        Row: {
+          created_at: string
+          description: string | null
+          dreamer_count: number
+          dreamer_ids: string[] | null
+          emoji: string | null
+          id: string
+          is_trending: boolean | null
+          theme: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          dreamer_count?: number
+          dreamer_ids?: string[] | null
+          emoji?: string | null
+          id?: string
+          is_trending?: boolean | null
+          theme: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          dreamer_count?: number
+          dreamer_ids?: string[] | null
+          emoji?: string | null
+          id?: string
+          is_trending?: boolean | null
+          theme?: string
+        }
+        Relationships: []
+      }
       terms_acceptance: {
         Row: {
           accepted_at: string
@@ -2146,30 +3078,39 @@ export type Database = {
           avatar_color: string | null
           avatar_symbol: string | null
           avatar_url: string | null
+          banner_image: string | null
           bio: string | null
+          color_scheme: string | null
           created_at: string | null
           display_name: string | null
           id: string | null
+          social_links: Json | null
           username: string | null
         }
         Insert: {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string | null
+          social_links?: Json | null
           username?: string | null
         }
         Update: {
           avatar_color?: string | null
           avatar_symbol?: string | null
           avatar_url?: string | null
+          banner_image?: string | null
           bio?: string | null
+          color_scheme?: string | null
           created_at?: string | null
           display_name?: string | null
           id?: string | null
+          social_links?: Json | null
           username?: string | null
         }
         Relationships: []
@@ -2207,6 +3148,36 @@ export type Database = {
         }
         Relationships: []
       }
+      sync_alerts_safe: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          dreamer_count: number | null
+          emoji: string | null
+          id: string | null
+          is_trending: boolean | null
+          theme: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          dreamer_count?: number | null
+          emoji?: string | null
+          id?: string | null
+          is_trending?: boolean | null
+          theme?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          dreamer_count?: number | null
+          emoji?: string | null
+          id?: string | null
+          is_trending?: boolean | null
+          theme?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_subscription_credits: {
@@ -2226,6 +3197,22 @@ export type Database = {
         Args: { user_id_to_delete: string }
         Returns: undefined
       }
+      get_lucid_stats: { Args: { p_user_id: string }; Returns: Json }
+      get_poll_results: {
+        Args: { p_announcement_id: string }
+        Returns: {
+          selected_option: string
+          vote_count: number
+        }[]
+      }
+      grant_learning_achievement: {
+        Args: { p_achievement_id: string }
+        Returns: boolean
+      }
+      grant_lucid_achievement: {
+        Args: { p_achievement_id: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -2241,6 +3228,7 @@ export type Database = {
         Args: { credit_type: string; user_id_param: string }
         Returns: undefined
       }
+      increment_view_count: { Args: { p_dream_id: string }; Returns: undefined }
       reset_subscription_usage: { Args: never; Returns: undefined }
       update_learning_streak_and_xp: {
         Args: { p_user_id: string; p_xp_to_add: number }

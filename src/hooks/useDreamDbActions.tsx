@@ -19,6 +19,8 @@ export const useDreamDbActions = () => {
       | "image_url"
       | "imagePrompt"
       | "audio_url"
+      | "technique_used"
+      | "lucidity_level"
     > & { is_public?: boolean }
   ) => {
     const dbSaveDream = {
@@ -36,6 +38,8 @@ export const useDreamDbActions = () => {
       image_url: dreamData.image_url || null,
       imagePrompt: dreamData.imagePrompt || null,
       audio_url: dreamData.audio_url || null,
+      technique_used: dreamData.technique_used || null,
+      lucidity_level: dreamData.lucidity_level || null,
     };
     return supabase.from("dream_entries").insert(dbSaveDream);
   };

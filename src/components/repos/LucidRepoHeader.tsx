@@ -29,7 +29,12 @@ const LucidRepoHeader = ({
   onClearTags,
 }: LucidRepoHeaderProps) => {
   return (
-    <div className="mb-3 pt-3 space-y-2.5">
+    <div className="mb-3 pt-3 space-y-2.5 px-4">
+      {/* Title */}
+      <h1 className="text-xl lg:text-2xl font-bold text-foreground tracking-tight">
+        Explore Dreamscapes
+      </h1>
+
       {/* Tabs Row */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="w-full bg-muted/20 backdrop-blur-sm rounded-xl p-0.5 h-9">
@@ -49,7 +54,7 @@ const LucidRepoHeader = ({
             value="popular"
             className="flex-1 rounded-lg text-[13px] font-medium h-8 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all"
           >
-            Popular
+            Top
           </TabsTrigger>
         </TabsList>
         <TabsContent value="following"></TabsContent>

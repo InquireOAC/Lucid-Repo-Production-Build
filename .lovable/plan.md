@@ -1,40 +1,43 @@
+## Goal
 
+Consolidate all character avatar management (you + side characters) in one place: the **Edit Avatar** dialog in Settings. Remove the inline Side Characters UI from the dream entry/edit screens, but keep the background auto-detection so saving a dream still links named people to your character roster.
 
-# Android Subscription Support
+## Background
 
-## Current State
-The app uses RevenueCat for native in-app purchases, which already supports both iOS and Android. The `revenueCatManager.ts`, `useNativeSubscription.ts`, and `NativeSubscriptionManager.tsx` are platform-agnostic in terms of RevenueCat API calls. However, several UI strings are iOS-specific ("App Store", "Apple ID").
+- `AIContextDialog` (Settings → Dream Avatar → Edit Avatar) already reads/writes the `public.dream_characters` table with a carousel + add/edit flow that supports name, face/outfit/accessory references, style picker, and AI portrait generation.
+- The `EditDream` page has a second, parallel UI ("Side Characters" collapsible) using `CharacterCreatorDialog`, which writes to the same `dream_characters` table.
+- Auto-detection runs in `useJournalActions.tsx` via the `extract-dream-characters` edge function and is fired after a dream save. It inserts/links rows in `dream_characters` and `dream_entries.dream_character_ids`.
 
-## Changes Needed
+Because both UIs already write to the same table, side characters auto-detected from dreams already show up in the Settings carousel today — we just need to remove the duplicate inline UI.
 
-### 1. NativeSubscriptionManager.tsx - Platform-aware text
-- Change "Manage via App Store Settings" to dynamically show "App Store" or "Play Store" based on platform
-- Update the legal footer text: "Auto-renews unless canceled..." to reference the correct store
-- The "Most Popular" badge and feature lists remain the same
+## Changes
 
-### 2. SubscriptionDialog.tsx - Platform-aware text
-- Change "Manage your subscription through App Store settings" to reference the correct store
+### 1. `src/pages/EditDream.tsx` — remove inline Side Characters UI
+- Delete the entire "Side Characters" collapsible block (the `<button>` toggle + `AnimatePresence` body + add card).
+- Remove related state, refs, and helpers: `sideCharacters`, `characterDialog`, `charactersOpen`, `isExtractingCharacters`, `refreshSideCharacters`, and its `useEffect`.
+- Remove the `<CharacterCreatorDialog>` mount near the bottom of the page and its `onSaved` linking logic.
+- Drop the now-unused imports: `CharacterCreatorDialog`, `Users`, `Plus`.
+- Leave the save flow untouched so `handleEditDream` still kicks off background extraction.
 
-### 3. useNativeSubscription.ts - Platform-aware restore message
-- Update the restore purchases toast that says "same Apple ID" to say "same Google account" on Android
+### 2. `src/components/dreams/CharacterCreatorDialog.tsx` — delete
+- No remaining importers after step 1, and `AIContextDialog` already provides the equivalent (and more polished) creator UI for the same `dream_characters` rows.
 
-### 4. No RevenueCat code changes needed
-- The RevenueCat SDK automatically uses Google Play Billing on Android
-- The same `revenueCatManager.ts` singleton works on both platforms
-- Product identifiers in RevenueCat are mapped per-platform in the RevenueCat dashboard, so the same offering works
+### 3. `src/components/profile/AIContextDialog.tsx` — minor copy + clarity polish
+- Update the empty-state / header copy so it's clear this dialog manages **both** the dreamer's own avatar and side characters (e.g. subtitle: "Your dream self and the people who show up in your dreams"). Carousel chips already render every row, including the auto-detected ones.
+- No schema or logic changes; we are not introducing a "self vs side" flag.
 
-## Files to Modify
+### 4. `src/hooks/useJournalActions.tsx` — leave as-is
+- Confirms the post-save call to `extract-dream-characters` still runs after `handleAddDream` / `handleEditDream`, so saving a dream with named people continues to create/link `dream_characters` rows that then appear in the Settings dialog.
 
-| File | Change |
-|------|--------|
-| `src/components/profile/NativeSubscriptionManager.tsx` | Platform-aware store name in UI text |
-| `src/components/profile/SubscriptionDialog.tsx` | Platform-aware "manage subscription" text |
-| `src/hooks/useNativeSubscription.ts` | Platform-aware restore message |
+### 5. New Dream / DreamEntryForm
+- No edits required — neither file currently shows a Side Characters section.
 
-## Manual Steps (User must do)
-After code changes:
-1. **RevenueCat Dashboard**: Add your Android app in RevenueCat and configure Google Play Store credentials (service account JSON key)
-2. **Google Play Console**: Create the same two subscription products (`com.lucidrepo.limited.monthly` and `com.lucidrepo.unlimited.monthly`) with matching pricing
-3. **RevenueCat Offerings**: Map the Google Play products to the same offering as your iOS products
-4. The RevenueCat API key may need to be platform-specific -- if you use a separate Android API key, you'll need to update the `get-revenuecat-key` edge function to return the correct key based on platform
+## Out of scope
 
+- No database or RLS changes.
+- No changes to the `extract-dream-characters` edge function.
+- No changes to cinematic/scene generation that reads `dream_character_ids`.
+
+## Risks
+
+- Users mid-flow who relied on the inline section will need to discover Settings → Edit Avatar. The empty-state copy update in AIContextDialog plus the existing auto-detection toast cover this.

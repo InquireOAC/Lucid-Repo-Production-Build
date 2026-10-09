@@ -2,6 +2,7 @@ import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import NotificationCard from "@/components/notifications/NotificationCard";
+import BroadcastsSection from "@/components/notifications/BroadcastsSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Bell, CheckCheck, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ const Notifications = () => {
   }
 
   return (
-    <div className="min-h-screen pt-safe-top pb-20 px-4 pl-safe-left pr-safe-right">
+    <div className="min-h-screen pt-safe-top pb-20 md:pb-8 px-4 md:px-8 pl-safe-left pr-safe-right">
       <div className="max-w-2xl lg:max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6 pt-4">
@@ -52,6 +53,9 @@ const Notifications = () => {
             </Button>
           )}
         </div>
+
+        {/* Broadcasts (platform-wide announcements, events, challenges) */}
+        <BroadcastsSection />
 
         {/* Loading State */}
         {loading && (

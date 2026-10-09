@@ -6,10 +6,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
-import { Video, Loader2, Sparkles, Wand2, X, Film } from "lucide-react";
+import { Video, Loader2, Wand2, X, Film } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { useFeatureUsage } from "@/hooks/useFeatureUsage";
+import { showSubscriptionPrompt } from "@/lib/stripe";
+import { toast } from "sonner";
+import { useDreamCinematic } from "@/hooks/useDreamCinematic";
 
 interface GenerateVideoDialogProps {
   open: boolean;
@@ -18,6 +21,7 @@ interface GenerateVideoDialogProps {
   imageUrl: string;
   onVideoGenerated?: (videoUrl: string) => void;
   dreamContent?: string;
+  skipDreamUpdate?: boolean;
 }
 
 export const GenerateVideoDialog = ({
@@ -27,13 +31,29 @@ export const GenerateVideoDialog = ({
   imageUrl,
   onVideoGenerated,
   dreamContent,
+  skipDreamUpdate,
 }: GenerateVideoDialogProps) => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isCraftingPrompt, setIsCraftingPrompt] = useState(false);
   const [progress, setProgress] = useState(0);
+  // Cinematic mode is the full 30-second dream-film flow and only makes sense
+  // when the dialog targets the whole dream. Per-section invocations pass
+  // skipDreamUpdate, in which case we hide the cinematic tab entirely and
+  // render only the legacy frame-animation UI.
+  const allowCinematic = !skipDreamUpdate;
+  const [mode, setMode] = useState<"veo" | "cinematic">(allowCinematic ? "cinematic" : "veo");
+  const cinematic = useDreamCinematic(dreamId);
 
-  // Auto-generate animation prompt when dialog opens
+  // Auto-close the dialog once the cinematic flow finishes so the user sees
+  // the success toast and the dream's hero updates without manual dismissal.
+  useEffect(() => {
+    if (cinematic.stage !== "done" || !cinematic.videoUrl) return;
+    onVideoGenerated?.(cinematic.videoUrl);
+    const t = setTimeout(() => onOpenChange(false), 600);
+    return () => clearTimeout(t);
+  }, [cinematic.stage, cinematic.videoUrl]);
+
   useEffect(() => {
     if (!open) return;
     
@@ -60,7 +80,22 @@ export const GenerateVideoDialog = ({
     craftPrompt();
   }, [open, dreamContent, imageUrl]);
 
+  const { canUseFeature, subscriptionTier } = useFeatureUsage();
+
   const handleGenerate = async () => {
+    // Video generation is Mystic-only
+    const canUse = await canUseFeature('video');
+    if (!canUse) {
+      toast.error("Dream Video Generation requires a Mystic subscription.");
+      showSubscriptionPrompt('video');
+      return;
+    }
+    if (subscriptionTier === 'dreamer') {
+      toast.error("Dream Video Generation is a Mystic-tier feature.");
+      showSubscriptionPrompt('video');
+      return;
+    }
+
     setIsGenerating(true);
     setProgress(10);
 
@@ -74,6 +109,7 @@ export const GenerateVideoDialog = ({
           dreamId,
           imageUrl,
           animationPrompt: prompt || undefined,
+          skipDreamUpdate: skipDreamUpdate || undefined,
         },
       });
 
@@ -83,7 +119,6 @@ export const GenerateVideoDialog = ({
       if (data?.error) throw new Error(data.error);
 
       setProgress(100);
-      toast.success('Dream video generated!');
       onVideoGenerated?.(data.videoUrl);
       
       setTimeout(() => {
@@ -95,7 +130,6 @@ export const GenerateVideoDialog = ({
     } catch (err: any) {
       clearInterval(progressInterval);
       console.error('Video generation failed:', err);
-      toast.error(err.message || 'Failed to generate video');
       setIsGenerating(false);
       setProgress(0);
     }
@@ -105,16 +139,10 @@ export const GenerateVideoDialog = ({
     <Dialog open={open} onOpenChange={isGenerating ? undefined : onOpenChange}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
         <div className="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-b from-[hsl(220,20%,12%)] to-[hsl(220,25%,8%)] shadow-2xl shadow-primary/10">
-          {/* Hero image with gradient overlay */}
           <div className="relative h-72 overflow-hidden">
-            <img
-              src={imageUrl}
-              alt="Dream to animate"
-              className="w-full h-full object-cover"
-            />
+            <img src={imageUrl} alt="Dream to animate" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,12%)] via-[hsl(220,20%,12%)]/60 to-transparent" />
             
-            {/* Close button */}
             <button
               onClick={() => !isGenerating && onOpenChange(false)}
               className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 text-white/70 hover:text-white hover:bg-black/60 transition-all"
@@ -122,38 +150,87 @@ export const GenerateVideoDialog = ({
               <X className="h-4 w-4" />
             </button>
 
-            {/* Title overlay */}
             <div className="absolute bottom-4 left-5 right-5">
               <div className="flex items-center gap-2.5 mb-1">
                 <div className="p-1.5 rounded-lg bg-primary/20 backdrop-blur-sm border border-primary/30">
                   <Film className="h-4 w-4 text-primary" />
                 </div>
-                <h2 className="text-lg font-semibold text-white tracking-tight">
-                  Dream Cinema
-                </h2>
+                <h2 className="text-lg font-semibold text-white tracking-tight">Dream Cinema</h2>
               </div>
               <p className="text-xs text-white/50 pl-[38px]">
-                AI-powered animation from your dream image
+                {allowCinematic && mode === "cinematic"
+                  ? "30-second narrated dream film, voiced by ElevenLabs"
+                  : "AI animation from your dream image"}
               </p>
             </div>
           </div>
 
-          {/* Content */}
           <div className="p-5 space-y-4">
-            {/* Prompt section */}
+            {allowCinematic && (
+              <div className="flex items-center gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
+                <button
+                  onClick={() => setMode("cinematic")}
+                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "cinematic" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
+                >Cinematic Dream · beta</button>
+                <button
+                  onClick={() => setMode("veo")}
+                  className={`flex-1 text-xs py-2 rounded-md transition-colors ${mode === "veo" ? "bg-primary/20 text-white" : "text-white/50 hover:text-white/80"}`}
+                >Animate frame</button>
+              </div>
+            )}
+
+            {mode === "cinematic" ? (
+              <div className="space-y-3">
+                <p className="text-xs text-white/50 leading-relaxed">
+                  Generates a ~30s narrated multi-shot video from your dream text, anchored on your avatar for character consistency.
+                </p>
+                {cinematic.stage !== "idle" && (
+                  <div className="space-y-2">
+                    <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                      <motion.div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${cinematic.progress}%` }} />
+                    </div>
+                    <p className="text-xs text-white/40 capitalize">{cinematic.stage.replace("_", " ")}…</p>
+                  </div>
+                )}
+                {cinematic.stage === "error" && (
+                  <div className="space-y-2">
+                    {cinematic.error && (
+                      <p className="text-xs text-red-400/80">{cinematic.error}</p>
+                    )}
+                    {cinematic.canRetryStitch && (
+                      <Button
+                        onClick={() => cinematic.retryStitch()}
+                        variant="outline"
+                        className="w-full h-10 rounded-xl border-white/15 bg-white/[0.04] text-white/80 text-xs hover:bg-white/[0.08]"
+                      >
+                        Retry assembly — your clips are saved, no re-render needed
+                      </Button>
+                    )}
+                  </div>
+                )}
+                <Button
+                  onClick={() => cinematic.run()}
+                  disabled={cinematic.stage !== "idle" && cinematic.stage !== "done" && cinematic.stage !== "error"}
+                  className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary text-white font-medium text-sm border-0"
+                >
+                  {cinematic.stage === "idle" || cinematic.stage === "done" || cinematic.stage === "error" ? (
+                    <div className="flex items-center gap-2"><Film className="h-4 w-4" /><span>Generate Cinematic Dream</span></div>
+                  ) : (
+                    <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /><span>Working…</span></div>
+                  )}
+                </Button>
+                <p className="text-[10px] text-white/20 text-center">
+                  Need a longer film? Continue in Lucid Engine.
+                </p>
+              </div>
+            ) : (
+            <>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-white/40 uppercase tracking-wider">
-                  Animation Directive
-                </label>
+                <label className="text-xs font-medium text-white/40 uppercase tracking-wider">Animation Directive</label>
                 <AnimatePresence>
                   {isCraftingPrompt && (
-                    <motion.div
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: 10 }}
-                      className="flex items-center gap-1.5"
-                    >
+                    <motion.div initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="flex items-center gap-1.5">
                       <Wand2 className="h-3 w-3 text-primary animate-pulse" />
                       <span className="text-xs text-primary/80">Crafting...</span>
                     </motion.div>
@@ -180,57 +257,36 @@ export const GenerateVideoDialog = ({
               </div>
             </div>
 
-            {/* Progress section */}
             <AnimatePresence>
               {isGenerating && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="space-y-2.5 overflow-hidden"
-                >
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-2.5 overflow-hidden">
                   <div className="relative h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-                    <motion.div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-secondary"
-                      style={{ width: `${progress}%` }}
-                      transition={{ duration: 0.5 }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[shimmer_2s_infinite]" />
+                    <motion.div className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary to-secondary" style={{ width: `${progress}%` }} transition={{ duration: 0.5 }} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <p className="text-xs text-white/40">
-                      Rendering cinematic sequence...
-                    </p>
+                    <p className="text-xs text-white/40">Rendering cinematic sequence...</p>
                     <span className="text-xs font-mono text-primary/60">{Math.round(progress)}%</span>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* Generate button */}
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || isCraftingPrompt}
               className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium text-sm border-0 shadow-lg shadow-primary/20 transition-all duration-300 disabled:opacity-40"
             >
               {isGenerating ? (
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Generating...</span>
-                </div>
+                <div className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /><span>Generating...</span></div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  <span>Generate Video</span>
-                </div>
+                <div className="flex items-center gap-2"><Video className="h-4 w-4" /><span>Generate Video</span></div>
               )}
             </Button>
 
-            {/* Subtle info */}
             {!isGenerating && (
-              <p className="text-[10px] text-white/20 text-center">
-                Powered by Veo 3.0 · ~1-2 min generation time
-              </p>
+              <p className="text-[10px] text-white/20 text-center">Powered by Seedance 2 · ~1–2 min generation time</p>
+            )}
+            </>
             )}
           </div>
         </div>

@@ -1,11 +1,13 @@
 
 import React from "react";
+import { useLocalMedia } from "@/hooks/useLocalMedia";
 
 interface ImageDisplayProps {
   imageUrl: string;
   imageDataUrl?: string;
   onError: () => void;
   disabled?: boolean;
+  dreamId?: string;
 }
 
 const ImageDisplay: React.FC<ImageDisplayProps> = ({
@@ -13,17 +15,19 @@ const ImageDisplay: React.FC<ImageDisplayProps> = ({
   imageDataUrl,
   onError,
   disabled = false,
+  dreamId,
 }) => {
-  const displayUrl = imageDataUrl || imageUrl;
+  const cachedUrl = useLocalMedia(dreamId, imageUrl || imageDataUrl, 'image');
+  const displayUrl = imageDataUrl || cachedUrl || imageUrl;
 
   return (
     <>
       {displayUrl ? (
-        <div className="relative rounded-2xl overflow-hidden">
+        <div className="relative rounded-2xl overflow-hidden aspect-[9/16]">
           <img
             src={displayUrl}
             alt="Dream visualization"
-            className="w-full aspect-[4/3] object-cover"
+            className="w-full h-full rounded-2xl object-contain"
             onError={onError}
           />
         </div>

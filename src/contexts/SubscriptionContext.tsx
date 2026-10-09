@@ -4,12 +4,17 @@ import { useAuth } from './AuthContext';
 import { useSubscription } from '@/hooks/useSubscription';
 import { revenueCatManager } from '@/utils/revenueCatManager';
 import { Capacitor } from "@capacitor/core";
+import { resolveTierId, TIER_DEFINITIONS, type LucidTierId, type TierDefinition } from '@/lib/stripe';
 
 interface SubscriptionContextType {
   subscription: any;
   isLoading: boolean;
   refreshSubscription: () => void;
   forceRefreshSubscription: () => void;
+  /** Lucid Engine shared tier identifier */
+  tierId: LucidTierId;
+  /** Full tier definition with feature flags and limits */
+  tierDef: TierDefinition;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -61,12 +66,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     baseRefreshSubscription();
   }, [user, baseRefreshSubscription]);
 
+  const tierId = resolveTierId(subscription?.price_id);
+  const tierDef = TIER_DEFINITIONS[tierId];
+
   const value = useMemo(() => ({
     subscription,
     isLoading,
     refreshSubscription,
-    forceRefreshSubscription
-  }), [subscription, isLoading, refreshSubscription, forceRefreshSubscription]);
+    forceRefreshSubscription,
+    tierId,
+    tierDef,
+  }), [subscription, isLoading, refreshSubscription, forceRefreshSubscription, tierId, tierDef]);
 
   return (
     <SubscriptionContext.Provider value={value}>
